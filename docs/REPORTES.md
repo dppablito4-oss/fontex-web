@@ -15,7 +15,7 @@ Cada reporte incluye alcance, cambios, archivos relevantes, validaciones reales,
 ## v0.1.4 — Estabilización y verificación del despliegue
 
 **Fecha:** 8 de octubre de 2026
-**Estado:** Correcciones locales completadas; publicación corregida pendiente de verificar
+**Estado:** Completado y verificado públicamente
 
 ### Objetivo
 
@@ -82,17 +82,30 @@ El bloqueo registrado en `v0.1.3` fue superado posteriormente: para el commit `a
 
 ### Commit correspondiente
 
-- Mensaje previsto: `fix: stabilize Fontex GitHub Pages deployment`
-- El SHA de implementación se registrará tras crear el commit y se comunicará en el reporte final de la intervención.
+- Implementación: `dccbfd9e23b29115dee5cbd12009a021261264ae`
+- Mensaje: `fix: stabilize Fontex GitHub Pages deployment`
+- CI: ejecución `37857789505`, completada correctamente.
+- GitHub Pages: ejecución `37857789570`, completada correctamente.
+
+### Estado del despliegue público después de la corrección
+
+- Dirección verificada: `https://fontex.sypablitodp.site/`.
+- El documento HTML responde HTTP 200 y referencia assets desde `/assets/`.
+- JavaScript responde HTTP 200 con `application/javascript`.
+- CSS responde HTTP 200 con `text/css`.
+- Chrome renderizó Inicio, Aula, Grupo, Biblioteca, Tutor y Administración con sus encabezados esperados.
+- No se observaron errores de consola `SEVERE`, `Uncaught`, `ReferenceError` o `TypeError` durante esas seis cargas.
+- El tutor público conserva la etiqueta «Simulación local» y el mensaje que indica que no envía información a servicios externos.
+- Las recargas conservan el documento estático porque las rutas de la aplicación permanecen después de `#`.
 
 ### Limitaciones pendientes
 
-- Falta publicar este cambio y volver a verificar assets, navegación renderizada y consola en el dominio público.
-- La API pública de configuración de Pages responde `404` sin autenticación; el estado se contrasta mediante DNS, HTTPS, contenido servido y ejecuciones públicas de Actions.
+- La API pública de configuración de Pages responde `404` sin autenticación; la verificación se realizó mediante DNS, certificado TLS, contenido servido, navegador real y ejecuciones públicas de Actions.
+- No se ejecutó una auditoría E2E completa con tecnologías de asistencia; esa actividad continúa reservada para el Bloque 5.
 
 ### Siguiente paso permitido
 
-Publicar y verificar esta estabilización. Después, el Bloque 0 puede cerrarse y el Bloque 1 solo podrá iniciarse mediante una orden explícita posterior.
+El Bloque 0 puede cerrarse. El Bloque 1 solo podrá iniciarse mediante una orden explícita posterior.
 
 ---
 
