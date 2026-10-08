@@ -12,6 +12,46 @@ Cada reporte incluye alcance, cambios, archivos relevantes, validaciones reales,
 
 ---
 
+## v0.1.3 — Preparación de publicación en GitHub Pages
+
+**Fecha:** 8 de octubre de 2026
+**Estado:** Bloqueado por activación administrativa de GitHub Pages
+
+### Acción solicitada
+
+Actualizar el commit y publicar Fontex mediante GitHub Pages.
+
+### Diagnóstico remoto
+
+- `origin/main` ya contiene el commit `4f20d7a` del Bloque 0.
+- El workflow `CI` terminó correctamente para ese commit.
+- El workflow `Deploy to GitHub Pages` compiló, validó tipos, ejecutó pruebas y generó el build correctamente.
+- La ejecución falló en `actions/configure-pages@v5` antes de subir el artefacto.
+- La API pública de Pages devuelve `404`, lo que confirma que el sitio todavía no está habilitado en la configuración del repositorio.
+- La CLI de GitHub instalada en el entorno no posee una sesión autenticada para realizar la activación administrativa.
+
+### Ejecución revisada
+
+- Workflow: `Deploy to GitHub Pages`
+- Run: `37855100916`
+- Resultado del job `build`: fallo únicamente en `Configure GitHub Pages`.
+- Job `deploy`: omitido como consecuencia del fallo anterior.
+
+### Acción manual requerida
+
+En GitHub, abrir `Settings → Pages` y seleccionar **GitHub Actions** como fuente en **Build and deployment**. Esta activación requiere permisos de administración o mantenimiento del repositorio.
+
+### Continuación prevista
+
+Una vez habilitado Pages:
+
+1. Actualizar esta entrada a estado completado.
+2. Crear el commit de actualización.
+3. Subir `main` para disparar nuevamente el workflow.
+4. Esperar su finalización y comprobar la URL pública.
+
+---
+
 ## v0.1.2 — Consolidación del Bloque 0 en Git
 
 **Fecha:** 8 de octubre de 2026
