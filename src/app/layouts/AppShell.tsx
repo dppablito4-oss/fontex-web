@@ -9,7 +9,7 @@ import {
   UsersRound,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import { type MouseEvent, useEffect, useRef, useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 
 import { BrandMark } from "../../components/BrandMark";
@@ -27,10 +27,44 @@ const navigation = [
 
 export function AppShell() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(() =>
+    typeof window !== "undefined"
+      ? window.matchMedia("(min-width: 1024px)").matches
+      : false,
+  );
+  const mainContentRef = useRef<HTMLElement>(null);
+  const openMenuButtonRef = useRef<HTMLButtonElement>(null);
+  const closeMenuButtonRef = useRef<HTMLButtonElement>(null);
+  const navigationAvailable = isDesktop || mobileOpen;
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(min-width: 1024px)");
+    const updateViewport = (event: MediaQueryListEvent) => setIsDesktop(event.matches);
+
+    mediaQuery.addEventListener("change", updateViewport);
+    return () => mediaQuery.removeEventListener("change", updateViewport);
+  }, []);
+
+  function openMobileMenu() {
+    setMobileOpen(true);
+    window.requestAnimationFrame(() => closeMenuButtonRef.current?.focus());
+  }
+
+  function closeMobileMenu({ restoreFocus = true } = {}) {
+    setMobileOpen(false);
+    if (restoreFocus) {
+      window.requestAnimationFrame(() => openMenuButtonRef.current?.focus());
+    }
+  }
+
+  function skipToContent(event: MouseEvent<HTMLAnchorElement>) {
+    event.preventDefault();
+    mainContentRef.current?.focus();
+  }
 
   return (
     <div className="min-h-dvh bg-paper text-ink">
-      <a className="skip-link" href="#contenido-principal">
+      <a className="skip-link" href="#contenido-principal" onClick={skipToContent}>
         Saltar al contenido
       </a>
 
@@ -38,11 +72,18 @@ export function AppShell() {
         <button
           className="fixed inset-0 z-30 bg-ink/30 backdrop-blur-[2px] lg:hidden"
           aria-label="Cerrar navegación"
-          onClick={() => setMobileOpen(false)}
+          onClick={() => closeMobileMenu()}
         />
       )}
 
       <aside
+        id="navegacion-lateral"
+        aria-label="Navegación lateral"
+        aria-hidden={!navigationAvailable}
+        inert={!navigationAvailable ? true : undefined}
+        onKeyDown={(event) => {
+          if (event.key === "Escape" && mobileOpen) closeMobileMenu();
+        }}
         className={cn(
           "fixed inset-y-0 left-0 z-40 flex w-[17.5rem] -translate-x-full flex-col border-r border-line bg-[#f8f6f0] px-4 py-5 transition-transform duration-300 lg:translate-x-0",
           mobileOpen && "translate-x-0",
@@ -51,11 +92,12 @@ export function AppShell() {
         <div className="flex items-center justify-between px-2">
           <BrandMark />
           <Button
+            ref={closeMenuButtonRef}
             className="lg:hidden"
             variant="ghost"
             size="icon"
             aria-label="Cerrar menú"
-            onClick={() => setMobileOpen(false)}
+            onClick={() => closeMobileMenu()}
           >
             <X className="size-5" />
           </Button>
@@ -78,7 +120,7 @@ export function AppShell() {
               key={to}
               to={to}
               end={end}
-              onClick={() => setMobileOpen(false)}
+              onClick={() => closeMobileMenu({ restoreFocus: false })}
               className={({ isActive }) =>
                 cn("nav-item", isActive && "nav-item-active")
               }
@@ -95,7 +137,7 @@ export function AppShell() {
             className={({ isActive }) =>
               cn("nav-item", isActive && "nav-item-active")
             }
-            onClick={() => setMobileOpen(false)}
+            onClick={() => closeMobileMenu({ restoreFocus: false })}
           >
             <Settings2 className="size-[18px]" />
             Administración
@@ -117,11 +159,14 @@ export function AppShell() {
         <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-line/80 bg-paper/90 px-4 backdrop-blur-md sm:px-7 lg:px-10">
           <div className="flex items-center gap-3">
             <Button
+              ref={openMenuButtonRef}
               className="lg:hidden"
               variant="secondary"
               size="icon"
               aria-label="Abrir menú"
-              onClick={() => setMobileOpen(true)}
+              aria-controls="navegacion-lateral"
+              aria-expanded={mobileOpen}
+              onClick={openMobileMenu}
             >
               <Menu className="size-5" />
             </Button>
@@ -140,7 +185,12 @@ export function AppShell() {
           </div>
         </header>
 
-        <main id="contenido-principal" className="min-h-[calc(100dvh-4rem)]">
+        <main
+          ref={mainContentRef}
+          id="contenido-principal"
+          tabIndex={-1}
+          className="min-h-[calc(100dvh-4rem)] outline-none"
+        >
           <Outlet />
         </main>
       </div>

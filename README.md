@@ -17,6 +17,18 @@ npm run dev
 
 La aplicación se abre normalmente en `http://localhost:5173`. Las rutas usan hash (`#/tutor`, `#/biblioteca`) para funcionar al recargar desde GitHub Pages.
 
+## Ruta base de despliegue
+
+Vite publica en `/` de forma predeterminada, que es la configuración usada por el dominio personalizado `https://fontex.sypablitodp.site`.
+
+La ruta puede seleccionarse explícitamente al compilar:
+
+```bash
+VITE_BASE_PATH=/fontex-web/ npm run build
+```
+
+En GitHub Actions, el workflow de Pages lee la variable de repositorio `VITE_BASE_PATH` y utiliza `/` si no está definida. Para volver al dominio estándar `https://dppablito4-oss.github.io/fontex-web/`, se debe configurar esa variable como `/fontex-web/` antes de publicar.
+
 ## Comandos de calidad
 
 ```bash

@@ -17,6 +17,8 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      VITE_BASE_PATH: ${{ vars.VITE_BASE_PATH || '/' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -27,7 +29,8 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run test
-      - run: npm run build
+      - name: Build for Pages
+        run: npm run build
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

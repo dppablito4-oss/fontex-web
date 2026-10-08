@@ -12,6 +12,90 @@ Cada reporte incluye alcance, cambios, archivos relevantes, validaciones reales,
 
 ---
 
+## v0.1.4 — Estabilización y verificación del despliegue
+
+**Fecha:** 8 de octubre de 2026
+**Estado:** Correcciones locales completadas; publicación corregida pendiente de verificar
+
+### Objetivo
+
+Cerrar técnicamente el Bloque 0 corrigiendo la ruta base del dominio personalizado, estabilizando la navegación accesible, ampliando pruebas y verificando el sitio público más allá del resultado del workflow.
+
+### Problemas identificados
+
+- El build publicado en `fontex.sypablitodp.site` utilizaba `/fontex-web/` como base por detectar GitHub Actions.
+- El documento HTML público respondía `200`, pero sus archivos JavaScript y CSS en `/fontex-web/assets/` respondían `404`; por tanto, la aplicación pública no era funcional.
+- El enlace «Saltar al contenido» apuntaba a `#contenido-principal` y podía reemplazar la ruta administrada por `HashRouter`.
+- El panel móvil cerrado permanecía en el DOM sin `inert`, permitiendo alcanzar controles ocultos mediante tabulación.
+- La prueba existente solo comprobaba la portada y no ejercitaba rutas, menú, tutor ni configuración de assets.
+
+### Cambios realizados
+
+- `VITE_BASE_PATH` controla explícitamente la base de compilación.
+- La base predeterminada es `/` para el dominio personalizado.
+- El valor `/fontex-web/` sigue disponible para el dominio estándar de GitHub Pages.
+- El workflow de Pages toma `vars.VITE_BASE_PATH` y utiliza `/` cuando la variable no está definida.
+- El salto accesible cancela la navegación del enlace y enfoca el elemento `main`, que ahora acepta foco programático.
+- El menú móvil declara `aria-expanded`, `aria-controls`, `aria-hidden` e `inert`, gestiona foco y permite cierre con `Escape`.
+- `Button` reenvía referencias para la gestión de foco.
+- Se añadieron pruebas pequeñas para las rutas, `HashRouter`, salto al contenido, menú móvil, tutor simulado, datos ficticios y normalización de la base.
+- Se documentaron ambas modalidades de publicación en el README y la arquitectura.
+
+### Archivos modificados
+
+- `.github/workflows/deploy-pages.yml`
+- `README.md`
+- `docs/REPORTES.md`
+- `docs/architecture/overview.md`
+- `src/app/App.test.tsx`
+- `src/app/layouts/AppShell.tsx`
+- `src/components/ui/button.tsx`
+- `src/lib/base-path.ts`
+- `src/lib/base-path.test.ts`
+- `src/test/setup.ts`
+- `vite.config.ts`
+
+### Resultados locales verificados
+
+| Validación | Resultado |
+|---|---|
+| `npm ci` | Correcto; 0 vulnerabilidades reportadas |
+| `npm run lint` | Correcto, sin advertencias |
+| `npm run typecheck` | Correcto |
+| `npm run test` | 2 archivos y 12 pruebas aprobadas |
+| `VITE_BASE_PATH=/ npm run build` | Correcto; assets generados en `/assets/` |
+| `VITE_BASE_PATH=/fontex-web/ npm run build` | Correcto; assets generados en `/fontex-web/assets/` |
+| `npm run dev` | HTTP 200 en el servidor local |
+| Chrome headless local | Tutor renderizado visualmente con identificación «Simulación local» |
+
+### Estado del despliegue público antes de la corrección
+
+- DNS: `fontex.sypablitodp.site` resuelve mediante CNAME a `dppablito4-oss.github.io` y a las direcciones de GitHub Pages.
+- HTTPS: certificado válido para `fontex.sypablitodp.site`, emitido por Let's Encrypt y observado con vigencia hasta el 6 de enero de 2027.
+- Documento raíz: HTTP 200.
+- JavaScript y CSS referenciados: HTTP 404 por la base `/fontex-web/` incorrecta.
+- Rutas con hash: el documento HTML respondía, pero la aplicación no podía iniciar al faltar sus assets.
+
+### Nota histórica sobre v0.1.3
+
+El bloqueo registrado en `v0.1.3` fue superado posteriormente: para el commit `a303332`, CI (`37856269768`) y Deploy to GitHub Pages (`37856269736`) terminaron satisfactoriamente. La verificación de esta intervención demostró, sin embargo, que ese despliegue exitoso todavía contenía rutas de assets incorrectas para el dominio personalizado.
+
+### Commit correspondiente
+
+- Mensaje previsto: `fix: stabilize Fontex GitHub Pages deployment`
+- El SHA de implementación se registrará tras crear el commit y se comunicará en el reporte final de la intervención.
+
+### Limitaciones pendientes
+
+- Falta publicar este cambio y volver a verificar assets, navegación renderizada y consola en el dominio público.
+- La API pública de configuración de Pages responde `404` sin autenticación; el estado se contrasta mediante DNS, HTTPS, contenido servido y ejecuciones públicas de Actions.
+
+### Siguiente paso permitido
+
+Publicar y verificar esta estabilización. Después, el Bloque 0 puede cerrarse y el Bloque 1 solo podrá iniciarse mediante una orden explícita posterior.
+
+---
+
 ## v0.1.3 — Preparación de publicación en GitHub Pages
 
 **Fecha:** 8 de octubre de 2026
