@@ -57,9 +57,15 @@ Conectar el tutor del frontend con OpenAI exclusivamente a través de una Supaba
 | Invocación autenticada | Respuesta no vacía de `gpt-6-astra`; usuario temporal eliminado |
 | Revisión visual | Logo y pantalla de Auth revisados en Chrome headless a 1440 × 900 |
 
+### Entregables y commit principal
+
+- Edge Function: `tutor-chat`, versión remota 1, desplegada en `goegjuglstapjwcckawp`.
+- Activo visual: `public/brand/fontex-mark.svg`.
+- Commit funcional: `a8c673e` (`feat(tutor): connect real AI and add Fontex logo`).
+
 ### Pendiente para cerrar esta versión
 
-- Crear commits, hacer push y verificar CI/GitHub Pages sobre el SHA publicado.
+- Hacer push y verificar CI/GitHub Pages sobre el SHA publicado.
 
 ---
 
