@@ -88,15 +88,18 @@ export function useDocuments({
           throw new Error(`El PDF quedó cargado como privado. ${detail}`, { cause: shareError });
         }
       }
-      try {
-        await processDocument(documentId);
-      } catch (processingError) {
-        await refresh();
-        const detail = processingError instanceof Error ? processingError.message : "No fue posible indexarlo.";
-        throw new Error(`El PDF quedó cargado, pero su índice no está listo. ${detail}`, { cause: processingError });
-      }
       await refresh();
-      setMessage(scope.type === "private" ? "PDF privado cargado e indexado." : "PDF cargado, compartido e indexado.");
+      setMessage(scope.type === "private" ? "PDF privado cargado exitosamente. Indexando..." : "PDF cargado y compartido. Indexando...");
+
+      // Inicia el procesamiento sin bloquear la pantalla del usuario
+      void processDocument(documentId)
+        .then(async () => {
+          await refresh();
+          setMessage("Índice documental listo para consultas.");
+        })
+        .catch(async () => {
+          await refresh();
+        });
     });
   }, [classroomId, refresh, runAction]);
 

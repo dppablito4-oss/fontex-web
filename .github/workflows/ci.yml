@@ -51,5 +51,7 @@ jobs:
         run: deno check --config supabase/functions/document-process/deno.json supabase/functions/document-process/index.ts
       - name: Check document search
         run: deno check --config supabase/functions/document-search/deno.json supabase/functions/document-search/index.ts
-      - name: Lint RAG Edge Functions
-        run: deno lint supabase/functions/document-process/index.ts supabase/functions/document-search/index.ts supabase/functions/_shared/rag/*.ts
+      - name: Check tutor chat
+        run: deno check --config supabase/functions/tutor-chat/deno.json supabase/functions/tutor-chat/index.ts
+      - name: Lint Edge Functions
+        run: deno lint supabase/functions/document-process/index.ts supabase/functions/document-search/index.ts supabase/functions/tutor-chat/index.ts supabase/functions/_shared/rag/*.ts

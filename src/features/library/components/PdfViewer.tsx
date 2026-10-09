@@ -10,15 +10,17 @@ export function PdfViewer({
   document,
   blob,
   onClose,
+  initialPage = 1,
 }: {
   document: LibraryDocument;
   blob: Blob;
   onClose: () => void;
+  initialPage?: number;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const frameRef = useRef<HTMLDivElement>(null);
   const [pdf, setPdf] = useState<PDFDocumentProxy | null>(null);
-  const [pageNumber, setPageNumber] = useState(1);
+  const [pageNumber, setPageNumber] = useState(initialPage);
   const [frameWidth, setFrameWidth] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -45,7 +47,8 @@ export function PdfViewer({
         loadedPdf = await loadingTask.promise;
         if (!active) return;
         setPdf(loadedPdf);
-        setPageNumber(1);
+        const validPage = Math.min(Math.max(1, initialPage), loadedPdf.numPages);
+        setPageNumber(validPage);
       } catch (loadError) {
         if (active) setError(loadError instanceof Error ? loadError.message : "No fue posible abrir el PDF.");
       } finally {
@@ -57,7 +60,7 @@ export function PdfViewer({
       active = false;
       void loadingTask?.destroy();
     };
-  }, [blob]);
+  }, [blob, initialPage]);
 
   useEffect(() => {
     if (!pdf || !canvasRef.current || frameWidth <= 0) return;

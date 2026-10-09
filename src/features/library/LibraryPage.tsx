@@ -206,7 +206,7 @@ export function LibraryPage() {
       <RagSearchPanel />
 
       <p className="mt-4 text-center text-xs text-muted-foreground">
-        PDF.js valida en el navegador y extrae nuevamente en servidor. Los índices sirven sólo al diagnóstico; todavía no alimentan al tutor.
+        PDF.js valida en el navegador y extrae en el servidor. Los fragmentos indexados alimentan directamente las consultas fundamentadas del Tutor Académico.
       </p>
 
       {library.viewer && (

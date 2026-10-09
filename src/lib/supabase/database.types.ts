@@ -12,6 +12,8 @@ export type DocumentStatus = "pending" | "uploading" | "ready" | "failed";
 export type DocumentShareScope = "group" | "classroom";
 export type DocumentProcessingStatus = "pending" | "processing" | "ready" | "failed";
 export type DocumentProcessingPhase = "extracting" | "embedding" | "complete";
+export type TutorMode = "strict" | "comparative";
+export type TutorRole = "user" | "assistant";
 
 type Relationship = {
   foreignKeyName: string;
@@ -291,6 +293,137 @@ export type Database = {
         Update: never;
         Relationships: Relationship[];
       };
+      tutor_limits: {
+        Row: {
+          id: number;
+          is_enabled: boolean;
+          max_queries_per_user_per_hour: number;
+          max_queries_per_user_per_day: number;
+          max_global_queries_per_day: number;
+          max_retrieved_chunks: number;
+          max_input_tokens: number;
+          max_output_tokens: number;
+          max_concurrent_requests_per_user: number;
+          default_model: string;
+          reasoning_effort: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      tutor_conversations: {
+        Row: {
+          id: string;
+          user_id: string;
+          classroom_id: string;
+          title: string;
+          mode: TutorMode;
+          guided: boolean;
+          selected_document_ids: string[];
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string;
+          classroom_id: string;
+          title: string;
+          mode?: TutorMode;
+          guided?: boolean;
+          selected_document_ids?: string[];
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          title?: string;
+          mode?: TutorMode;
+          guided?: boolean;
+          selected_document_ids?: string[];
+          updated_at?: string;
+        };
+        Relationships: Relationship[];
+      };
+      tutor_messages: {
+        Row: {
+          id: string;
+          conversation_id: string;
+          user_id: string;
+          role: TutorRole;
+          content: string;
+          model: string | null;
+          metadata: Json;
+          order_index: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          conversation_id: string;
+          user_id?: string;
+          role: TutorRole;
+          content: string;
+          model?: string | null;
+          metadata?: Json;
+          order_index?: number;
+          created_at?: string;
+        };
+        Update: never;
+        Relationships: Relationship[];
+      };
+      tutor_message_citations: {
+        Row: {
+          id: string;
+          message_id: string;
+          document_id: string;
+          chunk_id: number;
+          citation_index: number;
+          page_start: number;
+          page_end: number;
+          document_title: string;
+          document_version: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          message_id: string;
+          document_id: string;
+          chunk_id: number;
+          citation_index?: number;
+          page_start: number;
+          page_end: number;
+          document_title: string;
+          document_version?: string | null;
+          created_at?: string;
+        };
+        Update: never;
+        Relationships: Relationship[];
+      };
+      tutor_usage_events: {
+        Row: {
+          id: string;
+          user_id: string;
+          classroom_id: string;
+          conversation_id: string | null;
+          mode: TutorMode;
+          guided: boolean;
+          query_characters: number;
+          retrieved_chunks_count: number;
+          prompt_tokens: number;
+          completion_tokens: number;
+          reasoning_tokens: number;
+          total_tokens: number;
+          latency_ms: number | null;
+          status: string;
+          error_code: string | null;
+          idempotency_key: string | null;
+          created_at: string;
+          completed_at: string | null;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: Relationship[];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -347,6 +480,56 @@ export type Database = {
         Args: { target_document_id: string };
         Returns: Json;
       };
+      internal_begin_tutor_request: {
+        Args: {
+          requesting_user_id: string;
+          target_classroom_id: string;
+          target_conversation_id: string;
+          requested_mode: string;
+          requested_guided: boolean;
+          query_characters: number;
+          request_idempotency_key?: string | null;
+        };
+        Returns: Json;
+      };
+      internal_complete_tutor_request: {
+        Args: {
+          target_event_id: string;
+          requesting_user_id: string;
+          result_status: string;
+          retrieved_chunks?: number;
+          prompt_tokens_used?: number;
+          completion_tokens_used?: number;
+          reasoning_tokens_used?: number;
+          latency_ms_used?: number | null;
+          result_error_code?: string | null;
+        };
+        Returns: undefined;
+      };
+      internal_search_tutor_chunks: {
+        Args: {
+          requesting_user_id: string;
+          target_classroom_id: string;
+          search_query: string;
+          query_embedding: string;
+          selected_document_ids?: string[] | null;
+          requested_scope?: string;
+          requested_match_count?: number;
+          requested_embedding_model?: string;
+        };
+        Returns: Array<{
+          chunk_id: number;
+          document_id: string;
+          document_title: string;
+          page_start: number;
+          page_end: number;
+          content: string;
+          semantic_similarity: number;
+          lexical_rank: number;
+          combined_score: number;
+          chunk_version: string;
+        }>;
+      };
     };
     Enums: {
       classroom_role: ClassroomRole;
@@ -355,6 +538,8 @@ export type Database = {
       document_share_scope: DocumentShareScope;
       document_processing_status: DocumentProcessingStatus;
       document_processing_phase: DocumentProcessingPhase;
+      tutor_mode: TutorMode;
+      tutor_role: TutorRole;
     };
     CompositeTypes: Record<string, never>;
   };

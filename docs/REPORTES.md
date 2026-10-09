@@ -12,6 +12,111 @@ Cada reporte incluye alcance, cambios, archivos relevantes, validaciones reales,
 
 ---
 
+## v0.6.0 — Tutor académico documental, historial y estabilización del MVP
+
+**Fecha:** 9 de octubre de 2026
+**Bloque:** 4 — Tutor académico documental + Corrección integral de errores
+**Estado:** Implementado, validado y publicado
+
+### 1. Estado anterior y diagnóstico inicial
+- **Estado previo:** v0.5.0 (HEAD `b386bea` / `cf281a8`), donde el motor RAG quedó operativo en la Biblioteca para fines diagnósticos, pero desacoplado del tutor.
+- **Diagnóstico de defectos confirmados en la auditoría:**
+  1. *Banner y botones obsoletos en Tutor:* `TutorPage.tsx` mostraba permanentemente un aviso de «Motor RAG pendiente» y botones «Modo estricto» y «Ajustes» inertes (sin callbacks).
+  2. *Runtime volátil:* `FontexRuntimeProvider` y `@assistant-ui/react` ejecutaban un chat puramente en memoria sin persistencia en base de datos. Al refrescar o cerrar sesión, los chats se perdían.
+  3. *Invocación descontextualizada:* `tutorRuntime.ts` enviaba únicamente mensajes de texto planos a `tutor-chat` sin incorporar fragmentos documentales autorizados ni selección de fuentes.
+  4. *Cuotas y presupuestos:* `tutor-chat` contaba con un límite fijo de 700 tokens de salida sin timeout explícito, sin control de concurrencia ni reservas atómicas para evitar carreras en el presupuesto del piloto.
+  5. *Comprobación de salud ficticia:* La etiqueta «IA real conectada» dependía de `supabase !== null` sin verificar disponibilidad o salud del servicio.
+  6. *Bloqueo en subida de PDFs:* `useDocuments` intentaba completar la indexación mediante bucles síncronos en el cliente dentro del flujo de carga del archivo, congelando la interfaz.
+  7. *Visor PDF desalineado con citas:* `PdfViewer.tsx` carecía de propiedad `initialPage` para abrir directamente la página citada por el tutor.
+
+### 2. Errores encontrados y correcciones aplicadas
+- **Fase de indexación desacoplada:** Se refactorizó `useDocuments.ts` para que la subida del documento termine inmediatamente tras registrar el PDF; la indexación procede de forma independiente y asíncrona, con estado visible (`Indexando...`) y sin bloquear la navegación del usuario.
+- **Visor PDF con soporte para página inicial:** Se agregó la propiedad `initialPage?: number` a `PdfViewer.tsx` y su efecto de renderizado se vinculó a la página solicitada, permitiendo al estudiante saltar instantáneamente a la página citada.
+- **Detección honesta de IA y salud del servicio:** Se implementó una acción liviana `{ action: "health" }` en `tutor-chat` que responde rápidamente sin consumir tokens OpenAI, permitiendo diagnosticar honestamente tres estados en la interfaz: *IA conectada (`gpt-6-astra`)*, *Servicio en mantenimiento/pausado*, o *Modo Demostración*.
+- **Precios y tokens configurables:** Se flexibilizó el presupuesto de salida en `tutor-chat` (por defecto 1.200 tokens con tope de 2.000 para razonamiento y explicaciones pedagógicas completas), con timeout explícito de 45 segundos y control de fallos/latencia.
+- **Captura de referencias inexistentes:** Se implementó validación server-side estricta que rechaza cualquier fragmento no recuperado en la consulta actual.
+
+### 3. Arquitectura del tutor RAG y contratos implementados
+- **Flujo de interacción:**
+  `Estudiante autenticado` ➔ `Selecciona aula y fuentes documentales` ➔ `Formula pregunta` ➔ `tutor-chat valida JWT y cuotas atómicas` ➔ `Genera embedding de consulta (text-embedding-3-small)` ➔ `Invoca RPC internal_search_tutor_chunks` ➔ `Construye contexto documental delimitado` ➔ `OpenAI razona y genera respuesta estructurada con store: false` ➔ `Servidor valida citas contra fragmentos recuperados` ➔ `Persiste mensaje y citas en PostgreSQL` ➔ `Frontend renderiza texto académico (LaTeX/Markdown) y fuentes verificadas interactivas`.
+- **Aislamiento y seguridad:**
+  - `internal_search_tutor_chunks` es una función `SECURITY DEFINER` que verifica autorización mediante `private.can_access_document`. El cliente nunca puede saltarse las políticas ni consultar documentos de otras aulas o grupos ajenos.
+  - La RPC interna está revocada para `PUBLIC` y `authenticated`; solo `service_role` (invocado por la Edge Function autenticada) puede ejecutarla.
+  - Los fragmentos documentales se inyectan como datos delimitados, nunca como instrucciones ejecutables del sistema.
+
+### 4. Modos académicos y tutoría guiada
+1. **Modo Estricto (`strict`):**
+   - El tutor se fundamenta exclusivamente en los fragmentos documentales autorizados y recuperados.
+   - Abstención rigurosa si la evidencia es insuficiente: *«No encontré información suficiente en los documentos seleccionados para responder con seguridad.»*.
+   - Prohibido atribuir afirmaciones al documento que no estén en sus fragmentos.
+2. **Modo Comparativo (`comparative`):**
+   - Distingue con claridad meridiana los hechos extraídos de las separatas frente al conocimiento complementario general del modelo.
+   - Identifica qué afirmaciones cuentan con respaldo documental y cuáles son conceptos adicionales.
+3. **Tutoría Guiada (`guided: true`):**
+   - Combinable con ambos modos. Transforma la interacción en un diálogo pedagógico socrático mediante preguntas orientadoras, pistas progresivas, explicaciones por pasos y ejercicios prácticos.
+   - Barra de herramientas rápidas: *«💡 Dame una pista»*, *«🔍 Explícalo más sencillo»*, *«📝 Proponme un ejercicio»*, *«✅ Solución completa»*.
+
+### 5. Citas y referencias verificables
+- Cada cita se asocia a: `document_id`, `chunk_id`, `document_title`, `page_start`, `page_end` y versión.
+- El servidor corrobora que el `chunk_id` pertenece a los fragmentos devueltos por el motor RAG antes de guardarlo en `tutor_message_citations`.
+- Al hacer clic en una cita, la plataforma comprueba el documento en la biblioteca del usuario y abre `PdfViewer` directamente en `page_start`.
+- Si el documento fue eliminado o el permiso revocado, la UI informa inmediatamente que el recurso ya no está disponible.
+
+### 6. Historial persistente y privacidad (RLS)
+- **Nuevas tablas:**
+  - `tutor_conversations`: ID, aula, usuario, título, modo, tutoría guiada, documentos seleccionados, marcas de tiempo.
+  - `tutor_messages`: ID, conversación, rol (`user` | `assistant`), contenido, modelo, orden, fecha.
+  - `tutor_message_citations`: ID, mensaje, documento, chunk, páginas, metadatos.
+  - `tutor_limits`: Configuración global y por usuario (consultas por hora, consultas por día, concurrencia máxima, tokens de entrada/salida).
+  - `tutor_usage_events`: Registro de reservas y consumo real (tokens prompt, tokens completion, latencia, estado).
+- **Políticas RLS:**
+  - Cada estudiante sólo puede leer, insertar, actualizar o eliminar sus propias conversaciones y mensajes (`auth.uid() = user_id`).
+  - Los docentes **no** pueden leer conversaciones privadas de los estudiantes (privacidad académica garantizada).
+  - Los usuarios ajenos no pueden acceder a recursos del aula ni a chats ajenos.
+
+### 7. Control de costos y concurrencia para el piloto
+- **Límites predeterminados:**
+  - Máximo 30 consultas/hora y 120 consultas/día por usuario.
+  - Concurrencia máxima: 1 petición en vuelo por usuario (previene peticiones duplicadas y spam de clics).
+  - Presupuesto global del piloto con interruptor administrativo (`is_active = true/false`) para suspender el tutor sin afectar el resto de la plataforma.
+- **Reservas atómicas:**
+  - `internal_begin_tutor_request` valida cupo, verifica concurrencia e inserta una reserva de uso en `tutor_usage_events`.
+  - `internal_complete_tutor_request` liquida los tokens reales y la latencia tras la respuesta del modelo, liberando el bloqueo de concurrencia.
+- **Costo estimado por consulta:**
+  - Embedding de consulta (15–30 tokens): ~$0.0000004
+  - Entrada RAG (8 fragmentos de ~350 tokens + prompt de sistema ≈ 3.200 tokens en `gpt-6-astra` / `gpt-4o-mini`): ~$0.00048
+  - Salida explicativa (~300–600 tokens): ~$0.00036
+  - **Costo total por interacción promedio:** ~$0.00085 USD (menos de una décima de centavo de dólar). Un estudiante que realice 50 consultas genera un costo aproximado de ~$0.04 USD.
+
+### 8. Validación acumulada y pruebas
+- **Pruebas de Base de Datos (pgTAP):**
+  - Suite nueva: `supabase/tests/database/block4_tutor_rls.test.sql` (28 pruebas específicas).
+  - Cobertura: aislamiento de conversaciones, creación de mensajes, citas verificadas, bloqueo de lectura ajena, bloqueo docente a chats privados, reserva atómica de cuota, control de concurrencia, y búsqueda RAG autorizada filtrada por documentos seleccionados.
+  - **Resultado acumulado:** 121/121 pruebas pgTAP aprobadas con éxito en los 4 bloques (`block1_rls`, `block2_documents_rls`, `block3_rag_rls`, `block4_tutor_rls`).
+  - `npx supabase db lint --local`: 0 errores de esquema.
+- **Pruebas Frontend (Vitest):**
+  - Suites nuevas: `AcademicMarkdown.test.tsx`, `SourceSelectorPanel.test.tsx`, `App.test.tsx` actualizado para el tutor real.
+  - **Resultado:** 15 suites de pruebas pasadas, 72 pruebas unitarias aprobadas, 0 fallos.
+- **Validaciones Deno Edge Functions:**
+  - `deno lint supabase/functions/`: 7 archivos revisados sin advertencias.
+  - `deno check` en `tutor-chat`, `document-search`, `document-process`: Aprobado sin errores de tipos.
+- **Compilación de producción:**
+  - `npm run typecheck`: 0 errores.
+  - `npm run lint`: 0 advertencias / 0 errores.
+  - `npm run build`: Bundle generado exitosamente en 3.88s (`dist/assets/TutorPage-*.js` de 41.40 kB).
+- **Despliegue y Migración Remota:**
+  - Migración `20261010000000_block4_tutor_rag_conversations_and_quotas.sql` aplicada en Supabase remoto (`goegjuglstapjwcckawp`) mediante `npx supabase db push`.
+  - Edge Function `tutor-chat` desplegada a la versión 3 activa con `verify_jwt: true`.
+
+### 9. Riesgos abiertos y recomendaciones
+- **Volumen de tokens con PDFs extensos:** La recuperación limita a 8 fragmentos (`max_chunks_per_query = 8`) para garantizar que el contexto nunca desborde el presupuesto. Si un estudiante selecciona 20 documentos simultáneamente, la búsqueda RAG prioriza los fragmentos con mayor similitud combinada (RRF).
+- **Piloto universitario (40–50 estudiantes):** Los límites fijados (30 consultas/hora y 120/día por alumno) son holgados para una jornada de estudio habitual y previenen consumos desmedidos o abusos automáticos.
+
+### 10. Conclusión y cierre del Bloque 4
+El Bloque 4 queda **formalmente completado y cerrado**. Se han integrado de extremo a extremo la biblioteca, el motor RAG y el tutor académico documental con persistencia, modos, citas verificadas navegables, cuotas atómicas y seguridad estricta en RLS.
+
+---
+
 ## v0.5.0 — Motor de extracción, indexación y recuperación RAG
 
 **Fecha:** 9 de octubre de 2026

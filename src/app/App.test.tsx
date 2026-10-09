@@ -78,20 +78,22 @@ describe("Fontex shell", () => {
     expect(menu).toHaveAttribute("inert");
   });
 
-  it("carga el tutor local y diferencia la demo de la IA real", async () => {
+  it("carga el tutor académico documental y diferencia el modo demostración", async () => {
     renderRoute("/tutor");
 
     expect(
       await screen.findByRole(
         "heading",
-        { name: /consulta con contexto/i, level: 1 },
+        { name: /tutor académico documental/i, level: 1 },
         { timeout: 5_000 },
       ),
     ).toBeInTheDocument();
-    expect(screen.getByText("Demo local")).toBeInTheDocument();
-    expect(screen.getByText(/no se envía información a servicios externos/i)).toBeInTheDocument();
-    expect(screen.getByText("0 fuentes")).toBeInTheDocument();
-    expect(screen.getByText("Motor RAG pendiente")).toBeInTheDocument();
+    expect(screen.getAllByText("Modo Demostración").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("Modo Estricto")).toBeInTheDocument();
+    expect(screen.getByText("Modo Comparativo")).toBeInTheDocument();
+    expect(screen.getByText(/Tutoría Guiada/i)).toBeInTheDocument();
+    expect(screen.getByText("Fuentes Académicas")).toBeInTheDocument();
+    expect(screen.queryByText("Motor RAG pendiente")).not.toBeInTheDocument();
   });
 
   it("identifica claramente los datos demostrativos", () => {
