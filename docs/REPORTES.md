@@ -12,11 +12,62 @@ Cada reporte incluye alcance, cambios, archivos relevantes, validaciones reales,
 
 ---
 
+## v0.3.0 — Tutor con IA real y logotipo Fontex
+
+**Fecha:** 8 de octubre de 2026
+**Tipo:** Capacidad funcional e identidad de marca
+**Estado:** Implementado y verificado; publicación del frontend pendiente
+
+### Objetivo autorizado
+
+Conectar el tutor del frontend con OpenAI exclusivamente a través de una Supabase Edge Function autenticada e incorporar al producto el símbolo de Fontex entregado por el propietario. La clave privada nunca debe llegar al navegador ni al repositorio.
+
+### Registro de acciones
+
+1. **Cierre de la publicación visual `v0.2.2`.** Los workflows remotos `CI` y `Deploy to GitHub Pages` concluyeron correctamente para el commit `ef3de35`.
+2. **Auditoría segura de Supabase.** El proyecto vinculado `goegjuglstapjwcckawp` contiene el secreto `OPENAI_API_KEY`; solo se comprobó su nombre, sin leer ni imprimir su valor.
+3. **Verificación del backend declarado.** `supabase functions list` devolvió `0` funciones desplegadas. El secreto estaba configurado, pero todavía no existía una Edge Function que pudiera atender al tutor.
+4. **Contrato técnico actualizado.** La documentación vigente confirma el uso de `supabase.functions.invoke` desde el cliente autenticado y de Responses API desde el servidor. El resolvedor oficial de modelos devolvió `gpt-6-astra` como modelo vigente para una integración nueva.
+5. **Tratamiento del logotipo.** El adjunto visual no apareció como archivo binario recuperable en el workspace. Para evitar una reinterpretación generativa de la marca, se implementará como SVG determinista basado en la geometría y colores entregados, sujeto a sustitución directa si posteriormente se aporta el original vectorial.
+6. **Implementación del backend.** Se creó `tutor-chat` con `@supabase/server@1.9.1`, autenticación `user`, CORS automático, límites de historial y tamaño, Responses API, `store: false` y errores públicos sin datos sensibles. El modelo predeterminado es `gpt-6-astra` y puede cambiarse mediante `OPENAI_MODEL` en Supabase.
+7. **Implementación del cliente.** `assistant-ui` invoca la función con la sesión y permite cancelar o agotar la solicitud. Sin configuración de Supabase conserva una demo explícita; en producción muestra `IA real conectada`.
+8. **Honestidad del alcance.** Se retiraron las tres fuentes ficticias. La interfaz muestra `0 fuentes` y `Motor RAG pendiente`; las instrucciones del servidor prohíben inventar documentos, citas o páginas.
+9. **Despliegue y prueba real.** La versión 1 de `tutor-chat` está `ACTIVE` con `verify_jwt: true`. CORS respondió `204`, una llamada no autenticada fue rechazada con `401` y una llamada autenticada temporal devolvió texto de `gpt-6-astra`. El usuario de prueba fue eliminado.
+10. **Identidad publicada en el producto.** `public/brand/fontex-mark.svg` reproduce de forma determinista el símbolo cian, blanco e índigo recibido; se usa en `BrandMark` y como favicon. La revisión visual confirmó legibilidad y contraste en la pantalla de acceso de producción.
+11. **Configuración de Pages.** El build usa las variables públicas del repositorio cuando existen y, en su ausencia, la URL y clave publicable del proyecto vinculado. Ninguna clave secreta se incorporó al bundle.
+
+### Seguridad confirmada hasta este punto
+
+- `OPENAI_API_KEY` permanece en los secretos de Supabase.
+- No se añadieron claves privadas a archivos, comandos, reportes ni salida de consola.
+- La aplicación web usará únicamente URL y clave publicable de Supabase, protegidas por Auth/RLS y aptas para cliente público.
+
+### Validaciones completadas
+
+| Validación | Resultado |
+|---|---|
+| `npm run lint` | Correcto, sin advertencias |
+| `npm run typecheck` | Correcto |
+| `npm run test` | 8 archivos y 53 pruebas aprobadas; 1 integración de RLS omitida sin variables locales |
+| `npm run build` | Correcto |
+| Build Pages con Supabase | Correcto; contiene el project ref y el modo de IA real |
+| `deno check` / `deno lint` | Correcto para `tutor-chat` |
+| Edge Function | `ACTIVE`, versión 1, `verify_jwt: true` |
+| CORS / acceso anónimo | `204` para preflight; `401` sin sesión |
+| Invocación autenticada | Respuesta no vacía de `gpt-6-astra`; usuario temporal eliminado |
+| Revisión visual | Logo y pantalla de Auth revisados en Chrome headless a 1440 × 900 |
+
+### Pendiente para cerrar esta versión
+
+- Crear commits, hacer push y verificar CI/GitHub Pages sobre el SHA publicado.
+
+---
+
 ## v0.2.2 — Identidad visual Fontex y temas claro/oscuro
 
 **Fecha:** 8 de octubre de 2026
 **Tipo:** Refactorización visual controlada
-**Estado:** Implementado y verificado localmente; publicación pendiente
+**Estado:** Implementado, verificado y publicado
 **Nota de versión:** la solicitud proponía `v0.1.6`, pero se usa `v0.2.2` para continuar la secuencia vigente sin retroceder desde `v0.2.1`.
 
 ### Problema y objetivo

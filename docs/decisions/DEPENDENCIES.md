@@ -9,13 +9,14 @@ Registro inicial del Bloque 0. Las versiones exactas instaladas quedan fijadas e
 | TypeScript | Comprobación estática estricta | Apache-2.0 | Reduce errores de contrato |
 | Tailwind CSS + plugin Vite | Sistema de estilos | MIT | Estilos compilados sin runtime |
 | React Router DOM | Navegación cliente | MIT | `HashRouter` evita reescrituras del servidor |
-| assistant-ui React | Primitivas y runtime de conversación | MIT | Aprobado para el spike local; backend real pendiente |
+| assistant-ui React | Primitivas y runtime de conversación | MIT | Adaptador local conectado a `tutor-chat`; conserva demo explícita sin Supabase |
 | Radix Slot | Composición accesible para botones/enlaces | MIT | Dependencia puntual de los componentes UI |
 | class-variance-authority, clsx, tailwind-merge | Variantes y combinación de clases | Apache-2.0 / MIT | Patrón utilizado por shadcn/ui |
 | lucide-react | Iconografía | ISC | Iconos consistentes y reemplazables |
 | Vitest + Testing Library + jsdom | Pruebas del frontend | MIT | Prueba básica del shell y futuras unitarias |
 | ESLint + typescript-eslint | Calidad estática | MIT / BSD-2-Clause | CI sin advertencias |
 | `@supabase/supabase-js` | Auth y acceso tipado a PostgreSQL bajo RLS | MIT | SDK oficial; solo recibe URL y clave publicable en el navegador |
+| `@supabase/server` 1.9.1 | Auth, contexto y CORS de `tutor-chat` | MIT | Dependencia Deno fijada en `deno.json`/`deno.lock`; exige JWT de usuario |
 | Supabase CLI | Migraciones, configuración, lint y pruebas de base | MIT | Dependencia de desarrollo, no se incluye en el bundle |
 | pgTAP | Pruebas transaccionales de esquema y RLS | PostgreSQL | Extensión administrada por Supabase; pruebas locales y en CI |
 

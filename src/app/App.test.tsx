@@ -78,7 +78,7 @@ describe("Fontex shell", () => {
     expect(menu).toHaveAttribute("inert");
   });
 
-  it("carga el tutor local y lo identifica como simulación", async () => {
+  it("carga el tutor local y diferencia la demo de la IA real", async () => {
     renderRoute("/tutor");
 
     expect(
@@ -88,8 +88,10 @@ describe("Fontex shell", () => {
         { timeout: 5_000 },
       ),
     ).toBeInTheDocument();
-    expect(screen.getByText("Simulación local")).toBeInTheDocument();
+    expect(screen.getByText("Demo local")).toBeInTheDocument();
     expect(screen.getByText(/no se envía información a servicios externos/i)).toBeInTheDocument();
+    expect(screen.getByText("0 fuentes")).toBeInTheDocument();
+    expect(screen.getByText("Motor RAG pendiente")).toBeInTheDocument();
   });
 
   it("identifica claramente los datos demostrativos", () => {

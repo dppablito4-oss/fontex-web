@@ -1,4 +1,4 @@
-# Supabase — Bloque 1
+# Supabase — Bloque 1 y tutor `v0.3.0`
 
 Esta carpeta contiene la infraestructura versionada de identidad, aulas, grupos y seguridad RLS de Fontex.
 
@@ -6,7 +6,7 @@ Esta carpeta contiene la infraestructura versionada de identidad, aulas, grupos 
 
 - `migrations/`: esquema aditivo y funciones controladas del Bloque 1.
 - `tests/database/`: pruebas pgTAP de estructura, privilegios, aislamiento y revocación.
-- `functions/`: reservado para ingesta y tutor en bloques posteriores.
+- `functions/tutor-chat/`: endpoint autenticado del tutor, con dependencias Deno fijadas y llamada server-side a OpenAI Responses API.
 
 ## Modelo actual
 
@@ -20,4 +20,6 @@ Todas las tablas expuestas tienen RLS. `anon` no recibe privilegios de tabla. Lo
 
 ## Límites
 
-No existen todavía tablas de documentos, buckets, embeddings, conversaciones ni Edge Functions. No se deben añadir tokens, contraseñas, claves `service_role` o archivos `.env` al repositorio.
+No existen todavía tablas de documentos, buckets, embeddings ni conversaciones. `tutor-chat` ofrece orientación general y rechaza afirmar que consultó fuentes; la recuperación documental pertenece al futuro motor RAG.
+
+`OPENAI_API_KEY` debe existir solo como secreto del proyecto. No se deben añadir tokens, contraseñas, claves `service_role`, claves `sb_secret_…` ni archivos `.env` al repositorio.

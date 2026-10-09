@@ -1,10 +1,11 @@
-import { BookCheck, ChevronDown, FileText, ShieldCheck, SlidersHorizontal } from "lucide-react";
+import { BookOpenText, ChevronDown, ShieldCheck, SlidersHorizontal } from "lucide-react";
 
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
 import { ChatThread } from "./ChatThread";
 import { FontexRuntimeProvider } from "./FontexRuntimeProvider";
+import { isTutorLive } from "./tutorRuntime";
 
 export function TutorPage() {
   return (
@@ -14,7 +15,9 @@ export function TutorPage() {
           <div>
             <div className="flex items-center gap-2">
               <p className="eyebrow">Tutor documental</p>
-              <Badge tone="orange">Simulación local</Badge>
+              <Badge tone={isTutorLive ? "green" : "orange"}>
+                {isTutorLive ? "IA real conectada" : "Demo local"}
+              </Badge>
             </div>
             <h1 className="mt-1 font-display text-3xl tracking-[-0.035em]">Consulta con contexto</h1>
           </div>
@@ -26,30 +29,23 @@ export function TutorPage() {
 
         <div className="grid flex-1 lg:grid-cols-[minmax(0,1fr)_19rem]">
           <section className="min-h-[36rem] bg-background" aria-label="Conversación con Fontex">
-            <ChatThread />
+            <ChatThread isLive={isTutorLive} />
           </section>
           <aside className="border-t border-border bg-sidebar p-4 sm:p-6 lg:border-l lg:border-t-0">
             <div className="flex items-center justify-between">
-              <div><p className="eyebrow">Contexto activo</p><h2 className="mt-1 font-semibold">3 fuentes</h2></div>
-              <BookCheck className="size-5 text-primary" />
+              <div><p className="eyebrow">Contexto activo</p><h2 className="mt-1 font-semibold">0 fuentes</h2></div>
+              <BookOpenText className="size-5 text-primary" />
             </div>
-            <div className="mt-5 space-y-3">
-              {[
-                ["Metodología de la investigación", "Aula · 32 pág."],
-                ["Notas sobre fuentes primarias", "Privado · 8 pág."],
-                ["Guía para formular el problema", "Grupo · 18 pág."],
-              ].map(([name, detail], index) => (
-                <Card className="flex gap-3 p-3" key={name}>
-                  <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-info-surface text-info-foreground"><FileText className="size-4" /></span>
-                  <div className="min-w-0"><p className="line-clamp-2 text-xs font-semibold leading-4">{name}</p><p className="mt-1 text-[10px] text-muted-foreground">{detail}</p></div>
-                  <span className="ml-auto mt-1 size-2 shrink-0 rounded-full bg-success" title={`Fuente ${index + 1} seleccionada`} />
-                </Card>
-              ))}
-            </div>
-            <Button className="mt-4 w-full" variant="secondary" size="sm">Cambiar fuentes</Button>
+            <Card className="mt-5 p-4">
+              <p className="text-sm font-semibold">Motor RAG pendiente</p>
+              <p className="mt-2 text-xs leading-5 text-muted-foreground">
+                La IA ya responde desde el servidor, pero los documentos autorizados se conectarán en la fase documental.
+              </p>
+            </Card>
+            <Button className="mt-4 w-full" variant="secondary" size="sm" disabled>Fuentes aún no disponibles</Button>
             <div className="mt-6 rounded-2xl border border-info bg-info-surface p-4 text-xs leading-5 text-info-foreground">
-              <strong className="block">Cómo responderá Fontex</strong>
-              Si la evidencia no alcanza, lo dirá en lugar de completar la respuesta con información no verificada.
+              <strong className="block">Límite actual</strong>
+              Fontex no afirmará haber consultado fuentes hasta que el motor RAG y sus citas estén conectados.
             </div>
           </aside>
         </div>

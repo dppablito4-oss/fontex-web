@@ -77,7 +77,7 @@ Al crear o modificar un token se deben volver a ejecutar `npm run test`, revisar
 
 ## Identidad gráfica
 
-`BrandMark.tsx` conserva temporalmente el identificador tipográfico existente, ahora adaptado a índigo, cian y los tokens de primer plano. No intenta reconstruir el símbolo oficial.
+`BrandMark.tsx` combina el identificador tipográfico con `public/brand/fontex-mark.svg`, una versión vectorial determinista del símbolo cian, blanco e índigo entregado por el propietario. El contenedor negro preserva el contraste del trazo blanco en temas claro y oscuro.
 
 Cuando estén disponibles los vectores aprobados, la ruta prevista es:
 

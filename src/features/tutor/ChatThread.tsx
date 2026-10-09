@@ -31,7 +31,7 @@ function ChatMessage() {
   );
 }
 
-export function ChatThread() {
+export function ChatThread({ isLive }: { isLive: boolean }) {
   return (
     <ThreadPrimitive.Root className="aui-root">
       <ThreadPrimitive.Viewport className="aui-viewport">
@@ -51,7 +51,9 @@ export function ChatThread() {
             </ComposerPrimitive.Send>
           </ComposerPrimitive.Root>
           <p className="mt-2 text-center text-[10px] leading-4 text-muted-foreground">
-            Prototipo local. Verifica siempre la evidencia citada.
+            {isLive
+              ? "IA real vía Supabase. Sin fuentes documentales hasta activar el motor RAG."
+              : "Demostración local. No se envían datos a servicios externos."}
           </p>
         </ThreadPrimitive.ViewportFooter>
       </ThreadPrimitive.Viewport>

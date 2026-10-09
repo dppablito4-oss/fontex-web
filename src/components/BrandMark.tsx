@@ -1,11 +1,12 @@
 export function BrandMark({ compact = false }: { compact?: boolean }) {
   return (
-    <div className="flex items-center gap-2.5" aria-label="Fontex">
-      <span
-        className="grid size-8 place-items-center rounded-[10px] bg-brand-deep text-[13px] font-bold text-on-brand shadow-sm"
-        aria-hidden="true"
-      >
-        f<span className="text-brand-cyan">.</span>
+    <div className="flex items-center gap-2.5" role="img" aria-label="Fontex">
+      <span className="grid size-9 shrink-0 place-items-center overflow-hidden rounded-[10px] bg-brand-black shadow-sm" aria-hidden="true">
+        <img
+          alt=""
+          className="size-8 object-contain"
+          src={`${import.meta.env.BASE_URL}brand/fontex-mark.svg`}
+        />
       </span>
       {!compact && (
         <span className="font-display text-[1.65rem] font-semibold leading-none tracking-[-0.04em] text-foreground">

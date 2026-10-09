@@ -47,7 +47,9 @@ El shell conserva las rutas internas en el fragmento mediante `HashRouter`. El s
 
 ## Evaluación de assistant-ui
 
-La prueba usa `@assistant-ui/react` con `useLocalRuntime` y un `ChatModelAdapter` local. La biblioteca funciona con Vite y no necesita Next.js para administrar el estado de una conversación en memoria.
+El tutor usa `@assistant-ui/react` con `useLocalRuntime`. Cuando existe configuración pública de Supabase, su `ChatModelAdapter` invoca la Edge Function autenticada `tutor-chat`; sin esa configuración conserva una demostración local explícita. La clave de OpenAI reside únicamente en Supabase y nunca se entrega al navegador.
+
+La versión `v0.3.0` todavía no implementa recuperación documental: `tutor-chat` llama a Responses API con instrucciones para no inventar citas ni afirmar acceso a archivos. La selección, fragmentación, búsqueda vectorial y trazabilidad de fuentes pertenecen a la fase RAG posterior.
 
 Resultado del spike:
 

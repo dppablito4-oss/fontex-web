@@ -19,8 +19,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       VITE_BASE_PATH: ${{ vars.VITE_BASE_PATH || '/' }}
-      VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
-      VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -33,6 +31,9 @@ jobs:
       - run: npm run test
       - name: Build for Pages
         run: npm run build
+        env:
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL || 'https://goegjuglstapjwcckawp.supabase.co' }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_m2CqJ9Hb_X1DKwQqqtpFYw_IkdANL6a' }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

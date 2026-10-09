@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title description">
+  <title id="title">Símbolo de Fontex</title>
+  <desc id="description">Una efe cian enlazada con un documento índigo.</desc>
+  <path fill="#06F0FC" d="M34 65 67 23h94v40H66v138H34Z" />
+  <path fill="#06F0FC" d="M99 94h63v49H99z" />
+  <path fill="#06F0FC" d="M99 174h60v31H99z" />
+  <path
+    fill="#1800AD"
+    stroke="#FFFFFF"
+    stroke-linejoin="round"
+    stroke-width="8"
+    d="M174 34h48v194h-48v-30h18V68h-18Z"
+  />
+  <g fill="none" stroke="#FFFFFF" stroke-linejoin="round" stroke-width="8">
+    <path d="M34 202V65l33-42h96v40" />
+    <path d="M66 63v166h34v-25h59v25" />
+    <path d="M99 94h63v48H99Z" />
+    <path d="M159 142h15l-15 34v28" />
+    <path d="M163 63h18v35h-19" />
+  </g>
+</svg>
