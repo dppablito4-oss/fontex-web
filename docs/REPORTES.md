@@ -101,9 +101,15 @@ La integración remota creó usuarios y registros con identificadores únicos, v
 - `.github/workflows/ci.yml`
 - `.github/workflows/deploy-pages.yml`
 
+### Commit principal
+
+- Commit: `3ccd2f4`.
+- Mensaje: `feat: implement Fontex block 1 identity and RLS`.
+- Alcance: frontend autenticado, modelo de aulas y grupos, dos migraciones, RLS, pruebas locales/remotas, CI y preparación de Pages.
+
 ### Siguiente paso permitido
 
-Finalizar las validaciones del frontend, crear y publicar los commits, configurar las dos variables públicas de Pages y verificar el flujo Auth en el dominio. El Bloque 2 no debe iniciarse hasta cerrar esas tareas y recibir una orden explícita.
+Publicar los commits, configurar las dos variables públicas de Pages y verificar el flujo Auth en el dominio. El Bloque 2 no debe iniciarse hasta cerrar esas tareas y recibir una orden explícita.
 
 ---
 
