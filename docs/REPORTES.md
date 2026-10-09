@@ -44,6 +44,7 @@ Convertir los PDF privados del Bloque 2 en una base documental recuperable: extr
 18. **Limpieza remota.** Tras cada pasada se eliminaron objeto, documento, chunks, job, métricas, grupo, aula, organización y cuatro cuentas temporales. La consulta independiente final devolvió 0 filas/objetos de prueba y únicamente la cuenta original.
 19. **CI ampliado.** El workflow incorpora un job Deno separado que comprueba y lintea ambas funciones RAG y sus módulos compartidos. La pasada local equivalente aprobó los cuatro archivos.
 20. **Validación final local.** `npm ci` instaló 385 paquetes, la auditoría quedó en 0 vulnerabilidades, TypeScript y ESLint aprobaron, Vitest aprobó 66 pruebas activas en 13 archivos, el build de producción terminó correctamente y las 93 pruebas pgTAP aprobaron tras reconstruir seis migraciones desde cero. Los lint SQL local y remoto no reportaron observaciones.
+21. **Commit funcional.** Los 31 archivos del Bloque 3 se registraron en `c7846ce` con el mensaje `feat(rag): implement secure document indexing and retrieval`; el commit contiene 2.917 inserciones y no incluye secretos ni cambios al código del tutor.
 
 ### Arquitectura decidida antes de implementar
 
