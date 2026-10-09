@@ -16,7 +16,7 @@ Cada reporte incluye alcance, cambios, archivos relevantes, validaciones reales,
 
 **Fecha:** 9 de octubre de 2026
 **Bloque:** 2 — Biblioteca documental segura
-**Estado:** Implementado y validado; publicación en curso
+**Estado:** Implementado, validado y publicado
 
 ### Objetivo autorizado
 
@@ -44,6 +44,8 @@ Sustituir la biblioteca demostrativa por un módulo real para PDF con metadatos 
 17. **Coherencia del producto y documentación.** La revisión final contra la orden eliminó dos mensajes heredados que aún presentaban Biblioteca/Storage como demostración o pendiente, actualizó la descripción exacta de descarga sin caché y extendió el sistema de diseño con los patrones del módulo documental.
 18. **Revisión visual autenticada.** Se creó un docente y un aula exclusivamente en el Supabase local, se abrió Biblioteca con Edge automatizado a 1440 × 900 y 390 × 844 en temas claro y oscuro, y se comprobó título, CTA, estado vacío y ausencia de desbordamiento horizontal. Las cuatro capturas se inspeccionaron visualmente; la cuenta, aula y archivos auxiliares fueron eliminados y sus conteos terminaron en cero.
 19. **Commit funcional.** La implementación completa se registró en `2fe4b78` con el mensaje `feat(library): implement secure PDF library`; incluye 37 archivos y no contiene secretos ni artefactos del arnés visual.
+20. **Publicación automatizada.** `main` se publicó hasta `99f5a7c`. GitHub Actions aprobó CI `37993604561` y Pages `37993604458`; el dominio respondió HTTP 200 y su bundle contiene `document-upload`, `fontex-documents`, el worker de PDF.js y el estado vacío real del Bloque 2.
+21. **Flujo público real.** En `https://fontex.sypablitodp.site/` una cuenta docente temporal inició sesión, cargó un PDF seleccionable mediante la interfaz publicada, lo vio aparecer como privado, lo abrió en el visor PDF.js y lo eliminó. La captura final confirmó el mensaje de eliminación; el bloque `finally` limpió Storage, metadata, aula, organización y usuario. La comprobación posterior devolvió 0 filas/objetos de prueba y únicamente la cuenta original.
 
 ### Arquitectura entregada
 
@@ -86,17 +88,22 @@ Sustituir la biblioteca demostrativa por un módulo real para PDF con metadatos 
 
 - La firma `%PDF-`/`%%EOF`, el hash y PDF.js reducen archivos inválidos, pero no constituyen análisis antivirus ni garantizan que un PDF sea inocuo.
 - OCR, otros formatos, versionado de contenido, extracción, chunks, embeddings, recuperación y citas pertenecen al Bloque 3 o fases posteriores.
-- La publicación GitHub/Pages y su comprobación pública se completarán después del commit funcional; sus identificadores se registrarán en este mismo reporte.
+- Supabase mantiene deshabilitada la protección contra contraseñas filtradas; es una configuración de Auth del proyecto que debe activarse desde la plataforma cuando el plan y la política operativa lo permitan.
 
 ### Entregables y publicación
 
 - Commit funcional: `2fe4b78` (`feat(library): implement secure PDF library`).
-- GitHub Actions: pendiente del push.
-- Dominio público: pendiente de validar después del despliegue.
+- Commit de reporte previo al despliegue: `99f5a7c` (`docs(report): record block 2 validation`).
+- GitHub Actions: CI `37993604561` y Pages `37993604458`, ambos `success`.
+- Dominio público: flujo autenticado de carga, listado, visor y eliminación aprobado en `https://fontex.sypablitodp.site/`.
 
 ### Límite vigente
 
 No se implementarán extracción, fragmentación, embeddings, `pgvector`, recuperación semántica ni conexión documental con `tutor-chat`.
+
+### Cierre y siguiente bloque permitido
+
+El Bloque 2 cumple sus criterios de aceptación y queda cerrado. El siguiente trabajo permitido es el Bloque 3 — extracción, indexación y RAG sobre documentos autorizados — únicamente bajo una nueva orden explícita.
 
 ---
 
