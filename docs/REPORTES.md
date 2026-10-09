@@ -43,6 +43,7 @@ Sustituir la biblioteca demostrativa por un módulo real para PDF con metadatos 
 16. **E2E remoto aprobado.** Tras las dos correcciones de compatibilidad, la suite remota completó en 25,32 s la carga, descargas autorizadas, bloqueos, compartición, revocación, expulsión, rechazo de firma falsa, eliminación física y limpieza. La pasada acumulada posterior detectó únicamente un acceso diagnóstico a una propiedad no declarada por el tipo `StorageError`; se simplificó el mensaje para mantener TypeScript estricto sin alterar el escenario.
 17. **Coherencia del producto y documentación.** La revisión final contra la orden eliminó dos mensajes heredados que aún presentaban Biblioteca/Storage como demostración o pendiente, actualizó la descripción exacta de descarga sin caché y extendió el sistema de diseño con los patrones del módulo documental.
 18. **Revisión visual autenticada.** Se creó un docente y un aula exclusivamente en el Supabase local, se abrió Biblioteca con Edge automatizado a 1440 × 900 y 390 × 844 en temas claro y oscuro, y se comprobó título, CTA, estado vacío y ausencia de desbordamiento horizontal. Las cuatro capturas se inspeccionaron visualmente; la cuenta, aula y archivos auxiliares fueron eliminados y sus conteos terminaron en cero.
+19. **Commit funcional.** La implementación completa se registró en `2fe4b78` con el mensaje `feat(library): implement secure PDF library`; incluye 37 archivos y no contiene secretos ni artefactos del arnés visual.
 
 ### Arquitectura entregada
 
@@ -89,7 +90,7 @@ Sustituir la biblioteca demostrativa por un módulo real para PDF con metadatos 
 
 ### Entregables y publicación
 
-- Commit funcional: pendiente de crear.
+- Commit funcional: `2fe4b78` (`feat(library): implement secure PDF library`).
 - GitHub Actions: pendiente del push.
 - Dominio público: pendiente de validar después del despliegue.
 
