@@ -16,7 +16,7 @@ Cada reporte incluye alcance, cambios, archivos relevantes, validaciones reales,
 
 **Fecha:** 8 de octubre de 2026
 **Tipo:** Capacidad funcional e identidad de marca
-**Estado:** Implementado y verificado; publicación del frontend pendiente
+**Estado:** Implementado, verificado y publicado
 
 ### Objetivo autorizado
 
@@ -35,6 +35,7 @@ Conectar el tutor del frontend con OpenAI exclusivamente a través de una Supaba
 9. **Despliegue y prueba real.** La versión 1 de `tutor-chat` está `ACTIVE` con `verify_jwt: true`. CORS respondió `204`, una llamada no autenticada fue rechazada con `401` y una llamada autenticada temporal devolvió texto de `gpt-6-astra`. El usuario de prueba fue eliminado.
 10. **Identidad publicada en el producto.** `public/brand/fontex-mark.svg` reproduce de forma determinista el símbolo cian, blanco e índigo recibido; se usa en `BrandMark` y como favicon. La revisión visual confirmó legibilidad y contraste en la pantalla de acceso de producción.
 11. **Configuración de Pages.** El build usa las variables públicas del repositorio cuando existen y, en su ausencia, la URL y clave publicable del proyecto vinculado. Ninguna clave secreta se incorporó al bundle.
+12. **Publicación comprobada.** CI `37876110840` y Pages `37876110796` terminaron correctamente sobre `ad1bcda`. El dominio público entrega el logo con HTTP 200 y sus chunks contienen el project ref, `tutor-chat`, `IA real conectada` y `Motor RAG pendiente`, sin las fuentes ficticias retiradas.
 
 ### Seguridad confirmada hasta este punto
 
@@ -56,6 +57,8 @@ Conectar el tutor del frontend con OpenAI exclusivamente a través de una Supaba
 | CORS / acceso anónimo | `204` para preflight; `401` sin sesión |
 | Invocación autenticada | Respuesta no vacía de `gpt-6-astra`; usuario temporal eliminado |
 | Revisión visual | Logo y pantalla de Auth revisados en Chrome headless a 1440 × 900 |
+| GitHub Actions | CI `37876110840` y Pages `37876110796`: `success` |
+| Sitio público | Bundle Supabase/IA real y SVG confirmados en `https://fontex.sypablitodp.site/` |
 
 ### Entregables y commit principal
 
@@ -63,9 +66,9 @@ Conectar el tutor del frontend con OpenAI exclusivamente a través de una Supaba
 - Activo visual: `public/brand/fontex-mark.svg`.
 - Commit funcional: `a8c673e` (`feat(tutor): connect real AI and add Fontex logo`).
 
-### Pendiente para cerrar esta versión
+### Cierre y siguiente paso
 
-- Hacer push y verificar CI/GitHub Pages sobre el SHA publicado.
+La versión queda cerrada. Ya puede iniciarse la siguiente fase funcional por orden explícita; el siguiente avance natural del tutor es conectar documentos autorizados, recuperación y citas trazables sin deshacer la integración server-side actual.
 
 ---
 
