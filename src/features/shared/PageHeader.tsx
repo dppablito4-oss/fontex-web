@@ -16,7 +16,7 @@ export function PageHeader({
       <div className="max-w-2xl">
         <p className="eyebrow">{eyebrow}</p>
         <h1 className="page-title mt-2">{title}</h1>
-        <p className="mt-3 max-w-xl text-sm leading-6 text-muted sm:text-base">
+        <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">
           {description}
         </p>
       </div>

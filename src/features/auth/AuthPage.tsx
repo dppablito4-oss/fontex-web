@@ -4,6 +4,7 @@ import { type FormEvent, useState } from "react";
 import { BrandMark } from "../../components/BrandMark";
 import { Button } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
+import { ThemeToggle } from "../theme/ThemeToggle";
 import { useAuth } from "./AuthProvider";
 
 type Mode = "signin" | "signup";
@@ -43,10 +44,13 @@ export function AuthPage() {
   }
 
   return (
-    <main className="min-h-dvh bg-paper px-4 py-8 text-ink sm:px-8">
+    <main className="min-h-dvh bg-background px-4 py-8 text-foreground sm:px-8">
       <div className="mx-auto flex max-w-6xl items-center justify-between">
         <BrandMark />
-        <span className="text-xs font-semibold text-muted">Fuentes puestas en contexto</span>
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <span className="hidden text-xs font-semibold text-muted-foreground sm:inline">Fuentes puestas en contexto</span>
+        </div>
       </div>
 
       <div className="mx-auto mt-10 grid max-w-6xl gap-8 lg:grid-cols-[1.1fr_.9fr] lg:items-center">
@@ -55,7 +59,7 @@ export function AuthPage() {
           <h1 className="mt-4 max-w-2xl font-display text-[clamp(3rem,7vw,6rem)] leading-[.9] tracking-[-.055em]">
             Aprende con tus fuentes, no a ciegas.
           </h1>
-          <p className="mt-6 max-w-xl text-base leading-7 text-muted">
+          <p className="mt-6 max-w-xl text-base leading-7 text-muted-foreground">
             Tu identidad determina qué aulas, grupos y materiales puedes consultar. Los permisos se verifican en la base de datos, no solo en la interfaz.
           </p>
           <div className="mt-8 grid gap-3 sm:grid-cols-3">
@@ -66,10 +70,10 @@ export function AuthPage() {
             ].map(([Icon, title, detail]) => {
               const FeatureIcon = Icon as typeof ShieldCheck;
               return (
-                <div className="rounded-2xl border border-line bg-surface p-4" key={String(title)}>
-                  <FeatureIcon className="size-5 text-forest" />
+                <div className="rounded-2xl border border-border bg-surface p-4" key={String(title)}>
+                  <FeatureIcon className="size-5 text-primary" />
                   <strong className="mt-4 block text-sm">{String(title)}</strong>
-                  <span className="mt-1 block text-xs text-muted">{String(detail)}</span>
+                  <span className="mt-1 block text-xs text-muted-foreground">{String(detail)}</span>
                 </div>
               );
             })}
@@ -77,16 +81,16 @@ export function AuthPage() {
         </section>
 
         <Card className="p-6 sm:p-8">
-          <div className="flex rounded-xl bg-sage p-1" aria-label="Modo de acceso">
+          <div className="flex rounded-xl bg-subtle p-1" aria-label="Modo de acceso">
             <button
-              className={`flex-1 rounded-lg px-3 py-2 text-sm font-semibold ${mode === "signin" ? "bg-white shadow-sm" : "text-muted"}`}
+              className={`flex-1 rounded-lg px-3 py-2 text-sm font-semibold ${mode === "signin" ? "bg-surface shadow-sm" : "text-muted-foreground"}`}
               onClick={() => setMode("signin")}
               type="button"
             >
               Iniciar sesión
             </button>
             <button
-              className={`flex-1 rounded-lg px-3 py-2 text-sm font-semibold ${mode === "signup" ? "bg-white shadow-sm" : "text-muted"}`}
+              className={`flex-1 rounded-lg px-3 py-2 text-sm font-semibold ${mode === "signup" ? "bg-surface shadow-sm" : "text-muted-foreground"}`}
               onClick={() => setMode("signup")}
               type="button"
             >
@@ -132,12 +136,12 @@ export function AuthPage() {
             </label>
 
             {(localError ?? authError) && (
-              <p className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800" role="alert">
+              <p className="rounded-xl border border-error-border bg-error-surface p-3 text-sm text-error" role="alert">
                 {localError ?? authError}
               </p>
             )}
             {message && (
-              <p className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800" role="status">
+              <p className="rounded-xl border border-success-border bg-success-surface p-3 text-sm text-success" role="status">
                 {message}
               </p>
             )}
@@ -155,10 +159,10 @@ export function AuthPage() {
 
 export function AuthLoadingPage() {
   return (
-    <main className="grid min-h-dvh place-items-center bg-paper px-4 text-ink">
+    <main className="grid min-h-dvh place-items-center bg-background px-4 text-foreground">
       <div className="text-center" role="status">
         <BrandMark />
-        <p className="mt-5 text-sm text-muted">Verificando tu sesión…</p>
+        <p className="mt-5 text-sm text-muted-foreground">Verificando tu sesión…</p>
       </div>
     </main>
   );

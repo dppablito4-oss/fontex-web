@@ -12,6 +12,85 @@ Cada reporte incluye alcance, cambios, archivos relevantes, validaciones reales,
 
 ---
 
+## v0.2.2 — Identidad visual Fontex y temas claro/oscuro
+
+**Fecha:** 8 de octubre de 2026
+**Tipo:** Refactorización visual controlada
+**Estado:** Implementado y verificado localmente; publicación pendiente
+**Nota de versión:** la solicitud proponía `v0.1.6`, pero se usa `v0.2.2` para continuar la secuencia vigente sin retroceder desde `v0.2.1`.
+
+### Problema y objetivo
+
+La interfaz mezclaba la paleta crema, verde y coral con valores HEX incrustados en páginas, componentes y estilos de `assistant-ui`. El objetivo es adoptar la identidad oficial cian, azul cielo, índigo y negro mediante tokens semánticos y ofrecer temas claro y oscuro persistentes, sin cambiar arquitectura, navegación ni funcionalidades educativas.
+
+### Decisiones visuales
+
+- El índigo `#1800AD` es la acción principal del tema claro y el azul cielo `#81C5FE` cumple esa función en oscuro.
+- El cian `#06F0FC` se reserva para acentos sobre fondos con contraste controlado.
+- El hero usa índigo profundo con texto claro en ambos temas para conservar identidad y legibilidad.
+- Éxito, advertencia, error e información mantienen paletas semánticas independientes.
+- `control-border` es más oscuro que el borde decorativo base para superar 3:1 frente al fondo.
+- No se reconstruyó un logotipo aproximado: `BrandMark` conserva el identificador tipográfico y queda documentada la futura ruta `public/brand/` para los SVG oficiales.
+
+### Implementación
+
+- `globals.css` define los temas en `:root` y `:root[data-theme="dark"]` y los conecta con Tailwind CSS v4 mediante `@theme inline`.
+- Se eliminaron de JSX los tokens `paper`, `forest`, `sage`, `coral` y los colores HEX de la paleta anterior.
+- `ThemeProvider` detecta el sistema, observa cambios, persiste elecciones en `fontex-theme`, tolera fallos de almacenamiento y actualiza `data-theme`, `color-scheme` y el color del navegador.
+- Un script previo a React evita el destello significativo del tema incorrecto.
+- El selector accesible se incorporó al header, al flujo móvil y a la pantalla de autenticación.
+- Inicio, Aula, Mi grupo, Biblioteca, Tutor y Administración consumen los nuevos tokens, incluidos formularios, badges, tarjetas, estados y controles.
+- El tutor conserva su adaptador simulado y ahora tematiza conversación, mensajes, compositor, envío y panel de fuentes.
+
+### Pruebas incorporadas
+
+- Preferencia inicial del sistema y preferencia guardada.
+- Alternancia, persistencia entre montajes y actualización de `data-theme`.
+- Cambios del sistema sin selección manual y manejo de `localStorage` bloqueado.
+- Etiqueta accesible del selector y persistencia durante navegación con `HashRouter`.
+- Contraste calculado desde los valores reales de CSS para texto, controles y foco en ambos temas.
+- Las pruebas existentes continúan cubriendo páginas principales y tutor simulado.
+
+### Archivos principales
+
+- `src/features/theme/ThemeProvider.tsx`
+- `src/features/theme/ThemeToggle.tsx`
+- `src/features/theme/theme.ts`
+- `src/features/theme/ThemeProvider.test.tsx`
+- `src/features/theme/contrast.test.ts`
+- `src/styles/globals.css`
+- `src/app/layouts/AppShell.tsx`
+- `docs/design/DESIGN_SYSTEM.md`
+
+### Límites respetados
+
+- No se modificaron Supabase, migraciones, Auth, RLS, RAG ni el tutor simulado.
+- No se añadieron dependencias.
+- El logotipo vectorial oficial continúa pendiente de recibir sus archivos aprobados.
+
+### Validaciones y publicación
+
+| Validación | Resultado |
+|---|---|
+| `npm ci` | Correcto; 383 paquetes auditados y 0 vulnerabilidades |
+| `npm run lint` | Correcto, sin advertencias |
+| `npm run typecheck` | Correcto |
+| `npm run test -- --run` | 7 archivos y 51 pruebas aprobadas; 1 integración remota omitida sin credenciales |
+| Contraste automatizado | 24 comprobaciones aprobadas en claro y oscuro: texto ≥ 4.5:1; controles y foco ≥ 3:1 |
+| `npm run build` | Correcto; sin incremento material de los chunks existentes |
+| `VITE_BASE_PATH=/ npm run build` | Correcto; assets desde `/assets/` y bootstrap del tema anterior al entrypoint |
+| Revisión visual en navegador | 36 capturas: 6 páginas × 2 temas × móvil, tablet y escritorio |
+| Diagnóstico de navegador | Tema, encabezado y selector correctos; 0 excepciones y 0 desbordamientos horizontales en las 36 combinaciones |
+| Auditoría de color en JSX/TSX | Sin tokens de la paleta anterior ni clases con colores HEX incrustados |
+
+Las capturas comparativas se generaron como artefactos temporales fuera del repositorio para evitar incorporar binarios de validación al producto.
+
+### Siguiente paso permitido
+
+Revisar el diff final, publicar y verificar CI y Pages. No iniciar el Bloque 2 antes de cerrar esta intervención.
+
+---
+
 ## v0.2.1 — Corrección del cierre de PostgreSQL en CI
 
 **Fecha:** 8 de octubre de 2026

@@ -22,12 +22,12 @@ function DemoClassroomPage() {
         <Card className="p-6">
           <Badge tone="orange">Datos ficticios</Badge>
           <h2 className="section-title mt-4">Del tema al problema de investigación</h2>
-          <p className="mt-3 text-sm leading-6 text-muted">Este contenido permanece como referencia visual y no modifica datos.</p>
+          <p className="mt-3 text-sm leading-6 text-muted-foreground">Este contenido permanece como referencia visual y no modifica datos.</p>
         </Card>
         <Card className="p-6">
-          <Users className="size-5 text-forest" />
+          <Users className="size-5 text-primary" />
           <strong className="mt-4 block text-xl">24 estudiantes simulados</strong>
-          <p className="mt-2 text-sm text-muted">La matrícula real se habilita con las variables públicas de Supabase.</p>
+          <p className="mt-2 text-sm text-muted-foreground">La matrícula real se habilita con las variables públicas de Supabase.</p>
         </Card>
       </div>
     </div>
@@ -129,9 +129,9 @@ export function ClassroomPage() {
         action={activeRole && <Badge tone="green"><ShieldCheck className="size-3" /> {activeRole === "teacher" ? "Docente" : "Estudiante"}</Badge>}
       />
 
-      {(localError ?? error) && <p className="mt-6 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800" role="alert">{localError ?? error}</p>}
-      {message && <p className="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800" role="status">{message}</p>}
-      {loading && <p className="mt-6 text-sm text-muted" role="status">Cargando aula…</p>}
+      {(localError ?? error) && <p className="mt-6 rounded-xl border border-error-border bg-error-surface p-3 text-sm text-error" role="alert">{localError ?? error}</p>}
+      {message && <p className="mt-6 rounded-xl border border-success-border bg-success-surface p-3 text-sm text-success" role="status">{message}</p>}
+      {loading && <p className="mt-6 text-sm text-muted-foreground" role="status">Cargando aula…</p>}
 
       {!activeClassroom ? (
         <div className="mt-8 grid gap-5 lg:grid-cols-2">
@@ -155,14 +155,14 @@ export function ClassroomPage() {
       ) : (
         <div className="mt-8 grid gap-5 xl:grid-cols-[1.35fr_1fr]">
           <Card className="overflow-hidden">
-            <div className="flex items-center justify-between border-b border-line p-5 sm:p-6">
+            <div className="flex items-center justify-between border-b border-border p-5 sm:p-6">
               <div><p className="eyebrow">Matrícula activa</p><h2 className="mt-1 text-lg font-semibold">{members.length} integrantes</h2></div>
-              <Users className="size-5 text-muted" />
+              <Users className="size-5 text-muted-foreground" />
             </div>
             {members.map((member) => (
-              <div className="flex flex-wrap items-center gap-3 border-b border-line px-5 py-4 last:border-0" key={member.userId}>
-                <span className="grid size-9 place-items-center rounded-full bg-sage text-xs font-bold text-forest">{member.displayName.slice(0, 2).toUpperCase()}</span>
-                <div className="min-w-0 flex-1"><strong className="block truncate text-sm">{member.displayName}</strong><span className="text-xs text-muted">{member.role === "teacher" ? "Docente" : "Estudiante"}</span></div>
+              <div className="flex flex-wrap items-center gap-3 border-b border-border px-5 py-4 last:border-0" key={member.userId}>
+                <span className="grid size-9 place-items-center rounded-full bg-info-surface text-xs font-bold text-info-foreground">{member.displayName.slice(0, 2).toUpperCase()}</span>
+                <div className="min-w-0 flex-1"><strong className="block truncate text-sm">{member.displayName}</strong><span className="text-xs text-muted-foreground">{member.role === "teacher" ? "Docente" : "Estudiante"}</span></div>
                 {owner && member.userId !== activeClassroom.ownerId && (
                   <>
                     <Button size="sm" variant="secondary" onClick={() => void run(() => setMemberRole(member.userId, member.role === "teacher" ? "student" : "teacher"), "Rol actualizado.")}>
@@ -178,7 +178,7 @@ export function ClassroomPage() {
           <div className="space-y-5">
             {activeRole === "teacher" && (
               <Card className="p-5 sm:p-6">
-                <MailPlus className="size-5 text-forest" />
+                <MailPlus className="size-5 text-primary" />
                 <h2 className="mt-3 text-lg font-semibold">Invitar por correo</h2>
                 <form className="mt-5 space-y-4" onSubmit={submitInvitation}>
                   <label className="form-field"><span>Correo de la persona</span><input type="email" required value={invitedEmail} onChange={(event) => setInvitedEmail(event.target.value)} /></label>
@@ -186,8 +186,8 @@ export function ClassroomPage() {
                   <Button disabled={pending} type="submit">Crear invitación</Button>
                 </form>
                 {invitationLink && (
-                  <div className="mt-5 rounded-xl border border-line bg-sage/60 p-3">
-                    <p className="break-all text-xs text-muted">{invitationLink}</p>
+                  <div className="mt-5 rounded-xl border border-border bg-subtle p-3">
+                    <p className="break-all text-xs text-muted-foreground">{invitationLink}</p>
                     <Button className="mt-3" size="sm" variant="secondary" onClick={() => void navigator.clipboard.writeText(invitationLink)}><Copy className="size-3.5" /> Copiar enlace</Button>
                   </div>
                 )}
@@ -216,7 +216,7 @@ function AcceptInvitationCard({
     <Card className="p-5 sm:p-7">
       <p className="eyebrow">Matrícula por invitación</p>
       <h2 className="mt-2 text-xl font-semibold">Unirme a un aula</h2>
-      <p className="mt-2 text-sm leading-6 text-muted">El correo de tu sesión debe coincidir con el correo invitado.</p>
+      <p className="mt-2 text-sm leading-6 text-muted-foreground">El correo de tu sesión debe coincidir con el correo invitado.</p>
       <form className="mt-6 space-y-4" onSubmit={onSubmit}>
         <label className="form-field"><span>Token de invitación</span><input minLength={64} required value={token} onChange={(event) => onTokenChange(event.target.value)} /></label>
         <Button disabled={pending} type="submit">Aceptar invitación</Button>

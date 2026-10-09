@@ -2,10 +2,15 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { AuthPage } from "./AuthPage";
+import { ThemeProvider } from "../theme/ThemeProvider";
+
+function renderAuthPage() {
+  return render(<ThemeProvider><AuthPage /></ThemeProvider>);
+}
 
 describe("Fontex authentication screen", () => {
   it("renders a password sign-in form", () => {
-    render(<AuthPage />);
+    renderAuthPage();
 
     expect(screen.getByRole("heading", { name: /aprende con tus fuentes/i })).toBeInTheDocument();
     expect(screen.getByLabelText("Correo")).toHaveAttribute("type", "email");
@@ -14,7 +19,7 @@ describe("Fontex authentication screen", () => {
   });
 
   it("requires a display name when creating an account", () => {
-    render(<AuthPage />);
+    renderAuthPage();
 
     fireEvent.click(screen.getByRole("button", { name: "Crear cuenta" }));
 

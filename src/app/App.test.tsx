@@ -3,13 +3,16 @@ import { HashRouter } from "react-router-dom";
 import { describe, expect, it } from "vitest";
 
 import { App } from "./App";
+import { ThemeProvider } from "../features/theme/ThemeProvider";
 
 function renderRoute(route = "/") {
   window.location.hash = `#${route}`;
   return render(
-    <HashRouter>
-      <App />
-    </HashRouter>,
+    <ThemeProvider>
+      <HashRouter>
+        <App />
+      </HashRouter>
+    </ThemeProvider>,
   );
 }
 
@@ -32,6 +35,17 @@ describe("Fontex shell", () => {
 
     await screen.findByRole("heading", { name: /tu aula/i, level: 1 });
     expect(window.location.hash).toBe("#/aula");
+  });
+
+  it("conserva el tema seleccionado al navegar entre páginas", async () => {
+    renderRoute();
+    fireEvent.click(screen.getByRole("button", { name: "Activar tema oscuro" }));
+    fireEvent.click(screen.getByRole("button", { name: "Abrir menú" }));
+    fireEvent.click(screen.getByRole("link", { name: "Biblioteca" }));
+
+    await screen.findByRole("heading", { name: "Biblioteca", level: 1 });
+    expect(document.documentElement).toHaveAttribute("data-theme", "dark");
+    expect(window.localStorage.getItem("fontex-theme")).toBe("dark");
   });
 
   it("salta al contenido sin modificar la ruta activa", () => {

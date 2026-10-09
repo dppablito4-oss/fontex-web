@@ -44,5 +44,8 @@ HTMLElement.prototype.scrollIntoView = vi.fn();
 
 afterEach(() => {
   cleanup();
+  window.localStorage.clear();
+  delete document.documentElement.dataset.theme;
+  document.documentElement.style.colorScheme = "";
   window.location.hash = "";
 });

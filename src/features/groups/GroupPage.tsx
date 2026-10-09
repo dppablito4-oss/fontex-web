@@ -20,7 +20,7 @@ function DemoGroupPage() {
       <Card className="mt-8 p-6">
         <Badge tone="orange">Datos ficticios</Badge>
         <h2 className="mt-4 text-lg font-semibold">4 integrantes simulados</h2>
-        <p className="mt-2 text-sm text-muted">Configura Supabase para crear grupos y asignar matrículas reales.</p>
+        <p className="mt-2 text-sm text-muted-foreground">Configura Supabase para crear grupos y asignar matrículas reales.</p>
       </Card>
     </div>
   );
@@ -69,7 +69,7 @@ export function GroupPage() {
     return (
       <div className="page-wrap">
         <PageHeader eyebrow="Grupos privados" title="Mi grupo" description="Primero crea un aula o acepta una invitación desde la sección Aula." />
-        <Card className="mt-8 p-6 text-sm text-muted">No hay un aula activa.</Card>
+        <Card className="mt-8 p-6 text-sm text-muted-foreground">No hay un aula activa.</Card>
       </div>
     );
   }
@@ -83,8 +83,8 @@ export function GroupPage() {
         action={activeRole === "teacher" ? <Badge tone="green">Gestión docente</Badge> : <Badge tone="blue">Vista de estudiante</Badge>}
       />
 
-      {(localError ?? error) && <p className="mt-6 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800" role="alert">{localError ?? error}</p>}
-      {message && <p className="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800" role="status">{message}</p>}
+      {(localError ?? error) && <p className="mt-6 rounded-xl border border-error-border bg-error-surface p-3 text-sm text-error" role="alert">{localError ?? error}</p>}
+      {message && <p className="mt-6 rounded-xl border border-success-border bg-success-surface p-3 text-sm text-success" role="status">{message}</p>}
 
       {activeRole === "teacher" && (
         <Card className="mt-8 p-5 sm:p-6">
@@ -108,7 +108,7 @@ export function GroupPage() {
             onRemove={(userId) => run(() => removeGroupMember(group.id, userId), "Integrante retirado del grupo.")}
           />
         ))}
-        {!groups.length && <Card className="p-6 text-sm text-muted">Todavía no hay grupos en esta aula.</Card>}
+        {!groups.length && <Card className="p-6 text-sm text-muted-foreground">Todavía no hay grupos en esta aula.</Card>}
       </div>
     </div>
   );
@@ -144,23 +144,23 @@ function GroupCard({
 
   return (
     <Card className="overflow-hidden">
-      <div className="flex items-center justify-between border-b border-line p-5">
+      <div className="flex items-center justify-between border-b border-border p-5">
         <div><p className="eyebrow">Grupo privado</p><h2 className="mt-1 text-lg font-semibold">{group.name}</h2></div>
-        <span className="flex items-center gap-2 text-sm text-muted"><UsersRound className="size-4" /> {assignedMembers.length}</span>
+        <span className="flex items-center gap-2 text-sm text-muted-foreground"><UsersRound className="size-4" /> {assignedMembers.length}</span>
       </div>
       <div className="p-5">
         <div className="space-y-3">
           {assignedMembers.map((member) => (
             <div className="flex items-center gap-3" key={member.userId}>
-              <span className="grid size-8 place-items-center rounded-full bg-sage text-xs font-bold text-forest">{member.displayName.slice(0, 2).toUpperCase()}</span>
+              <span className="grid size-8 place-items-center rounded-full bg-info-surface text-xs font-bold text-info-foreground">{member.displayName.slice(0, 2).toUpperCase()}</span>
               <span className="min-w-0 flex-1 truncate text-sm font-semibold">{member.displayName}</span>
               {teacher && <Button aria-label={`Retirar a ${member.displayName} de ${group.name}`} disabled={disabled} onClick={() => void onRemove(member.userId)} size="icon" variant="ghost"><UserMinus className="size-4" /></Button>}
             </div>
           ))}
-          {!assignedMembers.length && <p className="text-sm text-muted">Sin integrantes asignados.</p>}
+          {!assignedMembers.length && <p className="text-sm text-muted-foreground">Sin integrantes asignados.</p>}
         </div>
         {teacher && availableMembers.length > 0 && (
-          <form className="mt-5 flex gap-2 border-t border-line pt-5" onSubmit={submit}>
+          <form className="mt-5 flex gap-2 border-t border-border pt-5" onSubmit={submit}>
             <label className="form-field flex-1"><span className="sr-only">Integrante para {group.name}</span><select required value={selectedUserId} onChange={(event) => setSelectedUserId(event.target.value)}><option value="">Seleccionar integrante</option>{availableMembers.map((member) => <option key={member.userId} value={member.userId}>{member.displayName}</option>)}</select></label>
             <Button disabled={disabled || !selectedUserId} size="sm" type="submit">Asignar</Button>
           </form>

@@ -7,10 +7,10 @@ type BadgeProps = HTMLAttributes<HTMLSpanElement> & {
 };
 
 const tones = {
-  neutral: "border-line bg-surface text-muted",
-  green: "border-[#b8cfc2] bg-[#e5efe9] text-forest",
-  orange: "border-[#ecc6aa] bg-[#fff0e4] text-[#8a4b21]",
-  blue: "border-[#b9cbd8] bg-[#eaf1f5] text-[#31576c]",
+  neutral: "border-border bg-surface text-muted-foreground",
+  green: "border-success-border bg-success-surface text-success",
+  orange: "border-warning-border bg-warning-surface text-warning",
+  blue: "border-info bg-info-surface text-info-foreground",
 };
 
 export function Badge({ className, tone = "neutral", ...props }: BadgeProps) {

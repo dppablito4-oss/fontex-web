@@ -4,6 +4,7 @@ import { HashRouter } from "react-router-dom";
 
 import { App } from "./app/App";
 import { AuthProvider } from "./features/auth/AuthProvider";
+import { ThemeProvider } from "./features/theme/ThemeProvider";
 import "./styles/globals.css";
 
 const root = document.getElementById("root");
@@ -14,10 +15,12 @@ if (!root) {
 
 createRoot(root).render(
   <StrictMode>
-    <AuthProvider>
-      <HashRouter>
-        <App />
-      </HashRouter>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <HashRouter>
+          <App />
+        </HashRouter>
+      </AuthProvider>
+    </ThemeProvider>
   </StrictMode>,
 );

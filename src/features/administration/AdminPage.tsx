@@ -31,7 +31,7 @@ export function AdminPage() {
           {demoItems.map(({ icon: Icon, title, detail, tone }) => (
             <Card key={title} className="flex items-center gap-4 p-5 sm:p-6">
               <span className="metric-icon"><Icon /></span>
-              <div className="flex-1"><h2 className="font-semibold">{title}</h2><p className="mt-1 text-sm text-muted">{detail}</p></div>
+              <div className="flex-1"><h2 className="font-semibold">{title}</h2><p className="mt-1 text-sm text-muted-foreground">{detail}</p></div>
               <Badge tone={tone}>Demo</Badge>
             </Card>
           ))}
@@ -62,11 +62,11 @@ export function AdminPage() {
         <Card className="p-5 sm:p-7">
           <p className="eyebrow">Perfil</p>
           <h2 className="mt-2 text-xl font-semibold">{profile?.displayName ?? "Usuario Fontex"}</h2>
-          <p className="mt-1 text-sm text-muted">{user?.email}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{user?.email}</p>
           <form className="mt-6 space-y-4" onSubmit={(event) => void submitProfile(event)}>
             <label className="form-field"><span>Nombre visible</span><input minLength={1} maxLength={80} required value={displayName} onChange={(event) => setDisplayName(event.target.value)} /></label>
-            {error && <p className="text-sm text-red-700" role="alert">{error}</p>}
-            {message && <p className="text-sm text-emerald-700" role="status">{message}</p>}
+            {error && <p className="text-sm text-error" role="alert">{error}</p>}
+            {message && <p className="text-sm text-success" role="status">{message}</p>}
             <div className="flex flex-wrap gap-3">
               <Button disabled={pending} type="submit"><Save className="size-4" /> Guardar perfil</Button>
               <Button onClick={() => void signOut()} type="button" variant="secondary"><LogOut className="size-4" /> Cerrar sesión</Button>
@@ -76,16 +76,16 @@ export function AdminPage() {
         <div className="space-y-4">
           <Card className="flex items-center gap-4 p-5">
             <span className="metric-icon"><LockKeyhole /></span>
-            <div className="flex-1"><h2 className="font-semibold">Identidad y RLS</h2><p className="mt-1 text-sm text-muted">Activos en Supabase</p></div>
+            <div className="flex-1"><h2 className="font-semibold">Identidad y RLS</h2><p className="mt-1 text-sm text-muted-foreground">Activos en Supabase</p></div>
             <Badge tone="green">Real</Badge>
           </Card>
           <Card className="flex items-center gap-4 p-5">
             <span className="metric-icon"><Settings2 /></span>
-            <div className="flex-1"><h2 className="font-semibold">Aula activa</h2><p className="mt-1 text-sm text-muted">{activeClassroom?.title ?? "Sin aula"} · {activeRole === "teacher" ? "Docente" : activeRole === "student" ? "Estudiante" : "Sin rol"}</p></div>
+            <div className="flex-1"><h2 className="font-semibold">Aula activa</h2><p className="mt-1 text-sm text-muted-foreground">{activeClassroom?.title ?? "Sin aula"} · {activeRole === "teacher" ? "Docente" : activeRole === "student" ? "Estudiante" : "Sin rol"}</p></div>
           </Card>
           <Card className="flex items-center gap-4 p-5">
             <span className="metric-icon"><Database /></span>
-            <div className="flex-1"><h2 className="font-semibold">Biblioteca y Storage</h2><p className="mt-1 text-sm text-muted">Pendientes del Bloque 2</p></div>
+            <div className="flex-1"><h2 className="font-semibold">Biblioteca y Storage</h2><p className="mt-1 text-sm text-muted-foreground">Pendientes del Bloque 2</p></div>
             <Badge tone="neutral">Pendiente</Badge>
           </Card>
         </div>

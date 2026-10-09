@@ -17,6 +17,7 @@ import { BrandMark } from "../../components/BrandMark";
 import { DemoNotice } from "../../components/feedback/DemoNotice";
 import { Button } from "../../components/ui/button";
 import { useAuth } from "../../features/auth/AuthProvider";
+import { ThemeToggle } from "../../features/theme/ThemeToggle";
 import { useWorkspace } from "../../features/workspace/WorkspaceProvider";
 import { cn } from "../../lib/utils";
 
@@ -75,14 +76,14 @@ export function AppShell() {
   }
 
   return (
-    <div className="min-h-dvh bg-paper text-ink">
+    <div className="min-h-dvh bg-background text-foreground">
       <a className="skip-link" href="#contenido-principal" onClick={skipToContent}>
         Saltar al contenido
       </a>
 
       {mobileOpen && (
         <button
-          className="fixed inset-0 z-30 bg-ink/30 backdrop-blur-[2px] lg:hidden"
+          className="fixed inset-0 z-30 bg-[var(--ui-overlay)] backdrop-blur-[2px] lg:hidden"
           aria-label="Cerrar navegación"
           onClick={() => closeMobileMenu()}
         />
@@ -97,7 +98,7 @@ export function AppShell() {
           if (event.key === "Escape" && mobileOpen) closeMobileMenu();
         }}
         className={cn(
-          "fixed inset-y-0 left-0 z-40 flex w-[17.5rem] -translate-x-full flex-col border-r border-line bg-[#f8f6f0] px-4 py-5 transition-transform duration-300 lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-40 flex w-[17.5rem] -translate-x-full flex-col border-r border-border bg-sidebar px-4 py-5 transition-transform duration-300 lg:translate-x-0",
           mobileOpen && "translate-x-0",
         )}
       >
@@ -115,7 +116,7 @@ export function AppShell() {
           </Button>
         </div>
 
-        <div className="mt-8 rounded-2xl border border-line bg-white/70 p-3">
+        <div className="mt-8 rounded-2xl border border-border bg-surface/75 p-3">
           <p className="eyebrow">Aula activa</p>
           {authenticated ? (
             classrooms.length ? (
@@ -130,8 +131,8 @@ export function AppShell() {
                     <option key={classroom.id} value={classroom.id}>{classroom.title}</option>
                   ))}
                 </select>
-                <ChevronDown className="pointer-events-none absolute right-0 top-0 size-4 text-muted" />
-                <span className="mt-1 block text-xs text-muted">{activeClassroom?.term ?? "Sin periodo"}</span>
+                <ChevronDown className="pointer-events-none absolute right-0 top-0 size-4 text-muted-foreground" />
+                <span className="mt-1 block text-xs text-muted-foreground">{activeClassroom?.term ?? "Sin periodo"}</span>
               </label>
             ) : (
               <p className="mt-2 text-sm font-semibold">Crea un aula o acepta una invitación</p>
@@ -140,9 +141,9 @@ export function AppShell() {
             <div className="mt-2 flex w-full items-center justify-between text-left">
               <span>
                 <strong className="block text-sm">Fundamentos de investigación</strong>
-                <span className="mt-0.5 block text-xs text-muted">Demostración 2026-II</span>
+                <span className="mt-0.5 block text-xs text-muted-foreground">Demostración 2026-II</span>
               </span>
-              <ChevronDown className="size-4 text-muted" />
+              <ChevronDown className="size-4 text-muted-foreground" />
             </div>
           )}
         </div>
@@ -175,13 +176,13 @@ export function AppShell() {
             <Settings2 className="size-[18px]" />
             Administración
           </NavLink>
-          <div className="flex items-center gap-3 border-t border-line px-2 pt-4">
-            <span className="grid size-9 place-items-center rounded-full bg-[#d9e6de] text-xs font-bold text-forest">
+          <div className="flex items-center gap-3 border-t border-border px-2 pt-4">
+            <span className="grid size-9 place-items-center rounded-full bg-info-surface text-xs font-bold text-info-foreground">
               {initials}
             </span>
             <span className="min-w-0 flex-1">
               <strong className="block truncate text-sm">{displayName}</strong>
-              <span className="block truncate text-xs text-muted">
+              <span className="block truncate text-xs text-muted-foreground">
                 {authenticated ? (activeRole === "teacher" ? "Docente" : activeRole === "student" ? "Estudiante" : "Sin aula") : "Demostración"}
               </span>
             </span>
@@ -196,14 +197,14 @@ export function AppShell() {
                 <LogOut className="size-4" />
               </Button>
             ) : (
-              <span className="size-2 rounded-full bg-[#57a276]" title="Modo demostración" />
+              <span className="status-dot" title="Modo demostración" />
             )}
           </div>
         </div>
       </aside>
 
       <div className="lg:pl-[17.5rem]">
-        <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-line/80 bg-paper/90 px-4 backdrop-blur-md sm:px-7 lg:px-10">
+        <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-border/80 bg-background/90 px-4 backdrop-blur-md sm:px-7 lg:px-10">
           <div className="flex items-center gap-3">
             <Button
               ref={openMenuButtonRef}
@@ -222,15 +223,16 @@ export function AppShell() {
             </div>
             <div className="hidden lg:block">
               {authenticated ? (
-                <span className="demo-notice border-emerald-200 bg-emerald-50 text-emerald-800">
+                <span className="demo-notice border-success-border bg-success-surface text-success">
                   <span className="status-dot" /> Sesión protegida
                 </span>
               ) : <DemoNotice />}
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className="hidden text-xs text-muted sm:inline">Fuentes puestas en contexto</span>
-            <span className="mx-1 hidden h-4 w-px bg-line sm:block" />
+            <ThemeToggle />
+            <span className="hidden text-xs text-muted-foreground sm:inline">Fuentes puestas en contexto</span>
+            <span className="mx-1 hidden h-4 w-px bg-border sm:block" />
             <span className="status-dot" />
             <span className="text-xs font-semibold">{authenticated ? "Supabase conectado" : "Modo demostración"}</span>
           </div>

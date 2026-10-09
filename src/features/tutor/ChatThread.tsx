@@ -13,14 +13,14 @@ function ChatMessage() {
           <div className="aui-bubble aui-user-bubble">
             <MessagePrimitive.Parts />
           </div>
-          <span className="aui-avatar bg-ink text-paper"><UserRound className="size-4" /></span>
+          <span className="aui-avatar bg-primary text-primary-foreground"><UserRound className="size-4" /></span>
         </div>
       </MessagePrimitive.If>
       <MessagePrimitive.If assistant>
         <div className="aui-message-row">
-          <span className="aui-avatar bg-[#dce9e1] text-forest"><Bot className="size-4" /></span>
+          <span className="aui-avatar bg-info-surface text-info-foreground"><Bot className="size-4" /></span>
           <div>
-            <span className="mb-1.5 block text-[10px] font-bold uppercase tracking-[0.16em] text-muted">Fontex</span>
+            <span className="mb-1.5 block text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Fontex</span>
             <div className="aui-bubble aui-assistant-bubble">
               <MessagePrimitive.Parts />
             </div>
@@ -50,7 +50,7 @@ export function ChatThread() {
               <ArrowUp className="size-4" />
             </ComposerPrimitive.Send>
           </ComposerPrimitive.Root>
-          <p className="mt-2 text-center text-[10px] leading-4 text-muted">
+          <p className="mt-2 text-center text-[10px] leading-4 text-muted-foreground">
             Prototipo local. Verifica siempre la evidencia citada.
           </p>
         </ThreadPrimitive.ViewportFooter>

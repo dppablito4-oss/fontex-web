@@ -34,7 +34,7 @@ export function App() {
         <Route
           path="tutor"
           element={
-            <Suspense fallback={<div className="page-wrap text-sm text-muted">Preparando el tutor…</div>}>
+            <Suspense fallback={<div className="page-wrap text-sm text-muted-foreground">Preparando el tutor…</div>}>
               <TutorPage />
             </Suspense>
           }

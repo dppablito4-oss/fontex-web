@@ -82,7 +82,7 @@ npm run build
 - CI y despliegue estático a GitHub Pages.
 - Sin claves privadas en el cliente; la biblioteca y el tutor siguen siendo demostrativos.
 
-Consulta [los reportes versionados](docs/REPORTES.md), [la arquitectura](docs/architecture/overview.md) y [el registro de dependencias](docs/decisions/DEPENDENCIES.md) para conocer el historial y las decisiones del prototipo.
+Consulta [los reportes versionados](docs/REPORTES.md), [la arquitectura](docs/architecture/overview.md), [el sistema de diseño](docs/design/DESIGN_SYSTEM.md) y [el registro de dependencias](docs/decisions/DEPENDENCIES.md) para conocer el historial y las decisiones del prototipo.
 
 ## Estado
 
