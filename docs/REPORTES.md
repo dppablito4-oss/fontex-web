@@ -56,6 +56,12 @@ Conectar el entorno local de Fontex con el proyecto remoto de Supabase indicado 
 | `npm run test -- --run` | 2 archivos y 12 pruebas aprobadas |
 | `npm run build` | Correcto |
 
+### Commit principal
+
+- Commit: `15323f6`.
+- Mensaje: `chore: link Fontex Supabase project`.
+- Alcance: instalación del CLI, configuración local segura, vinculación verificada y reporte inicial.
+
 ### Límites respetados
 
 - No se consultaron ni modificaron tablas, registros, usuarios, Storage o funciones.
