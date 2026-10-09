@@ -1,0 +1,10 @@
+{
+  "imports": {
+    "@supabase/server": "npm:@supabase/server@1.9.1",
+    "pdfjs-dist/legacy/build/pdf.mjs": "npm:pdfjs-dist@6.4.299/legacy/build/pdf.mjs"
+  },
+  "compilerOptions": {
+    "strict": true
+  },
+  "lock": true
+}

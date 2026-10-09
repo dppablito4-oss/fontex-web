@@ -12,6 +12,70 @@ Cada reporte incluye alcance, cambios, archivos relevantes, validaciones reales,
 
 ---
 
+## v0.5.0 — Motor de extracción, indexación y recuperación RAG
+
+**Fecha:** 9 de octubre de 2026
+**Bloque:** 3 — Extracción, indexación y motor RAG
+**Estado:** Implementado y validado; publicación Git pendiente
+
+### Objetivo autorizado
+
+Convertir los PDF privados del Bloque 2 en una base documental recuperable: extracción server-side con referencia de página, fragmentación reproducible, embeddings versionados, búsqueda híbrida autorizada y una interfaz diagnóstica en Biblioteca. Los resultados no se conectarán todavía con `tutor-chat` y no se modificarán su modelo, prompt ni parámetros.
+
+### Registro de acciones
+
+1. **Auditoría integral previa.** Se leyó la orden completa del Bloque 3 y se revisaron plan maestro, arquitectura, dependencias, sistema visual, reporte vigente, migraciones, pruebas RLS, tipos de base de datos, servicios y componentes documentales, funciones Edge y workflows de CI/Pages.
+2. **Estado local y remoto.** `main` comenzó limpio en `76fa127`, sincronizado con `origin/main`. Las cuatro migraciones locales coinciden con las remotas; `tutor-chat` v1, `document-upload` v2 y `document-delete` v1 permanecen activas. Se verificó por nombre y huella que `OPENAI_API_KEY` existe sin leer ni registrar su valor.
+3. **Capacidad vectorial.** El proyecto remoto ofrece pgvector 0.8.2, aún no instalado. Se comprobó que `pdfjs-dist@6.4.299` puede importarse desde Deno y expone `getDocument`, por lo que la extracción puede reutilizar la dependencia ya auditada sin sumar otro parser.
+4. **Decisión de recuperación.** Se adopta `text-embedding-3-small` con dimensión estándar 1536, `vector(1536)`, similitud coseno, texto completo y fusión Reciprocal Rank Fusion. El piloto usará búsqueda vectorial exacta; HNSW queda condicionado a volumen y métricas reales.
+5. **Decisión de procesamiento.** La indexación será reanudable y por lotes: extracción y chunks se persisten una vez; las invocaciones posteriores completan embeddings pendientes bajo un lease exclusivo. Ningún fragmento parcial será recuperable hasta que el trabajo completo alcance `ready`.
+6. **Límite de confianza.** Sólo el propietario podrá iniciar o reintentar el procesamiento. La búsqueda se ejecutará mediante una RPC autenticada que aplica `private.can_access_document`, estado listo, versión de modelo y alcance; no habrá lectura directa de chunks desde el navegador ni confianza en filtros enviados por el cliente.
+7. **Contrato SQL y aislamiento.** La migración aditiva `20261009230000_block3_rag_indexing_and_retrieval.sql` habilita pgvector, límites, trabajos con lease, chunks con página y versión, métricas de búsqueda, guardado transaccional de lotes y recuperación híbrida. Las tablas nuevas tienen RLS; los chunks y RPC internas no conceden acceso directo a `authenticated`.
+8. **Matriz pgTAP.** Se añadió `block3_rag_rls.test.sql` para probar propietario, usuario ajeno, acceso privado/grupo/aula, revocación, exclusión de índices parciales, bloqueo de escrituras y bloqueo de la RPC interna. La matriz detectó que el scope `private` incluía documentos propios compartidos; se corrigió para coincidir con la clasificación visual. La reconstrucción desde cero y 91 pruebas acumuladas aprobaron.
+9. **Procesamiento Edge reanudable.** `document-process` descarga el PDF privado, confirma SHA-256 y páginas reales, extrae texto con PDF.js en servidor, normaliza, fragmenta con página, aplica presupuestos y embebe lotes de 16. Cada lote se confirma bajo lease; sólo el último cambia el trabajo a `ready`. Fallos quedan tipificados sin registrar contenido.
+10. **Recuperación Edge protegida.** `document-search` valida consulta, alcance y cantidad, genera un solo embedding y llama como servicio a la RPC que filtra primero por identidad, permisos actuales, índice listo, modelo y scope. Se registran tokens, latencia y cantidad devuelta; el límite inicial es 60 búsquedas por hora y 10 resultados.
+11. **Biblioteca diagnóstica.** La carga intenta indexar automáticamente y conserva el PDF si el índice falla. Las tarjetas muestran estado y progreso, permiten reintentar al propietario y el panel RAG presenta fragmentos, documento, páginas y score RRF, marcado explícitamente como no conectado al tutor.
+12. **Calidad de código inicial.** Ambas funciones pasan `deno check` y `deno lint`; el fragmentador pasó 3 pruebas específicas. TypeScript y ESLint finalizaron sin errores; Vitest aprobó 65 pruebas activas en 12 archivos, con 2 suites remotas omitidas por configuración. `npm audit` reportó 0 vulnerabilidades.
+13. **Presupuesto y coste.** Con la referencia de USD 0,02 por millón de tokens, el tope de 100.000 tokens equivale aproximadamente a USD 0,002 por documento, USD 0,02 por diez documentos y USD 0,20 por cien. Cien documentos al máximo de 240 chunks producirían 24.000 vectores y cerca de 141 MiB de valores vectoriales antes de overhead. HNSW se evaluará cerca de 100.000 chunks o p95 superior a 300 ms.
+14. **Preflight de producción.** Se generó un respaldo de esquema de 60.609 bytes en el directorio temporal. La instancia tenía 0 organizaciones, aulas, documentos y objetos, y una cuenta original. El primer `dry-run` propuso exclusivamente la migración principal del Bloque 3.
+15. **Migración y despliegue remotos.** Se aplicaron `20261009230000_block3_rag_indexing_and_retrieval.sql` y la corrección explícita `20261009233500_align_rag_metric_constraints.sql`; las seis migraciones locales/remotas coinciden. Se fijaron `EMBEDDING_MODEL` y `EMBEDDING_DIMENSIONS` como secretos y se desplegaron `document-process` v1 y `document-search` v1 con JWT obligatorio.
+16. **Funciones anteriores preservadas.** No se modificó ni desplegó código de `tutor-chat`, `document-upload` o `document-delete`. La propagación de secretos de Supabase incrementó sus números de revisión de plataforma, pero sus hashes, rutas y fechas de código permanecen iguales.
+17. **E2E remoto real.** Un arnés temporal cargó un PDF seleccionable, verificó extracción y página, creó un embedding OpenAI real, confirmó un job completo con tokens, recuperó como propietario, devolvió cero al ajeno, habilitó búsqueda al compartir con un grupo, la retiró inmediatamente al revocar y comprobó cascada tras borrar. La primera pasada detectó que el propietario ficticio no pertenecía al grupo —requisito correcto del Bloque 2—; se corrigió el arnés. Las dos pasadas funcionales finales aprobaron en 15,7 s y 16,1 s.
+18. **Limpieza remota.** Tras cada pasada se eliminaron objeto, documento, chunks, job, métricas, grupo, aula, organización y cuatro cuentas temporales. La consulta independiente final devolvió 0 filas/objetos de prueba y únicamente la cuenta original.
+19. **CI ampliado.** El workflow incorpora un job Deno separado que comprueba y lintea ambas funciones RAG y sus módulos compartidos. La pasada local equivalente aprobó los cuatro archivos.
+20. **Validación final local.** `npm ci` instaló 385 paquetes, la auditoría quedó en 0 vulnerabilidades, TypeScript y ESLint aprobaron, Vitest aprobó 66 pruebas activas en 13 archivos, el build de producción terminó correctamente y las 93 pruebas pgTAP aprobaron tras reconstruir seis migraciones desde cero. Los lint SQL local y remoto no reportaron observaciones.
+
+### Arquitectura decidida antes de implementar
+
+- Una migración aditiva habilitará `vector`, trabajos de procesamiento, chunks con rango de páginas y metadatos de modelo, límites RAG y contabilidad de búsquedas.
+- Los límites cubrirán caracteres extraídos, chunks, tokens por documento, tamaño de lote, concurrencia, reintentos, resultados máximos y consultas por hora.
+- La Edge Function de procesamiento volverá a descargar el objeto privado, verificará hash y número real de páginas, normalizará texto y conservará trazabilidad por página.
+- La Edge Function de búsqueda generará un único embedding de consulta y delegará en PostgreSQL la recuperación híbrida ya filtrada por permisos.
+- Biblioteca mostrará estados reales de indexación y un panel diagnóstico protegido; el tutor no consumirá estos resultados en v0.5.0.
+
+### Validación acumulada
+
+| Verificación | Estado |
+|---|---|
+| Árbol Git inicial | Limpio y sincronizado |
+| Migraciones local/remoto | 6/6 coincidentes |
+| Funciones remotas | 5 activas con JWT; dos RAG nuevas y hashes previos preservados |
+| Configuración OpenAI | Secreto presente, valor no expuesto |
+| pgvector remoto | 0.8.2 instalado por migración |
+| PDF.js en Deno | Importación 6.4.299 correcta |
+| Base local desde cero | 6 migraciones aplicadas; 93 pruebas pgTAP aprobadas |
+| Deno | `document-process` y `document-search` pasan check/lint |
+| Frontend | TypeScript, ESLint, 66 pruebas y build aprobados |
+| Dependencias npm | 0 vulnerabilidades reportadas |
+| E2E remoto | Extracción, OpenAI, permisos, revocación y cascada aprobados |
+| Estado remoto final | 0 datos/objetos de prueba; 1 cuenta original |
+
+### Pendiente inmediato
+
+Crear el commit funcional, publicar `main`, esperar CI y Pages y comprobar el dominio público. El Bloque 4 no debe iniciarse dentro de esta versión.
+
+---
+
 ## v0.4.0 — Biblioteca documental y almacenamiento privado
 
 **Fecha:** 9 de octubre de 2026

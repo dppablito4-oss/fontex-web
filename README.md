@@ -4,7 +4,7 @@
 
 Fontex es un entorno académico que prepara una experiencia de consulta documental con trazabilidad. El nombre reúne **FONT**es (latín: fuentes o manantial de información) y **TEX**tus (texto o contexto): ninguna respuesta debería presentarse aislada de las fuentes autorizadas que la sostienen.
 
-Este repositorio contiene los **Bloques 0, 1 y 2** del plan maestro, más la conexión anticipada del tutor en `v0.3.0`: frontend responsive, navegación estática, identidad con Supabase Auth, modelo protegido por RLS, biblioteca PDF privada y una Edge Function autenticada que consulta OpenAI. La extracción, indexación y el RAG permanecen fuera de alcance.
+Este repositorio contiene los **Bloques 0, 1, 2 y 3** del plan maestro, más la conexión anticipada del tutor en `v0.3.0`: frontend responsive, identidad con Supabase Auth, biblioteca PDF privada y un motor RAG autorizado con diagnóstico independiente. La recuperación todavía no alimenta `tutor-chat`.
 
 ## Ejecutar localmente
 
@@ -33,7 +33,7 @@ La clave publicable está diseñada para el navegador y solo es segura junto con
 
 ## Supabase
 
-El repositorio está vinculado al proyecto `goegjuglstapjwcckawp` (`fintex.back`). Las migraciones de los Bloques 1 y 2 se aplican con revisión previa:
+El repositorio está vinculado al proyecto `goegjuglstapjwcckawp` (`fintex.back`). Las migraciones de los Bloques 1, 2 y 3 se aplican con revisión previa:
 
 ```bash
 npx supabase db push --dry-run
@@ -58,6 +58,13 @@ La biblioteca coordina sus escrituras mediante dos funciones autenticadas. Ningu
 
 ```bash
 npx supabase functions deploy document-upload document-delete --project-ref goegjuglstapjwcckawp --use-api
+```
+
+La extracción/indexación y la búsqueda diagnóstica usan funciones separadas y el mismo secreto server-side. Su configuración estable debe conservar modelo y dimensión compatibles con la migración:
+
+```powershell
+npx supabase secrets set EMBEDDING_MODEL=text-embedding-3-small EMBEDDING_DIMENSIONS=1536 --project-ref goegjuglstapjwcckawp
+npx supabase functions deploy document-process document-search --project-ref goegjuglstapjwcckawp --use-api
 ```
 
 No se debe definir `OPENAI_API_KEY` en variables `VITE_*`, archivos del frontend ni GitHub Pages.
@@ -95,13 +102,17 @@ npm run build
 - PDF privados en `fontex-documents`, metadatos RLS, cuotas transaccionales y deduplicación SHA-256.
 - Compartición explícita por grupo o aula con revocación inmediata y sin URLs públicas.
 - Visor PDF.js responsive con navegación de páginas y descarga autenticada.
+- Extracción PDF server-side con hash y páginas verificadas, chunks versionados y procesamiento reanudable.
+- Embeddings `text-embedding-3-small` de 1536 dimensiones y almacenamiento pgvector con presupuesto de tokens.
+- Recuperación híbrida por coseno, texto completo y RRF, siempre filtrada por permisos vigentes.
+- Panel diagnóstico en Biblioteca con documento, páginas y fragmento recuperado.
 - Pruebas pgTAP y de integración remota con múltiples identidades ficticias.
 - CI y despliegue estático a GitHub Pages.
 - OpenAI Responses API desde una Edge Function autenticada; la clave privada permanece en Supabase.
-- Sin RAG todavía: el tutor declara `0 fuentes` y tiene prohibido inventar citas o acceso documental.
+- Motor RAG disponible sólo para diagnóstico: el tutor mantiene `0 fuentes` y tiene prohibido inventar citas o acceso documental.
 
 Consulta [los reportes versionados](docs/REPORTES.md), [la arquitectura](docs/architecture/overview.md), [el sistema de diseño](docs/design/DESIGN_SYSTEM.md) y [el registro de dependencias](docs/decisions/DEPENDENCIES.md) para conocer el historial y las decisiones del prototipo.
 
 ## Estado
 
-Prototipo académico en desarrollo. Identidad, aulas, grupos, biblioteca PDF y tutor de orientación general operan con servicios reales. La recuperación vectorial, las citas trazables y la conexión documental del tutor corresponden al Bloque 3 y continúan pendientes.
+Prototipo académico en desarrollo. Identidad, aulas, grupos, biblioteca PDF, indexación y recuperación diagnóstica operan con servicios reales. Las citas trazables y la conexión documental del tutor corresponden al Bloque 4 y continúan pendientes.

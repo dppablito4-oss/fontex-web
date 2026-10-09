@@ -39,3 +39,17 @@ jobs:
       - name: Stop isolated Postgres
         if: always()
         run: npx supabase stop --no-backup
+
+  edge-functions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Check document processing
+        run: deno check --config supabase/functions/document-process/deno.json supabase/functions/document-process/index.ts
+      - name: Check document search
+        run: deno check --config supabase/functions/document-search/deno.json supabase/functions/document-search/index.ts
+      - name: Lint RAG Edge Functions
+        run: deno lint supabase/functions/document-process/index.ts supabase/functions/document-search/index.ts supabase/functions/_shared/rag/*.ts

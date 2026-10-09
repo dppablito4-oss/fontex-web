@@ -5,6 +5,7 @@ import {
   downloadDocument,
   getDocumentLimits,
   listDocuments,
+  processDocument,
   revokeDocumentShare,
   shareDocument,
   uploadDocument,
@@ -87,8 +88,15 @@ export function useDocuments({
           throw new Error(`El PDF quedó cargado como privado. ${detail}`, { cause: shareError });
         }
       }
+      try {
+        await processDocument(documentId);
+      } catch (processingError) {
+        await refresh();
+        const detail = processingError instanceof Error ? processingError.message : "No fue posible indexarlo.";
+        throw new Error(`El PDF quedó cargado, pero su índice no está listo. ${detail}`, { cause: processingError });
+      }
       await refresh();
-      setMessage(scope.type === "private" ? "PDF cargado de forma privada." : "PDF cargado y compartido.");
+      setMessage(scope.type === "private" ? "PDF privado cargado e indexado." : "PDF cargado, compartido e indexado.");
     });
   }, [classroomId, refresh, runAction]);
 
@@ -143,6 +151,14 @@ export function useDocuments({
     });
   }, [refresh, runAction]);
 
+  const process = useCallback(async (document: LibraryDocument) => {
+    await runAction(`index:${document.id}`, async () => {
+      await processDocument(document.id);
+      await refresh();
+      setMessage("Índice documental listo para búsqueda.");
+    });
+  }, [refresh, runAction]);
+
   return {
     documents,
     limits,
@@ -157,6 +173,7 @@ export function useDocuments({
     remove,
     share,
     revoke,
+    process,
     closeViewer: () => setViewer(null),
     clearFeedback: () => {
       setError(null);

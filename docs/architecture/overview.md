@@ -1,8 +1,8 @@
-# Arquitectura de los Bloques 0, 1 y 2
+# Arquitectura de los Bloques 0, 1, 2 y 3
 
 ## Objetivo
 
-El Bloque 0 estableció la interfaz y las fronteras técnicas de Fontex. El Bloque 1 incorporó identidad, aulas y grupos con autorización en PostgreSQL. El Bloque 2 añade una biblioteca PDF real con metadatos protegidos, Storage privado, cuotas transaccionales y visor PDF.js, manteniendo el frontend como sitio estático para GitHub Pages. La indexación y el RAG siguen sin conectarse.
+El Bloque 0 estableció la interfaz y las fronteras técnicas de Fontex. El Bloque 1 incorporó identidad, aulas y grupos; el Bloque 2 añadió la biblioteca PDF privada. El Bloque 3 incorpora extracción server-side, indexación vectorial y recuperación híbrida autorizada, manteniendo el frontend como sitio estático para GitHub Pages. El tutor continúa deliberadamente separado del motor RAG.
 
 ## Capas actuales
 
@@ -11,11 +11,11 @@ Navegador
 ├── React Router (HashRouter)
 ├── Supabase Auth + cliente público bajo RLS
 ├── Contextos de identidad y espacio de trabajo
-├── Biblioteca documental y visor PDF.js bajo demanda
+├── Biblioteca documental, visor PDF.js y diagnóstico RAG
 ├── Shell responsive y páginas por funcionalidad
 ├── Componentes UI locales
 └── assistant-ui LocalRuntime
-    └── Adaptador a tutor-chat, todavía sin documentos ni RAG
+    └── Adaptador a tutor-chat, todavía sin contexto documental
 ```
 
 - `src/app`: enrutamiento y layout transversal.
@@ -26,6 +26,9 @@ Navegador
 - `supabase/tests`: pruebas pgTAP de aislamiento con múltiples identidades.
 - `supabase/functions/document-upload`: validación confiable y carga coordinada.
 - `supabase/functions/document-delete`: eliminación física antes de retirar metadatos y permisos.
+- `supabase/functions/document-process`: extracción PDF e indexación reanudable por lotes.
+- `supabase/functions/document-search`: embedding de consulta y recuperación híbrida protegida.
+- `supabase/functions/_shared/rag`: normalización, fragmentación y cliente mínimo de embeddings.
 
 ## Identidad y autorización
 
@@ -58,6 +61,18 @@ La descarga usa `storage.from('fontex-documents').download(path)` con el JWT del
 
 `document-delete` verifica propietario con el cliente sometido a RLS, elimina el objeto mediante Storage API y después borra el documento; el `ON DELETE CASCADE` retira sus comparticiones. Las sustituciones directas y cambios de ruta están denegados.
 
+## Indexación y recuperación RAG
+
+`document_processing_jobs` conserva estado, fase, lease, versión del chunker, modelo, dimensión, progreso, tokens y fallos. `document_chunks` conserva contenido normalizado, hash, página, embedding `vector(1536)` y un `tsvector` español/simple. Un índice incompleto nunca participa en búsquedas: la RPC exige trabajo `ready`, fase `complete` y todos los vectores presentes.
+
+El propietario inicia `document-process`. La función vuelve a descargar el objeto privado y verifica SHA-256 y páginas reales antes de confiar en el texto. PDF.js extrae página por página; el chunker determinista apunta cada fragmento a su página y aplica objetivos de 600 tokens con solape de 100. La primera llamada persiste chunks y embebe hasta 16; llamadas sucesivas reclaman un lease y continúan sólo los vectores nulos. Los límites iniciales son 400.000 caracteres, 240 chunks y 100.000 tokens de embedding por documento, una tarea concurrente por usuario y tres fallos.
+
+`document-search` crea un embedding por consulta y delega la recuperación a una RPC concedida sólo a `service_role`. La RPC recibe la identidad ya autenticada por Edge, vuelve a aplicar permisos actuales mediante `private.can_user_access_document`, filtra alcance y estado, y combina vecinos por coseno con texto completo mediante Reciprocal Rank Fusion. El cliente no puede leer `document_chunks`, invocar la RPC interna ni convertir un ID conocido en autorización. Las revocaciones y bajas de matrícula afectan la siguiente consulta.
+
+El piloto usa búsqueda vectorial exacta porque el máximo documental vigente mantiene acotado el conjunto. Con 240 chunks por documento, 100 documentos representarían como máximo 24.000 vectores; HNSW se evaluará al aproximarse a 100.000 chunks globales o si la latencia p95 supera 300 ms. Evitarlo ahora reduce mantenimiento y no debilita exactitud. `rag_search_events` registra volumen, tokens y latencia sin almacenar la consulta ni el contenido.
+
+La referencia publicada para `text-embedding-3-small` equivale a USD 0,02 por millón de tokens de entrada. Por tanto, el presupuesto extremo de 100.000 tokens cuesta aproximadamente USD 0,002 por documento, USD 0,02 por diez documentos o USD 0,20 por cien; no incluye impuestos ni futuros cambios de tarifa. Una consulta de 500 caracteres se estima en unos 125 tokens: incluso 60 consultas consumen cerca de 7.500 tokens, aproximadamente USD 0,00015. Cada `vector(1536)` ocupa alrededor de 6 KiB antes de índices y overhead; 24.000 vectores rondan 141 MiB sólo en valores vectoriales. Fuentes de referencia: [guía de embeddings de OpenAI](https://developers.openai.com/api/docs/guides/embeddings) y [documentación de índices vectoriales de Supabase](https://supabase.com/docs/guides/ai/vector-indexes).
+
 ## Cuotas del piloto
 
 `document_limits` permite configuración administrativa. Los valores iniciales son 5 MiB y 100 páginas por PDF, 10 documentos y 50 MiB por usuario, 500 MiB por aula y 750 MiB globales. El tope global deja margen frente al cupo publicado de 1 GB del plan Free; no depende de que la organización tenga un plan superior. Los conteos incluyen reservas y cargas en curso para no exceder límites mediante concurrencia.
@@ -74,7 +89,7 @@ El shell conserva las rutas internas en el fragmento mediante `HashRouter`. El s
 
 El tutor usa `@assistant-ui/react` con `useLocalRuntime`. Cuando existe configuración pública de Supabase, su `ChatModelAdapter` invoca la Edge Function autenticada `tutor-chat`; sin esa configuración conserva una demostración local explícita. La clave de OpenAI reside únicamente en Supabase y nunca se entrega al navegador.
 
-La versión `v0.3.0` todavía no implementa recuperación documental: `tutor-chat` llama a Responses API con instrucciones para no inventar citas ni afirmar acceso a archivos. La selección, fragmentación, búsqueda vectorial y trazabilidad de fuentes pertenecen a la fase RAG posterior.
+Aunque `v0.5.0` ya ofrece recuperación documental diagnóstica, `tutor-chat` conserva exactamente el comportamiento de `v0.3.0`: llama a Responses API con instrucciones para no inventar citas ni afirmar acceso a archivos. La selección de fuentes, citas y composición del contexto pertenecen al Bloque 4.
 
 Resultado del spike:
 
@@ -85,7 +100,7 @@ Resultado del spike:
 
 ## Frontera futura
 
-El frontend utiliza el SDK público de Supabase bajo RLS para identidad, biblioteca y descargas. Las operaciones documentales privilegiadas residen en Edge Functions. El siguiente bloque podrá leer únicamente documentos `ready` que ya superaron esta frontera de autorización, pero deberá diseñar nuevas políticas para texto, fragmentos y recuperación. `tutor-chat` no recibe todavía archivos ni contenido PDF.
+El frontend utiliza el SDK público bajo RLS para identidad, biblioteca y descargas. Las operaciones documentales privilegiadas residen en Edge Functions. El Bloque 4 podrá consumir sólo la salida autorizada del motor de recuperación, añadir citas y construir contexto acotado; no deberá consultar chunks directamente ni aceptar IDs o permisos decididos por el navegador. `tutor-chat` no recibe todavía archivos ni contenido PDF.
 
 ## Accesibilidad y responsive
 

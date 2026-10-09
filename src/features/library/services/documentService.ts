@@ -5,6 +5,8 @@ import type {
   DocumentShare,
   LibraryDocument,
   PreparedPdf,
+  RagSearchResult,
+  RagSearchScope,
   UploadScope,
 } from "../types";
 
@@ -69,6 +71,12 @@ export async function listDocuments(classroomId?: string | null): Promise<Librar
     .in("document_id", documentIds);
   if (shareResult.error) throw new Error(readableDataError(shareResult.error.message));
 
+  const processingResult = await client
+    .from("document_processing_jobs")
+    .select("id, document_id, status, phase, chunk_count, embedded_chunk_count, embedding_tokens, failure_count, failure_code, failure_detail, updated_at")
+    .in("document_id", documentIds);
+  if (processingResult.error) throw new Error(readableDataError(processingResult.error.message));
+
   const sharesByDocument = new Map<string, DocumentShare[]>();
   for (const share of shareResult.data) {
     const item: DocumentShare = {
@@ -81,6 +89,7 @@ export async function listDocuments(classroomId?: string | null): Promise<Librar
     };
     sharesByDocument.set(share.document_id, [...(sharesByDocument.get(share.document_id) ?? []), item]);
   }
+  const processingByDocument = new Map(processingResult.data.map((job) => [job.document_id, job]));
 
   return documentResult.data.map((document) => ({
     id: document.id,
@@ -97,6 +106,21 @@ export async function listDocuments(classroomId?: string | null): Promise<Librar
     createdAt: document.created_at,
     updatedAt: document.updated_at,
     shares: sharesByDocument.get(document.id) ?? [],
+    processing: (() => {
+      const job = processingByDocument.get(document.id);
+      return job ? {
+        id: job.id,
+        status: job.status,
+        phase: job.phase,
+        chunkCount: job.chunk_count,
+        embeddedChunkCount: job.embedded_chunk_count,
+        embeddingTokens: job.embedding_tokens,
+        failureCount: job.failure_count,
+        failureCode: job.failure_code,
+        failureDetail: job.failure_detail,
+        updatedAt: job.updated_at,
+      } : null;
+    })(),
   }));
 }
 
@@ -193,4 +217,66 @@ export async function deleteDocument(documentId: string) {
   if (invocation.error) {
     throw new Error(await readableFunctionError(invocation.error, "No fue posible eliminar el documento."));
   }
+}
+
+type ProcessingResponse = {
+  complete?: boolean;
+  status?: string;
+  embeddedChunkCount?: number;
+  chunkCount?: number;
+};
+
+export async function processDocument(documentId: string) {
+  const client = requireSupabase();
+  for (let step = 0; step < 20; step += 1) {
+    const invocation = await client.functions.invoke<ProcessingResponse>("document-process", {
+      body: { documentId },
+      timeout: 60_000,
+    });
+    if (invocation.error) {
+      throw new Error(await readableFunctionError(invocation.error, "No fue posible indexar el PDF."));
+    }
+    if (invocation.data?.complete || invocation.data?.status === "ready") return;
+  }
+  throw new Error("La indexación necesita más lotes de los permitidos. Revisa los límites del documento.");
+}
+
+type SearchResponse = {
+  results?: Array<{
+    chunk_id: number;
+    document_id: string;
+    document_title: string;
+    page_start: number;
+    page_end: number;
+    content: string;
+    semantic_similarity: number;
+    lexical_rank: number;
+    combined_score: number;
+  }>;
+};
+
+export async function searchDocumentChunks(
+  query: string,
+  scope: RagSearchScope,
+  matchCount = 5,
+): Promise<RagSearchResult[]> {
+  const client = requireSupabase();
+  const invocation = await client.functions.invoke<SearchResponse>("document-search", {
+    body: { query, scope, matchCount },
+    timeout: 45_000,
+  });
+  if (invocation.error) {
+    throw new Error(await readableFunctionError(invocation.error, "No fue posible buscar en los documentos."));
+  }
+  return (invocation.data?.results ?? []).map((result) => ({
+    chunkId: result.chunk_id,
+    documentId: result.document_id,
+    documentTitle: result.document_title,
+    pageStart: result.page_start,
+    pageEnd: result.page_end,
+    content: result.content,
+    semanticSimilarity: result.semantic_similarity,
+    lexicalRank: result.lexical_rank,
+    combinedScore: result.combined_score,
+  }));
 }

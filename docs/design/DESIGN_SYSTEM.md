@@ -1,6 +1,6 @@
 # Sistema de diseño de Fontex
 
-**Versión:** 0.4.0
+**Versión:** 0.5.0
 
 **Estado:** Implementado para temas claro y oscuro
 
@@ -72,6 +72,8 @@ La conversación usa `background` como plano de lectura, `surface` para respuest
 ## Biblioteca documental
 
 Las tarjetas de documento usan `surface`, bordes semánticos y badges textuales para distinguir alcance privado, de grupo o de aula sin depender solo del color. La carga y la compartición se presentan en paneles delimitados; el visor PDF ocupa un diálogo responsive con controles de página accesibles, ancho adaptable y cierre explícito. Los estados vacío, cargando, error y confirmación deben conservarse en ambos temas y en anchos móviles.
+
+Los estados de índice se expresan además con texto: `Sin indexar`, `Indexando`, `Índice listo` e `Índice fallido`. El panel diagnóstico RAG reutiliza campos y tarjetas existentes, identifica de forma visible que aún no alimenta al tutor y presenta cada resultado con documento, página y fragmento; la puntuación queda como metadato secundario, nunca como sustituto de la fuente.
 
 ## Accesibilidad y verificación
 

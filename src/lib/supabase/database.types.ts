@@ -10,6 +10,8 @@ export type ClassroomRole = "teacher" | "student";
 export type MembershipStatus = "active" | "removed";
 export type DocumentStatus = "pending" | "uploading" | "ready" | "failed";
 export type DocumentShareScope = "group" | "classroom";
+export type DocumentProcessingStatus = "pending" | "processing" | "ready" | "failed";
+export type DocumentProcessingPhase = "extracting" | "embedding" | "complete";
 
 type Relationship = {
   foreignKeyName: string;
@@ -200,6 +202,95 @@ export type Database = {
         Update: never;
         Relationships: Relationship[];
       };
+      rag_limits: {
+        Row: {
+          id: number;
+          max_extracted_characters: number;
+          max_chunks_per_document: number;
+          max_embedding_tokens_per_document: number;
+          target_chunk_tokens: number;
+          chunk_overlap_tokens: number;
+          embedding_batch_size: number;
+          max_concurrent_jobs_per_user: number;
+          max_processing_failures: number;
+          processing_lease_seconds: number;
+          max_search_results: number;
+          max_searches_per_hour: number;
+          updated_at: string;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      document_processing_jobs: {
+        Row: {
+          id: string;
+          document_id: string;
+          owner_id: string;
+          status: DocumentProcessingStatus;
+          phase: DocumentProcessingPhase;
+          embedding_model: string;
+          embedding_dimensions: number;
+          chunk_version: string;
+          extracted_pages: number;
+          extracted_characters: number;
+          chunk_count: number;
+          embedded_chunk_count: number;
+          embedding_tokens: number;
+          attempt_count: number;
+          failure_count: number;
+          failure_code: string | null;
+          failure_detail: string | null;
+          lease_token: string | null;
+          locked_until: string | null;
+          started_at: string | null;
+          completed_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: Relationship[];
+      };
+      document_chunks: {
+        Row: {
+          id: number;
+          document_id: string;
+          job_id: string;
+          chunk_index: number;
+          page_start: number;
+          page_end: number;
+          content: string;
+          content_sha256: string;
+          estimated_tokens: number;
+          embedding: string | null;
+          embedding_model: string;
+          chunk_version: string;
+          search_vector: unknown;
+          created_at: string;
+          embedded_at: string | null;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: Relationship[];
+      };
+      rag_search_events: {
+        Row: {
+          id: string;
+          user_id: string;
+          scope: string;
+          query_characters: number;
+          embedding_model: string;
+          embedding_tokens: number;
+          result_count: number;
+          latency_ms: number | null;
+          completed_at: string | null;
+          created_at: string;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: Relationship[];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -252,12 +343,18 @@ export type Database = {
         };
         Returns: Json;
       };
+      claim_document_processing: {
+        Args: { target_document_id: string };
+        Returns: Json;
+      };
     };
     Enums: {
       classroom_role: ClassroomRole;
       membership_status: MembershipStatus;
       document_status: DocumentStatus;
       document_share_scope: DocumentShareScope;
+      document_processing_status: DocumentProcessingStatus;
+      document_processing_phase: DocumentProcessingPhase;
     };
     CompositeTypes: Record<string, never>;
   };

@@ -1,6 +1,8 @@
 import type {
   DocumentShareScope,
   DocumentStatus,
+  DocumentProcessingPhase,
+  DocumentProcessingStatus,
 } from "../../lib/supabase/database.types";
 
 export type DocumentShare = {
@@ -27,6 +29,34 @@ export type LibraryDocument = {
   createdAt: string;
   updatedAt: string;
   shares: DocumentShare[];
+  processing: DocumentProcessing | null;
+};
+
+export type DocumentProcessing = {
+  id: string;
+  status: DocumentProcessingStatus;
+  phase: DocumentProcessingPhase;
+  chunkCount: number;
+  embeddedChunkCount: number;
+  embeddingTokens: number;
+  failureCount: number;
+  failureCode: string | null;
+  failureDetail: string | null;
+  updatedAt: string;
+};
+
+export type RagSearchScope = "all" | DocumentScope;
+
+export type RagSearchResult = {
+  chunkId: number;
+  documentId: string;
+  documentTitle: string;
+  pageStart: number;
+  pageEnd: number;
+  content: string;
+  semanticSimilarity: number;
+  lexicalRank: number;
+  combinedScore: number;
 };
 
 export type DocumentLimits = {

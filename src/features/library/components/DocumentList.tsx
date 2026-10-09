@@ -14,6 +14,7 @@ export function DocumentList({
   onDelete,
   onShare,
   onRevoke,
+  onProcess,
 }: {
   documents: LibraryDocument[];
   userId: string | null;
@@ -26,6 +27,7 @@ export function DocumentList({
   onDelete: (document: LibraryDocument) => Promise<void>;
   onShare: (document: LibraryDocument, scope: Exclude<UploadScope, { type: "private" }>) => Promise<void>;
   onRevoke: (shareId: string, documentId: string) => Promise<void>;
+  onProcess: (document: LibraryDocument) => Promise<void>;
 }) {
   return (
     <div>
@@ -41,6 +43,7 @@ export function DocumentList({
           onDelete={() => onDelete(document)}
           onDownload={() => onDownload(document)}
           onOpen={() => onOpen(document)}
+          onProcess={() => onProcess(document)}
           onRevoke={(shareId) => onRevoke(shareId, document.id)}
           onShare={(scope) => onShare(document, scope)}
         />

@@ -1,4 +1,4 @@
-import { Download, Eye, FileText, LoaderCircle, Trash2 } from "lucide-react";
+import { DatabaseZap, Download, Eye, FileText, LoaderCircle, RefreshCw, Trash2 } from "lucide-react";
 
 import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
@@ -33,6 +33,7 @@ export function DocumentCard({
   onDelete,
   onShare,
   onRevoke,
+  onProcess,
 }: {
   document: LibraryDocument;
   owner: boolean;
@@ -45,6 +46,7 @@ export function DocumentCard({
   onDelete: () => Promise<void>;
   onShare: (scope: Exclude<UploadScope, { type: "private" }>) => Promise<void>;
   onRevoke: (shareId: string) => Promise<void>;
+  onProcess: () => Promise<void>;
 }) {
   const scope = getDocumentScope(document);
   const scopeBadge = scopeLabels[scope];
@@ -70,6 +72,24 @@ export function DocumentCard({
         <p className="mt-1 truncate text-xs text-muted-foreground">
           {owner ? "Tuyo" : ownerName} · {formatDate(document.createdAt)} · {formatBytes(document.sizeBytes)} · {document.pageCount} páginas
         </p>
+        {ready && (
+          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            {document.processing?.status === "ready" ? (
+              <Badge tone="green">Índice listo · {document.processing.chunkCount} fragmentos</Badge>
+            ) : document.processing?.status === "failed" ? (
+              <Badge tone="orange">Índice fallido</Badge>
+            ) : document.processing ? (
+              <Badge tone="blue">
+                Indexando · {document.processing.embeddedChunkCount}/{document.processing.chunkCount || "…"}
+              </Badge>
+            ) : (
+              <Badge>Sin indexar</Badge>
+            )}
+            {owner && document.processing?.status === "failed" && document.processing.failureDetail && (
+              <span>{document.processing.failureDetail}</span>
+            )}
+          </div>
+        )}
         {document.status === "failed" && (
           <p className="mt-1 text-xs text-warning">El archivo no quedó disponible. Elimina este registro y vuelve a intentarlo.</p>
         )}
@@ -95,6 +115,18 @@ export function DocumentCard({
             onShare={onShare}
             onRevoke={onRevoke}
           />
+        )}
+        {owner && ready && document.processing?.status !== "ready" && (
+          <Button disabled={busy} onClick={() => void onProcess()} size="sm" variant="secondary">
+            {pendingAction === `index:${document.id}` ? (
+              <LoaderCircle className="size-3.5 animate-spin" />
+            ) : document.processing?.status === "failed" ? (
+              <RefreshCw className="size-3.5" />
+            ) : (
+              <DatabaseZap className="size-3.5" />
+            )}
+            {document.processing?.status === "failed" ? "Reintentar índice" : "Indexar"}
+          </Button>
         )}
         {owner && (
           <Button

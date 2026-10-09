@@ -18,6 +18,7 @@ const baseDocument: LibraryDocument = {
   createdAt: "2026-10-09T00:00:00Z",
   updatedAt: "2026-10-09T00:00:00Z",
   shares: [],
+  processing: null,
 };
 
 describe("document scope", () => {

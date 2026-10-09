@@ -9,6 +9,7 @@ import { PageHeader } from "../shared/PageHeader";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 import { DocumentList } from "./components/DocumentList";
 import { PdfViewer } from "./components/PdfViewer";
+import { RagSearchPanel } from "./components/RagSearchPanel";
 import { UploadDocument } from "./components/UploadDocument";
 import { useDocuments } from "./hooks/useDocuments";
 import { getDocumentScope, type DocumentScope } from "./types";
@@ -185,6 +186,7 @@ export function LibraryPage() {
             onDelete={library.remove}
             onDownload={library.download}
             onOpen={library.open}
+            onProcess={library.process}
             onRevoke={library.revoke}
             onShare={library.share}
           />
@@ -201,8 +203,10 @@ export function LibraryPage() {
         )}
       </Card>
 
+      <RagSearchPanel />
+
       <p className="mt-4 text-center text-xs text-muted-foreground">
-        PDF.js valida y visualiza localmente. Fontex no envía el contenido al tutor ni crea embeddings en este bloque.
+        PDF.js valida en el navegador y extrae nuevamente en servidor. Los índices sirven sólo al diagnóstico; todavía no alimentan al tutor.
       </p>
 
       {library.viewer && (
