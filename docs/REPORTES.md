@@ -16,7 +16,7 @@ Cada reporte incluye alcance, cambios, archivos relevantes, validaciones reales,
 
 **Fecha:** 9 de octubre de 2026
 **Bloque:** 3 — Extracción, indexación y motor RAG
-**Estado:** Implementado y validado; publicación Git pendiente
+**Estado:** Implementado, validado y publicado
 
 ### Objetivo autorizado
 
@@ -45,6 +45,9 @@ Convertir los PDF privados del Bloque 2 en una base documental recuperable: extr
 19. **CI ampliado.** El workflow incorpora un job Deno separado que comprueba y lintea ambas funciones RAG y sus módulos compartidos. La pasada local equivalente aprobó los cuatro archivos.
 20. **Validación final local.** `npm ci` instaló 385 paquetes, la auditoría quedó en 0 vulnerabilidades, TypeScript y ESLint aprobaron, Vitest aprobó 66 pruebas activas en 13 archivos, el build de producción terminó correctamente y las 93 pruebas pgTAP aprobaron tras reconstruir seis migraciones desde cero. Los lint SQL local y remoto no reportaron observaciones.
 21. **Commit funcional.** Los 31 archivos del Bloque 3 se registraron en `c7846ce` con el mensaje `feat(rag): implement secure document indexing and retrieval`; el commit contiene 2.917 inserciones y no incluye secretos ni cambios al código del tutor.
+22. **Publicación Git.** El reporte de validación se registró en `cf281a8` y `main` se publicó desde `76fa127` hasta ese commit.
+23. **GitHub Actions.** CI `37998822580` aprobó los jobs `quality`, `database-security` y el nuevo `edge-functions`. Pages `37998822663` aprobó build y deploy sobre `cf281a8`.
+24. **Dominio público.** `https://fontex.sypablitodp.site/` respondió HTTP 200 con el título oficial. Su bundle publicado contiene el panel `Diagnóstico de recuperación RAG`, llamadas a `document-process`/`document-search` y la advertencia `No conectado al tutor`.
 
 ### Arquitectura decidida antes de implementar
 
@@ -70,10 +73,12 @@ Convertir los PDF privados del Bloque 2 en una base documental recuperable: extr
 | Dependencias npm | 0 vulnerabilidades reportadas |
 | E2E remoto | Extracción, OpenAI, permisos, revocación y cascada aprobados |
 | Estado remoto final | 0 datos/objetos de prueba; 1 cuenta original |
+| GitHub Actions | CI `37998822580` y Pages `37998822663` en `success` |
+| Dominio | HTTP 200 y bundle v0.5.0 verificado |
 
 ### Pendiente inmediato
 
-Crear el commit funcional, publicar `main`, esperar CI y Pages y comprobar el dominio público. El Bloque 4 no debe iniciarse dentro de esta versión.
+El Bloque 3 queda cerrado. La conexión de resultados con el tutor, composición de contexto y citas corresponde al Bloque 4 y requiere una orden explícita posterior.
 
 ---
 
