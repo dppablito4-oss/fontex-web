@@ -15,7 +15,7 @@ Cada reporte incluye alcance, cambios, archivos relevantes, validaciones reales,
 ## v0.2.1 — Corrección del cierre de PostgreSQL en CI
 
 **Fecha:** 8 de octubre de 2026
-**Estado:** Corrección implementada y verificada localmente; nueva ejecución remota pendiente
+**Estado:** Completado, publicado y verificado
 
 ### Diagnóstico
 
@@ -35,9 +35,17 @@ Cada reporte incluye alcance, cambios, archivos relevantes, validaciones reales,
 - `npx supabase test db --local`: 34 pruebas pgTAP aprobadas.
 - `npx supabase stop --no-backup`: cleanup final correcto.
 
+### Validación remota y pública
+
+- Commit de corrección: `fd2c4fd` (`fix: use valid Supabase cleanup command in CI`).
+- CI `37869690042`: completado correctamente; calidad y seguridad de base de datos aprobadas.
+- GitHub Pages `37869690053`: completado correctamente.
+- `https://fontex.sypablitodp.site/`: HTTP 200; JavaScript, chunk de Supabase y CSS responden HTTP 200 con tipos MIME correctos.
+- El bundle público todavía no contiene la URL ni la clave publicable de Supabase y muestra el modo demostración, coherente con las variables de repositorio pendientes.
+
 ### Siguiente paso
 
-Validar localmente la secuencia exacta del job, publicar este parche y comprobar que CI y Pages finalicen correctamente.
+Configurar `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY` como variables de GitHub y verificar registro, confirmación e inicio de sesión en el dominio. No iniciar el Bloque 2 sin una orden explícita.
 
 ---
 
