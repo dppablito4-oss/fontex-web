@@ -12,6 +12,15 @@ export default defineConfig(({ mode }) => {
   return {
     base: resolveBasePath(basePath),
     plugins: [react(), tailwindcss()],
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes("node_modules/@supabase/")) return "supabase";
+          },
+        },
+      },
+    },
     test: {
       environment: "jsdom",
       setupFiles: "./src/test/setup.ts",

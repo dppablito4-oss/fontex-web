@@ -12,6 +12,8 @@ import { Link } from "react-router-dom";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
+import { useAuth } from "../auth/AuthProvider";
+import { useWorkspace } from "../workspace/WorkspaceProvider";
 
 const recent = [
   {
@@ -35,6 +37,41 @@ const recent = [
 ];
 
 export function HomePage() {
+  const { status, profile } = useAuth();
+  const { activeClassroom, activeRole, members, groups } = useWorkspace();
+
+  if (status === "authenticated") {
+    return (
+      <div className="page-wrap">
+        <section className="rounded-[2rem] border border-line bg-ink p-6 text-paper sm:p-9 lg:p-11">
+          <Badge className="border-white/20 bg-white/10 text-[#e8eee9]" tone="neutral">
+            <Sparkles className="size-3" /> Bloque 1 conectado
+          </Badge>
+          <h1 className="mt-7 max-w-3xl font-display text-[clamp(2.7rem,6vw,5rem)] leading-[.92] tracking-[-.055em]">
+            Hola, {profile?.displayName ?? "estudiante"}.
+          </h1>
+          <p className="mt-5 max-w-xl text-sm leading-6 text-[#c9d0cc] sm:text-base">
+            {activeClassroom
+              ? `Estás en ${activeClassroom.title} como ${activeRole === "teacher" ? "docente" : "estudiante"}.`
+              : "Crea tu primera aula o acepta una invitación para comenzar."}
+          </p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Button asChild variant="accent"><Link to="/aula">Gestionar aula <ArrowRight className="size-4" /></Link></Button>
+            <Button asChild className="border-white/20 bg-white/10 text-white hover:bg-white/15" variant="secondary"><Link to="/grupo">Ver grupos</Link></Button>
+          </div>
+        </section>
+        <section className="mt-8 grid gap-4 sm:grid-cols-3">
+          <Card className="p-5"><p className="eyebrow">Aula activa</p><strong className="mt-3 block text-xl">{activeClassroom?.title ?? "Sin aula"}</strong><span className="mt-1 block text-sm text-muted">{activeClassroom?.term ?? "Acepta una invitación"}</span></Card>
+          <Card className="p-5"><p className="eyebrow">Matrícula visible</p><strong className="mt-3 block text-xl">{members.length}</strong><span className="mt-1 block text-sm text-muted">integrantes activos</span></Card>
+          <Card className="p-5"><p className="eyebrow">Grupos privados</p><strong className="mt-3 block text-xl">{groups.length}</strong><span className="mt-1 block text-sm text-muted">en el aula seleccionada</span></Card>
+        </section>
+        <Card className="mt-5 p-5 text-sm text-muted">
+          Biblioteca, documentos y tutor real permanecen en modo demostración hasta los bloques 2–4. No se envía contenido académico a servicios externos.
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="page-wrap">
       <section className="hero-grid overflow-hidden rounded-[2rem] border border-line bg-ink text-paper">

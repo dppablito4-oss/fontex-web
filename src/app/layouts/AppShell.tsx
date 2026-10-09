@@ -4,6 +4,7 @@ import {
   ChevronDown,
   GraduationCap,
   House,
+  LogOut,
   Menu,
   Settings2,
   UsersRound,
@@ -15,6 +16,8 @@ import { NavLink, Outlet } from "react-router-dom";
 import { BrandMark } from "../../components/BrandMark";
 import { DemoNotice } from "../../components/feedback/DemoNotice";
 import { Button } from "../../components/ui/button";
+import { useAuth } from "../../features/auth/AuthProvider";
+import { useWorkspace } from "../../features/workspace/WorkspaceProvider";
 import { cn } from "../../lib/utils";
 
 const navigation = [
@@ -26,6 +29,8 @@ const navigation = [
 ];
 
 export function AppShell() {
+  const { status, profile, user, signOut } = useAuth();
+  const { activeClassroom, activeRole, classrooms, selectClassroom } = useWorkspace();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isDesktop, setIsDesktop] = useState(() =>
     typeof window !== "undefined"
@@ -36,6 +41,13 @@ export function AppShell() {
   const openMenuButtonRef = useRef<HTMLButtonElement>(null);
   const closeMenuButtonRef = useRef<HTMLButtonElement>(null);
   const navigationAvailable = isDesktop || mobileOpen;
+  const authenticated = status === "authenticated";
+  const displayName = profile?.displayName ?? user?.email ?? "Usuario Fontex";
+  const initials = displayName
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("") || "FX";
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(min-width: 1024px)");
@@ -105,13 +117,34 @@ export function AppShell() {
 
         <div className="mt-8 rounded-2xl border border-line bg-white/70 p-3">
           <p className="eyebrow">Aula activa</p>
-          <button className="mt-2 flex w-full items-center justify-between text-left">
-            <span>
-              <strong className="block text-sm">Fundamentos de investigación</strong>
-              <span className="mt-0.5 block text-xs text-muted">Ciclo 2026-II</span>
-            </span>
-            <ChevronDown className="size-4 text-muted" />
-          </button>
+          {authenticated ? (
+            classrooms.length ? (
+              <label className="relative mt-2 block">
+                <span className="sr-only">Seleccionar aula</span>
+                <select
+                  className="w-full appearance-none bg-transparent pr-6 text-sm font-semibold outline-none"
+                  onChange={(event) => selectClassroom(event.target.value)}
+                  value={activeClassroom?.id ?? ""}
+                >
+                  {classrooms.map((classroom) => (
+                    <option key={classroom.id} value={classroom.id}>{classroom.title}</option>
+                  ))}
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-0 top-0 size-4 text-muted" />
+                <span className="mt-1 block text-xs text-muted">{activeClassroom?.term ?? "Sin periodo"}</span>
+              </label>
+            ) : (
+              <p className="mt-2 text-sm font-semibold">Crea un aula o acepta una invitación</p>
+            )
+          ) : (
+            <div className="mt-2 flex w-full items-center justify-between text-left">
+              <span>
+                <strong className="block text-sm">Fundamentos de investigación</strong>
+                <span className="mt-0.5 block text-xs text-muted">Demostración 2026-II</span>
+              </span>
+              <ChevronDown className="size-4 text-muted" />
+            </div>
+          )}
         </div>
 
         <nav className="mt-7 space-y-1" aria-label="Navegación principal">
@@ -144,13 +177,27 @@ export function AppShell() {
           </NavLink>
           <div className="flex items-center gap-3 border-t border-line px-2 pt-4">
             <span className="grid size-9 place-items-center rounded-full bg-[#d9e6de] text-xs font-bold text-forest">
-              AM
+              {initials}
             </span>
             <span className="min-w-0 flex-1">
-              <strong className="block truncate text-sm">Ana Mendoza</strong>
-              <span className="block truncate text-xs text-muted">Estudiante</span>
+              <strong className="block truncate text-sm">{displayName}</strong>
+              <span className="block truncate text-xs text-muted">
+                {authenticated ? (activeRole === "teacher" ? "Docente" : activeRole === "student" ? "Estudiante" : "Sin aula") : "Demostración"}
+              </span>
             </span>
-            <span className="size-2 rounded-full bg-[#57a276]" title="En línea" />
+            {authenticated ? (
+              <Button
+                aria-label="Cerrar sesión"
+                onClick={() => void signOut()}
+                size="icon"
+                title="Cerrar sesión"
+                variant="ghost"
+              >
+                <LogOut className="size-4" />
+              </Button>
+            ) : (
+              <span className="size-2 rounded-full bg-[#57a276]" title="Modo demostración" />
+            )}
           </div>
         </div>
       </aside>
@@ -174,14 +221,18 @@ export function AppShell() {
               <BrandMark />
             </div>
             <div className="hidden lg:block">
-              <DemoNotice />
+              {authenticated ? (
+                <span className="demo-notice border-emerald-200 bg-emerald-50 text-emerald-800">
+                  <span className="status-dot" /> Sesión protegida
+                </span>
+              ) : <DemoNotice />}
             </div>
           </div>
           <div className="flex items-center gap-2">
             <span className="hidden text-xs text-muted sm:inline">Fuentes puestas en contexto</span>
             <span className="mx-1 hidden h-4 w-px bg-line sm:block" />
             <span className="status-dot" />
-            <span className="text-xs font-semibold">Entorno local</span>
+            <span className="text-xs font-semibold">{authenticated ? "Supabase conectado" : "Modo demostración"}</span>
           </div>
         </header>
 

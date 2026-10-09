@@ -22,3 +22,20 @@ jobs:
       - run: npm run typecheck
       - run: npm run test
       - run: npm run build
+
+  database-security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Start isolated Postgres
+        run: npx supabase db start
+      - name: Test schema and RLS
+        run: npx supabase test db --local
+      - name: Stop isolated Postgres
+        if: always()
+        run: npx supabase db stop

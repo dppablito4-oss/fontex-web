@@ -12,6 +12,101 @@ Cada reporte incluye alcance, cambios, archivos relevantes, validaciones reales,
 
 ---
 
+## v0.2.0 — Identidad, aulas, grupos y seguridad RLS
+
+**Fecha:** 8 de octubre de 2026
+**Bloque:** 1 — Identidad, aulas y grupos
+**Estado:** Implementado y verificado local/remotamente; activación en GitHub Pages pendiente de variables públicas
+
+### Objetivo
+
+Implementar exclusivamente el Bloque 1 del plan maestro: Supabase Auth, perfiles, organizaciones, aulas, matrícula por invitación, roles, grupos y políticas RLS probadas con identidades diferentes.
+
+### Base de datos y seguridad
+
+- Se crearon dos migraciones aditivas: la primera incorpora `profiles`, `organizations`, `classrooms`, `class_members`, `classroom_invitations`, `study_groups` y `group_members`; la segunda endurece permisos y añade índices para claves foráneas.
+- Todas las tablas expuestas tienen RLS y privilegios SQL explícitos; `anon` no puede operar sobre ellas.
+- Un trigger crea el perfil mínimo al registrar un usuario en Supabase Auth.
+- El propietario de un aula se registra automáticamente como docente.
+- Las invitaciones se vinculan a correo, aula, rol y vencimiento; el token se muestra una sola vez y en PostgreSQL solo se conserva SHA-256.
+- Un correo diferente no puede consumir la invitación.
+- Los estudiantes no tienen privilegio SQL para editar matrículas y no pueden autoasignarse el rol docente.
+- La creación inicial de organización y aula se realiza mediante una RPC atómica; después del primer espacio, solo un docente activo puede crear otro.
+- Solo el propietario puede cambiar roles; ningún docente puede retirar al propietario.
+- Los grupos solo admiten integrantes activos del aula y únicamente docentes pueden crear grupos o modificar asignaciones.
+- Retirar una matrícula elimina las asignaciones grupales y revoca inmediatamente el acceso al aula.
+- Las ayudas internas `SECURITY DEFINER` viven en `private`. Las RPC públicas necesarias están limitadas a `authenticated`, fijan `search_path = ''` y verifican identidad y permisos dentro de cada operación.
+
+### Frontend
+
+- Se integró `@supabase/supabase-js` con URL y clave publicable; no se admite `service_role` en variables `VITE_*`.
+- La configuración del navegador rechaza claves nuevas `sb_secret_*`, exige HTTPS fuera de `localhost`/`127.0.0.1` y conserva compatibilidad con Supabase local.
+- Se añadió registro, confirmación, inicio/cierre de sesión y edición del nombre visible.
+- Se implementaron creación de organización/aula, aceptación y generación de invitaciones, listado de matrícula y gestión controlada de roles.
+- Se implementaron creación de grupos, asignación y remoción de integrantes.
+- El shell muestra identidad, rol y aula reales cuando existe sesión.
+- Sin variables públicas, Fontex permanece en modo demostración claramente identificado y no simula escrituras.
+- Biblioteca, Storage, documentos y tutor real permanecen fuera de alcance.
+
+### Cambios remotos realizados
+
+- Proyecto: `fintex.back` (`goegjuglstapjwcckawp`).
+- Se aplicó `20261009003000_block1_identity_classrooms_groups.sql` mediante Supabase CLI.
+- Se aplicó `20261009011231_harden_block1_permissions_and_indexes.sql` para cerrar la creación directa de espacios, completar índices de claves foráneas y retirar la ejecución API del trigger alojado `rls_auto_enable`.
+- `site_url` de Auth quedó en `https://fontex.sypablitodp.site`.
+- Se autorizaron retornos a `https://fontex.sypablitodp.site/**` y `http://localhost:5173/**`.
+- Se conservaron los ajustes remotos más estrictos de confirmación de correo, OTP de 8 dígitos y MFA TOTP.
+- No se modificaron Storage, pooler, Apple OAuth, SMS ni secretos.
+
+### Validaciones reales
+
+| Validación | Resultado |
+|---|---|
+| `npx supabase db reset --local` | Las dos migraciones reconstruyen la base correctamente |
+| `npx supabase db push --linked --dry-run --skip-vault` | Solo la migración de endurecimiento pendiente fue detectada |
+| `npx supabase db push --linked --skip-vault` | Segunda migración aplicada correctamente |
+| `npx supabase migration list --linked` | Las dos versiones coinciden local y remotamente |
+| `npx supabase db lint --local` | Sin errores |
+| `npx supabase db lint --linked` | Sin errores |
+| `npx supabase db advisors --local` | Sin observaciones |
+| `npx supabase db advisors --linked` | Seis avisos revisados y esperados para RPC públicas `SECURITY DEFINER` con validación interna |
+| `npx supabase test db --local` | 34 pruebas pgTAP aprobadas |
+| Integración contra Supabase remoto | Aprobada con docente, estudiante y usuario ajeno |
+| Limpieza posterior | Consulta real: las siete tablas remotas quedaron con 0 filas |
+| `npm ci` | Correcto; 0 vulnerabilidades reportadas |
+| `npm run lint` | Correcto, sin advertencias |
+| `npm run typecheck` | Correcto |
+| `npm run test -- --run` | 4 archivos y 19 pruebas aprobadas; 1 archivo remoto omitido sin credenciales |
+| `npm run build` | Correcto; SDK de Supabase separado en un chunk de 223 kB |
+
+La integración remota creó usuarios y registros con identificadores únicos, verificó invitación, aislamiento, bloqueo de autoascenso, asignación/remoción grupal y revocación de matrícula, y eliminó los datos al finalizar. Las claves necesarias existieron únicamente como variables temporales del proceso.
+
+### CI y despliegue
+
+- CI incorpora un job separado que inicia PostgreSQL de Supabase, aplica migraciones y ejecuta pgTAP.
+- Pages acepta `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY` como variables de repositorio.
+- GitHub CLI no tiene una sesión autenticada en este entorno; por eso esas dos variables aún no se configuraron remotamente.
+- Hasta configurarlas, el sitio público seguirá mostrando el modo demostración aunque el backend del Bloque 1 ya esté desplegado.
+
+### Archivos principales
+
+- `supabase/migrations/20261009003000_block1_identity_classrooms_groups.sql`
+- `supabase/migrations/20261009011231_harden_block1_permissions_and_indexes.sql`
+- `supabase/tests/database/block1_rls.test.sql`
+- `src/features/auth/`
+- `src/features/workspace/WorkspaceProvider.tsx`
+- `src/features/classrooms/ClassroomPage.tsx`
+- `src/features/groups/GroupPage.tsx`
+- `src/lib/supabase/`
+- `.github/workflows/ci.yml`
+- `.github/workflows/deploy-pages.yml`
+
+### Siguiente paso permitido
+
+Finalizar las validaciones del frontend, crear y publicar los commits, configurar las dos variables públicas de Pages y verificar el flujo Auth en el dominio. El Bloque 2 no debe iniciarse hasta cerrar esas tareas y recibir una orden explícita.
+
+---
+
 ## v0.1.5 — Vinculación segura con Supabase
 
 **Fecha:** 8 de octubre de 2026

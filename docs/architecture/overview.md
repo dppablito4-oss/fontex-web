@@ -1,14 +1,16 @@
-# Arquitectura del Bloque 0
+# Arquitectura de los Bloques 0 y 1
 
 ## Objetivo
 
-El Bloque 0 establece la interfaz y las fronteras técnicas de Fontex sin conectar todavía datos privados ni modelos generativos. El resultado es un sitio estático que se puede compilar y publicar en GitHub Pages.
+El Bloque 0 estableció la interfaz y las fronteras técnicas de Fontex. El Bloque 1 incorpora identidad, aulas y grupos con autorización en PostgreSQL, manteniendo el frontend como sitio estático para GitHub Pages. Los documentos privados y modelos generativos siguen sin conectarse.
 
 ## Capas actuales
 
 ```text
 Navegador
 ├── React Router (HashRouter)
+├── Supabase Auth + cliente público bajo RLS
+├── Contextos de identidad y espacio de trabajo
 ├── Shell responsive y páginas por funcionalidad
 ├── Componentes UI locales
 └── assistant-ui LocalRuntime
@@ -19,7 +21,21 @@ Navegador
 - `src/features`: páginas y comportamiento agrupados por funcionalidad.
 - `src/components`: componentes compartidos y primitivas UI.
 - `src/lib`: utilidades sin conocimiento de la interfaz.
-- `supabase`: marcadores para migraciones, funciones y pruebas futuras; no contiene un esquema inventado.
+- `supabase/migrations`: esquema versionado de identidad, aulas, invitaciones y grupos.
+- `supabase/tests`: pruebas pgTAP de aislamiento con múltiples identidades.
+
+## Identidad y autorización
+
+`AuthProvider` administra la sesión y el perfil. `WorkspaceProvider` consulta exclusivamente mediante el token del usuario; no usa claves privadas ni decide autorizaciones. Si faltan las variables públicas, la aplicación conserva un modo demostrativo explícito y no simula escrituras.
+
+El esquema aplica dos capas:
+
+1. Privilegios SQL mínimos para `authenticated` y ninguno para `anon` sobre las tablas del Bloque 1.
+2. RLS para filtrar perfiles, organizaciones, aulas, matrículas, invitaciones y grupos.
+
+Los roles pertenecen a `class_members`, no a `raw_user_meta_data`. Las invitaciones vinculan correo, rol y aula; el token se devuelve una vez y solo se conserva su SHA-256. El propietario del aula no puede ser retirado y solo él puede cambiar roles de miembros existentes. Retirar una matrícula elimina también las asignaciones grupales y corta el acceso futuro.
+
+Las funciones auxiliares que deben leer membresías sin recursión RLS viven en el esquema no expuesto `private`, usan `SECURITY DEFINER`, fijan `search_path = ''` y califican todas las relaciones. Las funciones públicas de mutación verifican `auth.uid()`, correo y rol antes de escribir y limitan su ejecución a `authenticated`.
 
 ## Navegación estática
 
@@ -42,7 +58,7 @@ Resultado del spike:
 
 ## Frontera futura
 
-El frontend podrá utilizar el SDK público de Supabase bajo políticas RLS. Las operaciones con secretos, recuperación autorizada y proveedores de IA residirán en Edge Functions. El contrato del adaptador conversacional permite reemplazar la simulación sin rehacer la vista.
+El frontend ya utiliza el SDK público de Supabase bajo RLS para el Bloque 1. Las operaciones con secretos, documentos, recuperación autorizada y proveedores de IA residirán en Storage y Edge Functions a partir de los bloques siguientes. El contrato del adaptador conversacional permite reemplazar la simulación sin rehacer la vista.
 
 ## Accesibilidad y responsive
 

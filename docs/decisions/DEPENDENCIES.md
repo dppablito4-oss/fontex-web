@@ -15,6 +15,9 @@ Registro inicial del Bloque 0. Las versiones exactas instaladas quedan fijadas e
 | lucide-react | Iconografía | ISC | Iconos consistentes y reemplazables |
 | Vitest + Testing Library + jsdom | Pruebas del frontend | MIT | Prueba básica del shell y futuras unitarias |
 | ESLint + typescript-eslint | Calidad estática | MIT / BSD-2-Clause | CI sin advertencias |
+| `@supabase/supabase-js` | Auth y acceso tipado a PostgreSQL bajo RLS | MIT | SDK oficial; solo recibe URL y clave publicable en el navegador |
+| Supabase CLI | Migraciones, configuración, lint y pruebas de base | MIT | Dependencia de desarrollo, no se incluye en el bundle |
+| pgTAP | Pruebas transaccionales de esquema y RLS | PostgreSQL | Extensión administrada por Supabase; pruebas locales y en CI |
 
 ## shadcn/ui
 

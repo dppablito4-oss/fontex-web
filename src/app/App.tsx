@@ -3,10 +3,13 @@ import { Navigate, Route, Routes } from "react-router-dom";
 
 import { AppShell } from "./layouts/AppShell";
 import { AdminPage } from "../features/administration/AdminPage";
+import { AuthLoadingPage, AuthPage } from "../features/auth/AuthPage";
+import { useAuth } from "../features/auth/AuthProvider";
 import { ClassroomPage } from "../features/classrooms/ClassroomPage";
 import { GroupPage } from "../features/groups/GroupPage";
 import { HomePage } from "../features/home/HomePage";
 import { LibraryPage } from "../features/library/LibraryPage";
+import { WorkspaceProvider } from "../features/workspace/WorkspaceProvider";
 
 const TutorPage = lazy(() =>
   import("../features/tutor/TutorPage").then((module) => ({
@@ -15,8 +18,14 @@ const TutorPage = lazy(() =>
 );
 
 export function App() {
+  const { status } = useAuth();
+
+  if (status === "loading") return <AuthLoadingPage />;
+  if (status === "anonymous") return <AuthPage />;
+
   return (
-    <Routes>
+    <WorkspaceProvider>
+      <Routes>
       <Route element={<AppShell />}>
         <Route index element={<HomePage />} />
         <Route path="aula" element={<ClassroomPage />} />
@@ -33,6 +42,7 @@ export function App() {
         <Route path="administracion" element={<AdminPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
-    </Routes>
+      </Routes>
+    </WorkspaceProvider>
   );
 }
