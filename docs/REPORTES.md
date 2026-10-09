@@ -85,6 +85,12 @@ La interfaz mezclaba la paleta crema, verde y coral con valores HEX incrustados 
 
 Las capturas comparativas se generaron como artefactos temporales fuera del repositorio para evitar incorporar binarios de validación al producto.
 
+### Commit principal
+
+- Commit: `663d27f`.
+- Mensaje: `feat(ui): implement Fontex brand themes`.
+- Alcance: tokens, temas, selector, adaptación completa, accesibilidad, pruebas y documentación del sistema de diseño.
+
 ### Siguiente paso permitido
 
 Revisar el diff final, publicar y verificar CI y Pages. No iniciar el Bloque 2 antes de cerrar esta intervención.
