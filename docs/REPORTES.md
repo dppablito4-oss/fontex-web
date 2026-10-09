@@ -12,6 +12,35 @@ Cada reporte incluye alcance, cambios, archivos relevantes, validaciones reales,
 
 ---
 
+## v0.2.1 — Corrección del cierre de PostgreSQL en CI
+
+**Fecha:** 8 de octubre de 2026
+**Estado:** Corrección implementada y verificada localmente; nueva ejecución remota pendiente
+
+### Diagnóstico
+
+- La ejecución `37869420686` aprobó el job `quality` y las 34 pruebas de esquema/RLS del job `database-security`.
+- El job terminó en fallo porque el paso de limpieza usaba `supabase db stop`, subcomando que no existe en Supabase CLI `2.120.0`.
+- El despliegue de Pages `37869420684` sí terminó correctamente para `ddc3e8a`.
+
+### Corrección
+
+- El cleanup ahora usa el comando válido `supabase stop --no-backup` y permanece protegido por `if: always()`.
+- No se cambiaron el esquema remoto, las políticas RLS ni el frontend.
+
+### Validación local
+
+- `npx supabase stop --no-backup`: correcto.
+- `npx supabase db start`: reconstruyó ambas migraciones correctamente.
+- `npx supabase test db --local`: 34 pruebas pgTAP aprobadas.
+- `npx supabase stop --no-backup`: cleanup final correcto.
+
+### Siguiente paso
+
+Validar localmente la secuencia exacta del job, publicar este parche y comprobar que CI y Pages finalicen correctamente.
+
+---
+
 ## v0.2.0 — Identidad, aulas, grupos y seguridad RLS
 
 **Fecha:** 8 de octubre de 2026

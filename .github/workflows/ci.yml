@@ -38,4 +38,4 @@ jobs:
         run: npx supabase test db --local
       - name: Stop isolated Postgres
         if: always()
-        run: npx supabase db stop
+        run: npx supabase stop --no-backup
