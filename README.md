@@ -4,7 +4,7 @@
 
 Fontex es un entorno académico que prepara una experiencia de consulta documental con trazabilidad. El nombre reúne **FONT**es (latín: fuentes o manantial de información) y **TEX**tus (texto o contexto): ninguna respuesta debería presentarse aislada de las fuentes autorizadas que la sostienen.
 
-Este repositorio contiene los **Bloques 0 y 1** del plan maestro, más la conexión anticipada del tutor en `v0.3.0`: frontend responsive, navegación estática, identidad con Supabase Auth, modelo protegido por RLS y una Edge Function autenticada que consulta OpenAI. Biblioteca, documentos, Storage y RAG permanecen fuera de alcance.
+Este repositorio contiene los **Bloques 0, 1 y 2** del plan maestro, más la conexión anticipada del tutor en `v0.3.0`: frontend responsive, navegación estática, identidad con Supabase Auth, modelo protegido por RLS, biblioteca PDF privada y una Edge Function autenticada que consulta OpenAI. La extracción, indexación y el RAG permanecen fuera de alcance.
 
 ## Ejecutar localmente
 
@@ -33,7 +33,7 @@ La clave publicable está diseñada para el navegador y solo es segura junto con
 
 ## Supabase
 
-El repositorio está vinculado al proyecto `goegjuglstapjwcckawp` (`fintex.back`). La migración del Bloque 1 se aplica con revisión previa:
+El repositorio está vinculado al proyecto `goegjuglstapjwcckawp` (`fintex.back`). Las migraciones de los Bloques 1 y 2 se aplican con revisión previa:
 
 ```bash
 npx supabase db push --dry-run
@@ -52,6 +52,12 @@ El tutor real se ejecuta exclusivamente en `tutor-chat`. Requiere `OPENAI_API_KE
 
 ```bash
 npx supabase functions deploy tutor-chat --project-ref goegjuglstapjwcckawp --use-api
+```
+
+La biblioteca coordina sus escrituras mediante dos funciones autenticadas. Ninguna usa secretos en el navegador:
+
+```bash
+npx supabase functions deploy document-upload document-delete --project-ref goegjuglstapjwcckawp --use-api
 ```
 
 No se debe definir `OPENAI_API_KEY` en variables `VITE_*`, archivos del frontend ni GitHub Pages.
@@ -86,6 +92,9 @@ npm run build
 - Supabase Auth para registro, confirmación e inicio/cierre de sesión.
 - Perfiles, organizaciones, aulas, invitaciones de un solo uso, roles y grupos.
 - RLS y privilegios mínimos sobre todas las tablas expuestas del Bloque 1.
+- PDF privados en `fontex-documents`, metadatos RLS, cuotas transaccionales y deduplicación SHA-256.
+- Compartición explícita por grupo o aula con revocación inmediata y sin URLs públicas.
+- Visor PDF.js responsive con navegación de páginas y descarga autenticada.
 - Pruebas pgTAP y de integración remota con múltiples identidades ficticias.
 - CI y despliegue estático a GitHub Pages.
 - OpenAI Responses API desde una Edge Function autenticada; la clave privada permanece en Supabase.
@@ -95,4 +104,4 @@ Consulta [los reportes versionados](docs/REPORTES.md), [la arquitectura](docs/ar
 
 ## Estado
 
-Prototipo académico en desarrollo. Identidad, aulas, grupos y tutor de orientación general operan con servicios reales en producción. Biblioteca, documentos, recuperación vectorial y citas trazables continúan pendientes.
+Prototipo académico en desarrollo. Identidad, aulas, grupos, biblioteca PDF y tutor de orientación general operan con servicios reales. La recuperación vectorial, las citas trazables y la conexión documental del tutor corresponden al Bloque 3 y continúan pendientes.

@@ -45,7 +45,7 @@ export function HomePage() {
       <div className="page-wrap">
         <section className="rounded-[2rem] border border-brand-sky/30 bg-brand-deep p-6 text-on-brand sm:p-9 lg:p-11">
           <Badge className="border-white/25 bg-white/10 text-on-brand" tone="neutral">
-            <Sparkles className="size-3" /> Bloque 1 conectado
+            <Sparkles className="size-3" /> Bloque 2 conectado
           </Badge>
           <h1 className="mt-7 max-w-3xl font-display text-[clamp(2.7rem,6vw,5rem)] leading-[.92] tracking-[-.055em]">
             Hola, {profile?.displayName ?? "estudiante"}.
@@ -66,7 +66,7 @@ export function HomePage() {
           <Card className="p-5"><p className="eyebrow">Grupos privados</p><strong className="mt-3 block text-xl">{groups.length}</strong><span className="mt-1 block text-sm text-muted-foreground">en el aula seleccionada</span></Card>
         </section>
         <Card className="mt-5 p-5 text-sm text-muted-foreground">
-          Biblioteca, documentos y tutor real permanecen en modo demostración hasta los bloques 2–4. No se envía contenido académico a servicios externos.
+          La biblioteca PDF privada y el tutor general usan servicios reales. El contenido de los documentos no se envía al tutor: la indexación y el motor RAG siguen pendientes.
         </Card>
       </div>
     );

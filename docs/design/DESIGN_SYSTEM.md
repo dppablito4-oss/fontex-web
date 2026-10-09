@@ -1,6 +1,6 @@
 # Sistema de diseño de Fontex
 
-**Versión:** 0.2.2
+**Versión:** 0.4.0
 
 **Estado:** Implementado para temas claro y oscuro
 
@@ -68,6 +68,10 @@ Los grupos `success`, `warning`, `error` e `info` disponen de tokens separados p
 ## Tutor académico
 
 La conversación usa `background` como plano de lectura, `surface` para respuestas del tutor, `primary` para mensajes y envío del estudiante, y `sidebar` para las fuentes activas. El degradado del compositor, sus bordes y los controles se derivan de tokens para impedir superficies claras residuales en modo oscuro.
+
+## Biblioteca documental
+
+Las tarjetas de documento usan `surface`, bordes semánticos y badges textuales para distinguir alcance privado, de grupo o de aula sin depender solo del color. La carga y la compartición se presentan en paneles delimitados; el visor PDF ocupa un diálogo responsive con controles de página accesibles, ancho adaptable y cierre explícito. Los estados vacío, cargando, error y confirmación deben conservarse en ambos temas y en anchos móviles.
 
 ## Accesibilidad y verificación
 

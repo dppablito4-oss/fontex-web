@@ -1,8 +1,8 @@
-# Arquitectura de los Bloques 0 y 1
+# Arquitectura de los Bloques 0, 1 y 2
 
 ## Objetivo
 
-El Bloque 0 estableció la interfaz y las fronteras técnicas de Fontex. El Bloque 1 incorpora identidad, aulas y grupos con autorización en PostgreSQL, manteniendo el frontend como sitio estático para GitHub Pages. Los documentos privados y modelos generativos siguen sin conectarse.
+El Bloque 0 estableció la interfaz y las fronteras técnicas de Fontex. El Bloque 1 incorporó identidad, aulas y grupos con autorización en PostgreSQL. El Bloque 2 añade una biblioteca PDF real con metadatos protegidos, Storage privado, cuotas transaccionales y visor PDF.js, manteniendo el frontend como sitio estático para GitHub Pages. La indexación y el RAG siguen sin conectarse.
 
 ## Capas actuales
 
@@ -11,10 +11,11 @@ Navegador
 ├── React Router (HashRouter)
 ├── Supabase Auth + cliente público bajo RLS
 ├── Contextos de identidad y espacio de trabajo
+├── Biblioteca documental y visor PDF.js bajo demanda
 ├── Shell responsive y páginas por funcionalidad
 ├── Componentes UI locales
 └── assistant-ui LocalRuntime
-    └── Adaptador de demostración, sin red ni secretos
+    └── Adaptador a tutor-chat, todavía sin documentos ni RAG
 ```
 
 - `src/app`: enrutamiento y layout transversal.
@@ -23,6 +24,8 @@ Navegador
 - `src/lib`: utilidades sin conocimiento de la interfaz.
 - `supabase/migrations`: esquema versionado de identidad, aulas, invitaciones y grupos.
 - `supabase/tests`: pruebas pgTAP de aislamiento con múltiples identidades.
+- `supabase/functions/document-upload`: validación confiable y carga coordinada.
+- `supabase/functions/document-delete`: eliminación física antes de retirar metadatos y permisos.
 
 ## Identidad y autorización
 
@@ -36,6 +39,28 @@ El esquema aplica dos capas:
 Los roles pertenecen a `class_members`, no a `raw_user_meta_data`. Las invitaciones vinculan correo, rol y aula; el token se devuelve una vez y solo se conserva su SHA-256. El propietario del aula no puede ser retirado y solo él puede cambiar roles de miembros existentes. Retirar una matrícula elimina también las asignaciones grupales y corta el acceso futuro.
 
 Las funciones auxiliares que deben leer membresías sin recursión RLS viven en el esquema no expuesto `private`, usan `SECURITY DEFINER`, fijan `search_path = ''` y califican todas las relaciones. Las funciones públicas de mutación verifican `auth.uid()`, correo y rol antes de escribir y limitan su ejecución a `authenticated`.
+
+La creación del primer workspace ya no pertenece automáticamente a la primera cuenta pública. `private.workspace_bootstrap_authorizations` conserva autorizaciones administrativas de un solo uso; la migración autoriza al único usuario preexistente del proyecto piloto y las altas posteriores requieren una concesión explícita.
+
+## Biblioteca documental segura
+
+`documents` conserva una referencia estable por PDF, propietario derivado de `auth.uid()`, aula, hash SHA-256, tamaño, páginas, ruta aleatoria y estado. `document_shares` usa llaves foráneas separadas para aula y grupo, junto con un `check` y un trigger que impiden asociar un documento con otro contexto. No se creó versionado porque el MVP no reemplaza objetos: una nueva versión se carga como un documento nuevo.
+
+El flujo de carga separa reserva y archivo sin declarar disponibilidad prematura:
+
+1. PDF.js comprueba en el navegador extensión, MIME, parseo, páginas y presencia de texto seleccionable.
+2. `reserve_document_upload` verifica matrícula y cuotas dentro de una transacción. Advisory locks global, de aula y de usuario evitan carreras; la función genera ID y ruta aleatorios.
+3. `document-upload` exige JWT, vuelve a comprobar propietario, vencimiento, tamaño, MIME, nombre, firma `%PDF-`/`%%EOF` y SHA-256.
+4. Solo la función usa el cliente administrativo para escribir el objeto; los usuarios no reciben políticas `INSERT`, `UPDATE` o `DELETE` sobre Storage.
+5. El estado cambia a `ready` únicamente después de la subida. Si la confirmación falla, la función elimina el objeto; los fallos quedan visibles pero nunca descargables.
+
+La descarga usa `storage.from('fontex-documents').download(path)` con el JWT del usuario, un `cacheNonce` nuevo y caché `no-store`. La única política `SELECT` del bucket consulta `private.can_download_document_object` y no existen políticas directas de escritura. Un propietario puede leer su documento; una compartición de aula exige matrícula activa, y una de grupo exige simultáneamente matrícula y pertenencia actual al grupo. El docente no obtiene acceso implícito a documentos privados de estudiantes. No se crean URLs firmadas ni públicas.
+
+`document-delete` verifica propietario con el cliente sometido a RLS, elimina el objeto mediante Storage API y después borra el documento; el `ON DELETE CASCADE` retira sus comparticiones. Las sustituciones directas y cambios de ruta están denegados.
+
+## Cuotas del piloto
+
+`document_limits` permite configuración administrativa. Los valores iniciales son 5 MiB y 100 páginas por PDF, 10 documentos y 50 MiB por usuario, 500 MiB por aula y 750 MiB globales. El tope global deja margen frente al cupo publicado de 1 GB del plan Free; no depende de que la organización tenga un plan superior. Los conteos incluyen reservas y cargas en curso para no exceder límites mediante concurrencia.
 
 ## Navegación estática
 
@@ -60,7 +85,7 @@ Resultado del spike:
 
 ## Frontera futura
 
-El frontend ya utiliza el SDK público de Supabase bajo RLS para el Bloque 1. Las operaciones con secretos, documentos, recuperación autorizada y proveedores de IA residirán en Storage y Edge Functions a partir de los bloques siguientes. El contrato del adaptador conversacional permite reemplazar la simulación sin rehacer la vista.
+El frontend utiliza el SDK público de Supabase bajo RLS para identidad, biblioteca y descargas. Las operaciones documentales privilegiadas residen en Edge Functions. El siguiente bloque podrá leer únicamente documentos `ready` que ya superaron esta frontera de autorización, pero deberá diseñar nuevas políticas para texto, fragmentos y recuperación. `tutor-chat` no recibe todavía archivos ni contenido PDF.
 
 ## Accesibilidad y responsive
 

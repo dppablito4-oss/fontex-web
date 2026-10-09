@@ -8,6 +8,8 @@ export type Json =
 
 export type ClassroomRole = "teacher" | "student";
 export type MembershipStatus = "active" | "removed";
+export type DocumentStatus = "pending" | "uploading" | "ready" | "failed";
+export type DocumentShareScope = "group" | "classroom";
 
 type Relationship = {
   foreignKeyName: string;
@@ -139,6 +141,65 @@ export type Database = {
         Update: never;
         Relationships: Relationship[];
       };
+      document_limits: {
+        Row: {
+          id: number;
+          max_file_bytes: number;
+          max_pages: number;
+          max_documents_per_user: number;
+          max_bytes_per_user: number;
+          max_bytes_per_classroom: number;
+          max_bytes_global: number;
+          updated_at: string;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      documents: {
+        Row: {
+          id: string;
+          owner_id: string;
+          classroom_id: string;
+          title: string;
+          original_filename: string;
+          mime_type: string;
+          size_bytes: number;
+          page_count: number;
+          content_sha256: string;
+          storage_path: string;
+          status: DocumentStatus;
+          failure_code: string | null;
+          upload_expires_at: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: Relationship[];
+      };
+      document_shares: {
+        Row: {
+          id: string;
+          document_id: string;
+          scope_type: DocumentShareScope;
+          classroom_id: string | null;
+          group_id: string | null;
+          granted_by: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          document_id: string;
+          scope_type: DocumentShareScope;
+          classroom_id?: string | null;
+          group_id?: string | null;
+          granted_by?: string;
+          created_at?: string;
+        };
+        Update: never;
+        Relationships: Relationship[];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -179,10 +240,24 @@ export type Database = {
         };
         Returns: undefined;
       };
+      reserve_document_upload: {
+        Args: {
+          target_classroom_id: string;
+          document_title: string;
+          source_filename: string;
+          source_mime_type: string;
+          source_size_bytes: number;
+          source_page_count: number;
+          source_sha256: string;
+        };
+        Returns: Json;
+      };
     };
     Enums: {
       classroom_role: ClassroomRole;
       membership_status: MembershipStatus;
+      document_status: DocumentStatus;
+      document_share_scope: DocumentShareScope;
     };
     CompositeTypes: Record<string, never>;
   };

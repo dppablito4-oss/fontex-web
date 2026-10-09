@@ -98,4 +98,11 @@ describe("Fontex shell", () => {
     renderRoute();
     expect(screen.getByText(/datos ficticios/i)).toBeInTheDocument();
   });
+
+  it("no inventa documentos ni contadores en la biblioteca sin Supabase", () => {
+    renderRoute("/biblioteca");
+    expect(screen.getByText(/biblioteca no disponible en modo demostración/i)).toBeInTheDocument();
+    expect(screen.queryByText(/12 documentos/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/metodología de la investigación/i)).not.toBeInTheDocument();
+  });
 });

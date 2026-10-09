@@ -83,6 +83,9 @@ select extensions.is(
   'Auth trigger provisions one profile per user'
 );
 
+insert into private.workspace_bootstrap_authorizations (user_id)
+values ('00000000-0000-0000-0000-000000000101');
+
 set local role authenticated;
 set local "request.jwt.claims" = '{"sub":"00000000-0000-0000-0000-000000000101","email":"teacher@fontex.test","role":"authenticated"}';
 

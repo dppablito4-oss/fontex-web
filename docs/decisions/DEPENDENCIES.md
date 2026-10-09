@@ -19,6 +19,7 @@ Registro inicial del Bloque 0. Las versiones exactas instaladas quedan fijadas e
 | `@supabase/server` 1.9.1 | Auth, contexto y CORS de `tutor-chat` | MIT | Dependencia Deno fijada en `deno.json`/`deno.lock`; exige JWT de usuario |
 | Supabase CLI | Migraciones, configuración, lint y pruebas de base | MIT | Dependencia de desarrollo, no se incluye en el bundle |
 | pgTAP | Pruebas transaccionales de esquema y RLS | PostgreSQL | Extensión administrada por Supabase; pruebas locales y en CI |
+| `pdfjs-dist` 6.4.299 | Parseo, conteo de páginas y renderizado PDF en el navegador | Apache-2.0 | Paquete oficial precompilado de Mozilla PDF.js; worker cargado bajo demanda, sin persistir texto extraído. Declara `@napi-rs/canvas` 1.0.10 (MIT) como dependencia opcional para Node; el navegador no la utiliza |
 
 ## shadcn/ui
 

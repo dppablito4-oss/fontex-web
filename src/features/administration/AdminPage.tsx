@@ -9,9 +9,9 @@ import { PageHeader } from "../shared/PageHeader";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 
 const demoItems = [
-  { icon: LockKeyhole, title: "Identidad y permisos", detail: "Configura Supabase para activar el Bloque 1", tone: "orange" as const },
-  { icon: Database, title: "Almacenamiento", detail: "Reservado para el Bloque 2", tone: "neutral" as const },
-  { icon: Gauge, title: "Cuotas del aula", detail: "Valores de demostración", tone: "blue" as const },
+  { icon: LockKeyhole, title: "Identidad y permisos", detail: "Configura Supabase para activar sesiones y RLS", tone: "orange" as const },
+  { icon: Database, title: "Almacenamiento", detail: "Requiere el bucket privado de Fontex", tone: "neutral" as const },
+  { icon: Gauge, title: "Cuotas del aula", detail: "Se aplican en la base configurada", tone: "blue" as const },
   { icon: Settings2, title: "Configuración general", detail: "Interfaz inicial", tone: "green" as const },
 ];
 
@@ -85,8 +85,8 @@ export function AdminPage() {
           </Card>
           <Card className="flex items-center gap-4 p-5">
             <span className="metric-icon"><Database /></span>
-            <div className="flex-1"><h2 className="font-semibold">Biblioteca y Storage</h2><p className="mt-1 text-sm text-muted-foreground">Pendientes del Bloque 2</p></div>
-            <Badge tone="neutral">Pendiente</Badge>
+            <div className="flex-1"><h2 className="font-semibold">Biblioteca y Storage</h2><p className="mt-1 text-sm text-muted-foreground">PDF privados y permisos activos</p></div>
+            <Badge tone="green">Real</Badge>
           </Card>
         </div>
       </div>

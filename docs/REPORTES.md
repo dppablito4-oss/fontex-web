@@ -12,6 +12,93 @@ Cada reporte incluye alcance, cambios, archivos relevantes, validaciones reales,
 
 ---
 
+## v0.4.0 — Biblioteca documental y almacenamiento privado
+
+**Fecha:** 9 de octubre de 2026
+**Bloque:** 2 — Biblioteca documental segura
+**Estado:** Implementado y validado; publicación en curso
+
+### Objetivo autorizado
+
+Sustituir la biblioteca demostrativa por un módulo real para PDF con metadatos en PostgreSQL, archivos en Supabase Storage privado, permisos por propietario, grupo y aula, cuotas confiables, visualización con PDF.js y pruebas de aislamiento. El tutor existente conserva su comportamiento general y el motor RAG permanece fuera de alcance.
+
+### Registro de acciones
+
+1. **Auditoría integral previa.** Se leyeron el plan maestro completo, el historial versionado, la arquitectura, el sistema visual, las dependencias, todas las migraciones y pruebas RLS vigentes, y los módulos de Auth, espacios de trabajo, grupos, biblioteca y tutor.
+2. **Protección del trabajo existente.** `main` está limpio y sincronizado con `origin/main` en `6240bc2`; contiene los cierres posteriores al commit funcional `v0.3.0` y no presenta cambios locales que deban sobrescribirse.
+3. **Hallazgos iniciales.** La biblioteca sigue siendo enteramente ficticia; no existen tablas documentales ni bucket. Las políticas de grupos no exponen documentos porque aún no existen, pero la futura autorización deberá exigir simultáneamente matrícula activa y pertenencia al grupo. La RPC `create_workspace` permite el bootstrap a la primera cuenta autenticada cuando no hay organizaciones, condición insegura para un registro público que se endurecerá con configuración administrativa explícita.
+4. **Preflight remoto de solo lectura.** El proyecto enlazado `goegjuglstapjwcckawp` está saludable sobre PostgreSQL 17 y conserva exactamente las dos migraciones versionadas. La consulta remota encontró 0 organizaciones, 0 aulas, 0 buckets, 0 bytes almacenados y 1 cuenta; no existen objetos documentales que puedan colisionar con la migración.
+5. **Límites y documentación vigentes.** Se revisaron Storage privado, RLS, restricciones nativas de buckets, descarga autenticada, límites de Edge Functions y novedades recientes de Supabase. La cuota publicada del plan Free es 1 GB; como el CLI no expone el plan de facturación de la organización, el diseño adopta un límite global conservador de 750 MiB, además de 5 MiB por PDF, 100 páginas, límites por usuario y aula. `pdfjs-dist` 6.4.299 es la versión vigente comprobada y declara Apache-2.0.
+6. **Migración y pruebas de base iniciales.** Se creó mediante Supabase CLI la migración aditiva `20261009203710_block2_secure_document_library.sql`: incorpora `documents`, `document_shares`, `document_limits`, RLS, helpers privados, reserva transaccional con advisory locks, deduplicación SHA-256, bucket privado y política de descarga autenticada. También endurece el primer workspace con una autorización administrativa de un solo uso y añade una matriz pgTAP específica del Bloque 2.
+7. **Reconstrucción local de Supabase.** Docker Desktop se inició sin interacción después de detectar que estaba detenido. La primera reconstrucción señaló un alias SQL reservado; se corrigió y la segunda aplicó las tres migraciones desde cero. `supabase test db --local` aprobó 75 pruebas en 2 archivos; `db lint` y `db advisors` locales finalizaron sin observaciones.
+8. **Edge Functions documentales.** `document-upload` valida JWT, reserva, propietario, vencimiento, tamaño, MIME, nombre, firma PDF básica y SHA-256 antes de subir sin `upsert`; solo marca `ready` tras confirmar Storage y limpia el objeto si falla la finalización. `document-delete` verifica propietario, elimina primero el objeto y luego los metadatos con sus comparticiones. Ambas aprobaron `deno check` y `deno lint`.
+9. **Biblioteca y visor reales.** La vista ficticia se sustituyó por servicios, hook y componentes para carga confirmada, búsqueda, filtros, orden, estados, descarga, apertura, borrado, compartición y revocación. PDF.js 6.4.299 se carga bajo demanda, valida hasta 100 páginas y texto seleccionable, renderiza ajustado al ancho y libera worker, tareas y URLs temporales.
+10. **Integración local de extremo a extremo.** El stack completo de Supabase ejecutó la suite con cinco usuarios, dos grupos y un PDF físico. Se comprobaron carga mediante Edge Function, descarga privada real, denegación a otro grupo/docente/ajeno/anónimo, compartir y revocar, pérdida de acceso al retirar matrícula, bloqueo de subida directa, fallo de firma sin objeto disponible, bucket no público y eliminación física con limpieza. La suite finalizó correctamente y eliminó usuarios, filas y objetos de prueba.
+11. **Calidad de frontend acumulada.** TypeScript y ESLint pasan. Vitest cubre validación de archivos, alcance visual, ausencia de contadores ficticios y un PDF seleccionable real abierto con PDF.js, además de conservar las pruebas anteriores. La suite remota se mantiene condicionada a credenciales y reutiliza la misma matriz probada localmente.
+12. **Preflight de producción.** La instancia remota continúa con las dos migraciones anteriores, sin organizaciones, aulas, buckets ni bytes almacenados. No ofrece PITR ni snapshots físicos listables, por lo que se generó un respaldo de esquema previo de 37.798 bytes en el directorio temporal del sistema. El `db push --dry-run --skip-vault` detectó exclusivamente `20261009203710_block2_secure_document_library.sql`; la revisión no encontró `DROP`, `TRUNCATE` ni eliminación de datos existentes. `tutor-chat` sigue activo en versión 1 y no será redeployado.
+
+13. **Migración y funciones remotas.** La migración principal se aplicó al proyecto enlazado y se desplegaron exclusivamente `document-upload` y `document-delete`, ambas activas con verificación JWT. `tutor-chat` permanece intacta en su versión 1.
+14. **Compatibilidad de descarga hospedada.** El primer E2E remoto confirmó que el objeto se almacenaba y era legible con rol administrador, pero la lectura del propietario devolvía `NoSuchKey`: el marcador interno `storage.allow_only_operation` no coincidía en el servicio hospedado aunque funcionaba localmente. Se creó la migración aditiva `20261009211357_fix_document_download_policy.sql`, que conserva la autorización por bucket, documento listo, propietario, aula/grupo y matrícula, y elimina únicamente ese filtro auxiliar. La reconstrucción local y las 75 pruebas pgTAP volvieron a aprobar.
+15. **Revocación sin caché.** El E2E remoto posterior permitió la descarga autorizada y bloqueó accesos iniciales, pero una descarga ya autorizada permanecía servible desde caché después de revocar el grupo, pese a que RLS ocultaba inmediatamente la metadata. `document-upload` pasa a guardar PDFs privados con `cacheControl: "0"` y el cliente usa `cacheNonce` junto con `cache: "no-store"`, obligando a que cada solicitud posterior vuelva a evaluar la política vigente.
+16. **E2E remoto aprobado.** Tras las dos correcciones de compatibilidad, la suite remota completó en 25,32 s la carga, descargas autorizadas, bloqueos, compartición, revocación, expulsión, rechazo de firma falsa, eliminación física y limpieza. La pasada acumulada posterior detectó únicamente un acceso diagnóstico a una propiedad no declarada por el tipo `StorageError`; se simplificó el mensaje para mantener TypeScript estricto sin alterar el escenario.
+17. **Coherencia del producto y documentación.** La revisión final contra la orden eliminó dos mensajes heredados que aún presentaban Biblioteca/Storage como demostración o pendiente, actualizó la descripción exacta de descarga sin caché y extendió el sistema de diseño con los patrones del módulo documental.
+18. **Revisión visual autenticada.** Se creó un docente y un aula exclusivamente en el Supabase local, se abrió Biblioteca con Edge automatizado a 1440 × 900 y 390 × 844 en temas claro y oscuro, y se comprobó título, CTA, estado vacío y ausencia de desbordamiento horizontal. Las cuatro capturas se inspeccionaron visualmente; la cuenta, aula y archivos auxiliares fueron eliminados y sus conteos terminaron en cero.
+
+### Arquitectura entregada
+
+- `documents` conserva propietario derivado de sesión, aula, nombre, MIME, tamaño, páginas, SHA-256, ruta aleatoria, estado y vencimiento de reserva.
+- `document_shares` representa permisos explícitos de grupo o aula; restricciones, FKs y trigger impiden asociaciones cruzadas.
+- `document_limits` centraliza 5 MiB y 100 páginas por PDF, 10 documentos y 50 MiB por usuario, 500 MiB por aula y 750 MiB globales.
+- `reserve_document_upload` aplica matrícula, deduplicación y cuotas bajo advisory locks antes de emitir una ruta UUID no predecible.
+- El bucket `fontex-documents` es privado, acepta sólo `application/pdf` hasta 5 MiB y no concede escrituras directas al navegador.
+- `document-upload` y `document-delete` coordinan Storage y metadata con JWT; la descarga sigue sometida a RLS en cada solicitud y no usa URLs públicas ni firmadas.
+- La interfaz separa servicios, hook, tarjetas, carga, compartición y visor PDF.js; no envía texto ni archivos al tutor.
+
+### Seguridad y políticas
+
+- `anon` no recibe acceso a tablas documentales ni objetos.
+- El propietario accede a su documento; grupo exige matrícula y pertenencia activas; aula exige matrícula activa.
+- El docente puede publicar para su aula, pero no adquiere lectura implícita de documentos privados de estudiantes.
+- No existen políticas Storage de `INSERT`, `UPDATE` o `DELETE` para usuarios; una ruta o UUID conocidos no sustituyen autorización.
+- El bootstrap del primer workspace requiere autorización privada de un solo uso; la cuenta piloto ya existente quedó autorizada por la migración.
+- Los avisos remotos por RPC `SECURITY DEFINER` son intencionales: cada función valida JWT, rol y contexto y fija `search_path`. Sigue abierto el aviso de plataforma por protección de contraseñas filtradas deshabilitada.
+
+### Estado de validación
+
+| Validación | Resultado real |
+|---|---|
+| `npm ci` / `npm audit --omit=dev` | 385 paquetes; 0 vulnerabilidades |
+| ESLint / TypeScript | Correctos, sin advertencias ni errores |
+| Vitest local | 11 archivos y 62 pruebas aprobadas; 2 suites remotas omitidas sin variables |
+| Build Vite | Correcto; PDF.js y worker quedan en chunks diferidos |
+| Base local desde cero | 4 migraciones aplicadas; 75 pruebas pgTAP aprobadas |
+| Supabase lint/advisors local | Sin errores ni observaciones |
+| Deno | `check` y `lint` correctos para ambas funciones documentales |
+| E2E Storage local | Flujo físico completo aprobado con cinco identidades y limpieza |
+| E2E Storage remoto | Flujo físico completo aprobado en 25,32 s y limpieza confirmada |
+| Estado remoto final | 0 organizaciones, aulas, documentos, shares y objetos de prueba; 1 cuenta original |
+| Migraciones remotas | Las 4 migraciones locales y remotas coinciden |
+| Edge Functions | `document-upload` v2 y `document-delete` v1 activas con JWT; `tutor-chat` v1 intacta |
+| Revisión visual | Escritorio/móvil y claro/oscuro aprobados en Edge autenticado |
+
+### Riesgos y límites abiertos
+
+- La firma `%PDF-`/`%%EOF`, el hash y PDF.js reducen archivos inválidos, pero no constituyen análisis antivirus ni garantizan que un PDF sea inocuo.
+- OCR, otros formatos, versionado de contenido, extracción, chunks, embeddings, recuperación y citas pertenecen al Bloque 3 o fases posteriores.
+- La publicación GitHub/Pages y su comprobación pública se completarán después del commit funcional; sus identificadores se registrarán en este mismo reporte.
+
+### Entregables y publicación
+
+- Commit funcional: pendiente de crear.
+- GitHub Actions: pendiente del push.
+- Dominio público: pendiente de validar después del despliegue.
+
+### Límite vigente
+
+No se implementarán extracción, fragmentación, embeddings, `pgvector`, recuperación semántica ni conexión documental con `tutor-chat`.
+
+---
+
 ## v0.3.0 — Tutor con IA real y logotipo Fontex
 
 **Fecha:** 8 de octubre de 2026
