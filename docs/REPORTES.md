@@ -12,6 +12,63 @@ Cada reporte incluye alcance, cambios, archivos relevantes, validaciones reales,
 
 ---
 
+## v0.1.5 — Vinculación segura con Supabase
+
+**Fecha:** 8 de octubre de 2026
+**Estado:** Completado y verificado
+
+### Acción solicitada
+
+Conectar el entorno local de Fontex con el proyecto remoto de Supabase indicado por el usuario.
+
+### Cambios realizados
+
+- Se instaló Supabase CLI `2.120.0` como dependencia de desarrollo del repositorio.
+- Se inicializó la configuración local en `supabase/config.toml`.
+- Se vinculó el repositorio con el Project Ref `goegjuglstapjwcckawp`.
+- La información temporal de la sesión y del enlace permanece excluida mediante `supabase/.gitignore`.
+- No se añadieron tokens, contraseñas, claves de API ni otros secretos al repositorio.
+
+### Proyecto remoto verificado
+
+- Nombre: `fintex.back`.
+- Región: `us-east-1`.
+- Estado observado: `ACTIVE_HEALTHY`.
+- El comando `npx supabase projects list` confirmó que el proyecto aparece como enlazado.
+
+### Archivos afectados
+
+- `package.json`
+- `package-lock.json`
+- `supabase/.gitignore`
+- `supabase/config.toml`
+- `docs/REPORTES.md`
+
+### Validaciones ejecutadas
+
+| Validación | Resultado |
+|---|---|
+| `npx supabase --version` | `2.120.0` |
+| `npx supabase projects list` | Proyecto correcto marcado como enlazado |
+| `git diff --check` | Correcto |
+| `npm run lint` | Correcto, sin advertencias |
+| `npm run typecheck` | Correcto |
+| `npm run test -- --run` | 2 archivos y 12 pruebas aprobadas |
+| `npm run build` | Correcto |
+
+### Límites respetados
+
+- No se consultaron ni modificaron tablas, registros, usuarios, Storage o funciones.
+- No se aplicaron migraciones ni cambios de esquema.
+- No se inició el Bloque 1.
+- La autenticación del CLI permanece en el almacén local de credenciales y no forma parte del commit.
+
+### Siguiente paso permitido
+
+Revisar el estado remoto de solo lectura o iniciar el Bloque 1 únicamente mediante una orden explícita.
+
+---
+
 ## v0.1.4 — Estabilización y verificación del despliegue
 
 **Fecha:** 8 de octubre de 2026
