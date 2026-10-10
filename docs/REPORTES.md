@@ -105,8 +105,14 @@ Cada reporte incluye alcance, cambios, archivos relevantes, validaciones reales,
   - `npm run lint`: 0 advertencias / 0 errores.
   - `npm run build`: Bundle generado exitosamente en 3.88s (`dist/assets/TutorPage-*.js` de 41.40 kB).
 - **Despliegue y Migración Remota:**
-  - Migración `20261010000000_block4_tutor_rag_conversations_and_quotas.sql` aplicada en Supabase remoto (`goegjuglstapjwcckawp`) mediante `npx supabase db push`.
+  - Migraciones `20261010000000_block4_tutor_rag_conversations_and_quotas.sql` y `20261010010000_tutor_conversations_user_id_default.sql` aplicadas en Supabase remoto (`goegjuglstapjwcckawp`) mediante `npx supabase db push`.
   - Edge Function `tutor-chat` desplegada a la versión 3 activa con `verify_jwt: true`.
+  - **Pruebas de Integración Remota en Vivo (100% aprobadas):**
+    - `block1.remote.test.ts`: Aprobada (5.8s, aislamiento de invitaciones, roles y grupos).
+    - `block2.remote.test.ts`: Aprobada (22.8s, storage privado real, compartición, revocación y borrado en cascada).
+    - `block3.remote.test.ts`: Aprobada (17.8s, extracción con PDF.js en Edge, embeddings OpenAI reales, búsqueda híbrida y revocación).
+    - `block4.remote.test.ts`: Aprobada (29.6s, consultas al tutor en modo estricto fundamentadas con citas verificadas [7.5s], abstención honesta ante preguntas fuera de documento [5.9s], privacidad estricta entre estudiantes [0.5s] y rechazo a usuarios no matriculados [0.4s]).
+    - Limpieza automática confirmada: 0 datos residuales ni cuentas de prueba tras la ejecución.
 
 ### 9. Riesgos abiertos y recomendaciones
 - **Volumen de tokens con PDFs extensos:** La recuperación limita a 8 fragmentos (`max_chunks_per_query = 8`) para garantizar que el contexto nunca desborde el presupuesto. Si un estudiante selecciona 20 documentos simultáneamente, la búsqueda RAG prioriza los fragmentos con mayor similitud combinada (RRF).

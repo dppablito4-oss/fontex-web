@@ -6,9 +6,9 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import type { Database } from "../lib/supabase/database.types";
 
-const remoteUrl = process.env.SUPABASE_TEST_URL;
-const publishableKey = process.env.SUPABASE_TEST_PUBLISHABLE_KEY;
-const serviceRoleKey = process.env.SUPABASE_TEST_SERVICE_ROLE_KEY;
+const remoteUrl = process.env.SUPABASE_TEST_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;
+const publishableKey = process.env.SUPABASE_TEST_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const serviceRoleKey = process.env.SUPABASE_TEST_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.service_role;
 const remoteConfigured = Boolean(remoteUrl && publishableKey && serviceRoleKey);
 const suite = describe.runIf(remoteConfigured);
 

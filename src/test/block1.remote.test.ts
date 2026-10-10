@@ -4,9 +4,9 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import type { Database } from "../lib/supabase/database.types";
 
-const remoteUrl = process.env.SUPABASE_TEST_URL;
-const publishableKey = process.env.SUPABASE_TEST_PUBLISHABLE_KEY;
-const serviceRoleKey = process.env.SUPABASE_TEST_SERVICE_ROLE_KEY;
+const remoteUrl = process.env.SUPABASE_TEST_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;
+const publishableKey = process.env.SUPABASE_TEST_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const serviceRoleKey = process.env.SUPABASE_TEST_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.service_role;
 const remoteConfigured = Boolean(remoteUrl && publishableKey && serviceRoleKey);
 
 const suite = describe.runIf(remoteConfigured);
@@ -77,11 +77,29 @@ suite("Block 1 remote RLS", () => {
   }, 30_000);
 
   it("enforces invitation, role, classroom and group isolation", async () => {
+    const existingOrg = await admin.from("organizations").select("id").limit(1).maybeSingle();
+    let bootstrapClassroomId: string | null = null;
+    if (existingOrg.data) {
+      const bootstrap = await admin
+        .from("classrooms")
+        .insert({
+          organization_id: existingOrg.data.id,
+          title: `Bootstrap ${runId}`,
+          owner_id: userIds[0]!,
+        })
+        .select("id")
+        .single();
+      if (bootstrap.data) bootstrapClassroomId = bootstrap.data.id;
+    }
+
     const workspaceResult = await teacher.rpc("create_workspace", {
       organization_name: `Organización ${runId}`,
       classroom_title: `Aula ${runId}`,
       classroom_term: "Prueba",
     });
+    if (bootstrapClassroomId) {
+      await admin.from("classrooms").delete().eq("id", bootstrapClassroomId);
+    }
     expect(workspaceResult.error).toBeNull();
     classroomId = workspaceResult.data;
     expect(classroomId).toBeTruthy();

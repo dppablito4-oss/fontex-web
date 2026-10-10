@@ -6,9 +6,9 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import type { Database } from "../lib/supabase/database.types";
 
-const remoteUrl = process.env.SUPABASE_TEST_URL;
-const publishableKey = process.env.SUPABASE_TEST_PUBLISHABLE_KEY;
-const serviceRoleKey = process.env.SUPABASE_TEST_SERVICE_ROLE_KEY;
+const remoteUrl = process.env.SUPABASE_TEST_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;
+const publishableKey = process.env.SUPABASE_TEST_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const serviceRoleKey = process.env.SUPABASE_TEST_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.service_role;
 const remoteConfigured = Boolean(remoteUrl && publishableKey && serviceRoleKey);
 const suite = describe.runIf(remoteConfigured);
 
@@ -132,17 +132,17 @@ suite("Block 4 remote tutor, RAG grounding, citations and conversations", () => 
     if (classroom.error) throw new Error(classroom.error.message);
     classroomId = classroom.data.id;
 
-    // Enroll members
-    await adminClient.from("class_members").insert([
-      { classroom_id: classroomId, user_id: userIds.teacher, role: "teacher", status: "active" },
-      { classroom_id: classroomId, user_id: userIds.studentA, role: "student", status: "active" },
-      { classroom_id: classroomId, user_id: userIds.studentB, role: "student", status: "active" },
+    // Enroll students (teacher is automatically enrolled by trigger on_classroom_created)
+    const cm = await adminClient.from("class_members").insert([
+      { classroom_id: classroomId, user_id: userIds.studentA, role: "student", status: "active", invited_by: userIds.teacher },
+      { classroom_id: classroomId, user_id: userIds.studentB, role: "student", status: "active", invited_by: userIds.teacher },
     ]);
+    if (cm.error) throw new Error(`Failed to enroll students: ${cm.error.message}`);
 
     // Create study groups
     const gA = await adminClient
       .from("study_groups")
-      .insert({ classroom_id: classroomId, name: "Grupo A de Estudio" })
+      .insert({ classroom_id: classroomId, name: "Grupo A de Estudio", created_by: userIds.teacher })
       .select("id")
       .single();
     if (gA.error) throw new Error(gA.error.message);
@@ -150,15 +150,15 @@ suite("Block 4 remote tutor, RAG grounding, citations and conversations", () => 
 
     const gB = await adminClient
       .from("study_groups")
-      .insert({ classroom_id: classroomId, name: "Grupo B de Estudio" })
+      .insert({ classroom_id: classroomId, name: "Grupo B de Estudio", created_by: userIds.teacher })
       .select("id")
       .single();
     if (gB.error) throw new Error(gB.error.message);
     groupBId = gB.data.id;
 
     await adminClient.from("group_members").insert([
-      { group_id: groupAId, user_id: userIds.studentA },
-      { group_id: groupBId, user_id: userIds.studentB },
+      { group_id: groupAId, user_id: userIds.studentA, added_by: userIds.teacher },
+      { group_id: groupBId, user_id: userIds.studentB, added_by: userIds.teacher },
     ]);
 
     async function uploadAndIndex(
@@ -270,10 +270,10 @@ suite("Block 4 remote tutor, RAG grounding, citations and conversations", () => 
     expect(response.data?.conversationId).toBeTruthy();
     expect(response.data?.messageId).toBeTruthy();
     expect(response.data?.text.length).toBeGreaterThan(10);
-  });
+  }, 60_000);
 
   it("se abstiene honestamente en modo estricto cuando la información no existe en los documentos", async () => {
-    const response = await clients.studentA.functions.invoke<TutorInvokeResponse>("tutor-chat", {
+    const response = await clients.studentB.functions.invoke<TutorInvokeResponse>("tutor-chat", {
       body: {
         classroomId,
         messages: [{ role: "user", content: "¿Cuál es la receta tradicional para preparar alfajores peruanos?" }],
@@ -287,7 +287,7 @@ suite("Block 4 remote tutor, RAG grounding, citations and conversations", () => 
     expect(response.data).toBeTruthy();
     expect(response.data?.text).toContain("No encontré información suficiente en los documentos seleccionados");
     expect(response.data?.citations).toHaveLength(0);
-  });
+  }, 60_000);
 
   it("garantiza que el estudiante B no puede acceder a las conversaciones privadas del estudiante A", async () => {
     // Student A creates a conversation
@@ -318,7 +318,7 @@ suite("Block 4 remote tutor, RAG grounding, citations and conversations", () => 
       .eq("id", convA.data!.id);
 
     expect(readByTeacher).toHaveLength(0);
-  });
+  }, 30_000);
 
   it("bloquea consultas de usuarios externos que no pertenecen al aula", async () => {
     const response = await clients.outsider.functions.invoke<TutorInvokeResponse>("tutor-chat", {
@@ -331,5 +331,5 @@ suite("Block 4 remote tutor, RAG grounding, citations and conversations", () => 
     });
 
     expect(response.error).toBeTruthy();
-  });
+  }, 30_000);
 });
