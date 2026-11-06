@@ -5,11 +5,12 @@ import {
 } from "lucide-react";
 import { type ChangeEvent, type FormEvent, useEffect, useRef, useState } from "react";
 
+import { useAuth } from "../auth/AuthProvider";
 import { BrandMark } from "../../components/BrandMark";
 import { PdfViewer } from "../library/components/PdfViewer";
-import { type Citation, type DemoMaterial, type Exchange, findCitation, indexMaterial, readMaterials, requestTutor, tutorAvailable, writeMaterial } from "./demoService";
-import lessons from "./lessons.json";
-import { type TutorMode, trustedDomains, trustedResources, tutorModels } from "./tutorModels";
+import { type Citation, type DemoMaterial, type Exchange, type TutorConnection, findCitation, indexMaterial, readMaterials, requestTutor, tutorAvailable, writeMaterial } from "./demoService";
+import lessons from "../../../supabase/functions/_shared/practice/lessons.json";
+import { type TutorMode, trustedDomains, trustedResources, tutorModels } from "../../../supabase/functions/_shared/practice/models";
 import "./demo.css";
 
 const sections = [
@@ -26,7 +27,7 @@ type Progress = { answers: Record<number, number>; exchanges: Exchange[] };
 type Saved = { lessonId: string; progress: Record<string, Progress> };
 type Viewer = { document: { title: string; originalFilename: string }; blob: Blob; page: number };
 
-const storageKey = "fontex-tutor-matematica-v1";
+const guestStorageKey = "fontex-tutor-matematica-v1";
 const defaultLesson = lessons[0]!;
 const tutorModes = [
   { id: "study", label: "Estudiar con mis archivos" },
@@ -36,7 +37,7 @@ const tutorModes = [
 
 const emptyProgress: Progress = { answers: {}, exchanges: [] };
 
-function readProgress(): Saved {
+function readProgress(storageKey: string): Saved {
   try {
     const raw = localStorage.getItem(storageKey);
     if (raw) {
@@ -74,13 +75,19 @@ function HeroArt() {
 }
 
 export function DemoPage() {
-  const [saved, setSaved] = useState(readProgress);
+  const { status, user } = useAuth();
+  return <DemoWorkspace key={user?.id ?? "guest"} accountId={user?.id} authStatus={status} />;
+}
+
+function DemoWorkspace({ accountId, authStatus }: { accountId?: string; authStatus: ReturnType<typeof useAuth>["status"] }) {
+  const storageKey = accountId ? `${guestStorageKey}:${accountId}` : guestStorageKey;
+  const [saved, setSaved] = useState(() => readProgress(storageKey));
   const savedRef = useRef(saved);
   const [section, setSection] = useState<Section>("aula");
   const [level, setLevel] = useState<Level>(saved.lessonId === "funciones" || saved.lessonId === "proporciones" ? "secundaria" : "primaria");
   const [activeExercise, setActiveExercise] = useState(0);
   const [coach, setCoach] = useState<Record<string, string>>({});
-  const [connected, setConnected] = useState(false);
+  const [connection, setConnection] = useState<TutorConnection | null>(null);
   const [tutorMode, setTutorMode] = useState<TutorMode>("study");
   const [pendingTutor, setPendingTutor] = useState(false);
   const [materials, setMaterials] = useState<Record<string, DemoMaterial | undefined>>({});
@@ -103,6 +110,7 @@ export function DemoPage() {
   const correct = lesson.questions.filter((item, i) => item.correct === progress.answers[i]).length;
   const currentExchanges = progress.exchanges.filter((item) => (item.mode ?? "study") === tutorMode);
   const selectedModel = tutorMode === "chat" ? tutorModels.chat : tutorModels.study;
+  const connected = connection === "local" || (connection === "supabase" && authStatus === "authenticated");
   const canAsk = !pendingTutor && !materialBusy && (connected || tutorMode === "study");
   const activeQuestion = lesson.questions[activeExercise];
   const theoryPage = lesson.pages.find((page) => page.pageNumber === activeQuestion?.page);
@@ -116,8 +124,17 @@ export function DemoPage() {
 
   useEffect(() => {
     let active = true;
-    void tutorAvailable().then((value) => { if (active) setConnected(value); });
-    void readMaterials().then((data) => {
+    void tutorAvailable(authStatus === "authenticated").then((value) => {
+      if (active) setConnection(value);
+    }).catch(() => {
+      if (active) setConnection(null);
+    });
+    return () => { active = false; };
+  }, [authStatus]);
+
+  useEffect(() => {
+    let active = true;
+    void readMaterials(accountId).then((data) => {
       if (active) setMaterials(data);
     }).catch(() => {
       if (active) setNotice({ text: "El navegador bloqueó el acceso a los PDF guardados.", error: true });
@@ -125,7 +142,7 @@ export function DemoPage() {
       if (active) setMaterialBusy(false);
     });
     return () => { active = false; };
-  }, []);
+  }, [accountId]);
 
   function save(next: Saved) {
     savedRef.current = next;
@@ -169,7 +186,7 @@ export function DemoPage() {
     setNotice(null);
     try {
       const next = await indexMaterial(file);
-      await writeMaterial(lesson.id, next);
+      await writeMaterial(lesson.id, next, accountId);
       setMaterials((previous) => ({ ...previous, [lesson.id]: next }));
       setNotice({ text: `${next.title} listo para consultar. ${next.pages.length} pág.` });
     } catch (error) {
@@ -183,7 +200,7 @@ export function DemoPage() {
     setMaterialBusy(true);
     setNotice(null);
     try {
-      await writeMaterial(lesson.id);
+      await writeMaterial(lesson.id, undefined, accountId);
       setMaterials((previous) => ({ ...previous, [lesson.id]: undefined }));
       setNotice({ text: "Se quitó el PDF añadido de esta aula." });
     } catch {
@@ -219,11 +236,12 @@ export function DemoPage() {
   function ask(value: string) {
     const text = value.trim();
     if (!text || !canAsk) return;
+    setNotice(null);
     const citation = tutorMode === "study" ? findCitation(text, lesson, material) : null;
     const exchange: Exchange = { id: crypto.randomUUID(), question: text, citation, mode: tutorMode };
     updateProgress({ ...progress, exchanges: [...progress.exchanges, exchange].slice(-20) });
     setQuestion("");
-    if (!connected || (tutorMode === "study" && !citation)) return;
+    if (!connected || !connection || (tutorMode === "study" && !citation)) return;
     setPendingTutor(true);
     void requestTutor({
       mode: tutorMode,
@@ -231,11 +249,12 @@ export function DemoPage() {
       question: text,
       evidence: citation?.excerpt,
       history: currentExchanges.flatMap(({ question: previous, reply }) => reply ? [`Alumno: ${previous}`, `Tutor: ${reply.text}`] : []),
-    }).then((reply) => {
-      if (!reply) return;
+    }, connection).then((reply) => {
       const latest = savedRef.current.progress[lesson.id];
       if (!latest?.exchanges.some(({ id }) => id === exchange.id)) return;
       updateProgress({ ...latest, exchanges: latest.exchanges.map((item) => item.id === exchange.id ? { ...item, reply } : item) }, lesson.id);
+    }).catch((error: unknown) => {
+      setNotice({ text: error instanceof Error ? error.message : "No se pudo conectar con el tutor.", error: true });
     }).finally(() => setPendingTutor(false));
   }
 
@@ -245,11 +264,13 @@ export function DemoPage() {
     if (answer === undefined || progress.answers[index] !== undefined) return;
     updateProgress({ ...progress, answers: { ...progress.answers, [index]: answer } });
     setActiveExercise(index);
-    if (connected && answer !== lesson.questions[index]?.correct) {
+    if (connected && connection && answer !== lesson.questions[index]?.correct) {
       const key = `${lesson.id}:${index}:${answer}`;
       if (!coach[key]) {
-        void requestTutor({ mode: "study", topic: lesson.id, exercise: index, answer }).then((reply) => {
-          if (reply) setCoach((previous) => ({ ...previous, [key]: reply.text }));
+        void requestTutor({ mode: "study", topic: lesson.id, exercise: index, answer }, connection).then((reply) => {
+          setCoach((previous) => ({ ...previous, [key]: reply.text }));
+        }).catch((error: unknown) => {
+          setNotice({ text: error instanceof Error ? error.message : "No se pudo conectar con el tutor.", error: true });
         });
       }
     }
@@ -286,12 +307,14 @@ export function DemoPage() {
         </nav>
         <p className="fd-nav-label fd-course-label">TEMA ACTIVO</p>
         <div className="fd-current"><Sigma size={18} /><div><strong>{lesson.title}</strong><small>{lesson.grade} de {lesson.level}</small></div></div>
-        <div className="fd-side-bottom"><span><GraduationCap size={20} /></span><div><strong>Estudiante demo</strong><small>Sesión local</small></div></div>
+        <div className="fd-side-bottom"><span><GraduationCap size={20} /></span><div><strong>{accountId ? "Tu cuenta Fontex" : "Estudiante demo"}</strong><small>{accountId ? "Sesión iniciada" : "Sesión local"}</small></div></div>
       </aside>
       <div className="fd-workspace" inert={Boolean(viewer)}>
         <header className="fd-top">
           <div className="fd-crumb"><span>Aprendizaje individual</span><ChevronRight size={14} /><strong>Matemática</strong></div>
-          <span className="fd-badge"><i /> Modo demostración</span>
+          {authStatus === "anonymous" && !connected
+            ? <a className="fd-secondary" href="#/ingresar-tutor">Iniciar sesión para usar IA</a>
+            : <span className="fd-badge"><i /> {connected ? "IA conectada" : "Práctica local"}</span>}
         </header>
         <main className="fd-main">
           {section === "aula" ? (
@@ -416,7 +439,7 @@ export function DemoPage() {
                   {trustedResources.map(({ title, url }) => <a className="fd-cite" href={url} key={url} rel="noreferrer" target="_blank">{title} <ArrowRight size={15} /></a>)}
                 </div>
               )}
-              {!connected && tutorMode !== "study" && <p className="fd-support">Activa la API en el proyecto local para enviar preguntas en este modo.</p>}
+              {!connected && tutorMode !== "study" && <p className="fd-support">{authStatus === "anonymous" ? "Inicia sesión en Fontex para enviar preguntas en este modo." : authStatus === "authenticated" ? "El tutor de IA aún no está disponible. Intenta más tarde." : "Conecta el proyecto a Supabase o al servidor de desarrollo para enviar preguntas en este modo."}</p>}
               {currentExchanges.length > 0 && (
                 <ol aria-label="Historial de consultas" aria-live="polite" className="fd-history">
                   {[...currentExchanges].reverse().map(({ id, question: asked, citation, reply }, index) => (
