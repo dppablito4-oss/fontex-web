@@ -1,10 +1,11 @@
 import { createPageAwareChunks, type ExtractedPage } from "../../../supabase/functions/_shared/rag/chunking";
 import { getPdfJs, MAX_PDF_BYTES, MAX_PDF_PAGES } from "../library/services/pdfService";
 import lessons from "./lessons.json";
+import type { TutorMode, TutorReply } from "./tutorModels";
 
 export type Lesson = (typeof lessons)[number];
 export type Citation = { sourceId: string; title: string; page: number; excerpt: string };
-export type Exchange = { question: string; citation: Citation | null };
+export type Exchange = { id?: string; question: string; citation: Citation | null; mode?: TutorMode; reply?: TutorReply };
 export type DemoMaterial = {
   id: string;
   title: string;
@@ -117,5 +118,44 @@ export async function writeMaterial(lessonId: string, material?: DemoMaterial) {
     });
   } finally {
     db.close();
+  }
+}
+
+
+const tutorEndpoint = "/api/fontex-tutor";
+
+export async function tutorAvailable() {
+  if (!["localhost", "127.0.0.1", "[::1]"].includes(window.location.hostname)) return false;
+  try {
+    const response = await fetch(tutorEndpoint, { signal: AbortSignal.timeout(2500) });
+    if (!response.ok || !response.headers.get("Content-Type")?.includes("application/json")) return false;
+    const data = await response.json() as { available?: boolean };
+    return data.available === true;
+  } catch {
+    return false;
+  }
+}
+
+export async function requestTutor(input: {
+  mode: TutorMode;
+  topic: string;
+  question?: string;
+  exercise?: number;
+  answer?: number;
+  evidence?: string;
+  history?: string[];
+}): Promise<TutorReply | null> {
+  try {
+    const result = await fetch(tutorEndpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+      signal: AbortSignal.timeout(32_000),
+    });
+    if (!result.ok || !result.headers.get("Content-Type")?.includes("application/json")) return null;
+    const response = await result.json() as TutorReply;
+    return typeof response.text === "string" && Array.isArray(response.sources) ? response : null;
+  } catch {
+    return null;
   }
 }

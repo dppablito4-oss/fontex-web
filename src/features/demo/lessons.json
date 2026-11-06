@@ -1,97 +1,254 @@
 [
   {
-    "id": "fisica",
-    "subject": "Física I",
-    "code": "FIS 101",
-    "title": "Movimiento rectilíneo",
-    "description": "Distingue velocidad y aceleración, interpreta gráficas y aplica las ecuaciones del movimiento.",
-    "pdf": "guia-movimiento.pdf",
-    "source": "Guía de movimiento rectilíneo",
-    "prompt": "¿Qué es la aceleración constante?",
+    "id": "fracciones",
+    "level": "primaria",
+    "grade": "5.º–6.º",
+    "code": "MAT P01",
+    "title": "Fracciones equivalentes",
+    "description": "Reconoce cuándo dos fracciones representan la misma parte de un entero.",
+    "pdf": "guia-fracciones.pdf",
+    "source": "Guía · Fracciones equivalentes",
+    "prompt": "¿Cómo simplificar una fracción equivalente?",
     "pages": [
       {
         "pageNumber": 1,
-        "heading": "Velocidad y movimiento uniforme",
-        "text": "En el movimiento rectilíneo uniforme (MRU), la velocidad es constante y la aceleración es cero. La posición se calcula con x = x₀ + v · t. Por ejemplo, si un ciclista parte de x₀ = 2 m y avanza a 3 m/s, a los 4 s estará en x = 14 m.\n\nEn una gráfica de posición frente al tiempo, la pendiente representa la velocidad. Una pendiente negativa indica que la posición disminuye con el tiempo."
+        "heading": "Una misma cantidad",
+        "text": "Las fracciones equivalentes representan la misma parte de un entero. Si partes una tableta en 2 trozos iguales y tomas 1, obtienes 1/2. Si partes la misma tableta en 4 trozos iguales y tomas 2, obtienes 2/4. En ambos casos tomaste la mitad."
       },
       {
         "pageNumber": 2,
-        "heading": "Aceleración constante",
-        "text": "La aceleración es el cambio de velocidad por unidad de tiempo. Cuando es constante, v = v₀ + a · t. La unidad del SI es m/s². Por ejemplo, con v₀ = 2 m/s y a = 3 m/s², a los 4 s la velocidad es 14 m/s.\n\nCon aceleración constante, el desplazamiento se obtiene con Δx = v₀ · t + ½ · a · t². En una gráfica de velocidad frente al tiempo, la pendiente representa la aceleración y el área con signo bajo la curva representa el desplazamiento."
+        "heading": "Amplificar y simplificar",
+        "text": "Para formar fracciones equivalentes, multiplica el numerador y el denominador por el mismo número distinto de cero. Por ejemplo, 2/3 = (2 × 2)/(3 × 2) = 4/6.\n\nPara simplificar, divide el numerador y el denominador entre un mismo divisor común distinto de cero. Por ejemplo, 6/8 = (6 ÷ 2)/(8 ÷ 2) = 3/4."
       }
     ],
     "questions": [
       {
-        "text": "Un ciclista parte de x₀ = 2 m y avanza a 3 m/s. ¿Dónde está a los 4 s?",
-        "options": ["En 12 m", "En 14 m", "En 20 m"],
+        "text": "¿Qué fracción es equivalente a 2/3?",
+        "options": [
+          "2/6",
+          "4/6",
+          "4/3"
+        ],
         "correct": 1,
-        "hint": "Suma la posición inicial al producto de la velocidad por el tiempo.",
-        "feedback": "x = 2 m + (3 m/s)(4 s) = 14 m.",
-        "page": 1
+        "hint": "Multiplica el numerador y el denominador por 2.",
+        "feedback": "2/3 = (2 × 2)/(3 × 2) = 4/6.",
+        "page": 2,
+        "misconceptions": [
+          "Duplicaste solo el denominador. Cada trozo se hizo más pequeño, pero mantuviste la misma cantidad de trozos.",
+          "",
+          "Duplicaste solo el numerador. La cantidad de trozos cambió sin cambiar su tamaño."
+        ]
       },
       {
-        "text": "Si v₀ = 2 m/s y a = 3 m/s², ¿cuál es la velocidad a los 4 s?",
-        "options": ["14 m/s", "12 m/s", "24 m/s"],
-        "correct": 0,
-        "hint": "Usa v = v₀ + a · t. Conserva las unidades.",
-        "feedback": "v = 2 m/s + (3 m/s²)(4 s) = 14 m/s.",
-        "page": 2
+        "text": "Si tomas 2 de 4 trozos iguales, ¿qué parte de la tableta tienes?",
+        "options": [
+          "La cuarta parte",
+          "La mitad",
+          "La tableta entera"
+        ],
+        "correct": 1,
+        "hint": "Dibuja cuatro trozos y agrupa dos a cada lado.",
+        "feedback": "2 de 4 trozos es 2/4, que equivale a 1/2.",
+        "page": 1,
+        "misconceptions": [
+          "La cuarta parte sería 1 de los 4 trozos.",
+          "",
+          "Para tener la tableta entera necesitarías los 4 trozos."
+        ]
       },
       {
-        "text": "¿Qué representa la pendiente en una gráfica de velocidad frente al tiempo?",
-        "options": ["La posición inicial", "El desplazamiento", "La aceleración"],
+        "text": "¿Cuál es la forma simplificada de 6/8?",
+        "options": [
+          "3/8",
+          "2/3",
+          "3/4"
+        ],
         "correct": 2,
-        "hint": "Piensa qué cociente obtienes al dividir el cambio del eje vertical entre el tiempo.",
-        "feedback": "La pendiente es Δv/Δt. Sus unidades son m/s², las de la aceleración.",
-        "page": 2
+        "hint": "Busca un número mayor que uno que divida a 6 y a 8.",
+        "feedback": "Divide ambos términos entre 2. El resultado es 3/4.",
+        "page": 2,
+        "misconceptions": [
+          "Dividiste 6 entre 2 y dejaste el 8 igual. Simplifica ambos términos.",
+          "Comprueba que usaste el mismo divisor arriba y abajo. Para 6 y 8, ese divisor común es 2.",
+          ""
+        ]
       }
     ]
   },
   {
-    "id": "matematica",
-    "subject": "Matemática I",
-    "code": "MAT 101",
+    "id": "decimales",
+    "level": "primaria",
+    "grade": "5.º–6.º",
+    "code": "MAT P02",
+    "title": "Números decimales",
+    "description": "Compara décimos y centésimos y aprende a sumar colocando bien la coma.",
+    "pdf": "guia-decimales.pdf",
+    "source": "Guía · Números decimales",
+    "prompt": "¿Cómo se comparan los decimales?",
+    "pages": [
+      {
+        "pageNumber": 1,
+        "heading": "Comparar decimales",
+        "text": "Compara primero las partes enteras. Si son iguales, compara los décimos y luego los centésimos. Añadir ceros al final de la parte decimal no cambia el número. Por ejemplo, 0,6 = 0,60. Como 60 centésimos superan a 56 centésimos, 0,6 > 0,56."
+      },
+      {
+        "pageNumber": 2,
+        "heading": "Sumar por valor posicional",
+        "text": "Para sumar decimales en columna, alinea las comas. Así se suman unidades con unidades, décimos con décimos y centésimos con centésimos. Escribe 1,2 como 1,20 para sumar 1,20 + 0,35 = 1,55."
+      }
+    ],
+    "questions": [
+      {
+        "text": "¿Cuál es mayor, 0,6 o 0,56?",
+        "options": [
+          "0,6",
+          "0,56",
+          "Son iguales"
+        ],
+        "correct": 0,
+        "hint": "Escribe los dos números con dos decimales.",
+        "feedback": "0,6 = 0,60. Como 60 centésimos son más que 56, 0,6 es mayor.",
+        "page": 1,
+        "misconceptions": [
+          "",
+          "Contar cifras no sirve para comparar decimales. Escribe 0,6 como 0,60 y compara los centésimos.",
+          "El cero añadido conserva 0,6 como 0,60. Eso sigue siendo distinto de 0,56."
+        ]
+      },
+      {
+        "text": "¿Cuánto es 1,2 + 0,35?",
+        "options": [
+          "1,37",
+          "1,55",
+          "1,23"
+        ],
+        "correct": 1,
+        "hint": "Pon las comas una debajo de la otra.",
+        "feedback": "1,20 + 0,35 = 1,55.",
+        "page": 2,
+        "misconceptions": [
+          "Colocaste el 2 en la columna de centésimos. En 1,2 ese 2 representa dos décimos.",
+          "",
+          "Suma por columnas y conserva los centésimos. Alinea 1,20 con 0,35."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "proporciones",
+    "level": "secundaria",
+    "grade": "1.º–2.º",
+    "code": "MAT S01",
+    "title": "Proporcionalidad directa",
+    "description": "Encuentra la razón constante y úsala para predecir valores.",
+    "pdf": "guia-proporciones.pdf",
+    "source": "Guía · Proporcionalidad directa",
+    "prompt": "¿Qué es una razón constante?",
+    "pages": [
+      {
+        "pageNumber": 1,
+        "heading": "Razón constante",
+        "text": "Dos cantidades x e y son directamente proporcionales cuando y = k · x. Para x distinto de cero, la razón y/x siempre vale k. Si 3 cuadernos cuestan S/ 12, cada uno cuesta S/ 4 y k = 12/3 = 4 soles por cuaderno."
+      },
+      {
+        "pageNumber": 2,
+        "heading": "Escalar ambas cantidades",
+        "text": "En una relación de proporcionalidad directa, duplicar x también duplica y. Si 3 cuadernos cuestan S/ 12, entonces 6 cuadernos cuestan S/ 24. Una cuota fija adicional rompe la proporcionalidad, porque la razón entre el total y la cantidad deja de ser constante."
+      }
+    ],
+    "questions": [
+      {
+        "text": "Tres cuadernos cuestan S/ 12. ¿Cuánto cuestan cinco al mismo precio unitario?",
+        "options": [
+          "S/ 14",
+          "S/ 20",
+          "S/ 60"
+        ],
+        "correct": 1,
+        "hint": "Encuentra primero el precio de un cuaderno.",
+        "feedback": "12 ÷ 3 = 4 soles por cuaderno. Luego 5 × 4 = 20 soles.",
+        "page": 1,
+        "misconceptions": [
+          "Sumaste dos soles por dos cuadernos. Cada uno cuesta cuatro soles, así que dos cuestan ocho.",
+          "",
+          "Multiplicaste por el precio de tres cuadernos. Divide S/ 12 entre 3 antes de multiplicar."
+        ]
+      },
+      {
+        "text": "Un taxi cobra S/ 5 de inicio más S/ 2 por kilómetro. ¿El costo es directamente proporcional a la distancia?",
+        "options": [
+          "Sí, porque sube S/ 2 por kilómetro",
+          "No, porque la cuota inicial cambia la razón costo/distancia",
+          "Sí, porque la distancia se puede duplicar"
+        ],
+        "correct": 1,
+        "hint": "Compara el cociente costo/distancia para 1 y 2 km.",
+        "feedback": "Para 1 km, la razón es 7/1 = 7. Para 2 km, es 9/2 = 4,5. La razón no es constante.",
+        "page": 2,
+        "misconceptions": [
+          "Una tasa por kilómetro fija no basta si el costo incluye una cuota inicial.",
+          "",
+          "Duplicar la distancia tendría que duplicar el costo total. Aquí pasas de S/ 7 a S/ 9."
+        ]
+      }
+    ]
+  },
+  {
+    "id": "funciones",
+    "level": "secundaria",
+    "grade": "2.º–3.º",
+    "code": "MAT S02",
     "title": "Funciones afines",
-    "description": "Interpreta la pendiente y la ordenada al origen, y usa funciones para resolver problemas.",
+    "description": "Interpreta la pendiente y la ordenada al origen de una recta.",
     "pdf": "guia-funciones.pdf",
-    "source": "Guía de funciones afines",
+    "source": "Guía · Funciones afines",
     "prompt": "¿Cómo se calcula la pendiente?",
     "pages": [
       {
         "pageNumber": 1,
         "heading": "Pendiente de una recta",
-        "text": "Una función afín tiene la forma f(x) = m · x + b. La pendiente m describe cuánto cambia f(x) cuando x aumenta una unidad. Con dos puntos distintos en x, la pendiente se calcula con m = (y₂ − y₁) / (x₂ − x₁).\n\nSi la recta pasa por (1, 3) y (4, 9), su pendiente es m = (9 − 3) / (4 − 1) = 2. Una pendiente positiva indica que la función es creciente."
+        "text": "Una función afín tiene la forma f(x) = m · x + b. La pendiente m describe cuánto cambia f(x) cuando x aumenta una unidad. Con dos puntos distintos en x, la pendiente se calcula con m = (y₂ − y₁) / (x₂ − x₁).\n\nSi la recta pasa por (1, 3) y (4, 9), su pendiente es m = (9 − 3) / (4 − 1) = 2."
       },
       {
         "pageNumber": 2,
         "heading": "Ordenada al origen y evaluación",
-        "text": "La ordenada al origen b es el valor de la función cuando x = 0. En la gráfica, es la altura del punto donde la recta corta el eje vertical. Si f(x) = 2 · x + 1, entonces b = 1.\n\nPara evaluar una función, sustituye x por el número indicado. Si f(x) = 2 · x + 1, entonces f(4) = 2 · 4 + 1 = 9."
+        "text": "La ordenada al origen b es el valor de la función cuando x = 0. En la gráfica, es la altura donde la recta corta el eje vertical. Si f(x) = 2 · x + 1, entonces b = 1.\n\nPara evaluar una función, sustituye x por el número indicado. Si f(x) = 2 · x + 1, entonces f(4) = 2 · 4 + 1 = 9."
       }
     ],
     "questions": [
       {
         "text": "¿Cuál es la pendiente de la recta que pasa por (1, 3) y (4, 9)?",
-        "options": ["3", "2", "6"],
+        "options": [
+          "3",
+          "2",
+          "6"
+        ],
         "correct": 1,
         "hint": "Divide el cambio en y entre el cambio en x.",
         "feedback": "m = (9 − 3) / (4 − 1) = 6 / 3 = 2.",
-        "page": 1
+        "page": 1,
+        "misconceptions": [
+          "Hallaste el cambio en x. Usa ese 3 como divisor del cambio en y.",
+          "",
+          "Hallaste el cambio en y. Divide 6 por el cambio en x, que es 3."
+        ]
       },
       {
         "text": "En f(x) = 2 · x + 1, ¿cuál es la ordenada al origen?",
-        "options": ["2", "0", "1"],
+        "options": [
+          "2",
+          "0",
+          "1"
+        ],
         "correct": 2,
         "hint": "Evalúa f(0).",
         "feedback": "f(0) = 2 · 0 + 1 = 1.",
-        "page": 2
-      },
-      {
-        "text": "Si f(x) = 2 · x + 1, ¿cuánto vale f(4)?",
-        "options": ["9", "8", "7"],
-        "correct": 0,
-        "hint": "Reemplaza x por 4 antes de sumar 1.",
-        "feedback": "f(4) = 2 · 4 + 1 = 9.",
-        "page": 2
+        "page": 2,
+        "misconceptions": [
+          "El 2 multiplica a x y es la pendiente. La ordenada se obtiene evaluando f(0).",
+          "El eje vertical se cruza cuando x = 0. La altura en ese punto es f(0), que vale 1.",
+          ""
+        ]
       }
     ]
   }

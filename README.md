@@ -1,12 +1,22 @@
 # Fontex
 
-## Aula de práctica de Matemática y Física
+## Tutor personal de Matemática
 
-Arranca el proyecto con `npm ci` y `npm run dev`. Abre `/#/demo` en la dirección que indique Vite. Para generar una versión que abra directamente en el aula, ejecuta `npm run build -- --mode demo`.
+Ejecuta `npm ci` y `npm run dev`. Abre `/#/demo` en la dirección de Vite. El alumno elige un tema de primaria o secundaria, lee la teoría y practica. Cada error muestra una explicación para esa respuesta y la página de la guía que conviene repasar.
 
-La demo incluye dos cursos con guías PDF de dos páginas, seis ejercicios con pistas y corrección, y un tutor que recupera fragmentos por coincidencia textual. Las citas abren la página del documento en el visor de Fontex. Puedes añadir un PDF con texto seleccionable por curso (hasta 5 MiB y 100 páginas).
+La demo incluye cuatro temas, nueve ejercicios y una guía PDF por tema. Se puede añadir un PDF con texto seleccionable por tema (hasta 5 MiB y 100 páginas). El avance, el historial y los PDF se guardan en el navegador.
 
-El avance, las consultas y los PDF añadidos se guardan en el navegador actual. El modo demo funciona sin cuenta, credenciales ni un proveedor de IA.
+### Activar los modelos en local
+
+Añade `OPENAI_API_KEY` al archivo local `.env.local` y reinicia `npm run dev`. Abre la app en `localhost`. La clave se lee en el servidor de Vite.
+
+| Modo | Modelo | Fuente |
+| --- | --- | --- |
+| Chat general | GPT-6 Luna (`gpt-6-luna`) | Conversación reciente |
+| Corrección de ejercicios y estudio con archivos | GPT-6.1 Sol (`gpt-6.1-sol`) | Guía del tema o fragmento recuperado del PDF seleccionado |
+| Estudio web | GPT-6.1 Sol (`gpt-6.1-sol`) | Búsqueda en MINEDU, Khan Academy y OpenStax, con citas verificables |
+
+Para publicar la demo estática, ejecuta `npm run build -- --mode demo`. Ese modo ofrece teoría, corrección preparada por alternativa y búsqueda local por página. El chat generativo y la búsqueda web requieren el servidor local con la API configurada.
 
 **Fuentes puestas en contexto.**
 
