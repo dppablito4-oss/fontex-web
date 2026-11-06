@@ -3,13 +3,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { DemoPage } from "./DemoPage";
 import { findCitation, readMaterials, tutorAvailable } from "./demoService";
-import lessons from "./lessons.json";
+import lessons from "../../../supabase/functions/_shared/practice/lessons.json";
 
 vi.mock("./demoService", { spy: true });
 
 beforeEach(() => {
   vi.mocked(readMaterials).mockResolvedValue({});
-  vi.mocked(tutorAvailable).mockResolvedValue(false);
+  vi.mocked(tutorAvailable).mockResolvedValue(null);
   localStorage.clear();
   vi.spyOn(window, "scrollTo").mockImplementation(() => undefined);
 });

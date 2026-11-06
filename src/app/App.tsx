@@ -26,8 +26,9 @@ const DemoPage = lazy(() =>
 export function App() {
   const { status } = useAuth();
   const demoRoute = useMatch("/demo");
+  const tutorSignIn = useMatch("/ingresar-tutor");
 
-  if (demoRoute || import.meta.env.MODE === "demo") {
+  if (demoRoute || (import.meta.env.MODE === "demo" && !tutorSignIn)) {
     return (
       <Suspense fallback={<div className="page-wrap" role="status">Preparando el aula…</div>}>
         <DemoPage />
@@ -37,6 +38,7 @@ export function App() {
 
   if (status === "loading") return <AuthLoadingPage />;
   if (status === "anonymous") return <AuthPage />;
+  if (tutorSignIn) return <Navigate to="/demo" replace />;
 
   return (
     <WorkspaceProvider>

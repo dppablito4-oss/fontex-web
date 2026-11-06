@@ -4,11 +4,13 @@
 
 Ejecuta `npm ci` y `npm run dev`. Abre `/#/demo` en la dirección de Vite. El alumno elige un tema de primaria o secundaria, lee la teoría y practica. Cada error muestra una explicación para esa respuesta y la página de la guía que conviene repasar.
 
-La demo incluye cuatro temas, nueve ejercicios y una guía PDF por tema. Se puede añadir un PDF con texto seleccionable por tema (hasta 5 MiB y 100 páginas). El avance, el historial y los PDF se guardan en el navegador.
+La demo incluye cuatro temas, nueve ejercicios y una guía PDF por tema. Se puede añadir un PDF con texto seleccionable por tema (hasta 5 MiB y 100 páginas). El avance, el historial y los PDF se guardan en el navegador, separados por cuenta o por sesión de invitado.
 
-### Activar los modelos en local
+### Activar los modelos
 
-Añade `OPENAI_API_KEY` al archivo local `.env.local` y reinicia `npm run dev`. Abre la app en `localhost`. La clave se lee en el servidor de Vite.
+En la web, inicia sesión en Fontex desde `/#/demo`. La función Supabase `practice-tutor` consulta OpenAI desde el servidor. Requiere la migración de cuotas y el secreto `OPENAI_API_KEY` en Supabase. Limita las solicitudes de IA a 10 por hora y 25 por día por cuenta, con ventanas en UTC.
+
+En desarrollo también puedes añadir `OPENAI_API_KEY` a `.env.local` y reiniciar `npm run dev`. El servidor de Vite la lee exclusivamente en localhost.
 
 | Modo | Modelo | Fuente |
 | --- | --- | --- |
@@ -16,7 +18,7 @@ Añade `OPENAI_API_KEY` al archivo local `.env.local` y reinicia `npm run dev`. 
 | Corrección de ejercicios y estudio con archivos | GPT-6.1 Sol (`gpt-6.1-sol`) | Guía del tema o fragmento recuperado del PDF seleccionado |
 | Estudio web | GPT-6.1 Sol (`gpt-6.1-sol`) | Búsqueda en MINEDU, Khan Academy y OpenStax, con citas verificables |
 
-Para publicar la demo estática, ejecuta `npm run build -- --mode demo`. Ese modo ofrece teoría, corrección preparada por alternativa y búsqueda local por página. El chat generativo y la búsqueda web requieren el servidor local con la API configurada.
+Para publicar la demo estática, ejecuta `npm run build -- --mode demo`. Ese modo ofrece teoría, corrección preparada por alternativa y búsqueda local por página. Con una sesión válida y la función Supabase configurada, la compilación estática también habilita el chat generativo y la búsqueda web.
 
 **Fuentes puestas en contexto.**
 
@@ -66,7 +68,7 @@ npx supabase test db --local
 npx supabase db stop
 ```
 
-El tutor real se ejecuta exclusivamente en `tutor-chat`. Requiere `OPENAI_API_KEY` en los secretos del proyecto y se despliega con JWT obligatorio:
+El tutor de aulas se ejecuta en `tutor-chat`. Requiere `OPENAI_API_KEY` en los secretos del proyecto y se despliega con JWT obligatorio:
 
 ```bash
 npx supabase functions deploy tutor-chat --project-ref goegjuglstapjwcckawp --use-api

@@ -1,7 +1,10 @@
+import { FunctionsHttpError } from "@supabase/supabase-js";
+
+import { supabase } from "../../lib/supabase/client";
 import { createPageAwareChunks, type ExtractedPage } from "../../../supabase/functions/_shared/rag/chunking";
 import { getPdfJs, MAX_PDF_BYTES, MAX_PDF_PAGES } from "../library/services/pdfService";
-import lessons from "./lessons.json";
-import type { TutorMode, TutorReply } from "./tutorModels";
+import lessons from "../../../supabase/functions/_shared/practice/lessons.json";
+import type { TutorMode, TutorReply } from "../../../supabase/functions/_shared/practice/models";
 
 export type Lesson = (typeof lessons)[number];
 export type Citation = { sourceId: string; title: string; page: number; excerpt: string };
@@ -90,11 +93,15 @@ function openMaterials() {
   });
 }
 
-export async function readMaterials() {
+function materialKey(lessonId: string, accountId?: string) {
+  return accountId ? `${accountId}:${lessonId}` : lessonId;
+}
+
+export async function readMaterials(accountId?: string) {
   const db = await openMaterials();
   try {
     const entries = await Promise.all(lessons.map(({ id }) => new Promise<[string, DemoMaterial | undefined]>((resolve, reject) => {
-      const request = db.transaction("materials").objectStore("materials").get(id);
+      const request = db.transaction("materials").objectStore("materials").get(materialKey(id, accountId));
       request.onsuccess = () => resolve([id, request.result]);
       request.onerror = () => reject(new Error("No se pudo acceder al almacén de PDF.", { cause: request.error }));
     })));
@@ -104,14 +111,15 @@ export async function readMaterials() {
   }
 }
 
-export async function writeMaterial(lessonId: string, material?: DemoMaterial) {
+export async function writeMaterial(lessonId: string, material?: DemoMaterial, accountId?: string) {
   const db = await openMaterials();
   try {
     await new Promise<void>((resolve, reject) => {
       const transaction = db.transaction("materials", "readwrite");
       const materials = transaction.objectStore("materials");
-      if (material) materials.put(material, lessonId);
-      else materials.delete(lessonId);
+      const key = materialKey(lessonId, accountId);
+      if (material) materials.put(material, key);
+      else materials.delete(key);
       transaction.oncomplete = () => resolve();
       transaction.onabort = () => reject(new Error("No se pudo guardar el cambio en la biblioteca.", { cause: transaction.error }));
       transaction.onerror = () => reject(new Error("No se pudo guardar el cambio en la biblioteca.", { cause: transaction.error }));
@@ -123,20 +131,31 @@ export async function writeMaterial(lessonId: string, material?: DemoMaterial) {
 
 
 const tutorEndpoint = "/api/fontex-tutor";
+const edgeFunction = "practice-tutor";
+export type TutorConnection = "local" | "supabase";
 
-export async function tutorAvailable() {
-  if (!["localhost", "127.0.0.1", "[::1]"].includes(window.location.hostname)) return false;
-  try {
-    const response = await fetch(tutorEndpoint, { signal: AbortSignal.timeout(2500) });
-    if (!response.ok || !response.headers.get("Content-Type")?.includes("application/json")) return false;
-    const data = await response.json() as { available?: boolean };
-    return data.available === true;
-  } catch {
-    return false;
+export async function tutorAvailable(authenticated: boolean): Promise<TutorConnection | null> {
+  if (["localhost", "127.0.0.1", "[::1]"].includes(window.location.hostname)) {
+    try {
+      const response = await fetch(tutorEndpoint, { signal: AbortSignal.timeout(2500) });
+      if (response.ok && response.headers.get("Content-Type")?.includes("application/json")) {
+        const data = await response.json() as { available?: boolean };
+        if (data.available === true) return "local";
+      }
+    } catch {
+      // Try the hosted tutor when the local development server is unavailable.
+    }
   }
+
+  if (!authenticated || !supabase) return null;
+  const result = await supabase.functions.invoke<{ available: boolean }>(edgeFunction, {
+    body: { action: "health" },
+    timeout: 8000,
+  });
+  return !result.error && result.data?.available === true ? "supabase" : null;
 }
 
-export async function requestTutor(input: {
+type TutorInput = {
   mode: TutorMode;
   topic: string;
   question?: string;
@@ -144,18 +163,36 @@ export async function requestTutor(input: {
   answer?: number;
   evidence?: string;
   history?: string[];
-}): Promise<TutorReply | null> {
-  try {
+};
+
+export async function requestTutor(input: TutorInput, connection: TutorConnection): Promise<TutorReply> {
+  let reply: TutorReply | null;
+  if (connection === "supabase" && supabase) {
+    const result = await supabase.functions.invoke<TutorReply>(edgeFunction, { body: input, timeout: 36_000 });
+    const error: unknown = result.error;
+    const response: unknown = error instanceof FunctionsHttpError ? error.context : null;
+    if (response instanceof Response) {
+      if (response.status === 429) throw new Error("Alcanzaste el límite de consultas del tutor. Intenta más tarde.");
+      if (response.status === 401) throw new Error("Tu sesión venció. Inicia sesión de nuevo para continuar.");
+      if (response.status === 422) throw new Error("El tutor no encontró una respuesta con fuentes válidas.");
+    }
+    if (error) throw new Error("El tutor no está disponible en este momento.");
+    reply = result.data;
+  } else if (connection === "local") {
     const result = await fetch(tutorEndpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(input),
       signal: AbortSignal.timeout(32_000),
     });
-    if (!result.ok || !result.headers.get("Content-Type")?.includes("application/json")) return null;
-    const response = await result.json() as TutorReply;
-    return typeof response.text === "string" && Array.isArray(response.sources) ? response : null;
-  } catch {
-    return null;
+    reply = result.ok && result.headers.get("Content-Type")?.includes("application/json")
+      ? await result.json() as TutorReply
+      : null;
+  } else {
+    reply = null;
   }
+  if (!reply || typeof reply.text !== "string" || !Array.isArray(reply.sources)) {
+    throw new Error("El tutor no devolvió una respuesta válida.");
+  }
+  return reply;
 }
