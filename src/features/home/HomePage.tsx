@@ -44,9 +44,6 @@ export function HomePage() {
     return (
       <div className="page-wrap">
         <section className="rounded-[2rem] border border-brand-sky/30 bg-brand-deep p-6 text-on-brand sm:p-9 lg:p-11">
-          <Badge className="border-white/25 bg-white/10 text-on-brand" tone="neutral">
-            <Sparkles className="size-3" /> Bloque 2 conectado
-          </Badge>
           <h1 className="mt-7 max-w-3xl font-display text-[clamp(2.7rem,6vw,5rem)] leading-[.92] tracking-[-.055em]">
             Hola, {profile?.displayName ?? "estudiante"}.
           </h1>
@@ -57,7 +54,7 @@ export function HomePage() {
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Button asChild variant="accent"><Link to="/aula">Gestionar aula <ArrowRight className="size-4" /></Link></Button>
-            <Button asChild className="border-white/25 bg-white/10 text-on-brand hover:bg-white/15" variant="secondary"><Link to="/grupo">Ver grupos</Link></Button>
+            <Button asChild className="border-white/25 bg-white/10 text-on-brand hover:bg-white/15" variant="secondary"><Link to="/demo">Practicar Matemática</Link></Button>
           </div>
         </section>
         <section className="mt-8 grid gap-4 sm:grid-cols-3">
@@ -66,7 +63,7 @@ export function HomePage() {
           <Card className="p-5"><p className="eyebrow">Grupos privados</p><strong className="mt-3 block text-xl">{groups.length}</strong><span className="mt-1 block text-sm text-muted-foreground">en el aula seleccionada</span></Card>
         </section>
         <Card className="mt-5 p-5 text-sm text-muted-foreground">
-          En la biblioteca puedes añadir e indexar lecturas. El tutor documental permite consultar las fuentes disponibles en el aula.
+          Añade tus lecturas a la biblioteca para consultarlas con el tutor.
         </Card>
       </div>
     );

@@ -1,7 +1,7 @@
 import {
-  ArrowLeft, ArrowRight, BookOpen, Check, ChevronRight, CircleHelp,
-  ClipboardList, FileText, GraduationCap, LayoutGrid, LibraryBig, Lightbulb, LoaderCircle,
-  LockKeyhole, MessageSquareText, Plus, Send, Sigma, Trash2,
+  ArrowRight, ArrowUp, BookOpen, Check, ChevronLeft, ChevronRight, ClipboardList,
+  Divide, FileText, Hash, LayoutGrid, LibraryBig, Lightbulb, LoaderCircle,
+  MessageSquareText, Percent, Plus, Sigma, Trash2, TrendingUp,
 } from "lucide-react";
 import { type ChangeEvent, type FormEvent, useEffect, useRef, useState } from "react";
 
@@ -10,11 +10,11 @@ import { BrandMark } from "../../components/BrandMark";
 import { PdfViewer } from "../library/components/PdfViewer";
 import { type Citation, type DemoMaterial, type Exchange, type TutorConnection, findCitation, indexMaterial, readMaterials, requestTutor, tutorAvailable, writeMaterial } from "./demoService";
 import lessons from "../../../supabase/functions/_shared/practice/lessons.json";
-import { type TutorMode, trustedDomains, trustedResources, tutorModels } from "../../../supabase/functions/_shared/practice/models";
+import { type TutorMode, trustedResources, tutorModels } from "../../../supabase/functions/_shared/practice/models";
 import "./demo.css";
 
 const sections = [
-  { id: "aula", label: "Mi aula", icon: LayoutGrid },
+  { id: "aula", label: "Inicio", icon: LayoutGrid },
   { id: "teoria", label: "Teoría", icon: BookOpen },
   { id: "biblioteca", label: "Biblioteca", icon: LibraryBig },
   { id: "tutor", label: "Tutor", icon: MessageSquareText },
@@ -30,8 +30,8 @@ type Viewer = { document: { title: string; originalFilename: string }; blob: Blo
 const guestStorageKey = "fontex-tutor-matematica-v1";
 const defaultLesson = lessons[0]!;
 const tutorModes = [
-  { id: "study", label: "Estudiar con mis archivos" },
-  { id: "web", label: "Sitios confiables" },
+  { id: "study", label: "Mis archivos" },
+  { id: "web", label: "Buscar en la web" },
   { id: "chat", label: "Chat general" },
 ] as const;
 
@@ -50,29 +50,20 @@ function readProgress(storageKey: string): Saved {
   return { lessonId: defaultLesson.id, progress: {} };
 }
 
-function HeroArt() {
-  return (
-    <svg className="fd-art" viewBox="0 0 390 250" fill="none" aria-hidden="true">
-      <defs>
-        <pattern id="fd-grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" stroke="#9de8ff" strokeOpacity=".19" /></pattern>
-        <linearGradient id="fd-line" x1="70" y1="220" x2="330" y2="40" gradientUnits="userSpaceOnUse"><stop stopColor="#67e8f9" /><stop offset="1" stopColor="#c2a9ff" /></linearGradient>
-        <radialGradient id="fd-fade"><stop stopColor="white" /><stop offset="1" stopColor="white" stopOpacity="0" /></radialGradient>
-        <mask id="fd-mask"><ellipse cx="210" cy="128" rx="184" ry="136" fill="url(#fd-fade)" /></mask>
-      </defs>
-      <path d="M27 5h360v240H27z" fill="url(#fd-grid)" mask="url(#fd-mask)" />
-      <ellipse cx="227" cy="125" rx="151" ry="70" transform="rotate(-25 227 125)" stroke="#a5b4fc" strokeOpacity=".5" />
-      <ellipse cx="227" cy="125" rx="123" ry="53" transform="rotate(37 227 125)" stroke="#a5b4fc" strokeOpacity=".45" />
-      <path d="M71 201h265m-235 23V32" stroke="#c7d2fe" strokeOpacity=".7" strokeLinecap="round" />
-      <path d="M98 187c39-1 57-13 79-37 28-30 49-34 74-45 35-15 56-36 73-70" stroke="url(#fd-line)" strokeWidth="2.5" strokeLinecap="round" />
-      <path d="M177 150v51m74-96v96" stroke="#a9c3ff" strokeDasharray="4 5" strokeOpacity=".75" />
-      <circle cx="177" cy="150" r="4.5" fill="#a5f3fc" />
-      <circle cx="251" cy="105" r="5" fill="#c4b5fd" />
-      <circle cx="324" cy="35" r="4.5" fill="#e0e7ff" />
-      <circle cx="285" cy="175" r="3" fill="#a5f3fc" />
-      <path d="M119 58h12m-6-6v12m218 53h16m-8-8v16M152 223h10m-5-5v10" stroke="#b8c4ff" strokeOpacity=".8" strokeLinecap="round" />
-    </svg>
-  );
-}
+const topicIcons: Record<string, typeof Divide> = {
+  fracciones: Divide,
+  decimales: Hash,
+  proporciones: Percent,
+  funciones: TrendingUp,
+};
+
+const sectionHeadings = {
+  aula: "Tu tutor de Matemática",
+  teoria: "Teoría y ejemplos",
+  biblioteca: "Biblioteca",
+  tutor: "Tutor",
+  practica: "Práctica guiada",
+};
 
 export function DemoPage() {
   const { status, user } = useAuth();
@@ -101,6 +92,7 @@ function DemoWorkspace({ accountId, authStatus }: { accountId?: string; authStat
   const [selected, setSelected] = useState<Record<number, number>>({});
   const fileInput = useRef<HTMLInputElement>(null);
   const heading = useRef<HTMLHeadingElement>(null);
+  const exerciseFocus = useRef<HTMLFormElement>(null);
   const sourceTrigger = useRef<HTMLElement | null>(null);
 
   const lesson = lessons.find(({ id }) => id === saved.lessonId) ?? defaultLesson;
@@ -112,9 +104,11 @@ function DemoWorkspace({ accountId, authStatus }: { accountId?: string; authStat
   const selectedModel = tutorMode === "chat" ? tutorModels.chat : tutorModels.study;
   const connected = connection === "local" || (connection === "supabase" && authStatus === "authenticated");
   const canAsk = !pendingTutor && !materialBusy && (connected || tutorMode === "study");
-  const activeQuestion = lesson.questions[activeExercise];
+  const activeQuestion = lesson.questions[activeExercise]!;
+  const activeAnswer = progress.answers[activeExercise];
+  const coachText = coach[`${lesson.id}:${activeExercise}:${activeAnswer}`];
   const theoryPage = lesson.pages.find((page) => page.pageNumber === activeQuestion?.page);
-  const mistake = activeQuestion && progress.answers[activeExercise] !== undefined && progress.answers[activeExercise] !== activeQuestion.correct;
+  const mistake = activeAnswer !== undefined && activeAnswer !== activeQuestion.correct;
 
   useEffect(() => {
     const previousTitle = document.title;
@@ -173,7 +167,6 @@ function DemoWorkspace({ accountId, authStatus }: { accountId?: string; authStat
       setHints([]);
       setSelected({});
       setActiveExercise(0);
-
     }
     navigate("teoria");
   }
@@ -285,6 +278,21 @@ function DemoWorkspace({ accountId, authStatus }: { accountId?: string; authStat
     updateProgress({ ...progress, answers });
   }
 
+  function goToExercise(index: number) {
+    setActiveExercise(index);
+    window.requestAnimationFrame(() => exerciseFocus.current?.focus());
+  }
+
+  function continueLesson() {
+    if (!answered) {
+      navigate("teoria");
+      return;
+    }
+    const nextExercise = lesson.questions.findIndex((_, index) => progress.answers[index] === undefined);
+    if (nextExercise >= 0) setActiveExercise(nextExercise);
+    navigate("practica");
+  }
+
   function cite(citation: Citation) {
     return (
       <button className="fd-cite" disabled={viewerBusy} onClick={() => void openSource(citation.sourceId, citation.page)} type="button">
@@ -296,88 +304,73 @@ function DemoWorkspace({ accountId, authStatus }: { accountId?: string; authStat
   return (
     <div className="fd">
       <aside className="fd-side" aria-label="Menú del aula" inert={Boolean(viewer)}>
-        <div className="fd-brand"><BrandMark /><span>AULA VIRTUAL</span></div>
-        <p className="fd-nav-label">ESPACIO DE ESTUDIO</p>
+        <button className="fd-brand" onClick={() => navigate("aula")} type="button"><BrandMark /></button>
         <nav className="fd-nav" aria-label="Secciones">
           {sections.map(({ id, label, icon: Icon }) => (
             <button aria-current={section === id ? "page" : undefined} className="fd-nav-button" key={id} onClick={() => navigate(id)} type="button">
-              <Icon size={19} /><span>{label}</span><ChevronRight className="fd-nav-arrow" size={15} />
+              <Icon size={19} aria-hidden="true" /><span>{label}</span>
             </button>
           ))}
         </nav>
-        <p className="fd-nav-label fd-course-label">TEMA ACTIVO</p>
-        <div className="fd-current"><Sigma size={18} /><div><strong>{lesson.title}</strong><small>{lesson.grade} de {lesson.level}</small></div></div>
-        <div className="fd-side-bottom"><span><GraduationCap size={20} /></span><div><strong>{accountId ? "Tu cuenta Fontex" : "Estudiante demo"}</strong><small>{accountId ? "Sesión iniciada" : "Sesión local"}</small></div></div>
       </aside>
       <div className="fd-workspace" inert={Boolean(viewer)}>
         <header className="fd-top">
-          <div className="fd-crumb"><span>Aprendizaje individual</span><ChevronRight size={14} /><strong>Matemática</strong></div>
-          {authStatus === "anonymous" && !connected
-            ? <a className="fd-secondary" href="#/ingresar-tutor">Iniciar sesión para usar IA</a>
-            : <span className="fd-badge"><i /> {connected ? "IA conectada" : "Práctica local"}</span>}
+          <span className="fd-mobile-brand"><BrandMark /></span>
+          <span className="fd-subject">Matemática</span>
+          {authStatus === "anonymous" && <a className="fd-text-button" href="#/ingresar-tutor">Iniciar sesión</a>}
+          {authStatus === "authenticated" && <a className="fd-text-button" href="#/">Mi cuenta</a>}
         </header>
-        <main className="fd-main">
-          {section === "aula" ? (
+        <main className={`fd-main fd-page-${section}`}>
+          <header className="fd-intro">
+            {section !== "aula" && <p className="fd-topic-context">{lesson.title} <span>·</span> {lesson.grade} de {lesson.level}</p>}
+            <h1 ref={heading} tabIndex={-1}>{sectionHeadings[section]}</h1>
+            {section === "aula" && <p>Estudia a tu ritmo y practica con explicaciones paso a paso.</p>}
+          </header>
+
+          {section === "aula" && (
             <>
-              <div className="fd-intro"><p className="fd-kicker"><Sigma size={16} /> APRENDIZAJE INDIVIDUAL</p><h1 ref={heading} tabIndex={-1}>Tu tutor de Matemática</h1><p>Elige qué estudiar. Repasa la teoría, practica y recibe ayuda cuando te equivoques.</p></div>
               <section className="fd-hero" aria-labelledby="lesson-title">
-                <HeroArt />
                 <div className="fd-hero-copy">
-                  <span className="fd-hero-label"><span /> TU TEMA ACTUAL · {lesson.grade} DE {lesson.level.toUpperCase()}</span>
+                  <p className="fd-kicker">TEMA ACTUAL</p>
                   <h2 id="lesson-title">{lesson.title}</h2>
                   <p>{lesson.description}</p>
-                  <button className="fd-button fd-button-light" onClick={() => navigate("teoria")} type="button">Leer teoría <ArrowRight size={17} /></button>
+                  <div className="fd-hero-actions">
+                    <button className="fd-button" onClick={continueLesson} type="button">
+                      {answered === lesson.questions.length ? "Ver práctica" : answered ? "Continuar práctica" : "Empezar tema"} <ArrowRight size={17} />
+                    </button>
+                    {answered > 0 && <span>{answered} de {lesson.questions.length} resueltos</span>}
+                  </div>
+                </div>
+                <div className="fd-hero-mark" aria-hidden="true">
+                  <svg viewBox="0 0 160 160" fill="none">
+                    <path d="M80 9a71 71 0 1 0 71 71H80Z" fill="currentColor" opacity=".12" />
+                    <path d="M87 9v64h64A71 71 0 0 0 87 9Z" fill="currentColor" opacity=".52" />
+                    <circle cx="80" cy="80" r="71" stroke="currentColor" strokeWidth="1.5" opacity=".44" />
+                    <path d="M80 80v71m0-71H9" stroke="currentColor" strokeWidth="1.5" opacity=".34" />
+                  </svg>
                 </div>
               </section>
-              <section className="fd-panel fd-topics" aria-labelledby="fd-topics">
-                <div className="fd-panel-head fd-flex">
-                  <div><p className="fd-kicker">CATÁLOGO</p><h2 id="fd-topics">Elige un tema</h2></div>
-                  <div className="fd-levels" role="group" aria-label="Nivel educativo">
-                    <button aria-pressed={level === "primaria"} className="fd-secondary" onClick={() => setLevel("primaria")} type="button">Primaria</button>
-                    <button aria-pressed={level === "secundaria"} className="fd-secondary" onClick={() => setLevel("secundaria")} type="button">Secundaria</button>
+              <section className="fd-topics" aria-labelledby="fd-topics">
+                <div className="fd-flex">
+                  <h2 id="fd-topics">Explora los temas</h2>
+                  <div className="fd-segment" role="group" aria-label="Nivel educativo">
+                    <button aria-pressed={level === "primaria"} onClick={() => setLevel("primaria")} type="button">Primaria</button>
+                    <button aria-pressed={level === "secundaria"} onClick={() => setLevel("secundaria")} type="button">Secundaria</button>
                   </div>
                 </div>
                 <div className="fd-topic-grid">
-                  {lessons.filter((item) => item.level === level).map((item) => (
-                    <button className="fd-topic" key={item.id} onClick={() => selectLesson(item.id)} type="button">
-                      <span className="fd-step-icon fd-step-0"><Sigma size={18} /></span>
-                      <span><strong>{item.title}</strong><small>{item.grade} de {item.level} · {item.questions.length} ejercicios</small></span>
-                      <ArrowRight size={16} />
-                    </button>
-                  ))}
+                  {lessons.filter((item) => item.level === level).map((item) => {
+                    const Icon = topicIcons[item.id] ?? Sigma;
+                    return (
+                      <button className="fd-topic" key={item.id} onClick={() => selectLesson(item.id)} type="button">
+                        <span className="fd-symbol"><Icon size={19} aria-hidden="true" /></span>
+                        <span><strong>{item.title}</strong><small>{item.grade} de {item.level} · {item.questions.length} ejercicios</small></span>
+                        <ChevronRight size={16} aria-hidden="true" />
+                      </button>
+                    );
+                  })}
                 </div>
               </section>
-              <div className="fd-dashboard">
-                <section className="fd-panel fd-steps" aria-labelledby="fd-steps">
-                  <div className="fd-panel-head"><div><p className="fd-kicker">RECORRIDO</p><h2 id="fd-steps">Sigue esta ruta</h2></div></div>
-                  {[
-                    { id: "teoria", title: "Lee la teoría del tema", detail: "Explicaciones, ejemplos y guía PDF", icon: BookOpen },
-                    { id: "tutor", title: "Consulta al tutor", detail: "Encuentra el fragmento y abre su página", icon: MessageSquareText },
-                    { id: "practica", title: "Resuelve la actividad", detail: "3 ejercicios con pistas y corrección", icon: ClipboardList },
-                  ].map(({ id, title, detail, icon: Icon }, index) => (
-                    <button className="fd-step" key={id} onClick={() => navigate(id as Section)} type="button">
-                      <span className={`fd-step-icon fd-step-${index}`}><Icon size={20} /></span>
-                      <span><strong>{title}</strong><small>{detail}</small></span>
-                      <ArrowRight size={17} className="fd-step-arrow" />
-                    </button>
-                  ))}
-                </section>
-                <section className="fd-panel fd-progress" aria-labelledby="fd-progress">
-                  <p className="fd-kicker">TU AVANCE</p><h2 id="fd-progress">Práctica de la unidad</h2>
-                  <p className="fd-progress-numbers"><strong>{answered}</strong><span> / {lesson.questions.length} resueltos</span></p>
-                  <progress aria-label="Ejercicios resueltos" max={lesson.questions.length} value={answered} />
-                  <p>{answered ? `${correct} ${correct === 1 ? "acierto" : "aciertos"} hasta ahora.` : "Tu avance aparecerá al responder."}</p>
-                </section>
-              </div>
-            </>
-          ) : (
-            <>
-              <button className="fd-back" onClick={() => navigate("aula")} type="button"><ArrowLeft size={16} /> Volver a mi aula</button>
-              <div className="fd-intro">
-                <p className="fd-kicker"><Sigma size={16} /> {lesson.grade} DE {lesson.level} · {lesson.title}</p>
-                <h1 ref={heading} tabIndex={-1}>{section === "teoria" ? "Teoría y ejemplos" : section === "biblioteca" ? "Biblioteca del aula" : section === "tutor" ? "Tutor con fuentes" : "Práctica guiada"}</h1>
-                <p>{section === "teoria" ? lesson.description : section === "biblioteca" ? "Abre la guía del tema o añade un PDF que puedas consultar aquí." : section === "tutor" ? "Escribe una pregunta y consulta el fragmento más relevante de tus lecturas." : "Resuelve a tu ritmo. Si fallas, tendrás la corrección y la teoría del ejercicio a la vista."}</p>
-              </div>
             </>
           )}
 
@@ -388,7 +381,6 @@ function DemoWorkspace({ accountId, authStatus }: { accountId?: string; authStat
             <div className="fd-theory-list">
               {lesson.pages.map((page) => (
                 <section className="fd-panel fd-theory" key={page.pageNumber}>
-                  <p className="fd-kicker"><BookOpen size={16} /> PARTE {page.pageNumber}</p>
                   <h2>{page.heading}</h2>
                   <p className="fd-theory-text">{page.text}</p>
                   {cite({ sourceId: lesson.id, title: lesson.source, page: page.pageNumber, excerpt: page.text })}
@@ -400,133 +392,148 @@ function DemoWorkspace({ accountId, authStatus }: { accountId?: string; authStat
 
           {section === "biblioteca" && (
             <section className="fd-panel fd-content-panel" aria-labelledby="fd-materials">
-              <div className="fd-panel-head fd-flex"><div><p className="fd-kicker">LECTURAS</p><h2 id="fd-materials">Materiales del tema</h2></div>
+              <div className="fd-flex"><h2 id="fd-materials">Materiales del tema</h2>
                 <input accept=".pdf,application/pdf" aria-label="Seleccionar PDF" hidden onChange={(event) => void upload(event)} ref={fileInput} type="file" />
                 <button className="fd-button" disabled={materialBusy} onClick={() => fileInput.current?.click()} type="button">{materialBusy ? <LoaderCircle className="fd-spin" size={17} /> : <Plus size={17} />} {material ? "Reemplazar PDF" : "Añadir PDF"}</button>
               </div>
               <div className="fd-document">
-                <span className="fd-step-icon fd-step-0"><FileText size={21} /></span><div><strong>{lesson.source}</strong><small>Guía de Fontex · {lesson.pages.length} páginas</small></div>
+                <span className="fd-symbol"><FileText size={21} /></span><div><strong>{lesson.source}</strong><small>Guía de Fontex · {lesson.pages.length} páginas</small></div>
                 <button className="fd-secondary" disabled={viewerBusy} onClick={() => void openSource(lesson.id, 1)} type="button">Abrir guía <ArrowRight size={15} /></button>
               </div>
               {material && (
                 <div className="fd-document">
-                  <span className="fd-step-icon fd-step-1"><FileText size={21} /></span><div><strong>{material.title}</strong><small>PDF añadido · {material.pages.length} pág.</small></div>
+                  <span className="fd-symbol"><FileText size={21} /></span><div><strong>{material.title}</strong><small>PDF añadido · {material.pages.length} pág.</small></div>
                   <button className="fd-secondary" disabled={viewerBusy} onClick={() => void openSource(material.id, 1)} type="button">Abrir PDF <ArrowRight size={15} /></button>
                   <button aria-label="Quitar PDF añadido" className="fd-icon-button" disabled={materialBusy} onClick={() => void removeMaterial()} type="button"><Trash2 size={17} /></button>
                 </div>
               )}
-              <p className="fd-footnote"><LockKeyhole size={15} /> Un PDF añadido por curso, hasta 5 MiB y 100 páginas. Se procesa y guarda en este navegador.</p>
+              <p className="fd-footnote">Puedes añadir un PDF de hasta 5 MB y 100 páginas por tema.</p>
             </section>
           )}
 
           {section === "tutor" && (
-            <section className="fd-panel fd-content-panel fd-tutor" aria-labelledby="fd-consulta">
-              <div className="fd-panel-head fd-flex"><div><p className="fd-kicker">TUTOR PERSONAL</p><h2 id="fd-consulta">Elige cómo conversar</h2></div><span className="fd-badge"><i /> {selectedModel.name}{connected ? "" : " · sin conectar"}</span></div>
-              <div className="fd-modes" role="group" aria-label="Modo del tutor">
-                {tutorModes.map(({ id, label }) => (
-                  <button aria-pressed={tutorMode === id} className="fd-secondary" key={id} onClick={() => { setTutorMode(id); setQuestion(""); }} type="button">{label}</button>
-                ))}
+            <section className="fd-panel fd-tutor" aria-label="Conversación con el tutor">
+              <div className="fd-tutor-bar">
+                <div className="fd-segment" role="group" aria-label="Fuentes de la respuesta">
+                  {tutorModes.map(({ id, label }) => (
+                    <button aria-pressed={tutorMode === id} key={id} onClick={() => { setTutorMode(id); setQuestion(""); }} type="button">{label}</button>
+                  ))}
+                </div>
+                {connected && <span className="fd-model">{selectedModel.name}</span>}
               </div>
-              <p className="fd-support">{tutorMode === "study" ? (connected ? "Sol explica a partir del fragmento encontrado y muestra su página." : "Puedes buscar fragmentos y abrir sus páginas. Con la API conectada, Sol también explica a partir de la fuente.") : tutorMode === "web" ? `Sol consulta únicamente los dominios permitidos: ${trustedDomains.join(", ")}.` : "Luna ayuda a organizar el estudio y mantiene el contexto del chat."}</p>
-              {tutorMode === "study" && (
-                <div className="fd-suggestions" aria-label="Ejemplos de preguntas">
-                  <button className="fd-cite" disabled={!canAsk} onClick={() => ask(lesson.prompt)} type="button"><Lightbulb size={15} /> {lesson.prompt}</button>
-                  <button className="fd-cite" disabled={!canAsk} onClick={() => ask("¿Quién ganó el mundial de fútbol?")} type="button"><CircleHelp size={15} /> Probar una pregunta fuera del tema</button>
+
+              {currentExchanges.length === 0 && (
+                <div className="fd-tutor-empty">
+                  <span className="fd-symbol"><MessageSquareText size={22} aria-hidden="true" /></span>
+                  <h2>{tutorMode === "study" ? "Pregunta sobre tus lecturas" : tutorMode === "web" ? "Explora fuentes educativas" : "Conversa con tu tutor"}</h2>
+                  <p>{tutorMode === "study" ? "Encuentra una explicación y la página donde se apoya." : tutorMode === "web" ? "Consulta referencias educativas para ampliar el tema." : "Resuelve dudas y organiza tu estudio."}</p>
+                  {tutorMode === "study" && <button className="fd-cite" disabled={!canAsk} onClick={() => ask(lesson.prompt)} type="button">{lesson.prompt} <ArrowRight size={15} /></button>}
                 </div>
               )}
-              {!connected && tutorMode === "web" && (
-                <div className="fd-suggestions" aria-label="Recursos educativos">
-                  {trustedResources.map(({ title, url }) => <a className="fd-cite" href={url} key={url} rel="noreferrer" target="_blank">{title} <ArrowRight size={15} /></a>)}
+
+              {!connected && tutorMode !== "study" && (
+                <div className="fd-tutor-availability">
+                  {authStatus === "anonymous"
+                    ? <a className="fd-text-button" href="#/ingresar-tutor">Inicia sesión para hacer una consulta <ArrowRight size={15} /></a>
+                    : <p>El tutor no está disponible en este momento.</p>}
+                  {tutorMode === "web" && trustedResources.map(({ title, url }) => <a className="fd-cite" href={url} key={url} rel="noreferrer" target="_blank">{title} <ArrowRight size={15} /></a>)}
                 </div>
               )}
-              {!connected && tutorMode !== "study" && <p className="fd-support">{authStatus === "anonymous" ? "Inicia sesión en Fontex para enviar preguntas en este modo." : authStatus === "authenticated" ? "El tutor de IA aún no está disponible. Intenta más tarde." : "Conecta el proyecto a Supabase o al servidor de desarrollo para enviar preguntas en este modo."}</p>}
+
               {currentExchanges.length > 0 && (
                 <ol aria-label="Historial de consultas" aria-live="polite" className="fd-history">
                   {[...currentExchanges].reverse().map(({ id, question: asked, citation, reply }, index) => (
                     <li key={id ?? `local-${index}`}>
-                      <p className="fd-question"><strong>Tú</strong><span>{asked}</span></p>
-                      <div className="fd-answer"><p className="fd-answer-label"><MessageSquareText size={16} /> {reply ? selectedModel.name : "Fontex"}</p>
+                      <p className="fd-question">{asked}</p>
+                      <div className="fd-answer">
+                        <p className="fd-answer-label">Fontex</p>
                         {reply && <p className="fd-tutor-text">{reply.text}</p>}
-                        {citation && <><blockquote>{citation.excerpt}</blockquote>{cite(citation)}</>}
+                        {citation && <>{!reply && <blockquote>{citation.excerpt}</blockquote>}{cite(citation)}</>}
                         {reply?.sources.map(({ title, url }) => <a className="fd-cite fd-web-source" href={url} key={url} rel="noreferrer" target="_blank">{title} <ArrowRight size={15} /></a>)}
-                        {!reply && !citation && <p>{tutorMode === "study" ? "No encontré un fragmento suficientemente relacionado en los materiales de este tema. Prueba con términos de la lectura o añade un PDF pertinente." : pendingTutor && index === 0 ? "Consultando…" : tutorMode === "web" ? "No obtuve una respuesta con referencias verificables en los sitios permitidos." : "No se pudo conectar con Luna. Inténtalo de nuevo."}</p>}
+                        {!reply && !citation && <p>{tutorMode === "study" ? "No encontré una respuesta en los materiales de este tema. Prueba con otra pregunta o añade una lectura." : pendingTutor && index === 0 ? "Preparando una respuesta…" : "No pude responder esa pregunta. Inténtalo de nuevo."}</p>}
                       </div>
                     </li>
                   ))}
                 </ol>
               )}
-              {pendingTutor && <p className="fd-support" role="status">{selectedModel.name} está preparando una respuesta…</p>}
+              {pendingTutor && <p className="sr-only" role="status">El tutor está preparando una respuesta.</p>}
               <form className="fd-ask" onSubmit={(event) => { event.preventDefault(); ask(question); }}>
                 <label className="sr-only" htmlFor="fd-question">Tu pregunta</label>
                 <input disabled={!connected && tutorMode !== "study"} id="fd-question" maxLength={240} onChange={(event) => setQuestion(event.target.value)} placeholder="Escribe tu pregunta…" value={question} />
-                <button aria-label="Enviar pregunta" className="fd-button" disabled={!question.trim() || !canAsk} type="submit"><Send size={17} /> <span>Preguntar</span></button>
+                <button aria-label="Enviar pregunta" className="fd-button" disabled={!question.trim() || !canAsk} type="submit"><ArrowUp size={19} /></button>
               </form>
-              {currentExchanges.length > 0 && <button className="fd-back fd-clear" onClick={() => updateProgress({ ...progress, exchanges: progress.exchanges.filter((item) => (item.mode ?? "study") !== tutorMode) })} type="button"><Trash2 size={15} /> Borrar historial</button>}
+              {currentExchanges.length > 0 && <button className="fd-text-button fd-clear" onClick={() => updateProgress({ ...progress, exchanges: progress.exchanges.filter((item) => (item.mode ?? "study") !== tutorMode) })} type="button">Borrar conversación</button>}
             </section>
           )}
 
           {section === "practica" && (
             <>
-              <section className="fd-panel fd-score" aria-label="Resultado de la práctica">
-                <span className="fd-step-icon fd-step-0"><ClipboardList size={21} /></span>
-                <div><strong>{answered} de {lesson.questions.length} resueltos</strong><small>{correct} {correct === 1 ? "acierto" : "aciertos"} · {connected ? tutorModels.study.name : "Corrección guiada local"}</small></div>
-                {answered > 0 && <button className="fd-secondary" onClick={() => { updateProgress({ ...progress, answers: {} }); setSelected({}); setHints([]); }} type="button">Reiniciar</button>}
-              </section>
+              <div className="fd-practice-progress">
+                <span>{answered} de {lesson.questions.length} resueltos</span>
+                <progress aria-label="Ejercicios resueltos" max={lesson.questions.length} value={answered} />
+                <span>{correct} {correct === 1 ? "acierto" : "aciertos"}</span>
+              </div>
               <div className="fd-practice-grid">
-                <div>
-              {lesson.questions.map((item, index) => {
-                const answer = progress.answers[index];
-                const coachText = coach[`${lesson.id}:${index}:${answer}`];
-                const exerciseTheory = lesson.pages.find(({ pageNumber }) => pageNumber === item.page);
-                return (
-                  <form className="fd-panel fd-exercise" key={`${lesson.id}-${index}`} onFocus={() => setActiveExercise(index)} onSubmit={(event) => checkAnswer(index, event)}>
-                    <fieldset disabled={answer !== undefined}>
-                      <legend><span>0{index + 1}</span>{item.text}</legend>
-                      {item.options.map((option, optionIndex) => (
-                        <label className="fd-option" key={option}>
-                          <input checked={(answer ?? selected[index]) === optionIndex} name={`exercise-${index}`} onChange={() => setSelected({ ...selected, [index]: optionIndex })} type="radio" />
-                          {option}
-                          {answer !== undefined && optionIndex === item.correct && <Check size={17} />}
-                        </label>
-                      ))}
-                    </fieldset>
-                    {answer === undefined ? (
+                <form aria-label="Ejercicio actual" className="fd-panel fd-exercise" onSubmit={(event) => checkAnswer(activeExercise, event)} ref={exerciseFocus} tabIndex={-1}>
+                  <div className="fd-exercise-top">
+                    <span>Ejercicio {activeExercise + 1} de {lesson.questions.length}</span>
+                    <div role="group" aria-label="Cambiar de ejercicio">
+                      <button aria-label="Ejercicio anterior" className="fd-icon-button" disabled={activeExercise === 0} onClick={() => goToExercise(activeExercise - 1)} type="button"><ChevronLeft size={18} /></button>
+                      <button aria-label="Ejercicio siguiente" className="fd-icon-button" disabled={activeExercise + 1 >= lesson.questions.length} onClick={() => goToExercise(activeExercise + 1)} type="button"><ChevronRight size={18} /></button>
+                    </div>
+                  </div>
+                  <fieldset disabled={activeAnswer !== undefined}>
+                    <legend>{activeQuestion.text}</legend>
+                    {activeQuestion.options.map((option, optionIndex) => (
+                      <label className="fd-option" key={option}>
+                        <input checked={(activeAnswer ?? selected[activeExercise]) === optionIndex} name={`exercise-${activeExercise}`} onChange={() => setSelected({ ...selected, [activeExercise]: optionIndex })} type="radio" />
+                        <span>{option}</span>
+                        {activeAnswer !== undefined && optionIndex === activeQuestion.correct && <Check size={17} aria-label="Respuesta correcta" />}
+                      </label>
+                    ))}
+                  </fieldset>
+                  {hints.includes(activeExercise) && activeAnswer === undefined && <p className="fd-hint"><Lightbulb size={16} /> {activeQuestion.hint}</p>}
+                  {activeAnswer !== undefined && (
+                    <div className={`fd-feedback ${mistake ? "" : "fd-good"}`} role="status">
+                      <p><strong>{mistake ? "Veamos dónde te confundiste." : "Correcto."}</strong> {mistake ? activeQuestion.misconceptions[activeAnswer] : activeQuestion.feedback}</p>
+                      {mistake && <p>{activeQuestion.feedback}</p>}
+                      {mistake && coachText && <p><strong>Del tutor.</strong> {coachText}</p>}
+                      {mistake && theoryPage && (
+                        <div className="fd-inline-theory">
+                          <strong>{theoryPage.heading}</strong>
+                          <p>{theoryPage.text}</p>
+                          {cite({ sourceId: lesson.id, title: lesson.source, page: theoryPage.pageNumber, excerpt: theoryPage.text })}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  <div className="fd-exercise-actions">
+                    {activeAnswer === undefined ? (
                       <>
-                        <div className="fd-exercise-actions">
-                          <button aria-expanded={hints.includes(index)} className="fd-secondary" onClick={() => setHints(hints.includes(index) ? hints.filter((value) => value !== index) : [...hints, index])} type="button"><Lightbulb size={16} /> Pista</button>
-                          <button className="fd-button" disabled={selected[index] === undefined} type="submit">Comprobar</button>
-                        </div>
-                        {hints.includes(index) && <p className="fd-hint"><Lightbulb size={16} /> {item.hint}</p>}
+                        <button aria-expanded={hints.includes(activeExercise)} className="fd-text-button" onClick={() => setHints(hints.includes(activeExercise) ? hints.filter((value) => value !== activeExercise) : [...hints, activeExercise])} type="button"><Lightbulb size={16} /> Pista</button>
+                        <button className="fd-button" disabled={selected[activeExercise] === undefined} type="submit">Comprobar</button>
                       </>
+                    ) : mistake ? (
+                      <button className="fd-button" onClick={() => { retry(activeExercise); goToExercise(activeExercise); }} type="button">Volver a intentarlo</button>
+                    ) : activeExercise + 1 < lesson.questions.length ? (
+                      <button className="fd-button" onClick={() => goToExercise(activeExercise + 1)} type="button">Siguiente ejercicio <ArrowRight size={16} /></button>
                     ) : (
-                      <div className={`fd-feedback ${answer === item.correct ? "fd-good" : ""}`} role="status">
-                        <p><strong>{answer === item.correct ? "Correcto." : "Veamos dónde te confundiste."}</strong> {answer === item.correct ? item.feedback : item.misconceptions[answer]}</p>
-                        {answer !== item.correct && <p className="fd-worked">{item.feedback}</p>}
-                        {answer !== item.correct && coachText && <p className="fd-worked"><strong>{tutorModels.study.name}.</strong> {coachText}</p>}
-                        {answer !== item.correct && exerciseTheory && <div className="fd-inline-theory"><strong>{exerciseTheory.heading}</strong><p>{exerciseTheory.text}</p></div>}
-                        <div className="fd-feedback-actions">
-                          {answer !== item.correct && <button className="fd-cite" onClick={() => retry(index)} type="button">Volver a intentarlo <ArrowRight size={14} /></button>}
-                          <button className="fd-cite" disabled={viewerBusy} onClick={() => void openSource(lesson.id, item.page)} type="button"><FileText size={15} /> Ver guía · p. {item.page} <ArrowRight size={14} /></button>
-                        </div>
-                      </div>
+                      <button className="fd-button" onClick={() => navigate("aula")} type="button">Volver al inicio</button>
                     )}
-                  </form>
-                );
-              })}
-                </div>
+                  </div>
+                </form>
                 {theoryPage && (
                   <aside aria-label="Teoría del ejercicio" className="fd-panel fd-practice-theory">
-                    <p className="fd-kicker"><BookOpen size={16} /> {mistake ? "REPASA ESTE CONCEPTO" : `TEORÍA · EJERCICIO ${activeExercise + 1}`}</p>
+                    <p className="fd-kicker">{mistake ? "CONCEPTO PARA REPASAR" : "TEORÍA DEL EJERCICIO"}</p>
                     <h2>{theoryPage.heading}</h2>
                     <p className="fd-theory-text">{theoryPage.text}</p>
                     {cite({ sourceId: lesson.id, title: lesson.source, page: theoryPage.pageNumber, excerpt: theoryPage.text })}
                   </aside>
                 )}
               </div>
+              {answered > 0 && <button className="fd-text-button fd-clear" onClick={() => { updateProgress({ ...progress, answers: {} }); setSelected({}); setHints([]); goToExercise(0); }} type="button">Reiniciar práctica</button>}
             </>
           )}
-
-          <footer className="fd-footer"><span>Fontex · Tutor personal de Matemática</span><span><LockKeyhole size={13} /> Datos de demostración en este navegador</span></footer>
         </main>
       </div>
       {viewer && <PdfViewer blob={viewer.blob} document={viewer.document} initialPage={viewer.page} onClose={() => { setViewer(null); window.requestAnimationFrame(() => sourceTrigger.current?.focus()); }} />}

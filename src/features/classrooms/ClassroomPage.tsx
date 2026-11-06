@@ -16,18 +16,17 @@ function DemoClassroomPage() {
       <PageHeader
         eyebrow="Fundamentos de investigación · demostración"
         title="Tu aula"
-        description="Vista ficticia del Bloque 0. Configura Supabase para administrar matrículas reales."
+        description="Explora un aula de ejemplo."
       />
       <div className="mt-8 grid gap-5 md:grid-cols-2">
         <Card className="p-6">
           <Badge tone="orange">Datos ficticios</Badge>
           <h2 className="section-title mt-4">Del tema al problema de investigación</h2>
-          <p className="mt-3 text-sm leading-6 text-muted-foreground">Este contenido permanece como referencia visual y no modifica datos.</p>
+          <p className="mt-3 text-sm leading-6 text-muted-foreground">Practica cómo formular una pregunta de investigación.</p>
         </Card>
         <Card className="p-6">
           <Users className="size-5 text-primary" />
           <strong className="mt-4 block text-xl">24 estudiantes simulados</strong>
-          <p className="mt-2 text-sm text-muted-foreground">La matrícula real se habilita con las variables públicas de Supabase.</p>
         </Card>
       </div>
     </div>

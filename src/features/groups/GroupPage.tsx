@@ -20,7 +20,6 @@ function DemoGroupPage() {
       <Card className="mt-8 p-6">
         <Badge tone="orange">Datos ficticios</Badge>
         <h2 className="mt-4 text-lg font-semibold">4 integrantes simulados</h2>
-        <p className="mt-2 text-sm text-muted-foreground">Configura Supabase para crear grupos y asignar matrículas reales.</p>
       </Card>
     </div>
   );

@@ -12,7 +12,7 @@ describe("Fontex authentication screen", () => {
   it("renders a password sign-in form", () => {
     renderAuthPage();
 
-    expect(screen.getByRole("heading", { name: /aprende con tus fuentes/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /bienvenido a fontex/i })).toBeInTheDocument();
     expect(screen.getByLabelText("Correo")).toHaveAttribute("type", "email");
     expect(screen.getByLabelText("Contraseña")).toHaveAttribute("type", "password");
     expect(screen.getByRole("button", { name: /entrar a fontex/i })).toBeInTheDocument();

@@ -3,7 +3,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { downloadDocument } from "../../library/services/documentService";
 import type { LibraryDocument } from "../../library/types";
 import {
-  checkTutorHealth,
   createConversation,
   deleteConversation as deleteConversationApi,
   invokeTutorChat,
@@ -14,7 +13,6 @@ import {
 import type {
   TutorCitation,
   TutorConversation,
-  TutorHealthStatus,
   TutorMessageRecord,
   TutorMode,
 } from "../types";
@@ -33,12 +31,6 @@ export function useTutor({
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [health, setHealth] = useState<TutorHealthStatus>({
-    configured: false,
-    available: false,
-    model: "Verificando...",
-  });
-
   const [localMode, setLocalMode] = useState<TutorMode | null>(null);
   const [localGuided, setLocalGuided] = useState<boolean | null>(null);
   const [localSelectedDocIds, setLocalSelectedDocIds] = useState<string[] | null>(null);
@@ -48,17 +40,6 @@ export function useTutor({
     page: number;
     blob: Blob;
   } | null>(null);
-
-  // Check health on load
-  useEffect(() => {
-    let active = true;
-    void checkTutorHealth().then((status) => {
-      if (active) setHealth(status);
-    });
-    return () => {
-      active = false;
-    };
-  }, []);
 
   // Refresh conversations when classroom changes
   const refreshConversations = useCallback(async () => {
@@ -365,7 +346,6 @@ export function useTutor({
     loadingMessages,
     sending,
     error,
-    health,
     mode,
     guided,
     selectedDocumentIds,

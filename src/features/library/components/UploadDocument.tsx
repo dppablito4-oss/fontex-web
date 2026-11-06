@@ -110,7 +110,7 @@ export function UploadDocument({
 
             {validating && (
               <div className="mt-8 flex items-center gap-3 rounded-2xl border border-info bg-info-surface p-4 text-sm text-info-foreground" role="status">
-                <LoaderCircle className="size-5 animate-spin" /> PDF.js está comprobando formato, páginas y texto seleccionable…
+                <LoaderCircle className="size-5 animate-spin" /> Comprobando el PDF…
               </div>
             )}
 
@@ -158,9 +158,7 @@ export function UploadDocument({
                 </label>
 
                 <div className="rounded-2xl border border-border bg-subtle p-4 text-xs leading-5 text-muted-foreground">
-                  <strong className="block text-foreground">Controles aplicados</strong>
                   PDF, máximo {limits ? formatBytes(limits.maxFileBytes) : "5"} MiB y {limits?.maxPages ?? 100} páginas.
-                  El navegador valida con PDF.js; el servidor vuelve a comprobar tamaño, firma y SHA-256 antes de almacenar.
                 </div>
 
                 <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
