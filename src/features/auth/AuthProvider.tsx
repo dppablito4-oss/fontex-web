@@ -29,7 +29,7 @@ type AuthContextValue = {
   updateDisplayName: (displayName: string) => Promise<void>;
 };
 
-const unavailable = () => Promise.reject(new Error("Supabase no está configurado en este entorno."));
+const unavailable = () => Promise.reject(new Error("El acceso a tu cuenta no está disponible en este momento."));
 
 const defaultContext: AuthContextValue = {
   status: "unconfigured",

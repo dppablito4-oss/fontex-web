@@ -23,6 +23,7 @@ describe("Tutor personal de Matemática", () => {
     expect(mathCitation).toMatchObject({ page: 1, sourceId: "funciones" });
     expect(mathCitation?.excerpt).toContain("y₂");
     expect(findCitation("¿Quién ganó el mundial de fútbol?", fraction)).toBeNull();
+    for (const lesson of lessons) expect(findCitation(lesson.prompt, lesson), lesson.title).not.toBeNull();
   });
 
   it("muestra la teoría del error, permite corregirlo y conserva el resultado", async () => {
@@ -41,6 +42,9 @@ describe("Tutor personal de Matemática", () => {
     fireEvent.click(within(exercise).getByRole("radio", { name: "4/6" }));
     fireEvent.click(screen.getAllByRole("button", { name: "Comprobar" })[0]!);
     expect(screen.getByText("Correcto.")).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "Siguiente ejercicio" }));
+    expect(screen.queryByRole("group", { name: /fracción es equivalente a 2\/3/i })).not.toBeInTheDocument();
+    expect(screen.getByText("Ejercicio 2 de 3")).toBeVisible();
     firstVisit.unmount();
 
     render(<DemoPage />);
@@ -50,17 +54,18 @@ describe("Tutor personal de Matemática", () => {
     expect(screen.getByText("Correcto.")).toBeVisible();
   });
 
-  it("elige los temas por nivel y muestra el modelo del modo de tutoría", () => {
+  it("elige los temas por nivel y muestra el modelo activo sin avisos técnicos", async () => {
+    vi.mocked(tutorAvailable).mockResolvedValue("local");
     render(<DemoPage />);
     fireEvent.click(screen.getByRole("button", { name: "Secundaria" }));
     fireEvent.click(screen.getByRole("button", { name: /funciones afines.*ejercicios/i }));
     expect(screen.getByRole("heading", { name: "Pendiente de una recta" })).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: "Tutor" }));
-    expect(screen.getByText(/GPT-6\.1 Sol · sin conectar/)).toBeVisible();
+    expect(await screen.findByText("GPT-6.1 Sol")).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: "Chat general" }));
-    expect(screen.getByText(/GPT-6 Luna · sin conectar/)).toBeVisible();
-    fireEvent.click(screen.getByRole("button", { name: "Sitios confiables" }));
-    expect(screen.getByText(/GPT-6\.1 Sol · sin conectar/)).toBeVisible();
-    expect(screen.getByRole("link", { name: /Khan Academy/ })).toBeVisible();
+    expect(screen.getByText("GPT-6 Luna")).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "Buscar en la web" }));
+    expect(await screen.findByText("GPT-6.1 Sol")).toBeVisible();
+    expect(screen.queryByText(/supabase|sin conectar/i)).not.toBeInTheDocument();
   });
 });

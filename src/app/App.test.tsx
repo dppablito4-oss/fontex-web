@@ -78,22 +78,26 @@ describe("Fontex shell", () => {
     expect(menu).toHaveAttribute("inert");
   });
 
-  it("carga el tutor académico documental y diferencia el modo demostración", async () => {
+  it("abre las opciones y las fuentes del tutor solo al pedirlas", async () => {
     renderRoute("/tutor");
 
     expect(
       await screen.findByRole(
         "heading",
-        { name: /tutor académico documental/i, level: 1 },
+        { name: /^tutor documental$/i, level: 1 },
         { timeout: 5_000 },
       ),
     ).toBeInTheDocument();
-    expect(screen.getAllByText("Modo Demostración").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText("Modo Estricto")).toBeInTheDocument();
-    expect(screen.getByText("Modo Comparativo")).toBeInTheDocument();
-    expect(screen.getByText(/Tutoría Guiada/i)).toBeInTheDocument();
-    expect(screen.getByText("Fuentes Académicas")).toBeInTheDocument();
-    expect(screen.queryByText("Motor RAG pendiente")).not.toBeInTheDocument();
+    expect(screen.getByText("Elige un aula para empezar")).toBeVisible();
+    expect(screen.queryByRole("complementary", { name: "Fuentes" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Fuentes" }));
+    expect(screen.getByRole("complementary", { name: "Fuentes" })).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "Cerrar panel" }));
+    expect(screen.queryByRole("complementary", { name: "Fuentes" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByLabelText("Opciones de tutoría"));
+    expect(screen.getByLabelText("Respuesta")).toBeInTheDocument();
+    expect(screen.getByLabelText("Tutoría guiada")).toBeInTheDocument();
+    expect(screen.queryByText("Shift+Enter")).not.toBeInTheDocument();
   });
 
   it("identifica claramente los datos demostrativos", () => {

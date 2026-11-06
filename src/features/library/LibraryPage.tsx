@@ -75,15 +75,11 @@ export function LibraryPage() {
   if (status === "unconfigured") {
     return (
       <div className="page-wrap">
-        <PageHeader
-          eyebrow="Storage privado no configurado"
-          title="Biblioteca"
-          description="Configura las variables públicas de Supabase para acceder a documentos reales. Esta vista no inventa archivos ni contadores."
-        />
+        <PageHeader eyebrow="Lecturas" title="Biblioteca" description="Encuentra tus materiales de clase." />
         <Card className="mt-8 p-8 text-center">
           <FolderOpen className="mx-auto size-8 text-muted-foreground" />
           <h2 className="mt-4 text-lg font-semibold">Biblioteca no disponible en modo demostración</h2>
-          <p className="mt-2 text-sm text-muted-foreground">Los PDF privados solo se muestran en una sesión autenticada y protegida por RLS.</p>
+          <p className="mt-2 text-sm text-muted-foreground">Inicia sesión para consultar tus lecturas privadas.</p>
         </Card>
       </div>
     );
@@ -206,7 +202,7 @@ export function LibraryPage() {
       <RagSearchPanel />
 
       <p className="mt-4 text-center text-xs text-muted-foreground">
-        PDF.js valida en el navegador y extrae en el servidor. Los fragmentos indexados alimentan directamente las consultas fundamentadas del Tutor Académico.
+Consulta tus lecturas desde el tutor de tu aula.
       </p>
 
       {library.viewer && (

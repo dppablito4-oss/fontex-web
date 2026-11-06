@@ -9,10 +9,10 @@ import { PageHeader } from "../shared/PageHeader";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
 
 const demoItems = [
-  { icon: LockKeyhole, title: "Identidad y permisos", detail: "Configura Supabase para activar sesiones y RLS", tone: "orange" as const },
-  { icon: Database, title: "Almacenamiento", detail: "Requiere el bucket privado de Fontex", tone: "neutral" as const },
-  { icon: Gauge, title: "Cuotas del aula", detail: "Se aplican en la base configurada", tone: "blue" as const },
-  { icon: Settings2, title: "Configuración general", detail: "Interfaz inicial", tone: "green" as const },
+  { icon: LockKeyhole, title: "Identidad y permisos", detail: "Gestiona quién puede entrar a tus aulas", tone: "orange" as const },
+  { icon: Database, title: "Almacenamiento", detail: "Consulta los archivos de tu espacio", tone: "neutral" as const },
+  { icon: Gauge, title: "Cuotas del aula", detail: "Revisa los límites de uso del aula", tone: "blue" as const },
+  { icon: Settings2, title: "Configuración general", detail: "Revisa las preferencias de tu cuenta", tone: "green" as const },
 ];
 
 export function AdminPage() {
@@ -26,7 +26,7 @@ export function AdminPage() {
   if (status === "unconfigured") {
     return (
       <div className="page-wrap">
-        <PageHeader eyebrow="Configuración" title="Administración" description="Vista demostrativa. Ninguna acción modifica datos reales sin configurar Supabase." />
+        <PageHeader eyebrow="Configuración" title="Administración" description="Explora los ajustes de Fontex." />
         <div className="mt-8 grid gap-4 md:grid-cols-2">
           {demoItems.map(({ icon: Icon, title, detail, tone }) => (
             <Card key={title} className="flex items-center gap-4 p-5 sm:p-6">
@@ -57,7 +57,7 @@ export function AdminPage() {
 
   return (
     <div className="page-wrap">
-      <PageHeader eyebrow="Configuración segura" title="Administración" description="Gestiona tu identidad. Los roles del aula no se guardan en metadatos editables por el usuario." />
+      <PageHeader eyebrow="Configuración segura" title="Administración" description="Edita tu perfil y consulta los datos de tu aula." />
       <div className="mt-8 grid gap-5 lg:grid-cols-[1.2fr_.8fr]">
         <Card className="p-5 sm:p-7">
           <p className="eyebrow">Perfil</p>
@@ -76,8 +76,7 @@ export function AdminPage() {
         <div className="space-y-4">
           <Card className="flex items-center gap-4 p-5">
             <span className="metric-icon"><LockKeyhole /></span>
-            <div className="flex-1"><h2 className="font-semibold">Identidad y RLS</h2><p className="mt-1 text-sm text-muted-foreground">Activos en Supabase</p></div>
-            <Badge tone="green">Real</Badge>
+            <div className="flex-1"><h2 className="font-semibold">Acceso a tu cuenta</h2><p className="mt-1 text-sm text-muted-foreground">Sesión iniciada</p></div>
           </Card>
           <Card className="flex items-center gap-4 p-5">
             <span className="metric-icon"><Settings2 /></span>
@@ -85,8 +84,7 @@ export function AdminPage() {
           </Card>
           <Card className="flex items-center gap-4 p-5">
             <span className="metric-icon"><Database /></span>
-            <div className="flex-1"><h2 className="font-semibold">Biblioteca y Storage</h2><p className="mt-1 text-sm text-muted-foreground">PDF privados y permisos activos</p></div>
-            <Badge tone="green">Real</Badge>
+            <div className="flex-1"><h2 className="font-semibold">Biblioteca</h2><p className="mt-1 text-sm text-muted-foreground">PDF privados y permisos activos</p></div>
           </Card>
         </div>
       </div>

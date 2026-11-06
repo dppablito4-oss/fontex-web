@@ -84,7 +84,7 @@
     "description": "Compara décimos y centésimos y aprende a sumar colocando bien la coma.",
     "pdf": "guia-decimales.pdf",
     "source": "Guía · Números decimales",
-    "prompt": "¿Cómo se comparan los decimales?",
+    "prompt": "¿Cómo se compara la parte decimal?",
     "pages": [
       {
         "pageNumber": 1,

@@ -74,11 +74,11 @@ describe("SourceSelectorPanel", () => {
       />,
     );
 
-    expect(screen.getByText("Fuentes Académicas")).toBeInTheDocument();
+    expect(screen.getByText("Se consultan todos los archivos disponibles.")).toBeInTheDocument();
     expect(screen.getByText("Física I - Cinemática")).toBeInTheDocument();
-    expect(screen.getByText(/Indexado \(12\)/)).toBeInTheDocument();
+    expect(screen.getByText("Listo")).toBeInTheDocument();
     expect(screen.getByText("Apuntes Privados")).toBeInTheDocument();
-    expect(screen.getByText("Indexando…")).toBeInTheDocument();
+    expect(screen.getByText("Preparando…")).toBeInTheDocument();
   });
 
   it("permite seleccionar y deseleccionar documentos", () => {
@@ -99,7 +99,7 @@ describe("SourceSelectorPanel", () => {
     expect(onSelect).toHaveBeenCalledWith([]);
 
     // Select all indexed
-    fireEvent.click(screen.getByRole("button", { name: /Seleccionar indexados/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Seleccionar archivos listos/i }));
     expect(onSelect).toHaveBeenCalledWith(["doc-1"]);
   });
 
@@ -113,11 +113,11 @@ describe("SourceSelectorPanel", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /^Aula$/i }));
+    fireEvent.change(screen.getByLabelText("Mostrar"), { target: { value: "classroom" } });
     expect(screen.getByText("Física I - Cinemática")).toBeInTheDocument();
     expect(screen.queryByText("Apuntes Privados")).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: /^Privados$/i }));
+    fireEvent.change(screen.getByLabelText("Mostrar"), { target: { value: "private" } });
     expect(screen.queryByText("Física I - Cinemática")).not.toBeInTheDocument();
     expect(screen.getByText("Apuntes Privados")).toBeInTheDocument();
   });

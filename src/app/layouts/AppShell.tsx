@@ -221,21 +221,9 @@ export function AppShell() {
             <div className="lg:hidden">
               <BrandMark />
             </div>
-            <div className="hidden lg:block">
-              {authenticated ? (
-                <span className="demo-notice border-success-border bg-success-surface text-success">
-                  <span className="status-dot" /> Sesión protegida
-                </span>
-              ) : <DemoNotice />}
-            </div>
+            {!authenticated && <div className="hidden lg:block"><DemoNotice /></div>}
           </div>
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            <span className="hidden text-xs text-muted-foreground sm:inline">Fuentes puestas en contexto</span>
-            <span className="mx-1 hidden h-4 w-px bg-border sm:block" />
-            <span className="status-dot" />
-            <span className="text-xs font-semibold">{authenticated ? "Supabase conectado" : "Modo demostración"}</span>
-          </div>
+          <ThemeToggle />
         </header>
 
         <main
