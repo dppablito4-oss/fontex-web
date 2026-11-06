@@ -151,6 +151,7 @@ export function AuthPage() {
               {!pending && <ArrowRight className="size-4" />}
             </Button>
           </form>
+          <a className="mt-4 block text-center text-sm font-semibold text-primary underline" href="#/demo">Probar el aula de práctica</a>
         </Card>
       </div>
     </main>

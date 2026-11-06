@@ -1,5 +1,23 @@
 # Fontex
 
+## Tutor personal de Matemática
+
+Ejecuta `npm ci` y `npm run dev`. Abre `/#/demo` en la dirección de Vite. El alumno elige un tema de primaria o secundaria, lee la teoría y practica. Cada error muestra una explicación para esa respuesta y la página de la guía que conviene repasar.
+
+La demo incluye cuatro temas, nueve ejercicios y una guía PDF por tema. Se puede añadir un PDF con texto seleccionable por tema (hasta 5 MiB y 100 páginas). El avance, el historial y los PDF se guardan en el navegador.
+
+### Activar los modelos en local
+
+Añade `OPENAI_API_KEY` al archivo local `.env.local` y reinicia `npm run dev`. Abre la app en `localhost`. La clave se lee en el servidor de Vite.
+
+| Modo | Modelo | Fuente |
+| --- | --- | --- |
+| Chat general | GPT-6 Luna (`gpt-6-luna`) | Conversación reciente |
+| Corrección de ejercicios y estudio con archivos | GPT-6.1 Sol (`gpt-6.1-sol`) | Guía del tema o fragmento recuperado del PDF seleccionado |
+| Estudio web | GPT-6.1 Sol (`gpt-6.1-sol`) | Búsqueda en MINEDU, Khan Academy y OpenStax, con citas verificables |
+
+Para publicar la demo estática, ejecuta `npm run build -- --mode demo`. Ese modo ofrece teoría, corrección preparada por alternativa y búsqueda local por página. El chat generativo y la búsqueda web requieren el servidor local con la API configurada.
+
 **Fuentes puestas en contexto.**
 
 Fontex es un entorno académico que prepara una experiencia de consulta documental con trazabilidad. El nombre reúne **FONT**es (latín: fuentes o manantial de información) y **TEX**tus (texto o contexto): ninguna respuesta debería presentarse aislada de las fuentes autorizadas que la sostienen.

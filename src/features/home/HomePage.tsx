@@ -66,7 +66,7 @@ export function HomePage() {
           <Card className="p-5"><p className="eyebrow">Grupos privados</p><strong className="mt-3 block text-xl">{groups.length}</strong><span className="mt-1 block text-sm text-muted-foreground">en el aula seleccionada</span></Card>
         </section>
         <Card className="mt-5 p-5 text-sm text-muted-foreground">
-          La biblioteca PDF privada y el tutor general usan servicios reales. El contenido de los documentos no se envía al tutor: la indexación y el motor RAG siguen pendientes.
+          En la biblioteca puedes añadir e indexar lecturas. El tutor documental permite consultar las fuentes disponibles en el aula.
         </Card>
       </div>
     );
@@ -95,6 +95,9 @@ export function HomePage() {
             </Button>
             <Button asChild className="border-white/25 bg-white/10 text-on-brand hover:bg-white/15" variant="secondary">
               <Link to="/biblioteca">Explorar biblioteca</Link>
+            </Button>
+            <Button asChild className="border-white/25 bg-white/10 text-on-brand hover:bg-white/15" variant="secondary">
+              <Link to="/demo">Probar el aula de práctica</Link>
             </Button>
           </div>
         </div>

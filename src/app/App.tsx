@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useMatch } from "react-router-dom";
 
 import { AppShell } from "./layouts/AppShell";
 import { AdminPage } from "../features/administration/AdminPage";
@@ -17,8 +17,23 @@ const TutorPage = lazy(() =>
   })),
 );
 
+const DemoPage = lazy(() =>
+  import("../features/demo/DemoPage").then((module) => ({
+    default: module.DemoPage,
+  })),
+);
+
 export function App() {
   const { status } = useAuth();
+  const demoRoute = useMatch("/demo");
+
+  if (demoRoute || import.meta.env.MODE === "demo") {
+    return (
+      <Suspense fallback={<div className="page-wrap" role="status">Preparando el aula…</div>}>
+        <DemoPage />
+      </Suspense>
+    );
+  }
 
   if (status === "loading") return <AuthLoadingPage />;
   if (status === "anonymous") return <AuthPage />;

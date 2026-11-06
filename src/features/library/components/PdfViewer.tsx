@@ -12,11 +12,12 @@ export function PdfViewer({
   onClose,
   initialPage = 1,
 }: {
-  document: LibraryDocument;
+  document: Pick<LibraryDocument, "title" | "originalFilename">;
   blob: Blob;
   onClose: () => void;
   initialPage?: number;
 }) {
+  const dialogRef = useRef<HTMLElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const frameRef = useRef<HTMLDivElement>(null);
   const [pdf, setPdf] = useState<PDFDocumentProxy | null>(null);
@@ -24,6 +25,10 @@ export function PdfViewer({
   const [frameWidth, setFrameWidth] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    dialogRef.current?.focus();
+  }, []);
 
   useEffect(() => {
     const frame = frameRef.current;
@@ -126,7 +131,7 @@ export function PdfViewer({
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-[var(--ui-overlay)] backdrop-blur-sm" role="presentation">
-      <section aria-labelledby="pdf-viewer-title" aria-modal="true" className="m-2 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.25rem] border border-border bg-background shadow-2xl sm:m-4" role="dialog">
+      <section aria-labelledby="pdf-viewer-title" aria-modal="true" className="m-2 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.25rem] border border-border bg-background shadow-2xl sm:m-4" ref={dialogRef} role="dialog" tabIndex={-1}>
         <header className="flex flex-wrap items-center gap-2 border-b border-border bg-surface px-3 py-3 sm:px-5">
           <div className="min-w-0 flex-1">
             <p className="eyebrow">Visor privado</p>
