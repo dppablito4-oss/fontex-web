@@ -1,5 +1,13 @@
 # Fontex
 
+## Aula de práctica de Matemática y Física
+
+Arranca el proyecto con `npm ci` y `npm run dev`. Abre `/#/demo` en la dirección que indique Vite. Para generar una versión que abra directamente en el aula, ejecuta `npm run build -- --mode demo`.
+
+La demo incluye dos cursos con guías PDF de dos páginas, seis ejercicios con pistas y corrección, y un tutor que recupera fragmentos por coincidencia textual. Las citas abren la página del documento en el visor de Fontex. Puedes añadir un PDF con texto seleccionable por curso (hasta 5 MiB y 100 páginas).
+
+El avance, las consultas y los PDF añadidos se guardan en el navegador actual. El modo demo funciona sin cuenta, credenciales ni un proveedor de IA.
+
 **Fuentes puestas en contexto.**
 
 Fontex es un entorno académico que prepara una experiencia de consulta documental con trazabilidad. El nombre reúne **FONT**es (latín: fuentes o manantial de información) y **TEX**tus (texto o contexto): ninguna respuesta debería presentarse aislada de las fuentes autorizadas que la sostienen.

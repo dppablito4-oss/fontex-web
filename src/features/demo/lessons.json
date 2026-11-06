@@ -1,0 +1,98 @@
+[
+  {
+    "id": "fisica",
+    "subject": "Física I",
+    "code": "FIS 101",
+    "title": "Movimiento rectilíneo",
+    "description": "Distingue velocidad y aceleración, interpreta gráficas y aplica las ecuaciones del movimiento.",
+    "pdf": "guia-movimiento.pdf",
+    "source": "Guía de movimiento rectilíneo",
+    "prompt": "¿Qué es la aceleración constante?",
+    "pages": [
+      {
+        "pageNumber": 1,
+        "heading": "Velocidad y movimiento uniforme",
+        "text": "En el movimiento rectilíneo uniforme (MRU), la velocidad es constante y la aceleración es cero. La posición se calcula con x = x₀ + v · t. Por ejemplo, si un ciclista parte de x₀ = 2 m y avanza a 3 m/s, a los 4 s estará en x = 14 m.\n\nEn una gráfica de posición frente al tiempo, la pendiente representa la velocidad. Una pendiente negativa indica que la posición disminuye con el tiempo."
+      },
+      {
+        "pageNumber": 2,
+        "heading": "Aceleración constante",
+        "text": "La aceleración es el cambio de velocidad por unidad de tiempo. Cuando es constante, v = v₀ + a · t. La unidad del SI es m/s². Por ejemplo, con v₀ = 2 m/s y a = 3 m/s², a los 4 s la velocidad es 14 m/s.\n\nCon aceleración constante, el desplazamiento se obtiene con Δx = v₀ · t + ½ · a · t². En una gráfica de velocidad frente al tiempo, la pendiente representa la aceleración y el área con signo bajo la curva representa el desplazamiento."
+      }
+    ],
+    "questions": [
+      {
+        "text": "Un ciclista parte de x₀ = 2 m y avanza a 3 m/s. ¿Dónde está a los 4 s?",
+        "options": ["En 12 m", "En 14 m", "En 20 m"],
+        "correct": 1,
+        "hint": "Suma la posición inicial al producto de la velocidad por el tiempo.",
+        "feedback": "x = 2 m + (3 m/s)(4 s) = 14 m.",
+        "page": 1
+      },
+      {
+        "text": "Si v₀ = 2 m/s y a = 3 m/s², ¿cuál es la velocidad a los 4 s?",
+        "options": ["14 m/s", "12 m/s", "24 m/s"],
+        "correct": 0,
+        "hint": "Usa v = v₀ + a · t. Conserva las unidades.",
+        "feedback": "v = 2 m/s + (3 m/s²)(4 s) = 14 m/s.",
+        "page": 2
+      },
+      {
+        "text": "¿Qué representa la pendiente en una gráfica de velocidad frente al tiempo?",
+        "options": ["La posición inicial", "El desplazamiento", "La aceleración"],
+        "correct": 2,
+        "hint": "Piensa qué cociente obtienes al dividir el cambio del eje vertical entre el tiempo.",
+        "feedback": "La pendiente es Δv/Δt. Sus unidades son m/s², las de la aceleración.",
+        "page": 2
+      }
+    ]
+  },
+  {
+    "id": "matematica",
+    "subject": "Matemática I",
+    "code": "MAT 101",
+    "title": "Funciones afines",
+    "description": "Interpreta la pendiente y la ordenada al origen, y usa funciones para resolver problemas.",
+    "pdf": "guia-funciones.pdf",
+    "source": "Guía de funciones afines",
+    "prompt": "¿Cómo se calcula la pendiente?",
+    "pages": [
+      {
+        "pageNumber": 1,
+        "heading": "Pendiente de una recta",
+        "text": "Una función afín tiene la forma f(x) = m · x + b. La pendiente m describe cuánto cambia f(x) cuando x aumenta una unidad. Con dos puntos distintos en x, la pendiente se calcula con m = (y₂ − y₁) / (x₂ − x₁).\n\nSi la recta pasa por (1, 3) y (4, 9), su pendiente es m = (9 − 3) / (4 − 1) = 2. Una pendiente positiva indica que la función es creciente."
+      },
+      {
+        "pageNumber": 2,
+        "heading": "Ordenada al origen y evaluación",
+        "text": "La ordenada al origen b es el valor de la función cuando x = 0. En la gráfica, es la altura del punto donde la recta corta el eje vertical. Si f(x) = 2 · x + 1, entonces b = 1.\n\nPara evaluar una función, sustituye x por el número indicado. Si f(x) = 2 · x + 1, entonces f(4) = 2 · 4 + 1 = 9."
+      }
+    ],
+    "questions": [
+      {
+        "text": "¿Cuál es la pendiente de la recta que pasa por (1, 3) y (4, 9)?",
+        "options": ["3", "2", "6"],
+        "correct": 1,
+        "hint": "Divide el cambio en y entre el cambio en x.",
+        "feedback": "m = (9 − 3) / (4 − 1) = 6 / 3 = 2.",
+        "page": 1
+      },
+      {
+        "text": "En f(x) = 2 · x + 1, ¿cuál es la ordenada al origen?",
+        "options": ["2", "0", "1"],
+        "correct": 2,
+        "hint": "Evalúa f(0).",
+        "feedback": "f(0) = 2 · 0 + 1 = 1.",
+        "page": 2
+      },
+      {
+        "text": "Si f(x) = 2 · x + 1, ¿cuánto vale f(4)?",
+        "options": ["9", "8", "7"],
+        "correct": 0,
+        "hint": "Reemplaza x por 4 antes de sumar 1.",
+        "feedback": "f(4) = 2 · 4 + 1 = 9.",
+        "page": 2
+      }
+    ]
+  }
+]

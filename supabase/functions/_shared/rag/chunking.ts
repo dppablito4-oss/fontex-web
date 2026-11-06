@@ -11,9 +11,9 @@ export type TextChunk = {
   estimatedTokens: number;
 };
 
-export function normalizeExtractedText(value: string) {
+export function normalizeExtractedText(value: string, normalizationForm: "NFC" | "NFKC" = "NFKC") {
   return value
-    .normalize("NFKC")
+    .normalize(normalizationForm)
     .replace(/\u00ad/g, "")
     .replace(/\r\n?/g, "\n")
     .replace(/[\t\f\v ]+/g, " ")
@@ -48,8 +48,8 @@ function splitLongUnit(value: string, maximumCharacters: number) {
   return pieces;
 }
 
-function pageChunks(text: string, targetCharacters: number, overlapCharacters: number) {
-  const normalized = normalizeExtractedText(text);
+function pageChunks(text: string, targetCharacters: number, overlapCharacters: number, normalizationForm: "NFC" | "NFKC") {
+  const normalized = normalizeExtractedText(text, normalizationForm);
   if (!normalized) return [];
 
   const units = normalized
@@ -83,13 +83,14 @@ export function createPageAwareChunks(
   pages: ExtractedPage[],
   targetTokens: number,
   overlapTokens: number,
+  normalizationForm: "NFC" | "NFKC" = "NFKC",
 ) {
   const targetCharacters = targetTokens * 4;
   const overlapCharacters = overlapTokens * 4;
   const chunks: TextChunk[] = [];
 
   for (const page of pages) {
-    for (const content of pageChunks(page.text, targetCharacters, overlapCharacters)) {
+    for (const content of pageChunks(page.text, targetCharacters, overlapCharacters, normalizationForm)) {
       chunks.push({
         chunkIndex: chunks.length,
         pageStart: page.pageNumber,
