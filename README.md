@@ -1,5 +1,15 @@
 # Fontex
 
+## Laboratorio visual de fracciones
+
+La ruta principal `/#/` (también `/#/lienzo`) abre un lienzo interactivo sin iniciar sesión. Escribe una suma o resta como `2/3 + 3/6`: representa cada fracción, homogeneiza con el mínimo común múltiplo y muestra el resultado con figuras y explicación textual. Permite barras o círculos, mover tarjetas por su encabezado, cambiar el zoom y añadir una observación. La última operación válida se conserva en este navegador; las notas y posiciones duran la sesión abierta.
+
+Alcance del prototipo: dos fracciones no negativas, suma o resta con resultado no negativo; denominadores de 1 a 24, hasta 3 unidades por operando y denominador común de hasta 60 para mantener el dibujo legible. Los cálculos y las explicaciones son deterministas y funcionan sin API ni conexión a IA.
+
+La versión anterior completa se conserva en la rama `respaldo/aula-virtual-2026-11-11` (commit `6210aafa87e5a55cfa5adb25960a36edc25cc307`). El aula anterior sigue accesible desde `/#/inicio` y el tutor de práctica desde `/#/demo`.
+
+Ejecuta `npm ci`, `npm run dev`. Comprueba con `npm run test` y `npm run build`.
+
 ## Tutor personal de Matemática
 
 Ejecuta `npm ci` y `npm run dev`. Abre `/#/demo` en la dirección de Vite. El alumno elige un tema de primaria o secundaria, lee la teoría y practica. Cada error muestra una explicación para esa respuesta y la página de la guía que conviene repasar.

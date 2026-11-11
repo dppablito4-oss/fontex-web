@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { App } from "./App";
 import { ThemeProvider } from "../features/theme/ThemeProvider";
 
-function renderRoute(route = "/") {
+function renderRoute(route = "/inicio") {
   window.location.hash = `#${route}`;
   return render(
     <ThemeProvider>
@@ -18,7 +18,7 @@ function renderRoute(route = "/") {
 
 describe("Fontex shell", () => {
   it.each([
-    ["/", /tus fuentes/i],
+    ["/inicio", /tus fuentes/i],
     ["/aula", /tu aula/i],
     ["/grupo", /horizonte/i],
     ["/biblioteca", /biblioteca/i],

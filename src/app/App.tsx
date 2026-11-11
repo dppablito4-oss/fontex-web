@@ -1,6 +1,8 @@
 import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes, useMatch } from "react-router-dom";
 
+import { FractionCanvas } from "../features/canvas/FractionCanvas";
+
 import { AppShell } from "./layouts/AppShell";
 import { AdminPage } from "../features/administration/AdminPage";
 import { AuthLoadingPage, AuthPage } from "../features/auth/AuthPage";
@@ -26,7 +28,11 @@ const DemoPage = lazy(() =>
 export function App() {
   const { status } = useAuth();
   const demoRoute = useMatch("/demo");
+  const canvasRoute = useMatch("/");
+  const canvasAlias = useMatch("/lienzo");
   const tutorSignIn = useMatch("/ingresar-tutor");
+
+  if (canvasRoute || canvasAlias) return <FractionCanvas />;
 
   if (demoRoute || (import.meta.env.MODE === "demo" && !tutorSignIn)) {
     return (
@@ -44,7 +50,7 @@ export function App() {
     <WorkspaceProvider>
       <Routes>
       <Route element={<AppShell />}>
-        <Route index element={<HomePage />} />
+        <Route path="inicio" element={<HomePage />} />
         <Route path="aula" element={<ClassroomPage />} />
         <Route path="grupo" element={<GroupPage />} />
         <Route path="biblioteca" element={<LibraryPage />} />
