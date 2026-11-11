@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type CSSProperties, type PointerEvent } fr
 import { ArrowLeft, ArrowRight, Check, ChevronDown, Circle, GripHorizontal, Layers3, Maximize, Minus, MousePointer2, Plus, RotateCcw, Square, StickyNote, X } from 'lucide-react';
 import { parseOperation, type Fraction } from './fractions';
 import './canvas.css';
+import { useAuth } from '../auth/AuthProvider';
 
 type Position = { x: number; y: number };
 type Layout = { first: Position; second: Position; result: Position; note: Position };
@@ -31,6 +32,14 @@ function Pictogram({ n, d, color, shape, original, secondary = 0 }: Fraction & {
   </div>;
 }
 export function FractionCanvas() {
+  const { status: authStatus, profile, user, signOut, error: sessionError } = useAuth();
+  const [accountError, setAccountError] = useState('');
+  const [signingOut, setSigningOut] = useState(false);
+  async function leaveAccount() {
+    setSigningOut(true); setAccountError('');
+    try { await signOut(); } catch (error) { setAccountError(error instanceof Error ? error.message : 'No fue posible cerrar sesión.'); }
+    finally { setSigningOut(false); }
+  }
   const [expression, setExpression] = useState(readSaved);
   const [operation, setOperation] = useState(() => parseOperation(expression));
   const [stage, setStage] = useState(0);
@@ -64,7 +73,8 @@ export function FractionCanvas() {
     <>Ahora cada pieza representa <strong>1/{op.denominator}</strong> de la misma unidad. {op.operator === '+' ? 'Reunimos' : 'Quitamos'} las piezas: {op.left} {op.operator} {op.right} = <strong>{op.total}</strong>. Conservamos el denominador porque el tamaño de las piezas sigue siendo el mismo.</>,
   ];
   return <div className="fc-app">
-    <header className="fc-header"><a href="#/" className="fc-brand"><span className="fc-brand-icon"><Layers3 size={22}/></span>fontex<span className="fc-brand-divider"/><span className="fc-brand-sub">Laboratorio visual</span></a><div className="fc-header-right"><span className="fc-save"><span/>{saved ? 'Operación guardada' : 'Tu espacio para explorar'}</span><button className="fc-reset" onClick={() => { setLayout(initialLayout); setZoom(1); setStage(0); setNote(null); viewport.current?.scrollTo(0, 0); }}><RotateCcw size={15}/> Reiniciar vista</button></div></header>
+    <header className="fc-header"><a href="#/" className="fc-brand"><span className="fc-brand-icon"><Layers3 size={22}/></span>fontex<span className="fc-brand-divider"/><span className="fc-brand-sub">Laboratorio visual</span></a><div className="fc-header-right"><div className="fc-account">{authStatus === 'authenticated' ? <><span className="fc-account-name">{profile?.displayName || user?.user_metadata?.display_name || 'Mi cuenta'}</span><button className="fc-account-login" disabled={signingOut} onClick={() => void leaveAccount()}>{signingOut ? 'Saliendo…' : 'Cerrar sesión'}</button></> : authStatus === 'loading' ? <span className="fc-account-name" role="status">Verificando sesión…</span> : <><a className="fc-account-login" href="#/ingresar">Iniciar sesión</a><a className="fc-account-signup" href="#/crear-cuenta">Crear cuenta</a></>}</div><span className="fc-save"><span/>{saved ? 'Operación guardada' : 'Tu espacio para explorar'}</span><button className="fc-reset" onClick={() => { setLayout(initialLayout); setZoom(1); setStage(0); setNote(null); viewport.current?.scrollTo(0, 0); }}><RotateCcw size={15}/> Reiniciar vista</button></div></header>
+    {(accountError || sessionError) && <p role="alert" className="fc-account-error">{accountError || sessionError} <a href="#/ingresar">Ir al acceso</a></p>}
     <div className="fc-body"><aside className="fc-sidebar"><div className="fc-eyebrow">MATEMÁTICA, A LA VISTA</div><h1>Las fracciones <br/>toman forma<span>.</span></h1><p className="fc-intro">Escribe una operación y descubre qué pasa en cada paso.</p>
       <form onSubmit={event => { event.preventDefault(); visualize(); }}><label htmlFor="fc-expression">Tu operación</label><div className={`fc-input ${error ? 'invalid' : ''}`}><input id="fc-expression" value={expression} onChange={event => { setExpression(event.target.value); setSaved(false); }} spellCheck={false} autoComplete="off" aria-describedby={error ? 'fc-error' : 'fc-help'}/><span>↵</span></div><p id="fc-help" className="fc-help">Suma o resta dos fracciones: a/b + c/d</p>{error && <p id="fc-error" role="alert" className="fc-error">{error}</p>}<button type="submit" className="fc-primary">Visualizar operación <ArrowRight size={17}/></button></form>
       <div className="fc-examples"><span>PRUEBA TAMBIÉN</span><div>{examples.filter(value => value !== examples[0]).map(value => <button key={value} onClick={() => visualize(value)}>{value}</button>)}</div></div>

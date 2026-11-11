@@ -31,10 +31,19 @@ export function App() {
   const canvasRoute = useMatch("/");
   const canvasAlias = useMatch("/lienzo");
   const tutorSignIn = useMatch("/ingresar-tutor");
+  const signInRoute = useMatch("/ingresar");
+  const signUpRoute = useMatch("/crear-cuenta");
+  const authRoute = tutorSignIn || signInRoute || signUpRoute;
 
   if (canvasRoute || canvasAlias) return <FractionCanvas />;
 
-  if (demoRoute || (import.meta.env.MODE === "demo" && !tutorSignIn)) {
+  if (authRoute) {
+    if (status === "loading") return <AuthLoadingPage />;
+    if (status === "authenticated") return <Navigate to={tutorSignIn ? "/demo" : "/"} replace />;
+    return <AuthPage key={signUpRoute ? "signup" : "signin"} initialMode={signUpRoute ? "signup" : "signin"} />;
+  }
+
+  if (demoRoute || (import.meta.env.MODE === "demo" && !authRoute)) {
     return (
       <Suspense fallback={<div className="page-wrap" role="status">Preparando el aula…</div>}>
         <DemoPage />
@@ -44,7 +53,6 @@ export function App() {
 
   if (status === "loading") return <AuthLoadingPage />;
   if (status === "anonymous") return <AuthPage />;
-  if (tutorSignIn) return <Navigate to="/demo" replace />;
 
   return (
     <WorkspaceProvider>

@@ -22,7 +22,7 @@ import { useWorkspace } from "../../features/workspace/WorkspaceProvider";
 import { cn } from "../../lib/utils";
 
 const navigation = [
-  { to: "/", label: "Inicio", icon: House, end: true },
+  { to: "/inicio", label: "Inicio", icon: House, end: true },
   { to: "/aula", label: "Aula", icon: GraduationCap },
   { to: "/grupo", label: "Mi grupo", icon: UsersRound },
   { to: "/biblioteca", label: "Biblioteca", icon: BookOpenText },

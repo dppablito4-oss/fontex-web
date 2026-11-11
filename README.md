@@ -10,6 +10,14 @@ La versión anterior completa se conserva en la rama `respaldo/aula-virtual-2026
 
 Ejecuta `npm ci`, `npm run dev`. Comprueba con `npm run test` y `npm run build`.
 
+## Crear cuenta e iniciar sesión
+
+El lienzo ofrece acceso desde `/#/ingresar` y registro desde `/#/crear-cuenta`. Al entrar, vuelve al lienzo; el acceso específico del tutor (`/#/ingresar-tutor`) conserva su retorno al tutor. Crear cuenta solicita nombre, correo y contraseña confirmada. Si Supabase exige verificar el correo, el formulario explica el paso pendiente y permite reenviar el enlace con una espera de 60 segundos. La dirección de retorno utiliza el origen y la ruta de la aplicación, sin el fragmento reservado para los tokens de Supabase.
+
+Un error `email_not_confirmed` significa que hay que abrir el enlace recibido antes de iniciar sesión. No se desactiva la confirmación de correo. Los errores se muestran en español, el login admite contraseñas existentes sin imponer el mínimo del registro y la recuperación de sesión maneja fallos de red y respuestas tardías. El lienzo muestra la cuenta activa y permite cerrar sesión. Si faltan las variables de Supabase, el formulario informa que el acceso no está disponible y mantiene el lienzo abierto para invitados.
+
+Validación: pruebas de interfaz y proveedor cubren registro pendiente de confirmación, reenvío, login, cierre y restauración de sesión, errores de red y carreras de inicialización. Se comprobaron en la API real el rechazo de credenciales inexistentes y de un registro inválido, sin crear cuentas de prueba. El registro real observado en los logs fue exitoso y el login posterior falló por correo sin confirmar; la apertura de enlaces en una bandeja de correo no forma parte de las pruebas automatizadas.
+
 ## Tutor personal de Matemática
 
 Ejecuta `npm ci` y `npm run dev`. Abre `/#/demo` en la dirección de Vite. El alumno elige un tema de primaria o secundaria, lee la teoría y practica. Cada error muestra una explicación para esa respuesta y la página de la guía que conviene repasar.
