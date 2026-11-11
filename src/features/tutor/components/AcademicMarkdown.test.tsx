@@ -5,6 +5,10 @@ import { AcademicMarkdown } from "./AcademicMarkdown";
 import type { TutorCitation } from "../types";
 
 describe("AcademicMarkdown", () => {
+  it("conserva exponentes completos y deja intacta la notación no admitida", () => {
+    render(<AcademicMarkdown content="$x^0 + x^1 + x^4 + x^10 + x^{24} + x^{-12} + x^n$" />);
+    expect(screen.getByText("x⁰ + x¹ + x⁴ + x¹⁰ + x²⁴ + x⁻¹² + x^n")).toBeInTheDocument();
+  });
   it("renderiza texto simple, negrita y código en línea", () => {
     const text = "Este es un **concepto clave** con `código inline` y texto normal.";
     render(<AcademicMarkdown content={text} />);

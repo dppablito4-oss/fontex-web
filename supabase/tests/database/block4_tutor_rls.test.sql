@@ -131,7 +131,16 @@ select extensions.is(
   'Student A can see own conversation'
 );
 
--- Student A inserts a message
+select extensions.throws_ok(
+  'insert into public.tutor_messages (conversation_id, user_id, role, content) values (''c0000000-0000-4000-8000-000000000001'', ''00000000-0000-4000-8000-000000000402'', ''assistant'', ''Fabricated response'')',
+  '42501', null, 'Client cannot fabricate an assistant response'
+);
+select extensions.throws_ok(
+  'select public.internal_store_tutor_exchange(''00000000-0000-4000-8000-000000000402'', ''c0000000-0000-4000-8000-000000000001'', ''Question'', ''Answer'', ''fake'')',
+  '42501', null, 'Client cannot invoke server exchange persistence'
+);
+-- The server writes messages; students retain read access to their own history.
+reset role;
 insert into public.tutor_messages (
   id, conversation_id, user_id, role, content, order_index
 )
@@ -144,6 +153,7 @@ values (
   1
 );
 
+set local role authenticated;
 select extensions.is(
   (select count(*)::integer from public.tutor_messages where id = 'ba000000-0000-4000-8000-000000000001'),
   1,
@@ -329,6 +339,14 @@ select extensions.lives_ok(
   'internal_complete_tutor_request completes successfully'
 );
 
+select extensions.lives_ok(
+  format(
+    'select public.internal_complete_tutor_request(%L::uuid, ''00000000-0000-4000-8000-000000000402'', ''completed'', 1, 100, 50, 0, 450, null)',
+    current_setting('test.block4_usage_event_id')
+  ),
+  'Completion can be retried safely after a lost response'
+);
+
 -- Search tutor chunks as Student A: should find chunk for classroom doc, NOT chunk for B
 select extensions.is(
   (
@@ -453,6 +471,11 @@ select set_config(
 set local role authenticated;
 set local "request.jwt.claims" = '{"sub":"00000000-0000-4000-8000-000000000402","role":"authenticated"}';
 
+select extensions.throws_ok(
+  'insert into public.tutor_message_citations (message_id, document_id, chunk_id, page_start, page_end, document_title) values (''ba000000-0000-4000-8000-000000000001'', ''d0000000-0000-4000-8000-000000000001'', 1, 1, 1, ''Fabricated citation'')',
+  '42501', null, 'Client cannot fabricate verified citations'
+);
+reset role;
 insert into public.tutor_message_citations (
   id, message_id, document_id, chunk_id, citation_index, page_start, page_end, document_title
 )
@@ -464,6 +487,47 @@ values (
   1, 14, 14, 'Física I — Mecánica Clásica'
 );
 
+-- Server persistence assigns monotonic indices even after the context window fills.
+set local role service_role;
+select public.internal_store_tutor_exchange(
+  '00000000-0000-4000-8000-000000000402', 'c0000000-0000-4000-8000-000000000001',
+  'Question ' || turn, 'Answer ' || turn, 'test-model', '{}',
+  array[current_setting('test.block4_sample_chunk_id')::bigint]
+) from generate_series(1, 7) as turn;
+select extensions.is(
+  (select string_agg(content, '|' order by order_index) from public.tutor_messages
+    where conversation_id = 'c0000000-0000-4000-8000-000000000001' and order_index > 1),
+  'Question 1|Answer 1|Question 2|Answer 2|Question 3|Answer 3|Question 4|Answer 4|Question 5|Answer 5|Question 6|Answer 6|Question 7|Answer 7',
+  'Reopening a seven-turn conversation preserves question/answer order'
+);
+select extensions.throws_ok(
+  format('select public.internal_store_tutor_exchange(''00000000-0000-4000-8000-000000000402'', ''c0000000-0000-4000-8000-000000000001'', ''Rejected'', ''Rejected'', ''test'', ''{}'', array[%s]::bigint[])',
+    (select id from public.document_chunks where document_id = 'd0000000-0000-4000-8000-000000000002' limit 1)),
+  '42501', null, 'Exchange cannot cite another student private document'
+);
+select extensions.is(
+  (select count(*)::integer from public.tutor_messages where conversation_id = 'c0000000-0000-4000-8000-000000000001'),
+  15, 'Failed citation persistence leaves no partial messages'
+);
+select extensions.is(
+  (select count(*)::integer from public.tutor_message_citations c join public.tutor_messages m on m.id = c.message_id
+    where m.conversation_id = 'c0000000-0000-4000-8000-000000000001' and m.role = 'assistant'
+    and c.page_start = 14 and c.page_end = 14 and c.document_title = 'Física I — Mecánica Clásica'),
+  7, 'Server derives citation pages and titles from authoritative chunks'
+);
+reset role;
+select extensions.ok(
+  not exists (select 1 from information_schema.table_privileges
+    where table_schema = 'public' and table_name in ('tutor_limits', 'tutor_conversations', 'tutor_messages', 'tutor_message_citations', 'tutor_usage_events')
+    and grantee in ('anon', 'PUBLIC') ), 'Anonymous roles have no tutor table grants'
+);
+select extensions.ok(
+  not has_table_privilege('authenticated', 'public.tutor_limits', 'TRUNCATE')
+  and not has_table_privilege('authenticated', 'public.tutor_messages', 'INSERT')
+  and not has_table_privilege('authenticated', 'public.tutor_message_citations', 'INSERT'),
+  'Browser roles cannot truncate limits or write server-authored history'
+);
+set local role authenticated;
 select extensions.is(
   (select count(*)::integer from public.tutor_message_citations where id = 'e0000000-0000-4000-8000-000000000001'),
   1,

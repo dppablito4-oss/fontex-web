@@ -27,7 +27,7 @@ describe("RAG diagnostic search panel", () => {
     }]);
     render(<RagSearchPanel />);
 
-    expect(screen.getByText("No conectado al tutor")).toBeInTheDocument();
+    expect(screen.getByText("Diagnóstico de recuperación")).toBeInTheDocument();
     fireEvent.change(screen.getByRole("searchbox", { name: "Consulta para recuperar fragmentos" }), {
       target: { value: "ATP y energía" },
     });

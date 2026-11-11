@@ -1,14 +1,24 @@
 # Sistema de diseño de Fontex
 
-**Versión:** 0.5.0
+**Revisión documental:** 11 de noviembre de 2026; aplicación `0.6.0` con Studio incorporado.
 
-**Estado:** Implementado para temas claro y oscuro
+**Estado:** Temas claro/oscuro en vistas académicas; Studio usa una apariencia clara propia.
 
 ## Principios
 
 La interfaz expresa la idea de *fuentes puestas en contexto* con superficies sobrias, jerarquía legible y acentos geométricos. Los colores de marca identifican acciones y contexto, pero los estados de éxito, advertencia y error conservan colores semánticos independientes.
 
-Todo componente nuevo debe consumir tokens; no debe incluir valores HEX ni nombres ligados a la paleta anterior dentro de clases JSX.
+En las vistas académicas, los componentes nuevos deben consumir tokens. Studio utiliza actualmente variables `--st-*` y valores propios; unificar ambas superficies es trabajo pendiente y no debe darse por implementado.
+
+## Superficies actuales
+
+| Experiencia | Hoja de estilos | Temas |
+|---|---|---|
+| Espacio académico y autenticación | `src/styles/globals.css` | Claro y oscuro mediante `ThemeProvider` |
+| Aula de práctica | `src/features/demo/demo.css` y estilos globales | Estilos propios combinados con los globales; verificar por separado |
+| Studio | `src/features/studio/studio.css` | Fuerza `color-scheme: light`; variables `--st-ink`, `--st-muted`, `--st-teal`, `--st-line` y `--st-soft` |
+
+Studio usa un editor con paleta, tablero e inspector, además de un diálogo de materiales y una vista de presentación. Sus gráficos matemáticos SVG incluyen colores propios. Las pruebas de contraste de tokens globales no certifican automáticamente estos colores ni toda la experiencia de Studio.
 
 ## Paleta oficial
 
@@ -73,13 +83,13 @@ La conversación usa `background` como plano de lectura, `surface` para respuest
 
 Las tarjetas de documento usan `surface`, bordes semánticos y badges textuales para distinguir alcance privado, de grupo o de aula sin depender solo del color. La carga y la compartición se presentan en paneles delimitados; el visor PDF ocupa un diálogo responsive con controles de página accesibles, ancho adaptable y cierre explícito. Los estados vacío, cargando, error y confirmación deben conservarse en ambos temas y en anchos móviles.
 
-Los estados de índice se expresan además con texto: `Sin indexar`, `Indexando`, `Índice listo` e `Índice fallido`. El panel diagnóstico RAG reutiliza campos y tarjetas existentes, identifica de forma visible que aún no alimenta al tutor y presenta cada resultado con documento, página y fragmento; la puntuación queda como metadato secundario, nunca como sustituto de la fuente.
+Los estados de índice se expresan además con texto: `Sin indexar`, `Indexando`, `Índice listo` e `Índice fallido`. El panel diagnóstico RAG presenta documento, página y fragmento. El tutor documental ya consume recuperación autorizada mediante su propio endpoint; el diagnóstico de Biblioteca es una herramienta aparte. La puntuación queda como metadato secundario, nunca como sustituto de la fuente.
 
 ## Accesibilidad y verificación
 
 Las pruebas de `src/features/theme/contrast.test.ts` leen los valores reales de la hoja de estilos. Verifican un mínimo de 4.5:1 para texto normal y 3:1 para bordes de controles e indicadores de foco. Las pruebas del proveedor cubren preferencia del sistema, persistencia, alternancia, errores de almacenamiento y actualización de `data-theme`.
 
-Al crear o modificar un token se deben volver a ejecutar `npm run test`, revisar las seis páginas en ambos temas y comprobar móvil, tablet y escritorio.
+Al crear o modificar un token se deben ejecutar las pruebas relevantes y revisar las vistas afectadas en ambos temas y en móvil, tablet y escritorio. Studio y el aula de práctica requieren su propia revisión. La auditoría del 11 de noviembre ejecutó pruebas automatizadas, pero no una revisión visual, E2E o de lector de pantalla en navegador.
 
 ## Identidad gráfica
 

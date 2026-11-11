@@ -1,107 +1,125 @@
-# Arquitectura de los Bloques 0, 1, 2 y 3
+# Arquitectura actual de Fontex
 
-## Objetivo
+**Revisión:** 11 de noviembre de 2026 · código base `3a26911` · versión declarada `0.6.0`.
 
-El Bloque 0 estableció la interfaz y las fronteras técnicas de Fontex. El Bloque 1 incorporó identidad, aulas y grupos; el Bloque 2 añadió la biblioteca PDF privada. El Bloque 3 incorpora extracción server-side, indexación vectorial y recuperación híbrida autorizada, manteniendo el frontend como sitio estático para GitHub Pages. El tutor continúa deliberadamente separado del motor RAG.
+## Experiencias y fronteras
 
-## Capas actuales
+Fontex es una SPA estática con React, TypeScript y Vite. La entrada principal es Studio. El laboratorio de fracciones, el aula de práctica y el espacio académico permanecen disponibles como rutas independientes.
 
-```text
-Navegador
-├── React Router (HashRouter)
-├── Supabase Auth + cliente público bajo RLS
-├── Contextos de identidad y espacio de trabajo
-├── Biblioteca documental, visor PDF.js y diagnóstico RAG
-├── Shell responsive y páginas por funcionalidad
-├── Componentes UI locales
-└── assistant-ui LocalRuntime
-    └── Adaptador a tutor-chat, todavía sin contexto documental
+```mermaid
+flowchart TD
+    App[React y HashRouter] --> Studio[Studio y motor matemático]
+    App --> Practice[Aula de práctica]
+    App --> Academic[Espacio académico]
+    Studio --> Local[localStorage por usuario o invitado]
+    Studio --> JSON[Importación y exportación JSON]
+    Practice --> Progress[localStorage e IndexedDB]
+    Practice --> LocalAPI[Plugin local de Vite]
+    Practice --> PracticeAPI[practice-tutor con sesión]
+    Academic --> Client[Cliente público de Supabase y RLS]
+    Academic --> Edge[Funciones documentales y tutor-chat]
+    Client --> DB[PostgreSQL y Storage privado]
+    Edge --> DB
+    Edge --> AI[OpenAI desde el servidor]
+    LocalAPI --> AI
+    PracticeAPI --> AI
 ```
 
-- `src/app`: enrutamiento y layout transversal.
-- `src/features`: páginas y comportamiento agrupados por funcionalidad.
-- `src/components`: componentes compartidos y primitivas UI.
-- `src/lib`: utilidades sin conocimiento de la interfaz.
-- `supabase/migrations`: esquema versionado de identidad, aulas, invitaciones y grupos.
-- `supabase/tests`: pruebas pgTAP de aislamiento con múltiples identidades.
-- `supabase/functions/document-upload`: validación confiable y carga coordinada.
-- `supabase/functions/document-delete`: eliminación física antes de retirar metadatos y permisos.
-- `supabase/functions/document-process`: extracción PDF e indexación reanudable por lotes.
-- `supabase/functions/document-search`: embedding de consulta y recuperación híbrida protegida.
-- `supabase/functions/_shared/rag`: normalización, fragmentación y cliente mínimo de embeddings.
+La separación local por usuario organiza los datos en el navegador. No es aislamiento frente a otras personas con acceso al mismo perfil del navegador y no sincroniza datos con el servidor.
 
-## Identidad y autorización
+## Organización del código
 
-`AuthProvider` administra la sesión y el perfil. `WorkspaceProvider` consulta exclusivamente mediante el token del usuario; no usa claves privadas ni decide autorizaciones. Si faltan las variables públicas, la aplicación conserva un modo demostrativo explícito y no simula escrituras.
+| Ruta | Responsabilidad |
+|---|---|
+| `src/main.tsx` | React, temas, autenticación y HashRouter |
+| `src/app/App.tsx` | Experiencias, rutas y guardas de sesión |
+| `src/app/layouts/AppShell.tsx` | Navegación académica y selección de aula |
+| `src/core/document-schema` | Objetos y validación de materiales versión 1 |
+| `src/core/math-engine` | Fracciones y sucesiones |
+| `src/core/object-registry` | Catálogo y plantillas |
+| `src/features/studio` | Editor, historial, presentación y guardado local |
+| `src/features/demo` | Práctica, progreso, PDF locales y selección del tutor |
+| `src/features/auth`, `workspace` | Sesión, perfil y aula activa |
+| `src/features/library`, `tutor` | Biblioteca remota y tutor documental |
+| `src/lib/supabase` | Configuración pública, cliente y contratos tipados |
+| `supabase/migrations`, `tests` | Esquema versionado y pruebas de permisos |
+| `supabase/functions` | Endpoints y lógica compartida |
 
-El esquema aplica dos capas:
+## Studio
 
-1. Privilegios SQL mínimos para `authenticated` y ninguno para `anon` sobre las tablas del Bloque 1.
-2. RLS para filtrar perfiles, organizaciones, aulas, matrículas, invitaciones y grupos.
+`StudioShell` monta un editor con una clave React derivada del usuario o de `guest`; cambiar de cuenta reinicia el estado y recupera su espacio local. `CanvasViewport` gestiona movimiento con puntero y teclado. `PropertiesInspector` valida formularios; `MathObjectRenderer` presenta SVG y texto.
 
-Los roles pertenecen a `class_members`, no a `raw_user_meta_data`. Las invitaciones vinculan correo, rol y aula; el token se devuelve una vez y solo se conserva su SHA-256. El propietario del aula no puede ser retirado y solo él puede cambiar roles de miembros existentes. Retirar una matrícula elimina también las asignaciones grupales y corta el acceso futuro.
+Los tipos son fracción, operación guiada, texto y sucesión aritmética. El motor acepta suma/resta de dos fracciones no negativas con resultado no negativo. `src/features/canvas/fractions.ts` reexporta el motor para mantener el laboratorio anterior.
 
-Las funciones auxiliares que deben leer membresías sin recursión RLS viven en el esquema no expuesto `private`, usan `SECURITY DEFINER`, fijan `search_path = ''` y califican todas las relaciones. Las funciones públicas de mutación verifican `auth.uid()`, correo y rol antes de escribir y limitan su ejecución a `authenticated`.
+`useStudioDocument` mantiene hasta 40 estados previos. Los cambios aplicados, deshacer y rehacer intentan guardar inmediatamente; el arrastre confirma un cambio al soltar. `document-store` reemplaza una instantánea completa bajo `fontex-studio-v2:<propietario>`: documentos y material activo cambian juntos mediante un único `setItem`. Lee el formato anterior y solo elimina sus claves después de confirmar la nueva instantánea. Si falla guardar el material nuevo, el editor conserva el actual y devuelve el error al llamante.
 
-La creación del primer workspace ya no pertenece automáticamente a la primera cuenta pública. `private.workspace_bootstrap_authorizations` conserva autorizaciones administrativas de un solo uso; la migración autoriza al único usuario preexistente del proyecto piloto y las altas posteriores requieren una concesión explícita.
+Importar valida el formato y asigna un nuevo ID al material. Exportar descarga el documento completo como JSON. No existen tablas ni funciones de Supabase para materiales de Studio. Los detalles están en [studio.md](studio.md).
 
-## Biblioteca documental segura
+## Identidad, aulas y permisos
 
-`documents` conserva una referencia estable por PDF, propietario derivado de `auth.uid()`, aula, hash SHA-256, tamaño, páginas, ruta aleatoria y estado. `document_shares` usa llaves foráneas separadas para aula y grupo, junto con un `check` y un trigger que impiden asociar un documento con otro contexto. No se creó versionado porque el MVP no reemplaza objetos: una nueva versión se carga como un documento nuevo.
+`AuthProvider` maneja sesión, perfil, alta, confirmación, reenvío de correo y cierre de sesión. El perfil opcional no bloquea el acceso si su consulta falla. El nombre visible puede venir de metadatos del usuario; las decisiones de rol se basan en matrículas de PostgreSQL.
 
-El flujo de carga separa reserva y archivo sin declarar disponibilidad prematura:
+Con Supabase configurado, Studio y las rutas locales siguen accesibles sin cuenta; las rutas académicas muestran autenticación a usuarios anónimos. Sin configuración, el cliente es nulo y permanecen componentes de demostración. Esto no habilita operaciones reales de backend.
 
-1. PDF.js comprueba en el navegador extensión, MIME, parseo, páginas y presencia de texto seleccionable.
-2. `reserve_document_upload` verifica matrícula y cuotas dentro de una transacción. Advisory locks global, de aula y de usuario evitan carreras; la función genera ID y ruta aleatorios.
-3. `document-upload` exige JWT, vuelve a comprobar propietario, vencimiento, tamaño, MIME, nombre, firma `%PDF-`/`%%EOF` y SHA-256.
-4. Solo la función usa el cliente administrativo para escribir el objeto; los usuarios no reciben políticas `INSERT`, `UPDATE` o `DELETE` sobre Storage.
-5. El estado cambia a `ready` únicamente después de la subida. Si la confirmación falla, la función elimina el objeto; los fallos quedan visibles pero nunca descargables.
+`WorkspaceProvider` consulta aulas y roles con el token del usuario. Las invitaciones almacenan hashes de tokens de un solo uso; las membresías y roles pertenecen a `class_members`. Crear el primer workspace requiere autorización en `private.workspace_bootstrap_authorizations`; una cuenta pública no la recibe automáticamente.
 
-La descarga usa `storage.from('fontex-documents').download(path)` con el JWT del usuario, un `cacheNonce` nuevo y caché `no-store`. La única política `SELECT` del bucket consulta `private.can_download_document_object` y no existen políticas directas de escritura. Un propietario puede leer su documento; una compartición de aula exige matrícula activa, y una de grupo exige simultáneamente matrícula y pertenencia actual al grupo. El docente no obtiene acceso implícito a documentos privados de estudiantes. No se crean URLs firmadas ni públicas.
+Las migraciones habilitan RLS. Las ayudas privilegiadas fijan `search_path = ''` y califican relaciones. Las RPC internas de búsqueda, cuotas y escritura del tutor restringen su ejecución a `service_role`. La migración de endurecimiento revoca privilegios heredados de las cinco tablas del tutor; el navegador gestiona conversaciones y lee su historial, mientras mensajes y citas se escriben desde el servidor. Las políticas restantes evalúan la identidad con subconsultas para evitar recalcularla por fila.
 
-`document-delete` verifica propietario con el cliente sometido a RLS, elimina el objeto mediante Storage API y después borra el documento; el `ON DELETE CASCADE` retira sus comparticiones. Las sustituciones directas y cambios de ruta están denegados.
+## Biblioteca y RAG
 
-## Indexación y recuperación RAG
+El bucket `fontex-documents` es privado. La reserva de carga verifica membresía y cuotas; `document-upload` valida reserva, propietario, tamaño, firma PDF y hash antes de escribir con privilegios de servidor. `document-delete` elimina el objeto y sus metadatos. El navegador descarga con la sesión y permisos actuales, sin URLs públicas.
 
-`document_processing_jobs` conserva estado, fase, lease, versión del chunker, modelo, dimensión, progreso, tokens y fallos. `document_chunks` conserva contenido normalizado, hash, página, embedding `vector(1536)` y un `tsvector` español/simple. Un índice incompleto nunca participa en búsquedas: la RPC exige trabajo `ready`, fase `complete` y todos los vectores presentes.
+`document-process` descarga el PDF desde Storage, comprueba hash y páginas, extrae texto con PDF.js y genera chunks por página. Los trabajos tienen lease, progreso y versión; la indexación se reanuda por lotes. Un trabajo incompleto no participa en recuperación. El código usa embeddings de 1536 dimensiones y `text-embedding-3-small` por defecto.
 
-El propietario inicia `document-process`. La función vuelve a descargar el objeto privado y verifica SHA-256 y páginas reales antes de confiar en el texto. PDF.js extrae página por página; el chunker determinista apunta cada fragmento a su página y aplica objetivos de 600 tokens con solape de 100. La primera llamada persiste chunks y embebe hasta 16; llamadas sucesivas reclaman un lease y continúan sólo los vectores nulos. Los límites iniciales son 400.000 caracteres, 240 chunks y 100.000 tokens de embedding por documento, una tarea concurrente por usuario y tres fallos.
+`document-search` expone el diagnóstico de recuperación. La RPC combina similitud por coseno y texto completo mediante RRF, filtra por identidad y alcance, y exige un índice completo. Los clientes no leen directamente los chunks. El piloto usa búsqueda vectorial exacta; no hay índice HNSW implementado en las migraciones actuales.
 
-`document-search` crea un embedding por consulta y delega la recuperación a una RPC concedida sólo a `service_role`. La RPC recibe la identidad ya autenticada por Edge, vuelve a aplicar permisos actuales mediante `private.can_user_access_document`, filtra alcance y estado, y combina vecinos por coseno con texto completo mediante Reciprocal Rank Fusion. El cliente no puede leer `document_chunks`, invocar la RPC interna ni convertir un ID conocido en autorización. Las revocaciones y bajas de matrícula afectan la siguiente consulta.
+Los límites iniciales son 5 MiB/100 páginas por PDF, 10 documentos/50 MiB por usuario, 500 MiB por aula y 750 MiB globales. Son valores del esquema, no garantías sobre un proyecto remoto. No hay OCR.
 
-El piloto usa búsqueda vectorial exacta porque el máximo documental vigente mantiene acotado el conjunto. Con 240 chunks por documento, 100 documentos representarían como máximo 24.000 vectores; HNSW se evaluará al aproximarse a 100.000 chunks globales o si la latencia p95 supera 300 ms. Evitarlo ahora reduce mantenimiento y no debilita exactitud. `rag_search_events` registra volumen, tokens y latencia sin almacenar la consulta ni el contenido.
+## Tutor documental
 
-La referencia publicada para `text-embedding-3-small` equivale a USD 0,02 por millón de tokens de entrada. Por tanto, el presupuesto extremo de 100.000 tokens cuesta aproximadamente USD 0,002 por documento, USD 0,02 por diez documentos o USD 0,20 por cien; no incluye impuestos ni futuros cambios de tarifa. Una consulta de 500 caracteres se estima en unos 125 tokens: incluso 60 consultas consumen cerca de 7.500 tokens, aproximadamente USD 0,00015. Cada `vector(1536)` ocupa alrededor de 6 KiB antes de índices y overhead; 24.000 vectores rondan 141 MiB sólo en valores vectoriales. Fuentes de referencia: [guía de embeddings de OpenAI](https://developers.openai.com/api/docs/guides/embeddings) y [documentación de índices vectoriales de Supabase](https://supabase.com/docs/guides/ai/vector-indexes).
+La ruta `/#/tutor` usa `TutorPage`, `useTutor`, `ChatArea` y `tutorService`. `FontexRuntimeProvider`, `ChatThread` y `tutorRuntime` conservan la integración anterior con assistant-ui; no montan la conversación de esta ruta.
 
-## Cuotas del piloto
+Flujo de `tutor-chat`:
 
-`document_limits` permite configuración administrativa. Los valores iniciales son 5 MiB y 100 páginas por PDF, 10 documentos y 50 MiB por usuario, 500 MiB por aula y 750 MiB globales. El tope global deja margen frente al cupo publicado de 1 GB del plan Free; no depende de que la organización tenga un plan superior. Los conteos incluyen reservas y cargas en curso para no exceder límites mediante concurrencia.
+1. Autentica y valida aula, mensajes y opciones.
+2. Reserva una consulta con `internal_begin_tutor_request`.
+3. Comprueba o crea una conversación del usuario.
+4. Genera el embedding y llama a `internal_search_tutor_chunks` con identidad, aula y fuentes.
+5. En modo estricto, si no recupera fragmentos, se abstiene; con contexto, consulta Responses API.
+6. Filtra las citas del modelo contra los chunks recuperados.
+7. Persiste pregunta, respuesta y citas con `internal_store_tutor_exchange`, que bloquea brevemente la conversación, asigna índices crecientes y deriva las referencias de los chunks autorizados. Un fallo revierte todo el intercambio.
+8. Completa el evento de uso tanto en éxito como en error. La finalización es idempotente y se reintenta una vez si falla su confirmación; un fallo persistente se informa como error.
 
-## Navegación estática
+El modo comparativo permite contexto general identificado como complemento. La tutoría guiada modifica las instrucciones pedagógicas. El modelo se selecciona mediante `OPENAI_MODEL`, la configuración de base y un respaldo de código `gpt-6-astra`. Se envía `store: false`. El nombre configurado no demuestra disponibilidad ni precio.
 
-Se utiliza `HashRouter` porque GitHub Pages no ofrece reglas de reescritura para una SPA. La URL conserva el documento estático y expresa la ruta después de `#`, de modo que una recarga no produce un error 404.
+Las conversaciones, mensajes, citas y eventos tienen tablas propias. Las políticas de lectura separan usuarios, incluidos docentes y estudiantes. Al abrir una cita se vuelve a descargar el PDF con permisos actuales.
 
-Vite obtiene su `base` de compilación desde `VITE_BASE_PATH`. El valor predeterminado es `/`, necesario para publicar desde la raíz del dominio personalizado `fontex.sypablitodp.site`. El workflow de Pages utiliza la variable de repositorio del mismo nombre y también adopta `/` cuando no está definida. Para usar el dominio estándar de GitHub Pages se puede asignar `/fontex-web/`, sin detecciones de dominio en tiempo de ejecución.
+El modo estricto se abstiene si la salida no cumple el contrato JSON o no tiene citas válidas. Las referencias se limitan al contexto enviado y se vuelven a comprobar en PostgreSQL al guardar. Esto no verifica automáticamente el respaldo semántico de cada afirmación.
 
-El shell conserva las rutas internas en el fragmento mediante `HashRouter`. El salto accesible al contenido cancela la navegación del enlace y mueve el foco al elemento `main`, por lo que no reemplaza el fragmento de ruta. En pantallas móviles, el panel lateral cerrado utiliza `inert` y `aria-hidden`; sus controles quedan fuera de la navegación por teclado hasta abrir el menú.
+El prompt respeta `max_input_tokens` mediante una estimación conservadora de bytes UTF-8 más margen de formato: prioriza pregunta e instrucciones, selecciona fragmentos completos y después añade historial reciente. Si lo obligatorio no cabe, rechaza la consulta y libera la reserva. No es un tokenizer específico del modelo y puede aprovechar menos contexto que el límite nominal.
 
-## Evaluación de assistant-ui
+El hook de conversación cancela e ignora envíos obsoletos al cambiar de conversación/aula o desmontarse. Tras el envío recupera los mensajes persistidos para presentar el historial canónico. La reserva SQL también serializa el presupuesto global, además de las cuotas por usuario. Las regresiones están en la [auditoría](../AUDITORIA.md).
 
-El tutor usa `@assistant-ui/react` con `useLocalRuntime`. Cuando existe configuración pública de Supabase, su `ChatModelAdapter` invoca la Edge Function autenticada `tutor-chat`; sin esa configuración conserva una demostración local explícita. La clave de OpenAI reside únicamente en Supabase y nunca se entrega al navegador.
+## Aula de práctica
 
-Aunque `v0.5.0` ya ofrece recuperación documental diagnóstica, `tutor-chat` conserva exactamente el comportamiento de `v0.3.0`: llama a Responses API con instrucciones para no inventar citas ni afirmar acceso a archivos. La selección de fuentes, citas y composición del contexto pertenecen al Bloque 4.
+`/#/demo` usa `practice/lessons.json`: fracciones, decimales, proporciones y funciones. Guarda progreso en `localStorage` y PDF en IndexedDB por cuenta/tema. El contenido del invitado no se transfiere automáticamente a una cuenta.
 
-Resultado del spike:
+La búsqueda local por términos y chunks selecciona fragmentos; es distinta de la recuperación vectorial del backend. Sin IA, el estudio conserva consulta local y ejercicios.
 
-- Es compatible con el frontend estático para componentes, estado local y experiencia conversacional.
-- Una respuesta real **sí requiere** un backend seguro. En bloques posteriores, el adaptador deberá invocar una Supabase Edge Function autenticada.
-- La clave del proveedor de IA nunca se incluirá en variables `VITE_*` ni en el bundle.
-- Persistencia, citas verificadas, streaming remoto y permisos quedan fuera del Bloque 0.
+`tutorAvailable` prueba primero el endpoint local de Vite en localhost. Si no está disponible y existe sesión, prueba `practice-tutor`. El endpoint remoto autentica, limita el cuerpo a 10.000 bytes y reserva cuota mediante `take_practice_tutor_quota`: 10 llamadas por hora UTC y 25 por día UTC, por cuenta. Estas cuotas son independientes de `tutor-chat` y la reserva se consume aunque falle el proveedor.
 
-## Frontera futura
+Los modos `chat`, `study` y `web` usan `practice/tutor.ts`. `web` restringe dominios y exige al menos una cita HTTPS permitida. La evidencia de estudio enviada por el navegador es material del cliente; no acredita acceso a la biblioteca privada.
 
-El frontend utiliza el SDK público bajo RLS para identidad, biblioteca y descargas. Las operaciones documentales privilegiadas residen en Edge Functions. El Bloque 4 podrá consumir sólo la salida autorizada del motor de recuperación, añadir citas y construir contexto acotado; no deberá consultar chunks directamente ni aceptar IDs o permisos decididos por el navegador. `tutor-chat` no recibe todavía archivos ni contenido PDF.
+## Hosting y configuración
 
-## Accesibilidad y responsive
+`HashRouter` evita necesitar reescrituras de SPA en GitHub Pages. `VITE_BASE_PATH` controla los assets al compilar: `/` por defecto o `/fontex-web/` para el dominio estándar del repositorio.
 
-El shell incluye enlace de salto, navegación semántica, controles etiquetados, foco visible y soporte para reducción de movimiento. El menú lateral se transforma en panel móvil. Las verificaciones automáticas de accesibilidad en navegador quedan como tarea del Bloque 5; no se declaran como completadas en esta fase.
+Pages compila y publica solo el frontend. El workflow incluye respaldo de URL y clave publicable del piloto; omitir variables no desconecta ese backend. Las funciones y migraciones se despliegan por separado. `OPENAI_API_KEY` solo se lee en Edge Functions o en el servidor local de Vite.
+
+CI comprueba frontend, pgTAP local y Deno. Las suites remotas dependen de variables adicionales y pueden omitirse; Vitest correcto no implica una prueba de producción.
+
+## Diseño y verificación
+
+El espacio académico utiliza tokens y temas claro/oscuro. Studio tiene CSS propio y `color-scheme: light`; no hereda toda esa cobertura. Hay controles etiquetados y movimiento por teclado, pero las pruebas actuales no sustituyen una revisión de teclado, lector de pantalla y responsive en navegador real.
+
+La revisión ejecutó checks locales y análisis estático. No verificó el sitio publicado, la configuración remota, una conversación pagada ni pruebas E2E. Los resultados están en [AUDITORIA.md](../AUDITORIA.md).

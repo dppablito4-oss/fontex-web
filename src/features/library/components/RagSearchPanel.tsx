@@ -52,7 +52,7 @@ export function RagSearchPanel() {
             <p className="text-xs text-muted-foreground">Busca únicamente en fragmentos indexados que tu sesión puede leer.</p>
           </div>
         </div>
-        <Badge className="mt-3 sm:mt-0" tone="blue">No conectado al tutor</Badge>
+        <Badge className="mt-3 sm:mt-0" tone="blue">Diagnóstico de recuperación</Badge>
       </div>
 
       <form className="grid gap-3 p-5 md:grid-cols-[minmax(0,1fr)_auto_auto]" onSubmit={(event) => void submit(event)}>

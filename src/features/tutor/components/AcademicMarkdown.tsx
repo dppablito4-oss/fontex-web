@@ -29,9 +29,13 @@ function formatMathString(expr: string): string {
     .replace(/\\int/g, "∫")
     .replace(/\\sqrt\{([^}]+)\}/g, "√($1)")
     .replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, "($1 / $2)")
-    .replace(/\^2/g, "²")
-    .replace(/\^3/g, "³")
-    .replace(/\^([0-9])/g, "ⁿ")
+    .replace(/\^(?:\{([+-]?\d+)\}|([+-]?\d+))/g, (_match, braced: string | undefined, plain: string | undefined) => {
+      const superscripts: Record<string, string> = {
+        "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴",
+        "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹", "+": "⁺", "-": "⁻",
+      };
+      return [...(braced ?? plain ?? "")].map((digit) => superscripts[digit]).join("");
+    })
     .replace(/_([0-9a-zA-Z])/g, "₍$1₎");
 }
 

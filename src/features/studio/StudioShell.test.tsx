@@ -132,14 +132,18 @@ describe("Fontex Studio", () => {
       screen.queryByRole("button", { name: /Salir de presentación/ }),
     ).not.toBeInTheDocument();
   });
-  it("no destruye materiales guardados cuando falla la recuperación", () => {
+  it.each(["v1", "v2"])("no destruye materiales %s cuando falla la recuperación", (version) => {
     const document = createDocument();
-    saveMaterial(localStorage, "guest", document);
-    localStorage.setItem(`fontex-studio-v1:guest:document:${document.id}`, "{");
+    const storageKey = version === "v1" ? `fontex-studio-v1:guest:document:${document.id}` : "fontex-studio-v2:guest";
+    if (version === "v1") {
+      localStorage.setItem("fontex-studio-v1:guest:index", JSON.stringify([document]));
+      localStorage.setItem("fontex-studio-v1:guest:active", document.id);
+    } else saveMaterial(localStorage, "guest", document);
+    localStorage.setItem(storageKey, "{");
     render(<StudioShell />);
     expect(screen.getByRole("alert")).toHaveTextContent("No se pudo recuperar");
     expect(
-      localStorage.getItem(`fontex-studio-v1:guest:document:${document.id}`),
+      localStorage.getItem(storageKey),
     ).toBe("{");
   });
   it("advierte si el guardado falla y mantiene el material editable", () => {

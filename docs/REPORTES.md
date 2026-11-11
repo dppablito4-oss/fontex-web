@@ -12,6 +12,75 @@ Cada reporte incluye alcance, cambios, archivos relevantes, validaciones reales,
 
 ---
 
+## v0.6.2 — Corrección de los diez hallazgos de auditoría
+
+**Fecha:** 11 de noviembre de 2026
+
+**Estado:** Corregido y verificado localmente; despliegue remoto pendiente. La versión declarada en `package.json` permanece en `0.6.0`.
+
+### Cambios
+
+- Se separó el handler del tutor y se garantizó la liquidación de reservas en los caminos de éxito/error, con confirmación idempotente y reintento.
+- Se añadió una migración que restringe privilegios, reserva mensajes/citas al servidor y guarda cada intercambio de forma atómica con orden creciente por conversación.
+- Se aplicó presupuesto al contexto completo y abstención estricta ante respuestas o citas inválidas; se corrigieron la salud optimista y el rótulo del diagnóstico de Biblioteca.
+- Se cancelan e ignoran respuestas de conversaciones/aulas obsoletas y se recupera el historial persistido tras enviar.
+- Studio usa instantáneas atómicas por propietario con migración compatible de sus claves anteriores; conserva el documento abierto ante errores de guardado.
+- Se corrigieron exponentes numéricos, se actualizaron Vitest/Zod/minimatch y se añadió el lockfile Deno de práctica.
+- Se agregaron regresiones de frontend, backend y SQL, y su ejecución del handler a CI. Se actualizaron README, arquitectura, guías y estado de la auditoría.
+
+### Validación
+
+| Comprobación | Resultado |
+|---|---|
+| `npm ci`, lint, tipos y build | Correctos |
+| Vitest | 136 aprobadas y 7 omitidas; 27 archivos aprobados y 4 omitidos |
+| Deno | Seis funciones comprobadas; 13 regresiones aprobadas; lint correcto |
+| pgTAP | 138 pruebas aprobadas |
+| Advisors y lint SQL | Sin incidencias |
+| npm audit, completo y sin dev | 0 vulnerabilidades |
+
+Se actualizaron las migraciones y su historial en la base local, sin reiniciar el stack ni borrar sus datos. No se modificó producción ni se consumió la API de IA. La publicación necesita aplicar el esquema y después desplegar `tutor-chat` y el frontend. La integración remota, E2E y revisión visual permanecen pendientes.
+
+---
+
+## v0.6.1 — Auditoría y actualización de documentación
+
+**Fecha:** 11 de noviembre de 2026
+
+**Estado:** Revisión local y documentación completadas; defectos de código pendientes.
+
+**Base revisada:** `main` en `3a26911`. Esta versión identifica la intervención documental; `package.json` continúa en `0.6.0`.
+
+### Alcance y cambios
+
+- Se revisaron Studio, rutas, persistencia, cuentas, práctica, biblioteca, tutor documental, migraciones, permisos, dependencias y workflows.
+- Se creó `docs/AUDITORIA.md` con diez hallazgos abiertos, evidencia, prioridades y propuestas de corrección.
+- Se reemplazó el README breve por instalación, configuración, capacidades, rutas, límites y despliegue actuales.
+- Se actualizaron arquitectura, Studio, backend Supabase, dependencias y sistema de diseño; se añadió `docs/README.md` como índice.
+- Se documentó que Studio guarda en el navegador y que RAG/conversaciones ya están implementados. Se distinguieron los dos tutores y sus cuotas.
+- Se conservaron los reportes anteriores como historial; sus precios, resultados y estados corresponden a sus fechas y no describen necesariamente el código actual.
+
+### Validación ejecutada
+
+| Comprobación | Resultado |
+|---|---|
+| Lint, TypeScript y build | Correctos |
+| Vitest | 122 pruebas aprobadas, 7 omitidas; 24 archivos aprobados, 4 omitidos |
+| Deno | Seis funciones comprobadas; lint correcto en 10 archivos |
+| Lint SQL local | Sin errores en el esquema existente |
+| pgTAP completo | Falla por migración local pendiente de cuotas; 121 pruebas de Bloques 1–4 aprobadas |
+| Cuotas de práctica en transacción revertida | 7/7 pruebas aprobadas |
+| npm audit | 13 alertas: 1 alta y 12 moderadas; sin dev, 1 alta transitiva |
+| Reproducciones focalizadas | Inserción de mensaje assistant desde cuenta, privilegios excesivos, respuesta sin citas y exponente incorrecto confirmados |
+
+No se modificó código de aplicación, no se actualizaron dependencias, no se aplicaron migraciones permanentes y no se publicó ni se ejecutaron pruebas remotas. Las comprobaciones SQL adicionales terminaron en `ROLLBACK`.
+
+### Pendientes
+
+Priorizar la liberación de cuotas en errores y el orden de conversaciones largas. Continuar con privilegios/escrituras del tutor, presupuesto de entrada, citas estrictas, respuestas tardías, guardado de Studio, notación matemática y dependencias. El [informe actual](AUDITORIA.md) contiene los detalles y los límites de esta auditoría.
+
+---
+
 ## v0.6.0 — Tutor académico documental, historial y estabilización del MVP
 
 **Fecha:** 9 de octubre de 2026

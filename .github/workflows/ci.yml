@@ -55,5 +55,7 @@ jobs:
         run: deno check --config supabase/functions/tutor-chat/deno.json supabase/functions/tutor-chat/index.ts
       - name: Check math practice tutor
         run: deno check --config supabase/functions/practice-tutor/deno.json supabase/functions/practice-tutor/index.ts
+      - name: Test tutor failures and grounding
+        run: deno test --allow-env --config supabase/functions/tutor-chat/deno.json supabase/functions/tutor-chat/handler_test.ts
       - name: Lint Edge Functions
-        run: deno lint supabase/functions/document-process/index.ts supabase/functions/document-search/index.ts supabase/functions/tutor-chat/index.ts supabase/functions/_shared/rag/*.ts supabase/functions/practice-tutor/index.ts supabase/functions/_shared/practice/*.ts
+        run: deno lint supabase/functions

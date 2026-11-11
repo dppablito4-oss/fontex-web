@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import { downloadDocument } from "../../library/services/documentService";
 import type { LibraryDocument } from "../../library/types";
@@ -34,15 +34,36 @@ export function useTutor({
   const [localMode, setLocalMode] = useState<TutorMode | null>(null);
   const [localGuided, setLocalGuided] = useState<boolean | null>(null);
   const [localSelectedDocIds, setLocalSelectedDocIds] = useState<string[] | null>(null);
-
   const [viewer, setViewer] = useState<{
     document: LibraryDocument;
     page: number;
     blob: Blob;
   } | null>(null);
+  const requestRef = useRef<AbortController | null>(null);
+  const epochRef = useRef(0);
+  const readRef = useRef(0);
+  const invalidateRequest = useCallback(() => {
+    epochRef.current += 1;
+    readRef.current += 1;
+    requestRef.current?.abort();
+    requestRef.current = null;
+    setSending(false);
+    setMessages((previous) => previous.filter((message) => !message.id.startsWith("temp-")));
+    setViewer(null);
+  }, []);
+  useLayoutEffect(() => {
+    return () => {
+      epochRef.current += 1;
+      readRef.current += 1;
+      requestRef.current?.abort();
+      requestRef.current = null;
+    };
+  }, [classroomId]);
 
   // Refresh conversations when classroom changes
   const refreshConversations = useCallback(async () => {
+    const epoch = epochRef.current;
+    setSending(requestRef.current !== null);
     if (!classroomId) {
       setConversations([]);
       setActiveConversationId(null);
@@ -54,6 +75,7 @@ export function useTutor({
     setError(null);
     try {
       const list = await listConversations(classroomId);
+      if (epochRef.current !== epoch) return;
       setConversations(list);
       if (list.length > 0) {
         setActiveConversationId((prev) =>
@@ -64,9 +86,10 @@ export function useTutor({
         setMessages([]);
       }
     } catch (err) {
+      if (epochRef.current !== epoch) return;
       setError(err instanceof Error ? err.message : "Error al cargar conversaciones.");
     } finally {
-      setLoadingConversations(false);
+      if (epochRef.current === epoch) setLoadingConversations(false);
     }
   }, [classroomId]);
 
@@ -91,17 +114,18 @@ export function useTutor({
     }
 
     let active = true;
+    const read = ++readRef.current;
     const timer = window.setTimeout(() => {
       setLoadingMessages(true);
       setError(null);
 
       void listMessages(activeConversationId)
         .then((msgs) => {
-          if (!active) return;
+          if (!active || readRef.current !== read) return;
           setMessages(msgs);
         })
         .catch((err) => {
-          if (!active) return;
+          if (!active || readRef.current !== read) return;
           setError(err instanceof Error ? err.message : "Error al cargar mensajes.");
         })
         .finally(() => {
@@ -171,15 +195,20 @@ export function useTutor({
 
   // Select a conversation
   const selectConversation = useCallback((id: string) => {
+    if (id === activeConversationId) return;
+    invalidateRequest();
+    setMessages([]);
     setLocalMode(null);
     setLocalGuided(null);
     setLocalSelectedDocIds(null);
     setActiveConversationId(id);
-  }, []);
+  }, [activeConversationId, invalidateRequest]);
 
   // Start new conversation
   const startNewConversation = useCallback(async () => {
     if (!classroomId) return;
+    invalidateRequest();
+    const epoch = epochRef.current;
     setError(null);
     try {
       const created = await createConversation(
@@ -189,6 +218,7 @@ export function useTutor({
         guided,
         selectedDocumentIds,
       );
+      if (epochRef.current !== epoch) return;
       setConversations((prev) => [created, ...prev]);
       setLocalMode(null);
       setLocalGuided(null);
@@ -196,9 +226,10 @@ export function useTutor({
       setActiveConversationId(created.id);
       setMessages([]);
     } catch (err) {
+      if (epochRef.current !== epoch) return;
       setError(err instanceof Error ? err.message : "No fue posible crear la conversación.");
     }
-  }, [classroomId, guided, mode, selectedDocumentIds]);
+  }, [classroomId, guided, invalidateRequest, mode, selectedDocumentIds]);
 
   // Rename conversation
   const renameConversation = useCallback(
@@ -220,8 +251,11 @@ export function useTutor({
   // Delete conversation
   const deleteConversation = useCallback(
     async (id: string) => {
+      if (activeConversationId === id) invalidateRequest();
+      const epoch = epochRef.current;
       try {
         await deleteConversationApi(id);
+        if (epochRef.current !== epoch) return;
         setConversations((prev) => prev.filter((c) => c.id !== id));
         if (activeConversationId === id) {
           const remaining = conversations.filter((c) => c.id !== id);
@@ -237,18 +271,24 @@ export function useTutor({
         setError(err instanceof Error ? err.message : "No fue posible eliminar la conversación.");
       }
     },
-    [activeConversationId, conversations, selectConversation],
+    [activeConversationId, conversations, invalidateRequest, selectConversation],
   );
 
   // Send message
   const sendMessage = useCallback(
     async (questionText: string) => {
+      if (requestRef.current) return;
       if (!classroomId) {
         setError("Selecciona un aula activa.");
         return;
       }
       const trimmed = questionText.trim();
       if (!trimmed) return;
+      const controller = new AbortController();
+      requestRef.current = controller;
+      const epoch = epochRef.current;
+      readRef.current += 1;
+      const currentRequest = () => epochRef.current === epoch && requestRef.current === controller && !controller.signal.aborted;
 
       setSending(true);
       setError(null);
@@ -278,30 +318,27 @@ export function useTutor({
           mode,
           guided,
           selectedDocumentIds,
+          signal: controller.signal,
         });
+        if (!currentRequest()) return;
 
         // If conversation was auto-created or active id changed
         if (response.conversationId && response.conversationId !== activeConversationId) {
           setActiveConversationId(response.conversationId);
           await refreshConversations();
         }
-
-        const assistantMsg: TutorMessageRecord = {
-          id: response.messageId,
-          conversationId: response.conversationId,
-          role: "assistant",
-          content: response.text,
-          model: response.model,
-          citations: response.citations,
-          createdAt: new Date().toISOString(),
-        };
-
-        setMessages((prev) => [...prev.filter((m) => m.id !== optimisticUserMsg.id), optimisticUserMsg, assistantMsg]);
+        if (!currentRequest()) return;
+        const persisted = await listMessages(response.conversationId);
+        if (currentRequest()) setMessages(persisted);
       } catch (sendErr) {
+        if (!currentRequest()) return;
         setMessages((prev) => prev.filter((m) => m.id !== optimisticUserMsg.id));
         setError(sendErr instanceof Error ? sendErr.message : "Error al enviar mensaje.");
       } finally {
-        setSending(false);
+        if (requestRef.current === controller) {
+          requestRef.current = null;
+          setSending(false);
+        }
       }
     },
     [activeConversationId, classroomId, guided, messages, mode, refreshConversations, selectedDocumentIds],

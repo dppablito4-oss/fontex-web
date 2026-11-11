@@ -83,8 +83,8 @@ export function useStudioDocument(owner: string) {
     if (!persist()) return false;
     try {
       const next = parseDocument(document);
+      if (!persist(next)) return false;
       setHistory({ past: [], present: next, future: [] });
-      persist(next);
       return true;
     } catch (e) {
       setError(

@@ -506,6 +506,18 @@ export type Database = {
         };
         Returns: undefined;
       };
+      internal_store_tutor_exchange: {
+        Args: {
+          requesting_user_id: string;
+          target_conversation_id: string;
+          question: string;
+          answer: string;
+          response_model: string;
+          response_metadata?: Json;
+          cited_chunk_ids?: number[];
+        };
+        Returns: Json;
+      };
       internal_search_tutor_chunks: {
         Args: {
           requesting_user_id: string;

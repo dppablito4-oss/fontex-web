@@ -1,5 +1,7 @@
 # Fontex Studio — primer incremento
 
+**Revisión documental:** 11 de noviembre de 2026, código base `3a26911`. La versión declarada de la aplicación sigue siendo `0.6.0`.
+
 Fontex permite construir una explicación matemática con objetos independientes. Fracciones y sucesiones usan el mismo lienzo, inspector, historial y guardado. La prioridad es preparar y presentar materiales durante clases presenciales.
 
 ## Implementación
@@ -29,15 +31,36 @@ Un documento contiene `schemaVersion`, `id`, `title`, `updatedAt` y una colecci�
 
 El formato inicial usa un solo lienzo de 1600 × 1100. Los objetos se mantienen completamente dentro de sus límites. Importar otro formato o una futura versión exige una migración explícita; no se interpreta código del documento. React presenta el texto como contenido literal.
 
-La validación rechaza tipos desconocidos, identificadores repetidos, denominadores cero, datos no finitos, operaciones no admitidas, dimensiones fuera de rango y colecciones mayores de 80 objetos. La interfaz limita archivos importados a 1 MB y crea una nueva identidad al importar para evitar sobrescribir otro material.
+La validación rechaza tipos de objeto desconocidos, identificadores repetidos, denominadores cero, datos no finitos, operaciones no admitidas, dimensiones fuera de rango y colecciones mayores de 80 objetos. La interfaz limita archivos importados a 1 MiB (1.048.576 bytes) y crea una nueva identidad al importar para evitar sobrescribir otro material. El parser selecciona los campos superiores admitidos, pero copia `data` conservando posibles propiedades adicionales; no es una normalización estricta de todas las claves del JSON.
+
+Límites matemáticos actuales:
+
+| Objeto | Valores admitidos |
+|---|---|
+| Fracción | Numerador entero no negativo; denominador 1–24; hasta 3 unidades |
+| Operación guiada | Dos fracciones con suma/resta; denominadores 1–24; denominador común hasta 60; resultado no negativo |
+| Texto | Hasta 5.000 caracteres; tamaño entero de 14–48 |
+| Sucesión aritmética | Inicio entero entre −1.000 y 1.000; diferencia entera entre −100 y 100; 2–8 términos |
+
+El documento admite título de hasta 160 caracteres y etiquetas de hasta 120. Cada objeto mide al menos 240 × 160 y se ajusta al tablero. No hay páginas adicionales, colaboración ni exportación PDF integrada.
 
 ## Persistencia
 
-Las claves tienen el prefijo `fontex-studio-v1:<usuario o guest>:`. Se guardan documentos completos, un índice y la identidad del último material abierto. Esta separación organiza las cuentas en el navegador; no sustituye el almacenamiento remoto ni las políticas RLS.
+El almacén actual usa la clave `fontex-studio-v2:<usuario o guest>` para una instantánea con `version: 2`, documentos completos y `activeId`. El formato de cada documento continúa siendo `schemaVersion: 1`; la versión del almacén es independiente. Esta separación organiza las cuentas en el navegador; no sustituye el almacenamiento remoto ni las políticas RLS. Todas las personas que usen el mismo invitado en el mismo perfil del navegador comparten ese espacio. Iniciar sesión no migra automáticamente materiales del invitado ni los sube al servidor.
 
-Cada cambio aplicado se guarda inmediatamente. El arrastre mantiene una previsualización en memoria y registra un solo cambio al soltar. Deshacer y rehacer también guardan el documento resultante. Al cambiar de material se intenta guardar el actual primero; si falla, se mantiene abierto y se recomienda exportar.
+Cada cambio aplicado intenta guardarse inmediatamente. El arrastre mantiene una previsualización en memoria y registra un solo cambio al soltar. Deshacer y rehacer también intentan guardar el documento resultante. Al cambiar de material se intenta guardar el actual primero; si ese primer guardado falla, se mantiene abierto y se recomienda exportar.
 
-No se modificaron tablas, políticas RLS ni funciones de Supabase. Las cuentas usan el flujo existente. El laboratorio anterior queda en `/#/fracciones`; las rutas de aula y tutor siguen disponibles.
+La instantánea se reemplaza con un único `localStorage.setItem`: si falla, permanece íntegro el estado persistido anterior. Las claves heredadas `fontex-studio-v1:<propietario>:` se leen sin modificarlas y se limpian después de una escritura v2 correcta. Si no hay espacio para la primera migración, los datos anteriores se conservan y se informa el fallo. `replace` solo cambia el historial cuando también logra guardar el material nuevo. Las pruebas cubren migración, fallo de escritura, limpieza fallida y corrupción de ambos formatos.
+
+Exportar JSON sigue siendo la copia portátil disponible; borrar datos del navegador puede eliminar los materiales locales. No hay coordinación de ediciones simultáneas entre varias pestañas.
+
+Este incremento de Studio no añade tablas, políticas RLS ni funciones de Supabase. Las cuentas usan el flujo existente. Studio se abre en `/#/` o `/#/lienzo`; el laboratorio anterior queda en `/#/fracciones` y las rutas académicas siguen disponibles.
+
+## Presentación y controles
+
+El zoom de edición va del 20 % al 150 %. El botón de ajuste calcula una escala para el tablero; presentar intenta usar Fullscreen API y conserva una vista de presentación si no está disponible. El botón de salida y Esc desactivan esa vista.
+
+Los objetos se arrastran desde su encabezado. Con el foco en ese control, las flechas mueven 10 unidades o 50 con Shift; Supr/Retroceso eliminan el objeto. Los pasos de las operaciones siguen siendo interactivos durante la presentación y sus cambios se intentan guardar. Studio utiliza su propio CSS con apariencia clara, separado del tema académico.
 
 ## Verificación
 
@@ -55,6 +78,8 @@ Las pruebas automatizadas incluyen:
 - Los flujos existentes de autenticación y del laboratorio original.
 
 Las pruebas remotas requieren su configuración de integración; no se consideran ejecutadas si Vitest las omite.
+
+Tras las correcciones del 11 de noviembre, la suite completa de frontend obtuvo 136 pruebas aprobadas y 7 omitidas; lint, TypeScript y build pasaron. No se ejecutó la siguiente prueba manual en navegador durante esa revisión. El [informe de auditoría](../AUDITORIA.md) centraliza los resultados y sus límites.
 
 Prueba manual para clase:
 

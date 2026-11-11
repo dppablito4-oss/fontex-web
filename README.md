@@ -1,176 +1,150 @@
 # Fontex
 
-## Fontex Studio: editor de materiales matemáticos
+**Acompañamiento académico con evidencia documental.**
 
-La ruta principal `/#/` (también `/#/lienzo`) abre el editor sin exigir una cuenta. Permite mezclar **fracciones pictóricas, operaciones guiadas, textos y sucesiones aritméticas** en un mismo documento.
+Fontex combina un editor de materiales matemáticos, **Fontex Studio**, con un aula de práctica y una plataforma de consulta de PDF con tutor documental. Su principio es *fuentes puestas en contexto*.
 
-- Añadir, seleccionar, arrastrar, duplicar y eliminar objetos independientes.
-- Editar propiedades, posición y tamaño desde un inspector común.
-- Mover con las flechas al enfocar el encabezado del objeto (10 unidades; Shift + flecha, 50).
-- Deshacer y rehacer hasta 40 cambios; un arrastre es un único cambio.
-- Recorrer la representación, homogeneización y resolución de una operación en el propio lienzo.
-- Crear materiales en blanco o partir de las plantillas de fracciones y sucesiones.
-- Guardar automáticamente los cambios aplicados, abrir otros materiales y recuperar el último al recargar.
-- Exportar e importar documentos `.fontex.json`, con validación de esquema y datos matemáticos.
-- Presentar sin paneles de edición, con pantalla completa cuando el navegador la admite y salida mediante Esc.
+Estado revisado el **11 de noviembre de 2026**, sobre `main` en `3a26911` y las correcciones locales posteriores. La versión declarada en `package.json` es `0.6.0`. Los diez hallazgos de la [auditoría](docs/AUDITORIA.md) están corregidos y verificados localmente; su publicación requiere desplegar los cambios de frontend, funciones y migraciones.
 
-**Guardado:** los documentos completos se conservan en este navegador, separados por cuenta e invitado. Incluyen valores, figuras, textos, posiciones, tamaños y pasos. No se sincronizan con Supabase ni entre dispositivos. Exporta una copia JSON para trasladarlos; borrar los datos del navegador elimina las copias locales. Si falla el almacenamiento, se mantiene el documento en memoria, se muestra el error y se permite exportarlo.
+## Qué incluye
 
-**Alcance:** un lienzo por documento de hasta 80 objetos, esquema versión 1. Las sucesiones admiten 2–8 términos, inicio entre −1000 y 1000 y diferencia entera entre −100 y 100; los valores entre 0 y 30 se representan con puntos. Las operaciones conservan los límites del laboratorio de fracciones. Funciones, ecuaciones, generación de materiales mediante IA, versiones remotas y apertura garantizada sin internet siguen pendientes. Los cálculos del editor no requieren IA; una página ya cargada puede seguir editándose sin conexión.
+| Área | Capacidades actuales | Dónde se guardan los datos |
+|---|---|---|
+| Studio | Fracciones en barras/círculos, suma y resta guiadas, texto, sucesiones aritméticas, arrastre, inspector, historial y presentación | `localStorage`, separado por usuario o invitado |
+| Materiales de Studio | Crear desde plantillas, abrir, duplicar objetos, importar y exportar `.fontex.json` | En este navegador; exportación manual entre equipos |
+| Aula de práctica | Fracciones, decimales, proporciones y funciones; teoría, ejercicios y consultas | Progreso en `localStorage`; PDF añadidos en IndexedDB |
+| Identidad y aulas | Registro, confirmación de correo, sesión, perfiles, invitaciones, roles y grupos | Supabase Auth y PostgreSQL con RLS |
+| Biblioteca | PDF privados, visor, compartición por aula/grupo, extracción e indexación | Supabase Storage privado y PostgreSQL |
+| Tutor documental | Recuperación híbrida, modo estricto/comparativo, tutoría guiada, conversaciones y citas con página | Edge Functions y PostgreSQL |
+| Tutor de práctica | Chat, estudio con fragmentos y búsqueda en dominios educativos permitidos | Endpoint local de Vite o Edge Function `practice-tutor` |
 
-La arquitectura y la guía de prueba están en [docs/architecture/studio.md](docs/architecture/studio.md).
-
-## Laboratorio visual de fracciones
-
-El laboratorio original sigue disponible en `/#/fracciones` sin iniciar sesión. Escribe una suma o resta como `2/3 + 3/6`: representa cada fracción, homogeneiza con el mínimo común múltiplo y muestra el resultado con figuras y explicación textual. Permite barras o círculos, mover tarjetas por su encabezado, cambiar el zoom y añadir una observación. La última operación válida se conserva en este navegador; las notas y posiciones duran la sesión abierta.
-
-Alcance del prototipo: dos fracciones no negativas, suma o resta con resultado no negativo; denominadores de 1 a 24, hasta 3 unidades por operando y denominador común de hasta 60 para mantener el dibujo legible. Los cálculos y las explicaciones son deterministas y funcionan sin API ni conexión a IA.
-
-La versión anterior completa se conserva en la rama `respaldo/aula-virtual-2026-11-11` (commit `6210aafa87e5a55cfa5adb25960a36edc25cc307`). El aula anterior sigue accesible desde `/#/inicio` y el tutor de práctica desde `/#/demo`.
-
-Ejecuta `npm ci`, `npm run dev`. Comprueba con `npm run test` y `npm run build`.
-
-## Crear cuenta e iniciar sesión
-
-El lienzo ofrece acceso desde `/#/ingresar` y registro desde `/#/crear-cuenta`. Al entrar, vuelve al lienzo; el acceso específico del tutor (`/#/ingresar-tutor`) conserva su retorno al tutor. Crear cuenta solicita nombre, correo y contraseña confirmada. Si Supabase exige verificar el correo, el formulario explica el paso pendiente y permite reenviar el enlace con una espera de 60 segundos. La dirección de retorno utiliza el origen y la ruta de la aplicación, sin el fragmento reservado para los tokens de Supabase.
-
-Un error `email_not_confirmed` significa que hay que abrir el enlace recibido antes de iniciar sesión. No se desactiva la confirmación de correo. Los errores se muestran en español, el login admite contraseñas existentes sin imponer el mínimo del registro y la recuperación de sesión maneja fallos de red y respuestas tardías. El lienzo muestra la cuenta activa y permite cerrar sesión. Si faltan las variables de Supabase, el formulario informa que el acceso no está disponible y mantiene el lienzo abierto para invitados.
-
-Validación: pruebas de interfaz y proveedor cubren registro pendiente de confirmación, reenvío, login, cierre y restauración de sesión, errores de red y carreras de inicialización. Se comprobaron en la API real el rechazo de credenciales inexistentes y de un registro inválido, sin crear cuentas de prueba. El registro real observado en los logs fue exitoso y el login posterior falló por correo sin confirmar; la apertura de enlaces en una bandeja de correo no forma parte de las pruebas automatizadas.
-
-## Tutor personal de Matemática
-
-Ejecuta `npm ci` y `npm run dev`. Abre `/#/demo` en la dirección de Vite. El alumno elige un tema de primaria o secundaria, lee la teoría y practica. Cada error muestra una explicación para esa respuesta y la página de la guía que conviene repasar.
-
-La demo incluye cuatro temas, nueve ejercicios y una guía PDF por tema. Se puede añadir un PDF con texto seleccionable por tema (hasta 5 MiB y 100 páginas). El avance, el historial y los PDF se guardan en el navegador, separados por cuenta o por sesión de invitado.
-
-### Activar los modelos
-
-En la web, inicia sesión en Fontex desde `/#/demo`. La función Supabase `practice-tutor` consulta OpenAI desde el servidor. Requiere la migración de cuotas y el secreto `OPENAI_API_KEY` en Supabase. Limita las solicitudes de IA a 10 por hora y 25 por día por cuenta, con ventanas en UTC.
-
-En desarrollo también puedes añadir `OPENAI_API_KEY` a `.env.local` y reiniciar `npm run dev`. El servidor de Vite la lee exclusivamente en localhost.
-
-| Modo                                            | Modelo                      | Fuente                                                              |
-| ----------------------------------------------- | --------------------------- | ------------------------------------------------------------------- |
-| Chat general                                    | GPT-6 Luna (`gpt-6-luna`)   | Conversación reciente                                               |
-| Corrección de ejercicios y estudio con archivos | GPT-6.1 Sol (`gpt-6.1-sol`) | Guía del tema o fragmento recuperado del PDF seleccionado           |
-| Estudio web                                     | GPT-6.1 Sol (`gpt-6.1-sol`) | Búsqueda en MINEDU, Khan Academy y OpenStax, con citas verificables |
-
-Para publicar la demo estática, ejecuta `npm run build -- --mode demo`. Ese modo ofrece teoría, corrección preparada por alternativa y búsqueda local por página. Con una sesión válida y la función Supabase configurada, la compilación estática también habilita el chat generativo y la búsqueda web.
-
-**Fuentes puestas en contexto.**
-
-Fontex es un entorno académico que prepara una experiencia de consulta documental con trazabilidad. El nombre reúne **FONT**es (latín: fuentes o manantial de información) y **TEX**tus (texto o contexto): ninguna respuesta debería presentarse aislada de las fuentes autorizadas que la sostienen.
-
-Este repositorio contiene los **Bloques 0, 1, 2 y 3** del plan maestro, más la conexión anticipada del tutor en `v0.3.0`: frontend responsive, identidad con Supabase Auth, biblioteca PDF privada y un motor RAG autorizado con diagnóstico independiente. La recuperación todavía no alimenta `tutor-chat`.
+**Iniciar sesión no sube los materiales de Studio a Supabase.** El invitado y cada cuenta tienen espacios locales distintos; no hay migración automática entre ellos. Exporta un JSON antes de cambiar de equipo, de perfil del navegador o de borrar sus datos.
 
 ## Ejecutar localmente
 
-Requisitos: Node.js 22 y npm 10 o versiones compatibles.
+Requisitos: **Node.js 22 y npm 10**, usados por el proyecto y CI.
 
-```bash
-npm install
-npx supabase db start
+```powershell
+npm ci
 npm run dev
 ```
 
-La aplicación se abre normalmente en `http://localhost:5173`. Las rutas usan hash (`#/tutor`, `#/biblioteca`) para funcionar al recargar desde GitHub Pages.
+Abre `http://localhost:5173/#/`. Studio funciona sin configurar Supabase ni OpenAI. El laboratorio y el aula de práctica también tienen funciones locales; las cuentas, la biblioteca remota y el tutor documental requieren backend.
 
-Para activar Auth y los datos reales, copia `.env.example` como `.env.local` y completa la clave **publicable** del proyecto:
+### Configurar cuentas y servicios remotos
 
 ```powershell
 Copy-Item .env.example .env.local
 ```
 
+Completa `.env.local` con los valores públicos de tu proyecto:
+
 ```dotenv
-VITE_SUPABASE_URL=https://goegjuglstapjwcckawp.supabase.co
+VITE_BASE_PATH=/
+VITE_SUPABASE_URL=https://TU_PROYECTO.supabase.co
 VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 ```
 
-La clave publicable está diseñada para el navegador y solo es segura junto con RLS. Nunca uses `service_role`, claves secretas nuevas ni credenciales de PostgreSQL en variables `VITE_*`.
+La plantilla contiene la URL del proyecto piloto. Para usar otro proyecto, cambia **URL y clave**. Si falta cualquiera de las dos, el cliente queda sin configurar. `VITE_SUPABASE_ANON_KEY` se admite como alternativa de compatibilidad.
 
-## Supabase
+El alta puede requerir confirmación de correo. Configura en Supabase las URLs de retorno de tu entorno; el código vuelve al origen y ruta base, sin añadir un fragmento que interfiera con el callback de Auth.
 
-El repositorio está vinculado al proyecto `goegjuglstapjwcckawp` (`fintex.back`). Las migraciones de los Bloques 1, 2 y 3 se aplican con revisión previa:
+Las claves publicables se incluyen en el navegador y requieren permisos SQL y RLS correctos. `service_role`, `sb_secret_*` y credenciales de base de datos deben permanecer en el servidor.
 
-```bash
-npx supabase db push --dry-run
-npx supabase db push --linked --skip-vault
-```
+### IA opcional para el aula de práctica local
 
-Las pruebas de políticas se ejecutan sobre una base local aislada y se revierten al terminar:
+Puedes añadir `OPENAI_API_KEY` a `.env.local` y reiniciar Vite. El plugin del servidor habilita `/api/fontex-tutor` para peticiones desde localhost. La clave carece de prefijo `VITE_` y no se entrega al cliente. Las consultas consumen la API del proveedor.
 
-```bash
-npx supabase db start
-npx supabase test db --local
-npx supabase db stop
-```
+Ese endpoint existe al ejecutar el servidor de Vite; GitHub Pages sirve archivos estáticos. Para el aula de práctica publicada se utiliza `practice-tutor` con sesión de usuario. El tutor documental usa otro endpoint, `tutor-chat`, y requiere un aula y documentos indexados.
 
-El tutor de aulas se ejecuta en `tutor-chat`. Requiere `OPENAI_API_KEY` en los secretos del proyecto y se despliega con JWT obligatorio:
+Consulta la [guía del backend](supabase/README.md) para migraciones, funciones y configuración local completa.
 
-```bash
-npx supabase functions deploy tutor-chat --project-ref goegjuglstapjwcckawp --use-api
-```
+## Rutas
 
-La biblioteca coordina sus escrituras mediante dos funciones autenticadas. Ninguna usa secretos en el navegador:
+Las rutas se escriben después de `#` para admitir recargas en GitHub Pages.
 
-```bash
-npx supabase functions deploy document-upload document-delete --project-ref goegjuglstapjwcckawp --use-api
-```
+| Ruta | Vista | Acceso |
+|---|---|---|
+| `/#/`, `/#/lienzo` | Fontex Studio | Invitado o cuenta |
+| `/#/fracciones` | Laboratorio original de fracciones | Público |
+| `/#/demo` | Aula de práctica de Matemática | Funciones locales públicas; IA remota con sesión |
+| `/#/ingresar`, `/#/crear-cuenta` | Acceso y registro | Requiere Supabase configurado |
+| `/#/ingresar-tutor` | Acceso con retorno al aula de práctica | Requiere Supabase configurado |
+| `/#/inicio`, `/#/aula`, `/#/grupo` | Espacio académico | Sesión cuando Supabase está configurado |
+| `/#/biblioteca`, `/#/tutor`, `/#/administracion` | Biblioteca, tutor documental y ajustes | Sesión y permisos del backend para operaciones reales |
 
-La extracción/indexación y la búsqueda diagnóstica usan funciones separadas y el mismo secreto server-side. Su configuración estable debe conservar modelo y dimensión compatibles con la migración:
+Sin configuración de Supabase, las rutas académicas conservan componentes de demostración. `WorkspaceProvider` coordina el aula activa; los permisos se aplican en PostgreSQL y las funciones. El registro público no concede por sí solo permiso para crear el primer espacio institucional.
+
+## Calidad y auditoría
 
 ```powershell
-npx supabase secrets set EMBEDDING_MODEL=text-embedding-3-small EMBEDDING_DIMENSIONS=1536 --project-ref goegjuglstapjwcckawp
-npx supabase functions deploy document-process document-search --project-ref goegjuglstapjwcckawp --use-api
-```
-
-No se debe definir `OPENAI_API_KEY` en variables `VITE_*`, archivos del frontend ni GitHub Pages.
-
-## Ruta base de despliegue
-
-Vite publica en `/` de forma predeterminada, que es la configuración usada por el dominio personalizado `https://fontex.sypablitodp.site`.
-
-La ruta puede seleccionarse explícitamente al compilar:
-
-```bash
-VITE_BASE_PATH=/fontex-web/ npm run build
-```
-
-En GitHub Actions, el workflow de Pages lee `VITE_BASE_PATH`, `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY` como variables del repositorio. Si no existen las dos variables públicas de Supabase, utiliza como respaldo la URL y la clave `sb_publishable_…` del proyecto vinculado; esta clave es pública por diseño y no sustituye RLS. La base utiliza `/` si no está definida. Para volver al dominio estándar `https://dppablito4-oss.github.io/fontex-web/`, se debe configurar `VITE_BASE_PATH=/fontex-web/` antes de publicar.
-
-## Comandos de calidad
-
-```bash
 npm run lint
 npm run typecheck
 npm run test
 npm run build
 ```
 
-## Alcance implementado
+Resultado de la revisión del 11 de noviembre de 2026:
 
-- Vite, React y TypeScript estricto.
-- Tailwind CSS y componentes locales con convenciones de shadcn/ui.
-- Shell mobile-first y seis páginas mínimas.
-- `assistant-ui` con adaptador real a `tutor-chat` y demo local solo cuando Supabase no está configurado.
-- Supabase Auth para registro, confirmación e inicio/cierre de sesión.
-- Perfiles, organizaciones, aulas, invitaciones de un solo uso, roles y grupos.
-- RLS y privilegios mínimos sobre todas las tablas expuestas del Bloque 1.
-- PDF privados en `fontex-documents`, metadatos RLS, cuotas transaccionales y deduplicación SHA-256.
-- Compartición explícita por grupo o aula con revocación inmediata y sin URLs públicas.
-- Visor PDF.js responsive con navegación de páginas y descarga autenticada.
-- Extracción PDF server-side con hash y páginas verificadas, chunks versionados y procesamiento reanudable.
-- Embeddings `text-embedding-3-small` de 1536 dimensiones y almacenamiento pgvector con presupuesto de tokens.
-- Recuperación híbrida por coseno, texto completo y RRF, siempre filtrada por permisos vigentes.
-- Panel diagnóstico en Biblioteca con documento, páginas y fragmento recuperado.
-- Pruebas pgTAP y de integración remota con múltiples identidades ficticias.
-- CI y despliegue estático a GitHub Pages.
-- OpenAI Responses API desde una Edge Function autenticada; la clave privada permanece en Supabase.
-- Motor RAG disponible sólo para diagnóstico: el tutor mantiene `0 fuentes` y tiene prohibido inventar citas o acceso documental.
+- Lint, TypeScript y compilación: correctos.
+- Vitest: **136 pruebas aprobadas y 7 omitidas**, en 27 archivos aprobados y 4 omitidos. Las omitidas requieren configuración de integración remota.
+- Deno: seis Edge Functions comprobadas, 13 regresiones de backend aprobadas y lint de `supabase/functions` correcto.
+- PostgreSQL local: **138 pruebas aprobadas**; migraciones locales actualizadas y advisors/lint sin incidencias.
+- `npm audit`: **0 vulnerabilidades** después de actualizar las resoluciones afectadas.
 
-Consulta [los reportes versionados](docs/REPORTES.md), [la arquitectura](docs/architecture/overview.md), [el sistema de diseño](docs/design/DESIGN_SYSTEM.md) y [el registro de dependencias](docs/decisions/DEPENDENCIES.md) para conocer el historial y las decisiones del prototipo.
+El [informe de auditoría](docs/AUDITORIA.md) detalla las correcciones, evidencias y comprobaciones pendientes. Estos resultados no certifican el despliegue remoto ni equivalen a pruebas E2E.
 
-## Estado
+## Despliegue en GitHub Pages
 
-Prototipo académico en desarrollo. Identidad, aulas, grupos, biblioteca PDF, indexación y recuperación diagnóstica operan con servicios reales. Las citas trazables y la conexión documental del tutor corresponden al Bloque 4 y continúan pendientes.
+El workflow [deploy-pages.yml](.github/workflows/deploy-pages.yml) valida y publica `dist/` cuando cambia `main`, o mediante ejecución manual. Configura Pages para usar GitHub Actions.
+
+Variables del repositorio utilizadas al compilar:
+
+| Variable | Uso |
+|---|---|
+| `VITE_BASE_PATH` | `/` para el dominio personalizado; `/fontex-web/` para el dominio estándar del repositorio |
+| `VITE_SUPABASE_URL` | URL pública del backend |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Clave pública del cliente |
+
+El workflow actual usa valores públicos del proyecto piloto como respaldo si faltan las variables de Supabase. No debe asumirse que omitirlas desconecta el backend publicado. Pages despliega el frontend; las migraciones y Edge Functions tienen su propio proceso.
+
+Para publicar las correcciones del tutor, aplica primero la migración `20261111223857_harden_tutor_exchange_persistence.sql` y después despliega `tutor-chat`. La [guía de Supabase](supabase/README.md) describe la revisión previa. El guardado de preguntas, respuestas y citas ahora depende de una RPC transaccional del servidor.
+
+Para comprobar una compilación con la base del repositorio desde PowerShell:
+
+```powershell
+$env:VITE_BASE_PATH = '/fontex-web/'
+npm run build
+Remove-Item Env:VITE_BASE_PATH
+```
+
+## Estructura y documentación
+
+```text
+src/app/                 Rutas y layouts
+src/core/                Esquema de materiales, motor matemático y catálogo de objetos
+src/features/studio/     Editor y persistencia local
+src/features/demo/       Aula de práctica y PDF locales
+src/features/            Auth, aulas, grupos, biblioteca, tutor y temas
+supabase/migrations/     Esquema y permisos versionados
+supabase/functions/      Servicios autenticados y lógica compartida
+supabase/tests/          Pruebas pgTAP
+docs/                    Guías, decisiones e historial
+```
+
+- [Índice de documentación](docs/README.md)
+- [Arquitectura actual](docs/architecture/overview.md)
+- [Fontex Studio: formato, límites y persistencia](docs/architecture/studio.md)
+- [Backend Supabase](supabase/README.md)
+- [Sistema de diseño](docs/design/DESIGN_SYSTEM.md)
+- [Dependencias](docs/decisions/DEPENDENCIES.md)
+- [Auditoría y pendientes](docs/AUDITORIA.md)
+- [Reportes históricos](docs/REPORTES.md)
+
+## Límites actuales
+
+Studio usa un lienzo de 1600 × 1100, hasta 80 objetos y 40 cambios de historial. Importa documentos versión 1 de hasta 1 MiB. No incluye sincronización remota de materiales, edición colaborativa, varias páginas ni exportación PDF integrada.
+
+La biblioteca remota acepta PDF de hasta 5 MiB y 100 páginas con texto seleccionable; no implementa OCR. El tutor estricto exige una salida estructurada y citas de los fragmentos enviados al modelo; si faltan o son inválidas, se abstiene. Esa validación no certifica por sí sola la exactitud de cada afirmación. El renderizador académico admite un subconjunto de Markdown y sustituciones matemáticas, incluidos exponentes numéricos completos; no es un motor LaTeX completo.
+
+Studio utiliza actualmente una apariencia clara propia. El tema claro/oscuro de las vistas académicas no cubre toda la aplicación. El guardado local usa una instantánea atómica por cuenta, con migración compatible de los materiales anteriores; no añade sincronización entre equipos. La revisión visual, las pruebas E2E y la verificación del despliegue remoto siguen pendientes.
