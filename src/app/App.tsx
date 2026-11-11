@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes, useMatch } from "react-router-dom";
 
 import { FractionCanvas } from "../features/canvas/FractionCanvas";
+import { StudioShell } from "../features/studio/StudioShell";
 
 import { AppShell } from "./layouts/AppShell";
 import { AdminPage } from "../features/administration/AdminPage";
@@ -30,22 +31,36 @@ export function App() {
   const demoRoute = useMatch("/demo");
   const canvasRoute = useMatch("/");
   const canvasAlias = useMatch("/lienzo");
+  const fractionsRoute = useMatch("/fracciones");
   const tutorSignIn = useMatch("/ingresar-tutor");
   const signInRoute = useMatch("/ingresar");
   const signUpRoute = useMatch("/crear-cuenta");
   const authRoute = tutorSignIn || signInRoute || signUpRoute;
 
-  if (canvasRoute || canvasAlias) return <FractionCanvas />;
+  if (canvasRoute || canvasAlias) return <StudioShell />;
+  if (fractionsRoute) return <FractionCanvas />;
 
   if (authRoute) {
     if (status === "loading") return <AuthLoadingPage />;
-    if (status === "authenticated") return <Navigate to={tutorSignIn ? "/demo" : "/"} replace />;
-    return <AuthPage key={signUpRoute ? "signup" : "signin"} initialMode={signUpRoute ? "signup" : "signin"} />;
+    if (status === "authenticated")
+      return <Navigate to={tutorSignIn ? "/demo" : "/"} replace />;
+    return (
+      <AuthPage
+        key={signUpRoute ? "signup" : "signin"}
+        initialMode={signUpRoute ? "signup" : "signin"}
+      />
+    );
   }
 
   if (demoRoute || (import.meta.env.MODE === "demo" && !authRoute)) {
     return (
-      <Suspense fallback={<div className="page-wrap" role="status">Preparando el aula…</div>}>
+      <Suspense
+        fallback={
+          <div className="page-wrap" role="status">
+            Preparando el aula…
+          </div>
+        }
+      >
         <DemoPage />
       </Suspense>
     );
@@ -57,22 +72,28 @@ export function App() {
   return (
     <WorkspaceProvider>
       <Routes>
-      <Route element={<AppShell />}>
-        <Route path="inicio" element={<HomePage />} />
-        <Route path="aula" element={<ClassroomPage />} />
-        <Route path="grupo" element={<GroupPage />} />
-        <Route path="biblioteca" element={<LibraryPage />} />
-        <Route
-          path="tutor"
-          element={
-            <Suspense fallback={<div className="page-wrap text-sm text-muted-foreground">Preparando el tutor…</div>}>
-              <TutorPage />
-            </Suspense>
-          }
-        />
-        <Route path="administracion" element={<AdminPage />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Route>
+        <Route element={<AppShell />}>
+          <Route path="inicio" element={<HomePage />} />
+          <Route path="aula" element={<ClassroomPage />} />
+          <Route path="grupo" element={<GroupPage />} />
+          <Route path="biblioteca" element={<LibraryPage />} />
+          <Route
+            path="tutor"
+            element={
+              <Suspense
+                fallback={
+                  <div className="page-wrap text-sm text-muted-foreground">
+                    Preparando el tutor…
+                  </div>
+                }
+              >
+                <TutorPage />
+              </Suspense>
+            }
+          />
+          <Route path="administracion" element={<AdminPage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Route>
       </Routes>
     </WorkspaceProvider>
   );

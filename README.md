@@ -1,8 +1,28 @@
 # Fontex
 
+## Fontex Studio: editor de materiales matemáticos
+
+La ruta principal `/#/` (también `/#/lienzo`) abre el editor sin exigir una cuenta. Permite mezclar **fracciones pictóricas, operaciones guiadas, textos y sucesiones aritméticas** en un mismo documento.
+
+- Añadir, seleccionar, arrastrar, duplicar y eliminar objetos independientes.
+- Editar propiedades, posición y tamaño desde un inspector común.
+- Mover con las flechas al enfocar el encabezado del objeto (10 unidades; Shift + flecha, 50).
+- Deshacer y rehacer hasta 40 cambios; un arrastre es un único cambio.
+- Recorrer la representación, homogeneización y resolución de una operación en el propio lienzo.
+- Crear materiales en blanco o partir de las plantillas de fracciones y sucesiones.
+- Guardar automáticamente los cambios aplicados, abrir otros materiales y recuperar el último al recargar.
+- Exportar e importar documentos `.fontex.json`, con validación de esquema y datos matemáticos.
+- Presentar sin paneles de edición, con pantalla completa cuando el navegador la admite y salida mediante Esc.
+
+**Guardado:** los documentos completos se conservan en este navegador, separados por cuenta e invitado. Incluyen valores, figuras, textos, posiciones, tamaños y pasos. No se sincronizan con Supabase ni entre dispositivos. Exporta una copia JSON para trasladarlos; borrar los datos del navegador elimina las copias locales. Si falla el almacenamiento, se mantiene el documento en memoria, se muestra el error y se permite exportarlo.
+
+**Alcance:** un lienzo por documento de hasta 80 objetos, esquema versión 1. Las sucesiones admiten 2–8 términos, inicio entre −1000 y 1000 y diferencia entera entre −100 y 100; los valores entre 0 y 30 se representan con puntos. Las operaciones conservan los límites del laboratorio de fracciones. Funciones, ecuaciones, generación de materiales mediante IA, versiones remotas y apertura garantizada sin internet siguen pendientes. Los cálculos del editor no requieren IA; una página ya cargada puede seguir editándose sin conexión.
+
+La arquitectura y la guía de prueba están en [docs/architecture/studio.md](docs/architecture/studio.md).
+
 ## Laboratorio visual de fracciones
 
-La ruta principal `/#/` (también `/#/lienzo`) abre un lienzo interactivo sin iniciar sesión. Escribe una suma o resta como `2/3 + 3/6`: representa cada fracción, homogeneiza con el mínimo común múltiplo y muestra el resultado con figuras y explicación textual. Permite barras o círculos, mover tarjetas por su encabezado, cambiar el zoom y añadir una observación. La última operación válida se conserva en este navegador; las notas y posiciones duran la sesión abierta.
+El laboratorio original sigue disponible en `/#/fracciones` sin iniciar sesión. Escribe una suma o resta como `2/3 + 3/6`: representa cada fracción, homogeneiza con el mínimo común múltiplo y muestra el resultado con figuras y explicación textual. Permite barras o círculos, mover tarjetas por su encabezado, cambiar el zoom y añadir una observación. La última operación válida se conserva en este navegador; las notas y posiciones duran la sesión abierta.
 
 Alcance del prototipo: dos fracciones no negativas, suma o resta con resultado no negativo; denominadores de 1 a 24, hasta 3 unidades por operando y denominador común de hasta 60 para mantener el dibujo legible. Los cálculos y las explicaciones son deterministas y funcionan sin API ni conexión a IA.
 
@@ -30,11 +50,11 @@ En la web, inicia sesión en Fontex desde `/#/demo`. La función Supabase `pract
 
 En desarrollo también puedes añadir `OPENAI_API_KEY` a `.env.local` y reiniciar `npm run dev`. El servidor de Vite la lee exclusivamente en localhost.
 
-| Modo | Modelo | Fuente |
-| --- | --- | --- |
-| Chat general | GPT-6 Luna (`gpt-6-luna`) | Conversación reciente |
-| Corrección de ejercicios y estudio con archivos | GPT-6.1 Sol (`gpt-6.1-sol`) | Guía del tema o fragmento recuperado del PDF seleccionado |
-| Estudio web | GPT-6.1 Sol (`gpt-6.1-sol`) | Búsqueda en MINEDU, Khan Academy y OpenStax, con citas verificables |
+| Modo                                            | Modelo                      | Fuente                                                              |
+| ----------------------------------------------- | --------------------------- | ------------------------------------------------------------------- |
+| Chat general                                    | GPT-6 Luna (`gpt-6-luna`)   | Conversación reciente                                               |
+| Corrección de ejercicios y estudio con archivos | GPT-6.1 Sol (`gpt-6.1-sol`) | Guía del tema o fragmento recuperado del PDF seleccionado           |
+| Estudio web                                     | GPT-6.1 Sol (`gpt-6.1-sol`) | Búsqueda en MINEDU, Khan Academy y OpenStax, con citas verificables |
 
 Para publicar la demo estática, ejecuta `npm run build -- --mode demo`. Ese modo ofrece teoría, corrección preparada por alternativa y búsqueda local por página. Con una sesión válida y la función Supabase configurada, la compilación estática también habilita el chat generativo y la búsqueda web.
 

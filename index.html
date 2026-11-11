@@ -6,9 +6,13 @@
     <meta name="theme-color" content="#F7F9FC" />
     <meta
       name="description"
-      content="Explora fracciones en un lienzo: representa, homogeneiza y resuelve con figuras y explicaciones paso a paso."
+      content="Crea materiales matemáticos con fracciones, operaciones guiadas, textos y sucesiones en un mismo lienzo editable."
     />
-    <link rel="icon" type="image/svg+xml" href="%BASE_URL%brand/fontex-mark.svg" />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="%BASE_URL%brand/fontex-mark.svg"
+    />
     <script>
       (() => {
         let theme;
@@ -16,7 +20,9 @@
           const stored = localStorage.getItem("fontex-theme");
           if (stored === "light" || stored === "dark") theme = stored;
         } catch {}
-        theme ||= matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        theme ||= matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "light";
         document.documentElement.dataset.theme = theme;
         document.documentElement.style.colorScheme = theme;
         document.querySelector('meta[name="theme-color"]').content =
@@ -29,7 +35,7 @@
       href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap"
       rel="stylesheet"
     />
-    <title>Fontex · Laboratorio visual de fracciones</title>
+    <title>Fontex Studio · Matemática, a la vista</title>
   </head>
   <body>
     <div id="root"></div>
