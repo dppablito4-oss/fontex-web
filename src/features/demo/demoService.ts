@@ -41,10 +41,14 @@ export function findCitation(question: string, lesson: Lesson, material?: DemoMa
     createPageAwareChunks(pages, 105, 0, "NFC").map((chunk) => {
       const words = terms(chunk.content);
       const hits = query.filter((word) => words.has(word)).length;
+      // Keep the explanation next to a matching paragraph when it fits the
+      // provider's evidence budget. A short match can omit the actual formula.
+      const pageText = pages.find(page => page.pageNumber === chunk.pageStart)?.text.trim();
+      const excerpt = pageText && pageText.length <= 2800 ? pageText : chunk.content.slice(0, 2800);
       return {
         hits,
         score: hits / (1 + words.size / 100),
-        citation: { sourceId: id, title, page: chunk.pageStart, excerpt: chunk.content },
+        citation: { sourceId: id, title, page: chunk.pageStart, excerpt },
       };
     }),
   );
