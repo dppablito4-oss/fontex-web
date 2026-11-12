@@ -187,6 +187,14 @@
 .st-open-material strong { overflow-wrap: anywhere; }
 .st-open-material small { font-size: 10px; color: var(--st-muted); font-weight: 400; }
 .st-loading { display: grid; place-items: center; min-height: 100dvh; background: var(--ui-background); color: var(--ui-foreground); }
+.st-agent { margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--st-line); font-size: 12px; }
+.st-agent summary { cursor: pointer; padding-block: 8px; font-weight: 600; }
+.st-agent label { display: grid; gap: 7px; margin-block: 12px; }
+.st-agent :is(textarea, select, input) { width: 100%; min-width: 0; padding: 9px; border: 1px solid var(--st-control); border-radius: 7px; background: var(--st-background); color: var(--st-ink); }
+.st-agent textarea { resize: vertical; }
+.st-agent pre { max-height: 230px; overflow: auto; padding: 8px; background: var(--st-background); font-size: 10px; }
+.st-agent :is(p, li) { margin-block: 8px; line-height: 1.5; overflow-wrap: anywhere; }
+.st-agent ul { padding-left: 16px; }
 .st-app .st-exit-presentation { position: fixed; top: 16px; right: 20px; z-index: 50; box-shadow: 0 4px 18px rgb(var(--ui-shadow) / .16); }
 .st-exit-presentation small { color: var(--st-muted); font-size: 10px; font-weight: 400; }
 .st-presenting { position: fixed; inset: 0; z-index: 1000; height: 100dvh; min-height: 0; background: var(--st-background); }

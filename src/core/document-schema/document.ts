@@ -1,4 +1,4 @@
-import { parseOperation } from "../math-engine/fractions";
+import { parseOperation } from "../math-engine/fractions.ts";
 
 export type Shape = "bar" | "circle";
 export type FractionData = {

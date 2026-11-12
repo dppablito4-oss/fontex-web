@@ -36,6 +36,7 @@ import { ThemeToggle } from "../theme/ThemeToggle";
 import { CanvasViewport } from "./CanvasViewport";
 import { PropertiesInspector } from "./PropertiesInspector";
 import { useStudioDocument } from "./useStudioDocument";
+import { StudioAgentPanel } from "./StudioAgentPanel";
 import "./studio.css";
 
 export function StudioShell() {
@@ -447,6 +448,7 @@ function StudioEditor({ owner }: { owner: string }) {
               <p>Selecciona un objeto</p>
             </div>
           )}
+          <StudioAgentPanel key={doc.id} document={doc} selectedId={selectedId} onApply={store.execute} />
         </aside>
       </div>
       {presenting && (

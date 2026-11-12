@@ -4,7 +4,7 @@ import {
   type MathObject,
   type ObjectType,
   type StudioDocument,
-} from "../document-schema/document";
+} from "../document-schema/document.ts";
 
 export const objectRegistry = {
   fraction: {

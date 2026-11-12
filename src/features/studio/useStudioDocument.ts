@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { executeActions } from "../../core/agent/actions";
 import {
   parseDocument,
   type StudioDocument,
@@ -45,10 +46,15 @@ export function useStudioDocument(owner: string) {
     present: initial.document,
     future: [],
   });
+  const historyRef = useRef(history);
+  function commit(next: History) {
+    historyRef.current = next;
+    setHistory(next);
+  }
   const [materials, setMaterials] = useState(initial.materials);
   const [error, setError] = useState(initial.error);
   const [saved, setSaved] = useState(initial.recovered);
-  function persist(document = history.present): boolean {
+  function persist(document = historyRef.current.present): boolean {
     try {
       saveMaterial(localStorage, owner, document);
       setMaterials(listMaterials(localStorage, owner));
@@ -65,18 +71,21 @@ export function useStudioDocument(owner: string) {
   }
   function update(change: (document: StudioDocument) => StudioDocument) {
     try {
+      const current = historyRef.current;
       const next = parseDocument({
-        ...change(history.present),
+        ...change(structuredClone(current.present)),
         updatedAt: new Date().toISOString(),
       });
-      setHistory({
-        past: [...history.past.slice(-39), history.present],
+      commit({
+        past: [...current.past.slice(-39), current.present],
         present: next,
         future: [],
       });
       persist(next);
+      return true;
     } catch (e) {
       setError(e instanceof Error ? e.message : "El cambio no es válido.");
+      return false;
     }
   }
   function replace(document: StudioDocument): boolean {
@@ -84,7 +93,7 @@ export function useStudioDocument(owner: string) {
     try {
       const next = parseDocument(document);
       if (!persist(next)) return false;
-      setHistory({ past: [], present: next, future: [] });
+      commit({ past: [], present: next, future: [] });
       return true;
     } catch (e) {
       setError(
@@ -112,22 +121,24 @@ export function useStudioDocument(owner: string) {
     }
   }
   function undo() {
-    const previous = history.past.at(-1);
+    const current = historyRef.current;
+    const previous = current.past.at(-1);
     if (!previous) return;
-    setHistory({
-      past: history.past.slice(0, -1),
+    commit({
+      past: current.past.slice(0, -1),
       present: previous,
-      future: [history.present, ...history.future],
+      future: [current.present, ...current.future],
     });
     persist(previous);
   }
   function redo() {
-    const next = history.future[0];
+    const current = historyRef.current;
+    const next = current.future[0];
     if (!next) return;
-    setHistory({
-      past: [...history.past, history.present],
+    commit({
+      past: [...current.past, current.present],
       present: next,
-      future: history.future.slice(1),
+      future: current.future.slice(1),
     });
     persist(next);
   }
@@ -138,6 +149,7 @@ export function useStudioDocument(owner: string) {
     saved,
     persist,
     update,
+    execute: (batch: unknown, expected?: StudioDocument) => update(current => executeActions(current, batch, expected)),
     replace,
     open,
     remove,

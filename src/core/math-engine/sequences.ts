@@ -1,4 +1,4 @@
-import type { SequenceData } from "../document-schema/document";
+import type { SequenceData } from "../document-schema/document.ts";
 
 export function sequenceTerms({
   start,
