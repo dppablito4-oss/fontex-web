@@ -2,7 +2,7 @@ import { expect, it } from "vitest";
 import { boardHeight, fitObject, parseDocument } from "../../core/document-schema/document";
 import { createDocument, createObject } from "../../core/object-registry/registry";
 import { lessonSteps } from "./lesson-steps";
-import { printableMaterial } from "./export-pdf";
+import { printableMaterial, printablePage } from "./export-pdf";
 import { geometryArea } from "../../core/math-engine/geometry";
 
 it("crece verticalmente sin apilar los objetos al final del antiguo lienzo", () => {
@@ -31,6 +31,12 @@ it("exporta contenido completo fuera del área visible, con pasos y texto escapa
   expect(html).toContain("altura perpendicular 4");
   expect(html).not.toContain("<script>");
   expect(html).not.toContain("20000px");
+  expect(html).toContain('alt="Logo de Fontex"');
+  expect(html).not.toContain("Material de aprendizaje");
+  expect(html).not.toContain("<details");
+  const page = printablePage(doc, "primary", "");
+  expect(page).toContain("&lt;script&gt;");
+  expect(page).not.toContain("<script>");
 });
 it("calcula exactamente áreas triangulares con media unidad", () => {
   expect(geometryArea({ figure: "triangle", base: 3, height: 3 })).toEqual({ n: 9, d: 2 });

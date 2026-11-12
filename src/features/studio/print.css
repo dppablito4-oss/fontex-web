@@ -1,0 +1,58 @@
+@page { size: A4; margin: 16mm; }
+html, body { margin: 0; background: #fff !important; color: #24272b !important; }
+.st-print-document {
+  --st-ink: #24272b;
+  --st-muted: #565b61;
+  --st-background: #fff;
+  --st-surface: #fff;
+  --st-soft: #f3f4f4;
+  --st-line: #d2d5d7;
+  --st-primary: #24272b;
+  --st-piece-primary: #466e7d;
+  --st-piece-secondary: #aa7541;
+  --st-piece-empty: #edf0f1;
+  --st-piece-stroke: #485159;
+  --st-piece-guide: #24272b;
+  --font-sans: Arial, Helvetica, sans-serif;
+  display: block !important;
+  height: auto !important;
+  min-height: 0 !important;
+  color: var(--st-ink) !important;
+  background: #fff !important;
+  font: 11pt/1.55 Arial, Helvetica, sans-serif;
+}
+.st-print-document * { box-sizing: border-box; max-height: none; }
+.st-print-header { display: flex; align-items: center; justify-content: space-between; gap: 24pt; margin-bottom: 22pt; padding-bottom: 12pt; border-bottom: .6pt solid #b9bfc3; }
+.st-print-brand { display: flex; align-items: center; gap: 6pt; flex: none; }
+.st-print-brand img { display: block; width: 28pt; height: 28pt; }
+.st-print-brand span { font-size: 24pt; font-weight: 750; letter-spacing: -1.1pt; line-height: 1; }
+.st-print-header h1 { margin: 0; font-size: 14pt; font-weight: 600; line-height: 1.35; text-align: right; overflow-wrap: anywhere; }
+.st-print-object { padding: 0; margin: 0 0 22pt; break-inside: avoid-page; page-break-inside: avoid; }
+.st-print-object h2 { margin: 0 0 10pt; font-size: 13pt; font-weight: 600; line-height: 1.4; break-after: avoid; page-break-after: avoid; overflow-wrap: anywhere; }
+.st-print-document p { margin: 0 0 8pt; orphans: 3; widows: 3; }
+.st-print-visual { margin-bottom: 12pt; break-inside: avoid-page; }
+.st-print-document :is(button, .st-step-buttons, .st-operation-title > span) { display: none !important; }
+.st-print-document .st-operands { flex-wrap: wrap; }
+.st-print-document .st-math-explanation { margin: 10pt 0; padding: 0; border: 0; border-radius: 0; background: none; font: inherit; }
+.st-print-document svg { display: block; max-width: 100% !important; min-width: 0 !important; max-height: 64mm !important; margin-inline: auto; break-inside: avoid; }
+.st-print-document .st-learning-statistics svg { max-height: 125mm !important; }
+.st-print-document .st-number-stats { margin: 8pt 0 12pt; gap: 24pt; }
+.st-print-document .st-number-stats dt { font-size: 9pt; }
+.st-print-document .st-number-stats dd { font-size: 12pt; }
+.st-print-document :is(.st-learning-visual, .st-polygon, .st-geometry) p { font: inherit; color: inherit; }
+.st-print-document :is(.st-learning-amount, .st-prime-chip, .st-collection li, .st-term) { border-radius: 0; background: none; }
+.st-print-document .st-learning-amount { padding: 8pt; }
+.st-print-document .st-learning-amount strong { font-size: 16pt; }
+.st-print-document .st-learning-amount small { font-size: 9pt; }
+.st-print-document .st-single-fraction > p { font-size: 10pt; }
+.st-print-steps { padding-left: 18pt; margin: 10pt 0 0; }
+.st-print-steps > li { margin-bottom: 9pt; padding-left: 3pt; break-inside: avoid; page-break-inside: avoid; }
+.st-print-steps > li::marker { font-weight: 600; }
+.st-print-steps strong { font-weight: 600; }
+.st-print-steps p { margin: 2pt 0 0; }
+.st-print-text { font: inherit; overflow-wrap: anywhere; }
+.st-print-text p { white-space: pre-wrap; break-inside: avoid-page; }
+.st-print-document figure { margin: 12pt 0; break-inside: avoid-page; }
+.st-print-document figcaption { margin-top: 6pt; font-size: 10pt; }
+.st-print-document .st-fraction { font-size: 22pt; }
+* { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
