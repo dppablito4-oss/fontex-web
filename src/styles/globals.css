@@ -75,6 +75,9 @@
   --ui-selection: #baf8fc;
   --ui-overlay: rgb(8 18 38 / 0.48);
   --ui-shadow: 16 23 34;
+  --ui-math-primary: #217d69;
+  --ui-math-secondary: #b75d3f;
+  --ui-math-empty: #e2e9f3;
 }
 
 :root[data-theme="dark"] {
@@ -111,6 +114,9 @@
   --ui-selection: #164e7a;
   --ui-overlay: rgb(0 0 0 / 0.62);
   --ui-shadow: 0 0 0;
+  --ui-math-primary: #75d7bb;
+  --ui-math-secondary: #efad82;
+  --ui-math-empty: #2b3550;
 }
 
 * { box-sizing: border-box; }

@@ -12,6 +12,31 @@ Cada reporte incluye alcance, cambios, archivos relevantes, validaciones reales,
 
 ---
 
+## v0.6.3 — Interfaz compacta y tema oscuro compartido
+
+**Fecha:** 11 de noviembre de 2026
+
+**Estado:** Implementado localmente; revisión visual en navegador pendiente.
+
+### Cambios
+
+- Studio usa una cabecera compacta, más espacio para el lienzo y paneles adaptados a escritorio, tablet y móvil.
+- Se retiraron notas de guardado, lemas repetidos, instrucciones obvias y nombres técnicos de modelos del aula de práctica. Se conservaron errores, límites y contenido pedagógico.
+- Se añadió el selector de luna/sol a Studio, Fracciones y Práctica, conectado al proveedor global que conserva la elección y sigue al sistema cuando no hay preferencia manual.
+- Superficies, campos, diálogos, presentación y gráficos SVG usan tokens compartidos. Las piezas matemáticas tienen colores claros/oscuros con contraste comprobado.
+- Se unificaron tipografías y se actualizaron README, arquitectura y sistema de diseño.
+
+### Validación
+
+- 141 pruebas de frontend aprobadas y 7 remotas omitidas.
+- Lint, TypeScript y compilación correctos.
+- Regresiones de alternancia/persistencia del tema en Studio, Fracciones y Práctica, además de contraste de figuras.
+- La herramienta de navegador no pudo verificar la URL en Windows y detuvo el control de la interfaz; no se continuó esa sesión ni se completó la revisión visual.
+
+La actualización no cambia el backend ni añade dependencias. Los cambios de esta intervención quedan locales hasta su publicación.
+
+---
+
 ## v0.6.2 — Corrección de los diez hallazgos de auditoría
 
 **Fecha:** 11 de noviembre de 2026

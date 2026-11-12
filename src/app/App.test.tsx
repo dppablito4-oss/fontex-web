@@ -17,6 +17,16 @@ function renderRoute(route = "/inicio") {
 }
 
 describe("Fontex shell", () => {
+  it.each(["/", "/fracciones", "/demo"])("permite alternar y conservar el tema desde %s", async (route) => {
+    const view = renderRoute(route);
+    fireEvent.click(await screen.findByRole("button", { name: "Activar tema oscuro" }));
+    expect(document.documentElement).toHaveAttribute("data-theme", "dark");
+    expect(localStorage.getItem("fontex-theme")).toBe("dark");
+    view.unmount();
+    renderRoute(route);
+    fireEvent.click(await screen.findByRole("button", { name: "Activar tema claro" }));
+    expect(document.documentElement).toHaveAttribute("data-theme", "light");
+  });
   it.each([
     ["/inicio", /tus fuentes/i],
     ["/aula", /tu aula/i],

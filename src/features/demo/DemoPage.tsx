@@ -7,10 +7,11 @@ import { type ChangeEvent, type FormEvent, useEffect, useRef, useState } from "r
 
 import { useAuth } from "../auth/AuthProvider";
 import { BrandMark } from "../../components/BrandMark";
+import { ThemeToggle } from "../theme/ThemeToggle";
 import { PdfViewer } from "../library/components/PdfViewer";
 import { type Citation, type DemoMaterial, type Exchange, type TutorConnection, findCitation, indexMaterial, readMaterials, requestTutor, tutorAvailable, writeMaterial } from "./demoService";
 import lessons from "../../../supabase/functions/_shared/practice/lessons.json";
-import { type TutorMode, trustedResources, tutorModels } from "../../../supabase/functions/_shared/practice/models";
+import { type TutorMode, trustedResources } from "../../../supabase/functions/_shared/practice/models";
 import "./demo.css";
 
 const sections = [
@@ -101,7 +102,6 @@ function DemoWorkspace({ accountId, authStatus }: { accountId?: string; authStat
   const answered = Object.keys(progress.answers).length;
   const correct = lesson.questions.filter((item, i) => item.correct === progress.answers[i]).length;
   const currentExchanges = progress.exchanges.filter((item) => (item.mode ?? "study") === tutorMode);
-  const selectedModel = tutorMode === "chat" ? tutorModels.chat : tutorModels.study;
   const connected = connection === "local" || (connection === "supabase" && authStatus === "authenticated");
   const canAsk = !pendingTutor && !materialBusy && (connected || tutorMode === "study");
   const activeQuestion = lesson.questions[activeExercise]!;
@@ -317,21 +317,22 @@ function DemoWorkspace({ accountId, authStatus }: { accountId?: string; authStat
         <header className="fd-top">
           <span className="fd-mobile-brand"><BrandMark /></span>
           <span className="fd-subject">Matemática</span>
-          {authStatus === "anonymous" && <a className="fd-text-button" href="#/ingresar-tutor">Iniciar sesión</a>}
-          {authStatus === "authenticated" && <a className="fd-text-button" href="#/">Mi cuenta</a>}
+          <div className="fd-top-actions">
+            {authStatus === "anonymous" && <a className="fd-text-button" href="#/ingresar-tutor">Iniciar sesión</a>}
+            {authStatus === "authenticated" && <a className="fd-text-button" href="#/">Mi cuenta</a>}
+            <ThemeToggle />
+          </div>
         </header>
         <main className={`fd-main fd-page-${section}`}>
           <header className="fd-intro">
             {section !== "aula" && <p className="fd-topic-context">{lesson.title} <span>·</span> {lesson.grade} de {lesson.level}</p>}
             <h1 ref={heading} tabIndex={-1}>{sectionHeadings[section]}</h1>
-            {section === "aula" && <p>Estudia a tu ritmo y practica con explicaciones paso a paso.</p>}
           </header>
 
           {section === "aula" && (
             <>
               <section className="fd-hero" aria-labelledby="lesson-title">
                 <div className="fd-hero-copy">
-                  <p className="fd-kicker">TEMA ACTUAL</p>
                   <h2 id="lesson-title">{lesson.title}</h2>
                   <p>{lesson.description}</p>
                   <div className="fd-hero-actions">
@@ -352,7 +353,7 @@ function DemoWorkspace({ accountId, authStatus }: { accountId?: string; authStat
               </section>
               <section className="fd-topics" aria-labelledby="fd-topics">
                 <div className="fd-flex">
-                  <h2 id="fd-topics">Explora los temas</h2>
+                <h2 id="fd-topics">Temas</h2>
                   <div className="fd-segment" role="group" aria-label="Nivel educativo">
                     <button aria-pressed={level === "primaria"} onClick={() => setLevel("primaria")} type="button">Primaria</button>
                     <button aria-pressed={level === "secundaria"} onClick={() => setLevel("secundaria")} type="button">Secundaria</button>
@@ -419,14 +420,12 @@ function DemoWorkspace({ accountId, authStatus }: { accountId?: string; authStat
                     <button aria-pressed={tutorMode === id} key={id} onClick={() => { setTutorMode(id); setQuestion(""); }} type="button">{label}</button>
                   ))}
                 </div>
-                {connected && <span className="fd-model">{selectedModel.name}</span>}
               </div>
 
               {currentExchanges.length === 0 && (
                 <div className="fd-tutor-empty">
                   <span className="fd-symbol"><MessageSquareText size={22} aria-hidden="true" /></span>
                   <h2>{tutorMode === "study" ? "Pregunta sobre tus lecturas" : tutorMode === "web" ? "Explora fuentes educativas" : "Conversa con tu tutor"}</h2>
-                  <p>{tutorMode === "study" ? "Encuentra una explicación y la página donde se apoya." : tutorMode === "web" ? "Consulta referencias educativas para ampliar el tema." : "Resuelve dudas y organiza tu estudio."}</p>
                   {tutorMode === "study" && <button className="fd-cite" disabled={!canAsk} onClick={() => ask(lesson.prompt)} type="button">{lesson.prompt} <ArrowRight size={15} /></button>}
                 </div>
               )}

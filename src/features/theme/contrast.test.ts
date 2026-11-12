@@ -71,4 +71,10 @@ describe.each([
     expect(contrast(paletteValue(palette, "control-border"), paletteValue(palette, "background"))).toBeGreaterThanOrEqual(3);
     expect(contrast(paletteValue(palette, "focus"), paletteValue(palette, "background"))).toBeGreaterThanOrEqual(3);
   });
+  it("keeps the mathematical pieces distinct on cards and against empty pieces", () => {
+    for (const token of ["math-primary", "math-secondary"]) {
+      expect(contrast(paletteValue(palette, token), paletteValue(palette, "surface"))).toBeGreaterThanOrEqual(3);
+      expect(contrast(paletteValue(palette, token), paletteValue(palette, "math-empty"))).toBeGreaterThanOrEqual(3);
+    }
+  });
 });

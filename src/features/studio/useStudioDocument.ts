@@ -32,7 +32,7 @@ function initialState(owner: string) {
       document: createDocument(),
       materials: [] as MaterialSummary[],
       error:
-        "No se pudo recuperar el material anterior. No se ha sobrescrito; puedes importar una copia JSON.",
+        "No se pudo recuperar el material anterior. Importa una copia para abrirlo.",
       recovered: false,
     };
   }
@@ -58,7 +58,7 @@ export function useStudioDocument(owner: string) {
     } catch {
       setSaved(false);
       setError(
-        "No se pudo guardar en este navegador. Exporta una copia JSON antes de cerrar o cambiar de material.",
+        "No se pudo guardar. Exporta una copia antes de cerrar.",
       );
       return false;
     }

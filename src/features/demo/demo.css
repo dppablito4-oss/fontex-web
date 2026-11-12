@@ -1,41 +1,24 @@
 .fd {
-  --fd-bg: #f8f9fc;
-  --fd-card: #fff;
-  --fd-text: #20213a;
-  --fd-muted: #555d73;
-  --fd-line: #dfe3ee;
-  --fd-primary: #4a3ab7;
-  --fd-on-primary: #fff;
-  --fd-hover: #382b99;
-  --fd-tint: #efedff;
-  --fd-quiet: #f0f2f7;
-  --fd-good: #18583f;
-  --fd-good-bg: #eaf7f0;
-  --fd-warn: #744716;
-  --fd-warn-bg: #fff5e5;
+  --fd-warn-bg: var(--ui-warning-surface);
+  --fd-warn: var(--ui-warning);
+  --fd-good-bg: var(--ui-success-surface);
+  --fd-good: var(--ui-success);
+  --fd-quiet: var(--ui-subtle);
+  --fd-tint: var(--ui-info-surface);
+  --fd-hover: var(--ui-primary);
+  --fd-on-primary: var(--ui-primary-foreground);
+  --fd-primary: var(--ui-primary);
+  --fd-line: var(--ui-border);
+  --fd-muted: var(--ui-muted-foreground);
+  --fd-text: var(--ui-foreground);
+  --fd-card: var(--ui-surface);
+  --fd-bg: var(--ui-background);
   display: grid;
   grid-template-columns: 220px minmax(0, 1fr);
   min-height: 100dvh;
   background: var(--fd-bg);
   color: var(--fd-text);
   font-family: var(--font-sans);
-}
-
-:root[data-theme="dark"] .fd {
-  --fd-bg: #151624;
-  --fd-card: #1d1f30;
-  --fd-text: #f3f2fb;
-  --fd-muted: #b4b9ce;
-  --fd-line: #363a52;
-  --fd-primary: #c3b7ff;
-  --fd-on-primary: #242049;
-  --fd-hover: #d9d1ff;
-  --fd-tint: #2e2a49;
-  --fd-quiet: #282b3e;
-  --fd-good: #adf0d0;
-  --fd-good-bg: #223b35;
-  --fd-warn: #f6d6a4;
-  --fd-warn-bg: #423423;
 }
 
 .fd button:not(:disabled) { cursor: pointer; }
@@ -107,7 +90,6 @@
 
 .fd-tutor { padding: 0; }
 .fd-tutor-bar { display: flex; align-items: center; justify-content: space-between; gap: 7px; flex-wrap: wrap; padding: 13px clamp(13px, 3vw, 23px); border-bottom: 1px solid var(--fd-line); }
-.fd-model { color: var(--fd-muted); font-size: .76rem; font-weight: 700; }
 .fd-tutor-empty { display: grid; justify-items: center; gap: 8px; padding: clamp(25px, 5vw, 50px) 16px 24px; text-align: center; }
 .fd-tutor-empty > p, .fd-tutor-availability { color: var(--fd-muted); font-size: .86rem; }
 .fd-tutor-empty > .fd-cite { margin-top: 4px; }
@@ -190,3 +172,15 @@
 @media (prefers-reduced-motion: reduce) {
   .fd-spin { animation: none; }
 }
+
+.fd-top-actions{display:flex;align-items:center;gap:10px;margin-left:auto}
+
+.fd-top-actions>button{flex:none}
+
+.fd-button:hover:not(:disabled){filter:brightness(.96)}
+
+.fd-intro h1{font-size:clamp(1.8rem,4vw,2.65rem)}
+
+.fd-hero{min-height:200px}
+
+.fd-hero h2{font-size:clamp(1.65rem,4vw,2.4rem)}

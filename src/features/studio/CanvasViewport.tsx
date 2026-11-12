@@ -107,12 +107,8 @@ export function CanvasViewport({
         >
           {objects.length === 0 && (
             <div className="st-empty-board">
-              <span>Un espacio para tus ideas</span>
-              <h2>Construye una explicación visual.</h2>
-              <p>
-                Añade una fracción, una operación guiada, un texto o una
-                sucesión.
-              </p>
+              <h2>Nuevo material</h2>
+              <p>Añade un objeto para comenzar.</p>
             </div>
           )}
           {objects.map((object) => {

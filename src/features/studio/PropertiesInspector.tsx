@@ -274,7 +274,6 @@ export function PropertiesInspector({
             />
           </label>
         </div>
-        <small>Los objetos se mantienen dentro del lienzo.</small>
       </details>
       {error && (
         <p className="st-error" role="alert">

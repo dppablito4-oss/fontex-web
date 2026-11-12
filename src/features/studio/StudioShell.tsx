@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import {
   Copy,
+  Check,
   Download,
   Expand,
   FolderOpen,
+  GraduationCap,
   Layers3,
   Minus,
   Plus,
@@ -12,6 +14,7 @@ import {
   Trash2,
   Undo2,
   Upload,
+  UserRound,
   X,
 } from "lucide-react";
 import {
@@ -29,6 +32,7 @@ import {
   objectRegistry,
 } from "../../core/object-registry/registry";
 import { useAuth } from "../auth/AuthProvider";
+import { ThemeToggle } from "../theme/ThemeToggle";
 import { CanvasViewport } from "./CanvasViewport";
 import { PropertiesInspector } from "./PropertiesInspector";
 import { useStudioDocument } from "./useStudioDocument";
@@ -152,7 +156,7 @@ function StudioEditor({ owner }: { owner: string }) {
     link.download = `${doc.title.replace(/[^\p{L}\p{N} _-]/gu, "").slice(0, 80) || "material-fontex"}.fontex.json`;
     link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
-    setNotice("Copia JSON exportada. Puedes importarla en otra computadora.");
+    setNotice("");
   }
   async function importDocument(event: ChangeEvent<HTMLInputElement>) {
     const input = event.currentTarget,
@@ -173,7 +177,7 @@ function StudioEditor({ owner }: { owner: string }) {
         })
       ) {
         setSelectedId(null);
-        setNotice("Material importado como una nueva copia.");
+        setNotice("");
       }
     } catch (e) {
       setNotice(
@@ -237,11 +241,11 @@ function StudioEditor({ owner }: { owner: string }) {
   return (
     <div ref={root} className={`st-app ${presenting ? "st-presenting" : ""}`}>
       <header className="st-header">
-        <a href="#/" className="st-brand">
+        <a href="#/" className="st-brand" aria-label="Fontex Studio">
           <span>
             <Layers3 size={24} />
           </span>
-          fontex <small>STUDIO</small>
+          <span className="st-wordmark">fontex <small>STUDIO</small></span>
         </a>
         <div className="st-document-heading">
           <input
@@ -259,11 +263,6 @@ function StudioEditor({ owner }: { owner: string }) {
               if (event.key === "Enter") event.currentTarget.blur();
             }}
           />
-          <span>
-            {store.saved
-              ? "Guardado en este navegador"
-              : "Guarda o exporta tu material"}
-          </span>
         </div>
         <div className="st-header-actions">
           <button
@@ -284,14 +283,19 @@ function StudioEditor({ owner }: { owner: string }) {
           >
             <Redo2 size={18} />
           </button>
-          <button onClick={() => store.persist()}>
-            <Save size={17} />
-            <span>Guardar</span>
+          <button className="st-icon-button" aria-label="Abrir materiales" title="Materiales" onClick={() => setMaterialsOpen(true)}>
+            <FolderOpen size={18} />
           </button>
-          <button className="st-primary" onClick={() => void present()}>
+          <button className="st-icon-button" aria-label="Guardar" title="Guardar" onClick={() => store.persist()}>
+            {store.saved ? <Check size={18} /> : <Save size={18} />}
+          </button>
+          <ThemeToggle className="st-theme-toggle" />
+          <button className="st-primary" aria-label="Presentar" title="Presentar" onClick={() => void present()}>
             <Expand size={17} />
-            <span>Presentar</span>
+            <span className="st-action-label">Presentar</span>
           </button>
+          {user ? <button className="st-icon-button" aria-label="Cerrar sesión" title="Cerrar sesión" onClick={() => void leaveAccount()}><UserRound size={18} /></button>
+            : <a className="st-account-link" href="#/ingresar" aria-label="Iniciar sesión" title="Iniciar sesión" onClick={(event) => { if (!store.persist()) event.preventDefault(); }}><UserRound size={18} /></a>}
         </div>
       </header>
       {(store.error || accountError || notice) && !presenting && (
@@ -311,16 +315,7 @@ function StudioEditor({ owner }: { owner: string }) {
       )}
       <div className="st-layout">
         <aside className="st-palette" aria-label="Herramientas del editor">
-          <div className="st-palette-intro">
-            <span className="st-eyebrow">MATEMÁTICA, A LA VISTA</span>
-            <h1>
-              Una idea.
-              <br />
-              Muchas formas.
-            </h1>
-            <p>Construye materiales para explicar y explorar en clase.</p>
-          </div>
-          <div className="st-section-label">AÑADIR AL LIENZO</div>
+          <h1 className="st-section-label">Objetos</h1>
           <div className="st-add-buttons">
             {(Object.keys(objectRegistry) as ObjectType[]).map((type) => (
               <button
@@ -339,24 +334,20 @@ function StudioEditor({ owner }: { owner: string }) {
                     ]
                   }
                 </span>
-                <span>{objectRegistry[type].name}</span>
+                <span>{type === "operation" ? "Operación" : objectRegistry[type].name}</span>
                 <Plus size={14} />
               </button>
             ))}
           </div>
           <div className="st-palette-divider" />
-          <div className="st-section-label">TUS MATERIALES</div>
+          <div className="st-section-label">Archivo</div>
           <div className="st-file-buttons">
-            <button onClick={() => setMaterialsOpen(true)}>
-              <FolderOpen size={17} /> Abrir / crear material
-            </button>
             <button onClick={exportDocument}>
-              <Download size={17} /> Exportar JSON
+              <Download size={17} /> Exportar
             </button>
             <button onClick={() => file.current?.click()}>
-              <Upload size={17} /> Importar JSON
+              <Upload size={17} /> Importar
             </button>
-            <a href="#/fracciones">Abrir laboratorio de fracciones ↗</a>
           </div>
           <input
             ref={file}
@@ -366,25 +357,10 @@ function StudioEditor({ owner }: { owner: string }) {
             aria-label="Importar material JSON"
             onChange={(event) => void importDocument(event)}
           />
-          <div className="st-local-note">
-            <strong>Tu material, a mano.</strong>
-            <p>
-              El guardado es local a este navegador y esta cuenta. Exporta una
-              copia para llevarlo a otra computadora.
-            </p>
-            {user ? (
-              <button onClick={() => void leaveAccount()}>Cerrar sesión</button>
-            ) : (
-              <a
-                href="#/ingresar"
-                onClick={(event) => {
-                  if (!store.persist()) event.preventDefault();
-                }}
-              >
-                Iniciar sesión
-              </a>
-            )}
-          </div>
+          <nav className="st-shortcuts" aria-label="Más herramientas">
+            <a href="#/demo"><GraduationCap size={17} /> Práctica</a>
+            <a href="#/fracciones"><Layers3 size={17} /> Fracciones</a>
+          </nav>
         </aside>
         <main
           ref={work}
@@ -393,10 +369,9 @@ function StudioEditor({ owner }: { owner: string }) {
         >
           <div className="st-workspace-heading">
             <span>
-              <i /> Lienzo matemático{" "}
-              <small>{doc.objects.length} objetos</small>
+              Lienzo
             </span>
-            <span>Mueve desde el encabezado · Flechas para ajustar</span>
+            <span>{doc.objects.length} {doc.objects.length === 1 ? "objeto" : "objetos"}</span>
           </div>
           <CanvasViewport
             objects={doc.objects}
@@ -408,7 +383,7 @@ function StudioEditor({ owner }: { owner: string }) {
             onDelete={remove}
           />
           <div className="st-canvas-footer">
-            <span>{presenting ? doc.title : "Explora. Conecta. Explica."}</span>
+            <span>{presenting ? doc.title : null}</span>
             <div className="st-zoom">
               <button
                 aria-label="Alejar"
@@ -468,16 +443,8 @@ function StudioEditor({ owner }: { owner: string }) {
             </>
           ) : (
             <div className="st-inspector-empty">
-              <span>↖</span>
-              <h3>Todo empieza con un objeto.</h3>
-              <p>
-                Selecciona uno en el lienzo para cambiar sus valores, su texto o
-                su tamaño.
-              </p>
-              <p>
-                Las operaciones guiadas se pueden recorrer directamente sobre el
-                material.
-              </p>
+              <Layers3 size={26} aria-hidden="true" />
+              <p>Selecciona un objeto</p>
             </div>
           )}
         </aside>
@@ -497,7 +464,7 @@ function StudioEditor({ owner }: { owner: string }) {
         onClose={() => setMaterialsOpen(false)}
       >
         <div className="st-dialog-heading">
-          <h2 id="st-materials-title">Tus materiales</h2>
+          <h2 id="st-materials-title">Materiales</h2>
           <button
             aria-label="Cerrar materiales"
             onClick={() => setMaterialsOpen(false)}
@@ -505,10 +472,6 @@ function StudioEditor({ owner }: { owner: string }) {
             <X size={20} />
           </button>
         </div>
-        <p>
-          Guardados en este navegador. El material actual se guarda antes de
-          cambiar.
-        </p>
         <div className="st-template-buttons">
           <button onClick={() => newMaterial("blank")}>
             <Plus size={17} /> En blanco
@@ -516,20 +479,6 @@ function StudioEditor({ owner }: { owner: string }) {
           <button onClick={() => newMaterial("fractions")}>⅔ Fracciones</button>
           <button onClick={() => newMaterial("sequences")}>⋯ Sucesiones</button>
         </div>
-        <p className="st-account-line">
-          {user ? (
-            <button onClick={() => void leaveAccount()}>Cerrar sesión</button>
-          ) : (
-            <a
-              href="#/ingresar"
-              onClick={(event) => {
-                if (!store.persist()) event.preventDefault();
-              }}
-            >
-              Iniciar sesión
-            </a>
-          )}
-        </p>
         {store.error && (
           <p role="alert" className="st-error">
             {store.error}
@@ -560,7 +509,7 @@ function StudioEditor({ owner }: { owner: string }) {
                   onClick={() => {
                     if (
                       window.confirm(
-                        `¿Eliminar “${item.title}” de este navegador?`,
+                        `¿Eliminar “${item.title}”?`,
                       )
                     )
                       store.remove(item.id);
@@ -573,7 +522,7 @@ function StudioEditor({ owner }: { owner: string }) {
           ))}
         </ul>
         {store.materials.length === 0 && (
-          <p>Todavía no hay materiales guardados.</p>
+          <p>Sin materiales.</p>
         )}
       </dialog>
     </div>

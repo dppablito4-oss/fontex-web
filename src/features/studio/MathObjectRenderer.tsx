@@ -45,10 +45,10 @@ function FractionDrawing({
             const index = unit * d + i;
             const fill =
               index >= n
-                ? "#e9eef1"
+                ? "var(--st-piece-empty)"
                 : splitAt !== undefined && index >= splitAt
-                  ? "#ed926f"
-                  : "#258d84";
+                  ? "var(--st-piece-secondary)"
+                  : "var(--st-piece-primary)";
             if (shape === "bar")
               return (
                 <rect
@@ -58,7 +58,7 @@ function FractionDrawing({
                   width={240 / d}
                   height={60}
                   fill={fill}
-                  stroke="white"
+                  stroke="var(--st-piece-stroke)"
                   strokeWidth={1.5}
                 />
               );
@@ -72,7 +72,7 @@ function FractionDrawing({
                 key={i}
                 d={`M60 60 L${60 + 54 * Math.cos(start)} ${60 + 54 * Math.sin(start)} A54 54 0 ${angle > Math.PI ? 1 : 0} 1 ${60 + 54 * Math.cos(end)} ${60 + 54 * Math.sin(end)} Z`}
                 fill={fill}
-                stroke="white"
+                stroke="var(--st-piece-stroke)"
                 strokeWidth={1.5}
               />
             );
@@ -86,7 +86,7 @@ function FractionDrawing({
                 x2={((i + 1) * 240) / original}
                 y1={0}
                 y2={60}
-                stroke="#344054"
+                stroke="var(--st-piece-guide)"
                 strokeWidth={2}
                 strokeDasharray="4 4"
               />
@@ -232,8 +232,7 @@ export function MathObjectRenderer({
           className="st-text-content"
           style={{ fontSize: object.data.fontSize }}
         >
-          {object.data.content ||
-            "Selecciona este texto y escribe en el panel de propiedades."}
+          {object.data.content}
         </div>
       );
     case "sequence": {

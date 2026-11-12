@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { StudioShell } from "./StudioShell";
+import { ThemeProvider } from "../theme/ThemeProvider";
 import { lastMaterial, saveMaterial } from "./document-store";
 import { createDocument } from "../../core/object-registry/registry";
 
@@ -18,7 +19,7 @@ afterEach(() => vi.restoreAllMocks());
 
 describe("Fontex Studio", () => {
   it("crea, edita, duplica y elimina; deshacer recupera el objeto con sus valores", () => {
-    render(<StudioShell />);
+    render(<ThemeProvider><StudioShell /></ThemeProvider>);
     fireEvent.click(screen.getByRole("button", { name: "Añadir fracción" }));
     fireEvent.change(inspector().getByLabelText("Numerador"), {
       target: { value: "3" },
@@ -55,7 +56,7 @@ describe("Fontex Studio", () => {
     ).toHaveLength(1);
   });
   it("recupera textos y posiciones al volver a abrir el editor", () => {
-    const view = render(<StudioShell />);
+    const view = render(<ThemeProvider><StudioShell /></ThemeProvider>);
     fireEvent.click(screen.getByRole("button", { name: "Mover Texto" }));
     fireEvent.change(inspector().getByLabelText("Contenido"), {
       target: { value: "La cantidad se conserva." },
@@ -67,7 +68,7 @@ describe("Fontex Studio", () => {
       key: "ArrowDown",
     });
     view.unmount();
-    render(<StudioShell />);
+    render(<ThemeProvider><StudioShell /></ThemeProvider>);
     expect(screen.getByText("La cantidad se conserva.")).toBeInTheDocument();
     expect(
       lastMaterial(localStorage, "guest")?.objects.find(
@@ -76,16 +77,16 @@ describe("Fontex Studio", () => {
     ).toBe(80);
   });
   it("explica la homogeneización y el resultado sin llamadas de IA", () => {
-    render(<StudioShell />);
+    render(<ThemeProvider><StudioShell /></ThemeProvider>);
     fireEvent.click(screen.getByRole("button", { name: "Homogeneizar" }));
     expect(screen.getByText(/El m.c.m. de 3 y 6 es 6/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Ver resultado" }));
     expect(screen.getByText("Resultado simplificado: 7/6")).toBeInTheDocument();
   });
   it("usa el mismo editor para crear, modificar y recuperar sucesiones", () => {
-    render(<StudioShell />);
+    render(<ThemeProvider><StudioShell /></ThemeProvider>);
     fireEvent.click(
-      screen.getByRole("button", { name: "Abrir / crear material" }),
+      screen.getByRole("button", { name: "Abrir materiales" }),
     );
     fireEvent.click(
       within(screen.getByRole("dialog")).getByRole("button", {
@@ -103,10 +104,9 @@ describe("Fontex Studio", () => {
     expect(lastMaterial(localStorage, "guest")?.objects[0]?.data).toMatchObject(
       { start: 2, difference: 3, count: 5 },
     );
-    expect(screen.getByText("Guardado en este navegador")).toBeInTheDocument();
   });
   it("rechaza operaciones inválidas sin perder el documento", () => {
-    render(<StudioShell />);
+    render(<ThemeProvider><StudioShell /></ThemeProvider>);
     fireEvent.click(
       screen.getByRole("button", { name: "Mover Operación guiada" }),
     );
@@ -122,7 +122,7 @@ describe("Fontex Studio", () => {
     expect(screen.getByText("2/3 + 3/6")).toBeInTheDocument();
   });
   it("mantiene una salida de presentación cuando fullscreen no está disponible", () => {
-    render(<StudioShell />);
+    render(<ThemeProvider><StudioShell /></ThemeProvider>);
     fireEvent.click(screen.getByRole("button", { name: "Presentar" }));
     expect(
       screen.getByRole("button", { name: /Salir de presentación/ }),
@@ -140,14 +140,14 @@ describe("Fontex Studio", () => {
       localStorage.setItem("fontex-studio-v1:guest:active", document.id);
     } else saveMaterial(localStorage, "guest", document);
     localStorage.setItem(storageKey, "{");
-    render(<StudioShell />);
+    render(<ThemeProvider><StudioShell /></ThemeProvider>);
     expect(screen.getByRole("alert")).toHaveTextContent("No se pudo recuperar");
     expect(
       localStorage.getItem(storageKey),
     ).toBe("{");
   });
   it("advierte si el guardado falla y mantiene el material editable", () => {
-    render(<StudioShell />);
+    render(<ThemeProvider><StudioShell /></ThemeProvider>);
     const spy = vi
       .spyOn(Storage.prototype, "setItem")
       .mockImplementation(() => {
@@ -159,7 +159,7 @@ describe("Fontex Studio", () => {
     spy.mockRestore();
   });
   it("importa como copia y rechaza un JSON inválido sin sustituir el material", async () => {
-    render(<StudioShell />);
+    render(<ThemeProvider><StudioShell /></ThemeProvider>);
     const input = screen.getByLabelText("Importar material JSON");
     const document = createDocument("sequences");
     const valid = new File([], "material.json", { type: "application/json" });

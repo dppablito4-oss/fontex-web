@@ -2,23 +2,26 @@
 
 **Revisión documental:** 11 de noviembre de 2026; aplicación `0.6.0` con Studio incorporado.
 
-**Estado:** Temas claro/oscuro en vistas académicas; Studio usa una apariencia clara propia.
+**Estado:** Temas claro/oscuro compartidos por Studio, Fracciones, Práctica y las vistas académicas.
 
 ## Principios
 
 La interfaz expresa la idea de *fuentes puestas en contexto* con superficies sobrias, jerarquía legible y acentos geométricos. Los colores de marca identifican acciones y contexto, pero los estados de éxito, advertencia y error conservan colores semánticos independientes.
 
-En las vistas académicas, los componentes nuevos deben consumir tokens. Studio utiliza actualmente variables `--st-*` y valores propios; unificar ambas superficies es trabajo pendiente y no debe darse por implementado.
+Los componentes nuevos deben consumir tokens. Studio, Fracciones y Práctica usan alias `--st-*`, `--fc-*` y `--fd-*` que referencian las variables globales; las superficies y los controles cambian de tema sin paletas independientes.
 
 ## Superficies actuales
 
 | Experiencia | Hoja de estilos | Temas |
 |---|---|---|
 | Espacio académico y autenticación | `src/styles/globals.css` | Claro y oscuro mediante `ThemeProvider` |
-| Aula de práctica | `src/features/demo/demo.css` y estilos globales | Estilos propios combinados con los globales; verificar por separado |
-| Studio | `src/features/studio/studio.css` | Fuerza `color-scheme: light`; variables `--st-ink`, `--st-muted`, `--st-teal`, `--st-line` y `--st-soft` |
+| Aula de práctica | `src/features/demo/demo.css` | Claro y oscuro, con alias de los tokens globales |
+| Studio | `src/features/studio/studio.css` | Claro y oscuro, incluidos tablero, SVG, inspector y diálogos |
+| Fracciones | `src/features/canvas/canvas.css` | Claro y oscuro, incluidas figuras y notas |
 
-Studio usa un editor con paleta, tablero e inspector, además de un diálogo de materiales y una vista de presentación. Sus gráficos matemáticos SVG incluyen colores propios. Las pruebas de contraste de tokens globales no certifican automáticamente estos colores ni toda la experiencia de Studio.
+Studio usa una cabecera compacta, paleta de objetos, tablero e inspector. En tablet el inspector pasa debajo del lienzo; en móvil las herramientas se distribuyen horizontalmente. Materiales, guardado, historial, presentación y selector de tema se concentran en la cabecera. Se retiraron lemas, notas persistentes sobre almacenamiento y metadatos técnicos sin una acción asociada.
+
+Los SVG comparten `--ui-math-primary`, `--ui-math-secondary` y `--ui-math-empty`, con valores para ambos temas. Las pruebas comprueban contraste mínimo 3:1 de piezas coloreadas frente a la tarjeta y a las piezas vacías. Texto, formularios, errores y foco conservan sus tokens semánticos.
 
 ## Paleta oficial
 
@@ -62,7 +65,7 @@ Los grupos `success`, `warning`, `error` e `info` disponen de tokens separados p
 - Si el almacenamiento está bloqueado, la preferencia continúa funcionando durante la sesión.
 - `data-theme` y `color-scheme` se aplican al elemento `<html>`.
 - Un script mínimo en `index.html` resuelve el tema antes del arranque de React para evitar un destello significativo.
-- El botón muestra luna cuando activa oscuro y sol cuando activa claro, con etiqueta accesible descriptiva.
+- El botón muestra luna cuando activa oscuro y sol cuando activa claro, con etiqueta accesible descriptiva. Está disponible en Studio, Fracciones, Práctica y las vistas académicas.
 
 ## Reglas para componentes
 
@@ -89,7 +92,7 @@ Los estados de índice se expresan además con texto: `Sin indexar`, `Indexando`
 
 Las pruebas de `src/features/theme/contrast.test.ts` leen los valores reales de la hoja de estilos. Verifican un mínimo de 4.5:1 para texto normal y 3:1 para bordes de controles e indicadores de foco. Las pruebas del proveedor cubren preferencia del sistema, persistencia, alternancia, errores de almacenamiento y actualización de `data-theme`.
 
-Al crear o modificar un token se deben ejecutar las pruebas relevantes y revisar las vistas afectadas en ambos temas y en móvil, tablet y escritorio. Studio y el aula de práctica requieren su propia revisión. La auditoría del 11 de noviembre ejecutó pruebas automatizadas, pero no una revisión visual, E2E o de lector de pantalla en navegador.
+Al crear o modificar un token se deben ejecutar las pruebas relevantes y revisar las vistas afectadas en ambos temas y en móvil, tablet y escritorio. Las pruebas actuales cubren selección y persistencia del tema desde las tres experiencias, además del contraste. La herramienta de navegador bloqueó la revisión visual del 11 de noviembre porque no pudo verificar la URL de Windows; no se completó revisión visual, E2E ni de lector de pantalla.
 
 ## Identidad gráfica
 

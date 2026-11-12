@@ -1,10 +1,11 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { FractionCanvas } from './FractionCanvas';
+import { ThemeProvider } from '../theme/ThemeProvider';
 describe('Lienzo de fracciones', () => {
   it('recorre las tres etapas, cambia las figuras y permite volver', () => {
-    render(<FractionCanvas/>);
-    expect(screen.getByRole('heading', { name: /las fracciones toman forma/i })).toBeInTheDocument();
+    render(<ThemeProvider><FractionCanvas/></ThemeProvider>);
+    expect(screen.getByRole('heading', { name: 'Fracciones', level: 1 })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /^homogeneizar$/i }));
     expect(screen.getByText(/m.c.m.\(3, 6\) = 6/)).toBeInTheDocument();
     expect(screen.getByRole('img', { name: /4 de 6 partes/ })).toBeInTheDocument();
@@ -16,7 +17,7 @@ describe('Lienzo de fracciones', () => {
     expect(screen.getByRole('heading', { name: 'Leer el dibujo' })).toBeInTheDocument();
   });
   it('muestra errores sin perder el dibujo y acepta una nueva operación', () => {
-    render(<FractionCanvas/>);
+    render(<ThemeProvider><FractionCanvas/></ThemeProvider>);
     const input = screen.getByLabelText('Tu operación');
     fireEvent.change(input, { target: { value: '1/0 + 1/2' } });
     fireEvent.click(screen.getByRole('button', { name: /visualizar operación/i }));

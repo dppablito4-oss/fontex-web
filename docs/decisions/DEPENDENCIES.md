@@ -52,7 +52,7 @@ La auditoría inicial reportó 13 alertas, incluidas las propagadas a dependient
 
 shadcn/ui es una distribución de componentes copiables. Fontex mantiene `Button`, `Badge` y `Card` locales con convenciones de variantes y `cn`; no depende de un runtime central de shadcn/ui.
 
-`index.html` solicita Manrope, Newsreader y DM Mono a Google Fonts. Studio declara Inter con alternativas de sistema, pero `index.html` no carga Inter. El autoalojamiento y la unificación de tipografías son decisiones pendientes. La solicitud a Google Fonts implica una dependencia externa al abrir la aplicación.
+`index.html` solicita Manrope, Newsreader y DM Mono a Google Fonts. Studio, Fracciones y Práctica usan las familias globales mediante `--font-sans` y `--font-display`. El autoalojamiento es una decisión pendiente. La solicitud a Google Fonts implica una dependencia externa al abrir la aplicación. La actualización de interfaz no añadió dependencias.
 
 ## Mantenimiento
 

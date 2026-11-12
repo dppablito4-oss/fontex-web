@@ -87,7 +87,7 @@ npm run build
 Resultado de la revisión del 11 de noviembre de 2026:
 
 - Lint, TypeScript y compilación: correctos.
-- Vitest: **136 pruebas aprobadas y 7 omitidas**, en 27 archivos aprobados y 4 omitidos. Las omitidas requieren configuración de integración remota.
+- Vitest: **141 pruebas aprobadas y 7 omitidas**, en 27 archivos aprobados y 4 omitidos. Las omitidas requieren configuración de integración remota.
 - Deno: seis Edge Functions comprobadas, 13 regresiones de backend aprobadas y lint de `supabase/functions` correcto.
 - PostgreSQL local: **138 pruebas aprobadas**; migraciones locales actualizadas y advisors/lint sin incidencias.
 - `npm audit`: **0 vulnerabilidades** después de actualizar las resoluciones afectadas.
@@ -147,4 +147,4 @@ Studio usa un lienzo de 1600 × 1100, hasta 80 objetos y 40 cambios de historial
 
 La biblioteca remota acepta PDF de hasta 5 MiB y 100 páginas con texto seleccionable; no implementa OCR. El tutor estricto exige una salida estructurada y citas de los fragmentos enviados al modelo; si faltan o son inválidas, se abstiene. Esa validación no certifica por sí sola la exactitud de cada afirmación. El renderizador académico admite un subconjunto de Markdown y sustituciones matemáticas, incluidos exponentes numéricos completos; no es un motor LaTeX completo.
 
-Studio utiliza actualmente una apariencia clara propia. El tema claro/oscuro de las vistas académicas no cubre toda la aplicación. El guardado local usa una instantánea atómica por cuenta, con migración compatible de los materiales anteriores; no añade sincronización entre equipos. La revisión visual, las pruebas E2E y la verificación del despliegue remoto siguen pendientes.
+Studio, Fracciones, Práctica y las vistas académicas comparten los temas claro y oscuro. El selector de luna/sol conserva la elección al navegar; sin elección manual se usa la preferencia del sistema. Los dibujos matemáticos también adaptan sus colores. El guardado local sigue usando una instantánea atómica por cuenta, sin sincronización entre equipos. La revisión visual en navegador, las pruebas E2E y la verificación del despliegue remoto siguen pendientes.

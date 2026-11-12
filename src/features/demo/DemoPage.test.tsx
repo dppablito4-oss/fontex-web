@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { DemoPage } from "./DemoPage";
+import { ThemeProvider } from "../theme/ThemeProvider";
 import { findCitation, readMaterials, tutorAvailable } from "./demoService";
 import lessons from "../../../supabase/functions/_shared/practice/lessons.json";
 
@@ -27,7 +28,7 @@ describe("Tutor personal de Matemática", () => {
   });
 
   it("muestra la teoría del error, permite corregirlo y conserva el resultado", async () => {
-    const firstVisit = render(<DemoPage />);
+    const firstVisit = render(<ThemeProvider><DemoPage /></ThemeProvider>);
     fireEvent.click(screen.getByRole("button", { name: /fracciones equivalentes.*ejercicios/i }));
     expect(screen.getByRole("heading", { name: "Teoría y ejemplos" })).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: "Pasar a los ejercicios" }));
@@ -47,25 +48,25 @@ describe("Tutor personal de Matemática", () => {
     expect(screen.getByText("Ejercicio 2 de 3")).toBeVisible();
     firstVisit.unmount();
 
-    render(<DemoPage />);
+    render(<ThemeProvider><DemoPage /></ThemeProvider>);
     await waitFor(() => expect(screen.getByRole("heading", { name: "Tu tutor de Matemática" })).toBeVisible());
     fireEvent.click(screen.getByRole("button", { name: "Práctica" }));
     expect(screen.getByText("1 de 3 resueltos")).toBeVisible();
     expect(screen.getByText("Correcto.")).toBeVisible();
   });
 
-  it("elige los temas por nivel y muestra el modelo activo sin avisos técnicos", async () => {
+  it("elige temas y alterna las fuentes de consulta sin avisos técnicos", async () => {
     vi.mocked(tutorAvailable).mockResolvedValue("local");
-    render(<DemoPage />);
+    render(<ThemeProvider><DemoPage /></ThemeProvider>);
     fireEvent.click(screen.getByRole("button", { name: "Secundaria" }));
     fireEvent.click(screen.getByRole("button", { name: /funciones afines.*ejercicios/i }));
     expect(screen.getByRole("heading", { name: "Pendiente de una recta" })).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: "Tutor" }));
-    expect(await screen.findByText("GPT-6.1 Sol")).toBeVisible();
+    await waitFor(() => expect(screen.getByRole("textbox", { name: "Tu pregunta" })).toBeEnabled());
     fireEvent.click(screen.getByRole("button", { name: "Chat general" }));
-    expect(screen.getByText("GPT-6 Luna")).toBeVisible();
+    await waitFor(() => expect(screen.getByRole("textbox", { name: "Tu pregunta" })).toBeEnabled());
     fireEvent.click(screen.getByRole("button", { name: "Buscar en la web" }));
-    expect(await screen.findByText("GPT-6.1 Sol")).toBeVisible();
+    await waitFor(() => expect(screen.getByRole("textbox", { name: "Tu pregunta" })).toBeEnabled());
     expect(screen.queryByText(/supabase|sin conectar/i)).not.toBeInTheDocument();
   });
 });

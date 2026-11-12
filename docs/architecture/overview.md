@@ -120,6 +120,6 @@ CI comprueba frontend, pgTAP local y Deno. Las suites remotas dependen de variab
 
 ## Diseño y verificación
 
-El espacio académico utiliza tokens y temas claro/oscuro. Studio tiene CSS propio y `color-scheme: light`; no hereda toda esa cobertura. Hay controles etiquetados y movimiento por teclado, pero las pruebas actuales no sustituyen una revisión de teclado, lector de pantalla y responsive en navegador real.
+Studio, Fracciones, Práctica y el espacio académico usan tokens compartidos de `globals.css` y el mismo `ThemeProvider`. Los alias `--st-*`, `--fc-*` y `--fd-*` referencian esos colores; los SVG usan tokens matemáticos que cambian con el tema. Cada experiencia expone un selector de luna/sol. Hay controles etiquetados y movimiento por teclado, pero las pruebas actuales no sustituyen una revisión de teclado, lector de pantalla y responsive en navegador real.
 
 La revisión ejecutó checks locales y análisis estático. No verificó el sitio publicado, la configuración remota, una conversación pagada ni pruebas E2E. Los resultados están en [AUDITORIA.md](../AUDITORIA.md).

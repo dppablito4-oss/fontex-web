@@ -60,7 +60,9 @@ Este incremento de Studio no añade tablas, políticas RLS ni funciones de Supab
 
 El zoom de edición va del 20 % al 150 %. El botón de ajuste calcula una escala para el tablero; presentar intenta usar Fullscreen API y conserva una vista de presentación si no está disponible. El botón de salida y Esc desactivan esa vista.
 
-Los objetos se arrastran desde su encabezado. Con el foco en ese control, las flechas mueven 10 unidades o 50 con Shift; Supr/Retroceso eliminan el objeto. Los pasos de las operaciones siguen siendo interactivos durante la presentación y sus cambios se intentan guardar. Studio utiliza su propio CSS con apariencia clara, separado del tema académico.
+Los objetos se arrastran desde su encabezado. Con el foco en ese control, las flechas mueven 10 unidades o 50 con Shift; Supr/Retroceso eliminan el objeto. Los pasos de las operaciones siguen siendo interactivos durante la presentación y sus cambios se intentan guardar. Studio usa los temas claro/oscuro globales, incluido el lienzo, las figuras, el inspector, el diálogo de materiales y la presentación. El selector de luna/sol está en la cabecera.
+
+La cabecera concentra materiales, guardado, historial y presentación. La paleta ofrece objetos, importación/exportación y accesos a Práctica y Fracciones. Se retiraron los lemas, notas repetidas de almacenamiento y mensajes estáticos de guardado. Los errores siguen visibles y los detalles del almacenamiento permanecen en la documentación.
 
 ## Verificación
 
@@ -79,7 +81,7 @@ Las pruebas automatizadas incluyen:
 
 Las pruebas remotas requieren su configuración de integración; no se consideran ejecutadas si Vitest las omite.
 
-Tras las correcciones del 11 de noviembre, la suite completa de frontend obtuvo 136 pruebas aprobadas y 7 omitidas; lint, TypeScript y build pasaron. No se ejecutó la siguiente prueba manual en navegador durante esa revisión. El [informe de auditoría](../AUDITORIA.md) centraliza los resultados y sus límites.
+Tras la actualización de interfaz del 11 de noviembre, la suite completa de frontend obtuvo 141 pruebas aprobadas y 7 omitidas; lint, TypeScript y build pasaron. La herramienta de navegador bloqueó la revisión visual porque no pudo verificar la URL de Windows; no se ejecutó la siguiente prueba manual. El [informe de auditoría](../AUDITORIA.md) centraliza el estado técnico y sus límites.
 
 Prueba manual para clase:
 

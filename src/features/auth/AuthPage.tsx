@@ -66,7 +66,7 @@ export function AuthPage({ initialMode = 'signin' }: { initialMode?: Mode }) {
   }
   return <main className="min-h-dvh bg-background px-4 py-8 text-foreground sm:px-8">
     <header className="mx-auto flex max-w-5xl items-center justify-between"><a href="#/" aria-label="Volver al lienzo"><BrandMark/></a><ThemeToggle/></header>
-    <div className="mx-auto mt-10 w-full max-w-md sm:mt-14"><div className="mb-6 text-center"><h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Bienvenido a Fontex</h1><p className="mt-2 text-sm leading-6 text-muted-foreground">Explora, representa y entiende las matemáticas.</p></div>
+    <div className="mx-auto mt-10 w-full max-w-md sm:mt-14"><div className="mb-6 text-center"><h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Bienvenido a Fontex</h1></div>
       <Card className="p-6 sm:p-8"><div className="flex rounded-xl bg-subtle p-1" aria-label="Modo de acceso">
         <button aria-pressed={mode === 'signin'} disabled={pending} className={`flex-1 rounded-lg px-3 py-2 text-sm font-semibold ${mode === 'signin' ? 'bg-surface shadow-sm' : 'text-muted-foreground'}`} onClick={() => switchMode('signin')} type="button">Iniciar sesión</button>
         <button aria-pressed={mode === 'signup'} disabled={pending} className={`flex-1 rounded-lg px-3 py-2 text-sm font-semibold ${mode === 'signup' ? 'bg-surface shadow-sm' : 'text-muted-foreground'}`} onClick={() => switchMode('signup')} type="button">Crear cuenta</button>
