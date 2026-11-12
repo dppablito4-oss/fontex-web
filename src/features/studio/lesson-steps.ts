@@ -3,10 +3,19 @@ import type { MathObject } from "../../core/document-schema/document";
 import { gcd } from "../../core/math-engine/fractions";
 import { parseStudioOperation } from "../../core/math-engine/studio-operations";
 import { solveLinearEquation, equationResult } from "../../core/math-engine/equations";
+import { analyzePolygon, analyzeFactors } from "../../core/math-engine/adapted-modules";
 export function lessonSteps(object: MathObject, level: AgentLevel): [string, string][] {
   const simple = level === "initial" || level === "primary";
   switch (object.type) {
     case "text": return [];
+    case "polygon": {
+      const p = analyzePolygon(object.data.vertices);
+      return [["Reconoce la figura", `El contorno tiene ${p.sides} lados. Cada cuadrado de la cuadrícula mide 1 unidad de lado.`], ["Distingue borde y superficie", "El perímetro recorre el borde. El área cuenta la superficie que ocupa la figura; se mide en unidades cuadradas."], ["Calcula el área", simple ? `Cuenta cuadrados completos y combina las partes. Puedes descomponer el polígono en rectángulos y triángulos. El área total es ${p.area} unidades cuadradas.` : `Con vértices ordenados, área = |Σ(xᵢyᵢ₊₁ − xᵢ₊₁yᵢ)| ÷ 2 = ${p.area}. La orientación no cambia el área.`], ["Comprueba el perímetro", `Suma las longitudes de los ${p.sides} lados: perímetro ≈ ${p.perimeter.toFixed(3)} unidades. Es una aproximación decimal; el área calculada con esta cuadrícula es exacta.`]];
+    }
+    case "factorization": {
+      const f = analyzeFactors(object.data.number);
+      return [["Observa el número", `Vamos a escribir ${object.data.number} como un producto de números primos. Un primo es un entero mayor que 1 con exactamente dos divisores positivos: 1 y él mismo.`], ...f.divisions.map((d, i): [string, string] => [`División ${i + 1}: entre ${d.factor}`, `${d.dividend} ÷ ${d.factor} = ${d.quotient}. Elegimos ${d.factor} porque es primo y la división es exacta.${d.quotient === 1 ? " Llegamos a 1: terminamos." : " Seguimos descomponiendo el cociente."}`]), ["Comprueba el producto", `${f.expression} = ${object.data.number}. Todos los factores son primos.${f.prime ? " El número original ya era primo." : " Si un factor se repite, se puede expresar mediante una potencia."}`]];
+    }
     case "fraction": {
       const { numerator: n, denominator: d } = object.data;
       const g = gcd(n, d);

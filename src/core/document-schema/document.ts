@@ -3,6 +3,7 @@ import { analyzeCollection, numberLineTicks } from "../math-engine/numbers.ts";
 import { solveLinearEquation, type LinearCoefficients } from "../math-engine/equations.ts";
 
 import { type GeometryData } from "../math-engine/geometry.ts";
+import { analyzePolygon, analyzeFactors, type PolygonData, type FactorizationData } from "../math-engine/adapted-modules.ts";
 export type Shape = "bar" | "circle";
 export type FractionData = {
   numerator: number;
@@ -25,6 +26,8 @@ type ObjectBase = {
 };
 export type MathObject = ObjectBase &
   (
+    | { type: "polygon"; data: PolygonData }
+    | { type: "factorization"; data: FactorizationData }
     | { type: "geometry"; data: GeometryData }
     | { type: "fraction"; data: FractionData }
     | { type: "operation"; data: OperationData }
@@ -77,6 +80,10 @@ export function validateObject(value: unknown): value is MathObject {
     return false;
   const d = value.data;
   switch (value.type) {
+    case "polygon":
+      try { if (!Array.isArray(d.vertices) || !d.vertices.every(p => record(p) && Object.keys(p).length === 2 && "x" in p && "y" in p)) return false; analyzePolygon(d.vertices as PolygonData["vertices"]); return true; } catch { return false; }
+    case "factorization":
+      try { analyzeFactors(d.number as number); return true; } catch { return false; }
     case "geometry":
       return (d.figure === "rectangle" || d.figure === "triangle") && integer(d.base, 1, 100) && integer(d.height, 1, 100);
     case "fraction":

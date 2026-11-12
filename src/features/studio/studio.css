@@ -458,3 +458,16 @@
   border-color: #c4c4cc;
   color: var(--st-on-primary);
 }
+.st-polygon svg { display:block; width:100%; max-height:400px; }
+.st-polygon > p { font-size:14px; line-height:1.6; color:var(--st-muted); }
+.st-factorization { display:grid; justify-items:center; gap:18px; }
+.st-factor-number { font-size:56px; line-height:1.1; font-weight:750; color:var(--st-piece-primary); }
+.st-factorization .st-dots { max-width:300px; }
+.st-factor-divisions { list-style:none; width:100%; max-width:340px; padding:0; margin:0; }
+.st-factor-divisions li { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; padding:12px; border-bottom:1px solid var(--st-line); font-size:24px; text-align:center; }
+.st-factor-divisions li > span:nth-child(2) { color:var(--st-piece-secondary); }
+.st-factor-product { font-size:26px; font-weight:650; text-align:center; }
+.st-type-polygon { color:#148065; background:#d8f8eb; }
+.st-type-factorization { color:#7655bb; background:#eee5ff; }
+:root[data-theme="dark"] .st-app .st-type-polygon { color:#8be6c4; background:#10271f; }
+:root[data-theme="dark"] .st-app .st-type-factorization { color:#c8b2ff; background:#241b34; }

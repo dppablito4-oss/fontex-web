@@ -30,12 +30,12 @@ export function GuidedObject({ object }: { object: MathObject }) {
     setFeedback(practiceReply({ document: { schemaVersion: 1, id: "practice-preview", title: "Práctica", updatedAt: new Date().toISOString(), objects: [object] }, selectedId: object.id, mode: "practice", level, question: "Practicar", attempt: answer, hintLevel: nextHint }).message);
   }
   return <div className={`st-guided st-guided-${mode}`}>
-    <div className="st-visual-panel" aria-label="Representación visual"><ObjectVisual object={visual} onChange={() => {}} /></div>
+    <div className="st-visual-panel" aria-label="Representación visual"><ObjectVisual object={visual} onChange={() => {}} lessonStep={mode === "solve" ? Infinity : current} concealAnswers={practice} /></div>
     <section className="st-story-panel" aria-label={practice ? "Práctica del módulo" : "Pasos del módulo"}>
       {practice ? <>
         <span className="st-story-eyebrow">TU TURNO</span><h3>{target?.prompt}</h3>
         <p>Observa la representación. Puedes pedir una pista cuando la necesites.</p>
-        <form onSubmit={e => { e.preventDefault(); check(hint); }}><label>Respuesta del módulo<input value={answer} onChange={e => { setAnswer(e.target.value); setFeedback(""); }} maxLength={120} placeholder="Ejemplo: 3/2" /></label><button className="st-primary" type="submit">Comprobar respuesta</button></form>
+        <form onSubmit={e => { e.preventDefault(); check(hint); }}><label>Respuesta del módulo<input value={answer} onChange={e => { setAnswer(e.target.value); setFeedback(""); }} maxLength={120} placeholder={object.type === "factorization" ? "Ejemplo: 2^2 × 3" : "Ejemplo: 3/2"} /></label><button className="st-primary" type="submit">Comprobar respuesta</button></form>
         {feedback && <p role="status" className="st-story-feedback">{feedback}</p>}
         <button type="button" disabled={hint >= 2} onClick={() => check(hint + 1)}><Lightbulb size={16} />{hint === 0 ? "Dame una pista" : hint === 1 ? "Mostrar comprobación" : "Comprobación mostrada"}</button>
       </> : mode === "solve" ? <>

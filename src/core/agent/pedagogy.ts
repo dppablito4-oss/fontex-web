@@ -10,6 +10,8 @@ import {
   solveLinearEquation,
 } from "../math-engine/equations.ts";
 
+import { analyzePolygon, analyzeFactors, factorAnswer } from "../math-engine/adapted-modules.ts";
+
 export const levelGuidance: Record<AgentLevel, string> = {
   initial:
     "Usa frases cortas, conteo y objetos concretos. Explica los símbolos; pide acompañamiento si el contenido supera el nivel inicial.",
@@ -27,13 +29,21 @@ const introductions: Record<AgentLevel, string> = {
   introductory: "Identifica el dominio y la propiedad que conserva el valor.",
 };
 export type ExactTarget = {
-  answer: { n: number; d: number } | "none" | "all";
+  answer: { n: number; d: number } | { factors: number[] } | "none" | "all";
   prompt: string;
   strategy: string;
   result: string;
 };
 export function exactTarget(object: MathObject): ExactTarget | null {
   switch (object.type) {
+    case "polygon": {
+      const p = analyzePolygon(object.data.vertices);
+      return { answer: p.areaFraction, prompt: "Calcula el área del polígono en unidades cuadradas.", strategy: "Usa los cuadrados de la cuadrícula y divide la figura en partes conocidas; no confundas área y perímetro.", result: String(p.area) };
+    }
+    case "factorization": {
+      const f = analyzeFactors(object.data.number);
+      return { answer: { factors: f.factors }, prompt: `Descompón ${object.data.number} en factores primos.`, strategy: "Busca el menor primo que divide exactamente el número y repite con el cociente hasta llegar a 1. Puedes escribir 2 × 2 × 3 o 2^2 × 3.", result: f.expression };
+    }
     case "geometry": {
       const { base, height, figure } = object.data;
       const d = figure === "triangle" ? 2 : 1;
@@ -156,17 +166,21 @@ export function practiceReply(request: AgentRequest): AgentReply {
         : ["infinitas", "infinitas soluciones", "todos los reales"].includes(
           normalized,
         )
+      : "factors" in target.answer
+      ? factorAnswer(request.attempt, target.answer.factors)
       : equivalentAnswer(request.attempt, target.answer);
     const feedback = answer === true
       ? "Tu respuesta es equivalente al resultado. Explica por qué."
       : answer === false
       ? "Tu respuesta aún no coincide. Revisa un paso."
       : answer === null
-      ? (object?.type === "linear-equation"
+      ? (object?.type === "factorization" ? "Escribe un producto de primos, por ejemplo 2 × 2 × 3 o 2^2 × 3." : object?.type === "linear-equation"
         ? "Escribe un entero, un decimal, una fracción a/b, «sin solución» o «infinitas»."
         : "Escribe un entero, un decimal o una fracción a/b; el denominador debe ser distinto de cero.")
       : "";
     const initialStrategies: Record<MathObject["type"], string> = {
+      polygon: "Cuenta cuadrados completos y junta las partes de cuadrados de la figura.",
+      factorization: "Empieza probando grupos de dos y pide acompañamiento para las divisiones.",
       geometry: "Cuenta los cuadrados de cada fila. Dos triángulos iguales forman un rectángulo.",
       fraction:
         "Cuenta las partes coloreadas y las partes de una unidad. Pide ayuda para escribir esos dos números como una fracción.",

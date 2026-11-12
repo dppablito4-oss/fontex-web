@@ -14,6 +14,8 @@ import { sequenceTerms } from "../math-engine/sequences.ts";
 import { analyzeCollection, numberLineTicks } from "../math-engine/numbers.ts";
 import { solveLinearEquation } from "../math-engine/equations.ts";
 
+import { analyzePolygon, analyzeFactors } from "../math-engine/adapted-modules.ts";
+
 export type StudioAction =
   | { kind: "create"; object: MathObject }
   | { kind: "update"; object: MathObject }
@@ -32,6 +34,8 @@ export function exactKeys(
     keys.every((key) => Object.hasOwn(value, key));
 }
 const dataKeys: Record<MathObject["type"], string[]> = {
+  polygon: ["vertices"],
+  factorization: ["number"],
   geometry: ["figure", "base", "height"],
   fraction: ["numerator", "denominator", "shape"],
   operation: ["expression", "stage", "shape"],
@@ -198,6 +202,8 @@ export function readStudioContext(
     },
     mathematics: snapshot.objects.map((object) => {
       switch (object.type) {
+        case "polygon": return { id: object.id, polygon: analyzePolygon(object.data.vertices) };
+        case "factorization": return { id: object.id, factorization: analyzeFactors(object.data.number) };
         case "geometry":
           return { id: object.id, area: { n: object.data.base * object.data.height, d: object.data.figure === "triangle" ? 2 : 1 } };
         case "fraction": {

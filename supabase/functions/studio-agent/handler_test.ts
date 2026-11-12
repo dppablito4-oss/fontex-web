@@ -198,3 +198,12 @@ Deno.test("agent: crear un objeto válido produce una propuesta sin escribir doc
   assert.equal(result.body.batch.actions.length, 1);
   assert.equal(result.quotas, 1);
 });
+Deno.test("agent: genera y verifica los módulos adaptados de Mathigon", async () => {
+  for (const type of ["polygon", "factorization"] as const) {
+    const object = createObject(type);
+    const result = await run({ model: { status: "completed", output: [{ type: "message", content: [{ type: "output_text", text: JSON.stringify({ message: "Módulo preparado.", actions: [{ kind: "create", object }] }) }] }] } });
+    assert.equal(result.status, 200);
+    assert.equal(result.body.batch.actions[0].object.type, type);
+    assert.equal(result.body.verification.length, 2);
+  }
+});

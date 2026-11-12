@@ -40,3 +40,7 @@ Se conserva el fondo negro AMOLED del lienzo. Los controles del tema oscuro usan
 3. Añadir plantillas didácticas con objetivo, representación, pregunta y comprobación; validar su legibilidad con docentes y alumnos en PC y móvil.
 
 Verificación del cambio visual: lint, TypeScript y compilación de producción. El navegador remoto devolvió «Site Unavailable» al abrir el dominio del usuario y al recargar una vez; esto impidió comprobar visualmente la publicación desde ese navegador. No se concluye que el sitio no funcione en el navegador del usuario.
+
+## Integración posterior de módulos
+
+Se incorporaron adaptaciones MIT de las bibliotecas matemáticas Euclid.js y Fermat.js de Mathigon, en módulos de polígonos y factores primos. La procedencia, las modificaciones y los límites se documentan en [mathigon-modules.md](../architecture/mathigon-modules.md). Esta integración es independiente de los cursos de Mathigon Textbooks y del SDK de tldraw.

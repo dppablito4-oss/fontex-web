@@ -39,6 +39,11 @@ export function PropertiesInspector({
     });
     try {
       switch (object.type) {
+        case "polygon": {
+          const vertices = read("vertices").trim().split(";").map(pair => { const xy = pair.trim().split(/[,\s]+/); if (xy.length !== 2 || xy.some(x => !x.trim())) throw new Error("Escribe x,y; x,y con dos números por vértice."); return { x: Number(xy[0]), y: Number(xy[1]) }; });
+          next = { ...next, type: "polygon", data: { vertices } }; break;
+        }
+        case "factorization": next = { ...next, type: "factorization", data: { number: num("factorNumber") } }; break;
         case "geometry":
           next = { ...next, type: "geometry", data: { figure: read("figure") as "rectangle" | "triangle", base: num("base"), height: num("geometryHeight") } };
           break;
@@ -117,6 +122,8 @@ export function PropertiesInspector({
         Nombre del objeto
         <input name="label" defaultValue={object.label} maxLength={120} />
       </label>
+      {object.type === "polygon" && <><label>Vértices en orden<textarea name="vertices" rows={4} required maxLength={160} defaultValue={object.data.vertices.map(p => `${p.x},${p.y}`).join("; ")} /></label><small>De 3 a 8 puntos x,y separados por punto y coma; enteros de 0 a 20. Los lados no deben cruzarse.</small></>}
+      {object.type === "factorization" && <NumericField name="factorNumber" label="Número a descomponer" value={object.data.number} min={2} max={360} />}
       {object.type === "geometry" && <>
         <label>Figura<select name="figure" defaultValue={object.data.figure}><option value="rectangle">Rectángulo</option><option value="triangle">Triángulo rectángulo</option></select></label>
         <NumericField name="base" label="Base (unidades)" value={object.data.base} min={1} max={100} />

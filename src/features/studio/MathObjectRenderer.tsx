@@ -1,3 +1,4 @@
+import { PolygonObject, FactorizationObject } from "./AdaptedMathObjects";
 import { useContext } from "react";
 import { LessonSteps } from "./LessonSteps";
 import { TeachingLevel } from "./teaching-level";
@@ -244,12 +245,18 @@ function OperationObject({
 export function ObjectVisual({
   object,
   onChange,
+  lessonStep,
+  concealAnswers,
 }: {
   object: MathObject;
   onChange: (object: MathObject) => void;
+  lessonStep?: number;
+  concealAnswers?: boolean;
 }) {
   const level = useContext(TeachingLevel);
   switch (object.type) {
+    case "polygon": return <PolygonObject data={object.data} lessonStep={lessonStep} concealAnswers={concealAnswers} />;
+    case "factorization": return <FactorizationObject data={object.data} lessonStep={lessonStep} concealAnswers={concealAnswers} />;
     case "geometry": return <GeometryObject data={object.data} />;
     case "collection": return <CollectionObject data={object.data} />;
     case "number-line": return <NumberLineObject data={object.data} />;

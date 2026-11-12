@@ -340,7 +340,7 @@ function StudioEditor({ owner }: { owner: string }) {
                   className={`st-type-icon st-type-${type}`}
                 >
                   {
-                    { geometry: "△", fraction: "⅔", operation: "±", text: "T", sequence: "⋯", collection: "#", "number-line": "↔", "linear-equation": "𝑥" }[
+                    { polygon: "⬡", factorization: "pⁿ", geometry: "△", fraction: "⅔", operation: "±", text: "T", sequence: "⋯", collection: "#", "number-line": "↔", "linear-equation": "𝑥" }[
                       type
                     ]
                   }
@@ -370,6 +370,7 @@ function StudioEditor({ owner }: { owner: string }) {
             onChange={(event) => void importDocument(event)}
           />
           <nav className="st-shortcuts" aria-label="Más herramientas">
+            <a href={`${import.meta.env.BASE_URL}notices/mathigon.txt`} target="_blank" rel="noopener noreferrer">Créditos de módulos</a>
             <a href="#/demo"><GraduationCap size={17} /> Práctica</a>
             <a href="#/fracciones"><Layers3 size={17} /> Fracciones</a>
           </nav>
