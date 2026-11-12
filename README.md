@@ -96,7 +96,7 @@ npm run build
 Resultado de la revisión del 11 de noviembre de 2026:
 
 - Lint, TypeScript y compilación: correctos.
-- Vitest: **199 pruebas aprobadas y 7 omitidas**, en 33 archivos aprobados y 4 omitidos. Las omitidas requieren configuración de integración remota.
+- Vitest: **214 pruebas aprobadas y 7 omitidas**, en 35 archivos aprobados y 4 omitidos. Las omitidas requieren configuración de integración remota.
 - Deno: siete Edge Functions comprobadas; **20 pruebas** de handlers (13 existentes y 7 del agente) aprobadas; lint de `supabase/functions` correcto.
 - PostgreSQL local: **138 pruebas aprobadas**, incluidas cuotas reutilizadas; diez migraciones alineadas con los archivos del repositorio. Agent no añade migraciones ni permisos.
 - No se añadieron dependencias npm. La auditoría previa registró 0 vulnerabilidades.

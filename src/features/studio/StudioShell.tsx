@@ -56,7 +56,7 @@ function StudioEditor({ owner }: { owner: string }) {
   const doc = store.document;
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [zoom, setZoom] = useState(() =>
-    window.innerWidth < 760 ? 0.5 : 0.65,
+    window.innerWidth < 760 ? 0.65 : 1,
   );
   const [presenting, setPresenting] = useState(false);
   const [materialsOpen, setMaterialsOpen] = useState(false);
@@ -227,7 +227,7 @@ function StudioEditor({ owner }: { owner: string }) {
         /* Keep the visible exit available. */
       }
     }
-    setZoom(window.innerWidth < 760 ? 0.5 : 0.65);
+    setZoom(window.innerWidth < 760 ? 0.65 : 1);
   }
   async function leaveAccount() {
     if (!store.persist()) return;
@@ -406,6 +406,7 @@ function StudioEditor({ owner }: { owner: string }) {
               <button aria-label="Ajustar lienzo" onClick={fit}>
                 <Expand size={16} />
               </button>
+              <button className="st-actual-size" aria-label="Ver al 100 %" title="Ver al 100 %" onClick={() => setZoom(1)}>100 %</button>
             </div>
           </div>
         </main>

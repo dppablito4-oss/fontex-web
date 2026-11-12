@@ -9,20 +9,20 @@ import {
 export const objectRegistry = {
   fraction: {
     name: "Fracción",
-    width: 370,
-    height: 250,
+    width: 440,
+    height: 340,
     data: { numerator: 2, denominator: 3, shape: "bar" },
   },
   operation: {
     name: "Operación guiada",
     width: 900,
-    height: 520,
+    height: 600,
     data: { expression: "2/3 + 3/6", stage: 0, shape: "bar" },
   },
   text: {
     name: "Texto",
-    width: 420,
-    height: 220,
+    width: 560,
+    height: 360,
     data: {
       content: "Escribe una explicación o una pregunta para tu clase.",
       fontSize: 22,
@@ -31,19 +31,19 @@ export const objectRegistry = {
   sequence: {
     name: "Sucesión",
     width: 900,
-    height: 370,
+    height: 420,
     data: { start: 2, difference: 2, count: 5 },
   },
   collection: {
-    name: "Colección numérica", width: 600, height: 300,
+    name: "Colección numérica", width: 640, height: 340,
     data: { values: [2, 4, 6, 8] },
   },
   "number-line": {
-    name: "Recta numérica", width: 850, height: 300,
+    name: "Recta numérica", width: 850, height: 320,
     data: { min: -5, max: 5, step: 1, points: [-3, 0, 2] },
   },
   "linear-equation": {
-    name: "Ecuación lineal", width: 700, height: 380,
+    name: "Ecuación lineal", width: 760, height: 440,
     data: { a: 2, b: 3, c: 0, d: 11, stage: 0 },
   },
 } as const;
@@ -76,7 +76,7 @@ export function createDocument(
     question.x = 1000;
     question.y = 70;
     question.width = 500;
-    question.height = 280;
+    question.height = 420;
     if (question.type === "text")
       question.data.content =
         template === "fractions"

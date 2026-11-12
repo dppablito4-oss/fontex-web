@@ -115,10 +115,23 @@
 .st-board { position: absolute; transform-origin: top left; background: var(--st-background); border: 1px solid var(--st-line); border-radius: 12px; box-shadow: 0 6px 24px rgb(var(--ui-shadow) / .04); }
 .st-object { position: absolute; display: flex; flex-direction: column; background: var(--st-surface); border: 2px solid var(--st-line); border-radius: 12px; box-shadow: 0 4px 16px rgb(var(--ui-shadow) / .06); overflow: hidden; }
 .st-object.selected { border-color: var(--st-primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--st-primary) 16%, transparent); }
-.st-object-handle { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 40px; height: 40px; padding: 0 17px; border-bottom: 1px solid var(--st-line); background: var(--st-background); color: var(--st-muted); cursor: grab; touch-action: none; user-select: none; font-size: 12px; font-weight: 600; }
+.st-object-handle { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 40px; height: 40px; padding: 0 48px 0 17px; border-bottom: 1px solid var(--st-line); background: var(--st-background); color: var(--st-muted); cursor: grab; touch-action: none; user-select: none; font-size: 12px; font-weight: 600; }
 .st-object-handle span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .st-object-handle:active { cursor: grabbing; }
 .st-object-content { min-height: 0; flex: 1; overflow: auto; padding: 22px; color: var(--st-ink); }
+.st-app :is(.st-object-expand, .st-resize-handle) { position: absolute; z-index: 2; width: 28px; height: 28px; min-height: 28px; padding: 5px; border: 0; color: var(--st-muted); }
+.st-app .st-object-expand { right: 5px; top: 5px; background: var(--st-background); }
+.st-app .st-resize-handle { right: 0; bottom: 0; border-radius: 8px 0 10px; background: var(--st-surface); cursor: nwse-resize; touch-action: none; }
+.st-app .st-resize-handle:focus-visible { outline-offset: -3px; }
+.st-object-dialog { position: fixed; inset: 0; margin: auto; width: min(1100px, calc(100vw - 32px)); max-height: 90dvh; padding: 24px; border: 1px solid var(--st-line); border-radius: 14px; background: var(--st-surface); color: var(--st-ink); box-shadow: 0 20px 80px rgb(var(--ui-shadow) / .2); overflow: auto; }
+.st-object-dialog::backdrop { background: rgb(0 0 0 / .5); backdrop-filter: blur(4px); }
+.st-object-dialog .st-dialog-heading { position: sticky; top: -24px; z-index: 1; padding-block: 12px; background: var(--st-surface); }
+.st-object-dialog h2 { font-size: 18px; }
+.st-object-dialog .st-dialog-heading h2 { overflow-wrap: anywhere; }
+.st-expanded-content { padding-top: 24px; }
+.st-expanded-content .st-bar svg { width: 240px; height: 60px; }
+.st-expanded-content .st-circle svg { width: 120px; height: 120px; }
+.st-app .st-zoom .st-actual-size { width: auto; padding-inline: 8px; font-size: 11px; }
 .st-text-content { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.7; }
 .st-single-fraction { display: flex; flex-direction: column; align-items: center; gap: 16px; }
 .st-single-fraction p { font-size: 12px; color: var(--st-muted); margin: 0; }
@@ -266,6 +279,11 @@
   .st-presenting .st-layout { flex: 1; min-height: 0; }
   .st-presenting .st-workspace { height: 100%; min-height: 0; flex: 1; }
   .st-banner { padding-inline: 14px; }
+  .st-object-dialog { padding: 16px; }
+  .st-object-dialog .st-dialog-heading { top: -16px; }
+  .st-expanded-content .st-operation-title { flex-wrap: wrap; }
+  .st-expanded-content .st-operands { flex-wrap: wrap; }
+  .st-expanded-content .st-operands > div { flex-basis: 100%; }
 }
 @media (max-width: 380px) {
   .st-header { padding-inline: 10px; column-gap: 6px; }

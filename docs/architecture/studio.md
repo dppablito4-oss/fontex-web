@@ -66,11 +66,15 @@ El esquema sigue en versión 1 con una extensión de tipos: el lector actual abr
 
 ## Presentación y controles
 
-El zoom de edición va del 20 % al 150 %. El botón de ajuste calcula una escala para el tablero; presentar intenta usar Fullscreen API y conserva una vista de presentación si no está disponible. El botón de salida y Esc desactivan esa vista.
+El zoom de edición va del 20 % al 150 %. Empieza al 100 % en escritorio y 65 % en móvil; el control «100 %» restablece una escala legible. El botón de ajuste calcula una escala para el tablero; presentar intenta usar Fullscreen API y conserva una vista de presentación si no está disponible. El botón de salida y Esc desactivan esa vista.
 
 Los objetos se arrastran desde su encabezado. Con el foco en ese control, las flechas mueven 10 unidades o 50 con Shift; Supr/Retroceso eliminan el objeto. Los pasos de las operaciones siguen siendo interactivos durante la presentación y sus cambios se intentan guardar. Studio usa los temas claro/oscuro globales, incluido el lienzo, las figuras, el inspector, el diálogo de materiales y la presentación. El selector de luna/sol está en la cabecera.
 
 La cabecera concentra materiales, guardado, historial y presentación. La paleta ofrece objetos, importación/exportación y accesos a Práctica y Fracciones. Se retiraron los lemas, notas repetidas de almacenamiento y mensajes estáticos de guardado. Los errores siguen visibles y los detalles del almacenamiento permanecen en la documentación.
+
+La paleta crea módulos con tamaños iniciales más amplios (fracción 440 × 340, texto 560 × 360, operación 900 × 600); no se reescriben dimensiones de materiales existentes ni de propuestas ya guardadas. La esquina inferior derecha permite redimensionar con puntero; se previsualiza el gesto y se confirma un solo cambio al soltar. Cancelar descarta la previsualización. Con el foco en ese control, las flechas cambian 20 unidades, o 100 con Shift. El ancla no se mueve y los límites del lienzo se respetan.
+
+Cada módulo tiene un botón de ampliación; también se abre con doble clic en el encabezado. El diálogo nativo muestra el mismo renderizador sin la reducción de zoom del lienzo, con figuras más grandes y pasos interactivos. Ampliar no cambia posiciones ni tamaños guardados; los pasos matemáticos sí pasan por el historial habitual. En móvil, los operandos ampliados se apilan. El diálogo conserva el foco y cierre nativos; todavía requiere revisión visual y de accesibilidad manual.
 
 ## Verificación
 
@@ -89,7 +93,7 @@ Las pruebas automatizadas incluyen:
 
 Las pruebas remotas requieren su configuración de integración; no se consideran ejecutadas si Vitest las omite.
 
-Tras Fontex Agent, la suite completa obtuvo 199 pruebas aprobadas y 7 omitidas; lint, TypeScript y build pasaron. Incluye nuevos tipos, exactitud racional, pistas y el ejecutor. La revisión visual continúa pendiente tras el bloqueo previo de la herramienta de navegador; no se ejecutó la siguiente prueba manual. El [registro del agente](fontex-agent.md) y la [auditoría](../AUDITORIA.md) distinguen resultados locales de verificaciones remotas.
+Tras la mejora de tamaño de módulos, la suite completa obtuvo 214 pruebas aprobadas y 7 omitidas; lint, TypeScript y build pasaron. Incluye nuevos tipos, exactitud racional, pistas, ejecutor, ampliación, resize con zoom/cancelación, límites e historial. El handler del agente conserva sus siete regresiones Deno aprobadas y pasa check. La revisión visual continúa pendiente tras el bloqueo previo de la herramienta de navegador; no se ejecutó la siguiente prueba manual. El [registro del agente](fontex-agent.md) y la [auditoría](../AUDITORIA.md) distinguen resultados locales de verificaciones remotas.
 
 Prueba manual para clase:
 

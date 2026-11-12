@@ -18,6 +18,25 @@ const inspector = () =>
 afterEach(() => vi.restoreAllMocks());
 
 describe("Fontex Studio", () => {
+  it("abre al 100 % en escritorio y permite restablecer el zoom", () => {
+    render(<ThemeProvider><StudioShell /></ThemeProvider>);
+    expect(screen.getByLabelText("Nivel de zoom")).toHaveTextContent("100%");
+    fireEvent.click(screen.getByRole("button", { name: "Alejar" }));
+    expect(screen.getByLabelText("Nivel de zoom")).toHaveTextContent("90%");
+    fireEvent.click(screen.getByRole("button", { name: "Ver al 100 %" }));
+    expect(screen.getByLabelText("Nivel de zoom")).toHaveTextContent("100%");
+  });
+  it("guarda un cambio de tamaño con teclado y permite deshacerlo", () => {
+    render(<ThemeProvider><StudioShell /></ThemeProvider>);
+    fireEvent.click(screen.getByRole("button", { name: "Añadir fracción" }));
+    const article = screen.getByRole("article", { name: "Fracción" });
+    expect(article).toHaveStyle({ width: "440px", height: "340px" });
+    fireEvent.keyDown(screen.getByRole("button", { name: "Cambiar tamaño de Fracción" }), { key: "ArrowDown", shiftKey: true });
+    expect(article).toHaveStyle({ height: "400px" });
+    expect(lastMaterial(localStorage, "guest")?.objects.find(object => object.type === "fraction")?.height).toBe(400);
+    fireEvent.click(screen.getByRole("button", { name: "Deshacer" }));
+    expect(article).toHaveStyle({ height: "340px" });
+  });
   it("edita colecciones, conserva multiplicidades y recupera las estadísticas", () => {
     const view = render(<ThemeProvider><StudioShell /></ThemeProvider>);
     fireEvent.click(screen.getByRole("button", { name: "Añadir colección numérica" }));

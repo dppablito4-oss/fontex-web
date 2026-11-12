@@ -12,6 +12,22 @@ Cada reporte incluye alcance, cambios, archivos relevantes, validaciones reales,
 
 ---
 
+## Módulos más legibles, ampliación y tamaño ajustable
+
+**Fecha:** 11 de noviembre de 2026
+
+Se sincronizó primero `main` con `e0f2843`, conservando la corrección/despliegue del backend realizada después de la integración inicial. La captura del usuario mostraba tarjetas pequeñas al 65 % y contenido cortado por desplazamiento interno.
+
+- Zoom inicial al 100 % en escritorio, 65 % en móvil y control para volver al 100 %.
+- Tamaños iniciales más amplios en ObjectRegistry y más alto para el texto de las plantillas. Los documentos existentes conservan sus medidas.
+- Botón y doble clic para abrir cada módulo en una vista ampliada, fuera del zoom del tablero, con el mismo renderizador y pasos interactivos.
+- Tirador de tamaño con puntero y teclado. El gesto respeta el zoom, ancla y límites; confirma un solo cambio al soltar, permite cancelación y conserva guardado/deshacer.
+- Sin cambios de esquema, dependencias o lógica matemática. La IA puede seguir proponiendo dimensiones válidas personalizadas; los controles de ampliación y tamaño también están disponibles para esos módulos.
+
+Validación: lint, typecheck y build correctos; 214 pruebas frontend aprobadas y 7 remotas omitidas; siete regresiones del handler del agente y Deno check correctos. Se añadieron ocho pruebas de ampliación, interacción matemática, resize, cancelación, límites, zoom y persistencia con deshacer. La comprobación visual en navegador y accesibilidad manual siguen pendientes; jsdom no acredita la composición final.
+
+---
+
 ## Integración de Fontex Agent en main
 
 **Fecha:** 11 de noviembre de 2026
