@@ -1,6 +1,6 @@
 # Fontex Agent — desarrollo incremental
 
-Base revisada: `main` / `origin/main` en `1d627cc`, sin cambios locales. Rama: `feat/fontex-agent`. No se publica ni despliega esta intervención.
+Base revisada: `main` / `origin/main` en `1d627cc`, sin cambios locales. Las tres fases se desarrollaron y verificaron en `feat/fontex-agent`. Posteriormente, por solicitud del usuario, se integraron en `main` para publicar el frontend con Pages, conservando la base en `backup/main-before-fontex-agent-20261111`. El endpoint de IA no se despliega con Pages.
 
 ## Estado de partida
 
@@ -90,4 +90,4 @@ La opción **Acciones locales** puede preparar un ejemplo real con ObjectRegistr
 
 Los tests de UI son de componentes/DOM con jsdom; no sustituyen navegador real, lector de pantalla o pruebas E2E. La revisión visual continúa pendiente después del bloqueo de la herramienta de navegador en la intervención anterior. Las pruebas del proveedor y de la cuota del handler usan dependencias simuladas; las pruebas SQL sí se ejecutaron en PostgreSQL local. No se ha comprobado la integración desplegada con Auth/runtime ni la compatibilidad del modelo efectivo con el proveedor real.
 
-Antes de habilitar IA: revisar esta rama, el destino del backend y sus diez migraciones; servir/empaquetar la función desde el repositorio completo; configurar secretos solo en servidor; probar sesión, CORS, cuota compartida y respuesta estructurada con un usuario de pruebas y un modelo autorizado. Revisar después el frontend en ambos temas y tamaños. Esta intervención no ejecuta push, merge ni despliegue.
+Antes de habilitar IA: revisar el destino del backend y sus diez migraciones; servir/empaquetar la función desde el repositorio completo; configurar secretos solo en servidor; probar sesión, CORS, cuota compartida y respuesta estructurada con un usuario de pruebas y un modelo autorizado. Revisar después el frontend en ambos temas y tamaños. La implementación inicial quedó local; su integración posterior en `main` fue autorizada por el usuario y repitió lint, typecheck, 199 pruebas (7 remotas omitidas) y build. Esa publicación del frontend no acredita el despliegue del backend ni las comprobaciones pendientes anteriores.

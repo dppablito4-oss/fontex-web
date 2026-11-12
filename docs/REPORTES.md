@@ -12,6 +12,16 @@ Cada reporte incluye alcance, cambios, archivos relevantes, validaciones reales,
 
 ---
 
+## Integración de Fontex Agent en main
+
+**Fecha:** 11 de noviembre de 2026
+
+Por solicitud del usuario, el estado anterior de `main` (`1d627cc`) se conserva en la rama remota `backup/main-before-fontex-agent-20261111`. Se integraron por fast-forward los tres commits verificados de `feat/fontex-agent`, sin reescribir el historial ni eliminar las experiencias existentes.
+
+Antes de subir `main` se repitieron lint, typecheck, 199 pruebas frontend aprobadas (7 remotas omitidas) y build. La actualización de `main` activa el workflow existente de GitHub Pages para publicar el frontend. El nuevo endpoint `studio-agent` no forma parte de ese despliegue y requiere una revisión/configuración separada de backend. La documentación actual refleja esa distinción; el reporte siguiente conserva el estado de la implementación antes de autorizar esta integración.
+
+---
+
 ## Fontex Agent — tres fases verificadas en rama local
 
 **Fecha:** 11 de noviembre de 2026

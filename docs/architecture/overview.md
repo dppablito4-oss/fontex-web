@@ -1,6 +1,6 @@
 # Arquitectura actual de Fontex
 
-**Revisión:** 11 de noviembre de 2026 · base `main` en `1d627cc`, cambios locales en `feat/fontex-agent` · versión declarada `0.6.0`.
+**Revisión:** 11 de noviembre de 2026 · Fontex Agent integrado en `main`, con respaldo de la base `1d627cc` en `backup/main-before-fontex-agent-20261111` · versión declarada `0.6.0`.
 
 ## Experiencias y fronteras
 

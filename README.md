@@ -4,7 +4,7 @@
 
 Fontex combina un editor de materiales matemáticos, **Fontex Studio**, con un aula de práctica y una plataforma de consulta de PDF con tutor documental. Su principio es *fuentes puestas en contexto*.
 
-Estado revisado el **11 de noviembre de 2026**: `main` y `origin/main` coincidían en `1d627cc`, sin cambios locales. Fontex Agent se desarrolla en la rama local `feat/fontex-agent`, sin publicación ni despliegue. La versión declarada en `package.json` sigue siendo `0.6.0`. Se conservan las correcciones de la [auditoría](docs/AUDITORIA.md) y todas las experiencias existentes.
+Estado revisado el **11 de noviembre de 2026**: Fontex Agent se integró en `main` desde `feat/fontex-agent` tras verificar sus tres fases. El `main` anterior (`1d627cc`) se conserva en `backup/main-before-fontex-agent-20261111`. El frontend se publica mediante el workflow de Pages al subir `main`; el endpoint nuevo de IA requiere despliegue separado. La versión declarada en `package.json` sigue siendo `0.6.0`. Se conservan las correcciones de la [auditoría](docs/AUDITORIA.md) y todas las experiencias existentes.
 
 ## Qué incluye
 

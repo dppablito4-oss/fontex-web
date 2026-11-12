@@ -1,6 +1,6 @@
 # Documentación de Fontex
 
-Actualizada el **11 de noviembre de 2026**: base `main`/`origin/main` en `1d627cc`; Fontex Agent implementado en la rama local `feat/fontex-agent`, sin publicar.
+Actualizada el **11 de noviembre de 2026**: Fontex Agent integrado en `main`; base anterior `1d627cc` conservada en `backup/main-before-fontex-agent-20261111`. Pages publica el frontend desde `main`; el endpoint del agente sigue pendiente de despliegue separado.
 
 | Documento | Qué resuelve |
 |---|---|

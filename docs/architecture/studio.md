@@ -1,6 +1,6 @@
 # Fontex Studio — primer incremento
 
-**Revisión documental:** 11 de noviembre de 2026, base `main` en `1d627cc` y rama local `feat/fontex-agent`. La versión declarada de la aplicación sigue siendo `0.6.0`.
+**Revisión documental:** 11 de noviembre de 2026, Fontex Agent integrado en `main` desde `feat/fontex-agent`. La versión declarada de la aplicación sigue siendo `0.6.0`.
 
 Fontex permite construir una explicación matemática con objetos independientes. Fracciones y sucesiones usan el mismo lienzo, inspector, historial y guardado. La prioridad es preparar y presentar materiales durante clases presenciales.
 
