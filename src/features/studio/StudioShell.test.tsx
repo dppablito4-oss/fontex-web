@@ -18,6 +18,41 @@ const inspector = () =>
 afterEach(() => vi.restoreAllMocks());
 
 describe("Fontex Studio", () => {
+  it("edita colecciones, conserva multiplicidades y recupera las estadísticas", () => {
+    const view = render(<ThemeProvider><StudioShell /></ThemeProvider>);
+    fireEvent.click(screen.getByRole("button", { name: "Añadir colección numérica" }));
+    fireEvent.change(inspector().getByLabelText("Enteros de la colección"), { target: { value: "1, 2, 2" } });
+    fireEvent.click(inspector().getByRole("button", { name: "Aplicar cambios" }));
+    const article = within(screen.getByRole("article", { name: "Colección numérica" }));
+    expect(article.getByText("Suma").nextElementSibling).toHaveTextContent("5");
+    expect(article.getByText("Media exacta").nextElementSibling).toHaveTextContent("5/3");
+    view.unmount();
+    render(<ThemeProvider><StudioShell /></ThemeProvider>);
+    expect(within(screen.getByRole("list", { name: "Números de la colección" })).getAllByRole("listitem")).toHaveLength(3);
+  });
+  it("edita rectas y rechaza pasos incompatibles sin perder el material", () => {
+    render(<ThemeProvider><StudioShell /></ThemeProvider>);
+    fireEvent.click(screen.getByRole("button", { name: "Añadir recta numérica" }));
+    for (const [name, value] of [["Mínimo de la recta", "-4"], ["Máximo de la recta", "4"], ["Tamaño del paso", "2"], ["Puntos enteros", "-2, 2"]]) fireEvent.change(inspector().getByLabelText(name!), { target: { value } });
+    fireEvent.click(inspector().getByRole("button", { name: "Aplicar cambios" }));
+    expect(screen.getByRole("img", { name: /Recta de -4 a 4, paso 2/ })).toBeInTheDocument();
+    fireEvent.change(inspector().getByLabelText("Tamaño del paso"), { target: { value: "3" } });
+    fireEvent.click(inspector().getByRole("button", { name: "Aplicar cambios" }));
+    expect(inspector().getByRole("alert")).toHaveTextContent("Revisa los valores");
+    expect(screen.getByRole("img", { name: /Recta de -4 a 4, paso 2/ })).toBeInTheDocument();
+  });
+  it("resuelve una ecuación racional por etapas y conserva el resultado al reabrir", () => {
+    const view = render(<ThemeProvider><StudioShell /></ThemeProvider>);
+    fireEvent.click(screen.getByRole("button", { name: "Añadir ecuación lineal" }));
+    fireEvent.change(inspector().getByLabelText("Coeficiente d"), { target: { value: "4" } });
+    fireEvent.click(inspector().getByRole("button", { name: "Aplicar cambios" }));
+    fireEvent.click(screen.getByRole("button", { name: "Agrupar términos" }));
+    fireEvent.click(screen.getByRole("button", { name: "Comprobar solución" }));
+    expect(screen.getByText("x = 1/2")).toBeInTheDocument();
+    view.unmount();
+    render(<ThemeProvider><StudioShell /></ThemeProvider>);
+    expect(screen.getByText("x = 1/2")).toBeInTheDocument();
+  });
   it("crea, edita, duplica y elimina; deshacer recupera el objeto con sus valores", () => {
     render(<ThemeProvider><StudioShell /></ThemeProvider>);
     fireEvent.click(screen.getByRole("button", { name: "Añadir fracción" }));

@@ -26,11 +26,12 @@ Las licencias anteriores se leyeron de los paquetes instalados. No constituyen u
 
 ## Backend y servicios
 
-- Las Edge Functions importan `@supabase/server` `1.9.1` mediante sus mapas de importación Deno. Las seis funciones incluyen `deno.lock`; el handler documental fija además `@supabase/supabase-js` `2.117.3` en su mapa de importación para tipos y pruebas.
+- Las Edge Functions importan `@supabase/server` `1.9.1` mediante sus mapas de importación Deno. Las siete funciones, incluida `studio-agent`, incluyen `deno.lock`; el handler documental fija además `@supabase/supabase-js` `2.117.3` en su mapa de importación para tipos y pruebas.
 - pgTAP comprueba esquema, RLS, cuotas y aislamiento en PostgreSQL local.
 - pgvector proporciona `vector(1536)` y distancia por coseno. El esquema actual usa búsqueda exacta, no un índice HNSW.
 - Responses API y Embeddings API se invocan por HTTP desde el servidor. Los nombres de modelo del código son configuración, no garantía de disponibilidad, precio o cuota.
 - El motor de Studio, los gráficos SVG, el esquema JSON y el almacén local son código del proyecto; el incremento de Studio no introdujo paquetes nuevos.
+- Fontex Agent reutiliza esos módulos y el cliente Supabase. No añade dependencias npm, SDK de IA ni librerías para interpretar código. El endpoint comparte validadores TypeScript con el frontend y solicita JSON Schema por HTTP.
 
 `OPENAI_API_KEY` se utiliza en Edge Functions o en el plugin local de Vite. `VITE_SUPABASE_URL` y la clave publicable son configuración pública del navegador. Los servicios privados de IA y las claves administrativas no deben incorporarse a variables `VITE_*`.
 

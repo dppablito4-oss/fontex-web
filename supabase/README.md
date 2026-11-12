@@ -29,6 +29,7 @@ Las tablas públicas creadas por estas migraciones habilitan RLS. La lectura del
 | `document-search` | Recuperación híbrida autorizada para diagnóstico |
 | `tutor-chat` | Tutor documental, modos estricto/comparativo, conversaciones, citas y cuotas |
 | `practice-tutor` | Chat/estudio/web del aula de Matemática con cuota por cuenta |
+| `studio-agent` | Propuestas validadas para Studio y práctica exacta; no escribe materiales remotos |
 
 Todos los endpoints se diseñan para usuario autenticado. `withSupabase({ auth: 'user' })` valida al llamante. El cliente administrativo solo debe usarse después de validar identidad y alcance; sus consultas no quedan protegidas por RLS del usuario.
 
@@ -70,6 +71,7 @@ La revisión inicial encontró pendientes `20261010010000_tutor_conversations_us
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | Frontend | Pública; requiere RLS y privilegios mínimos |
 | `OPENAI_API_KEY` | Edge Functions o plugin local | Privada; sin prefijo `VITE_` |
 | `OPENAI_MODEL` | `tutor-chat` | Sobrescribe el modelo de `tutor_limits` |
+| `FONTEX_AGENT_MODEL` | `studio-agent` | Opcional; por defecto reutiliza `tutorModels.study.id`. Requiere Responses y Structured Outputs |
 | `EMBEDDING_MODEL` | Funciones RAG | Respaldo `text-embedding-3-small`; debe coincidir con el índice |
 | `EMBEDDING_DIMENSIONS` | Funciones RAG | Respaldo `1536`; el esquema usa `vector(1536)` |
 
@@ -82,6 +84,12 @@ npx supabase functions serve --env-file .env.local
 ```
 
 El archivo debe contener las variables privadas requeridas por las funciones que vayas a probar. El runtime local proporciona sus propias variables de Supabase. El endpoint de Vite `/api/fontex-tutor` no sustituye `tutor-chat` ni la infraestructura documental.
+
+`studio-agent` tampoco usa el endpoint de Vite. Comparte los módulos puros de `src/core/agent` y MathEngine mediante imports relativos explícitos, por lo que se debe servir/empaquetar desde el repositorio completo. Su adaptador requiere sesión verificada y la RPC de cuota existente; no necesita una migración nueva. La entrada es JSON de hasta 256 KiB, con documento, selección, modo, nivel, pregunta, intento y pista. El servidor solicita JSON Schema estricto y vuelve a validar cada lote. El cliente revisa y aplica las acciones localmente.
+
+Aprender/Resolver envían contexto solo tras la consulta del usuario. Practicar se calcula con el motor sin proveedor; el navegador lo ejecuta localmente y no llama al endpoint ni consume cuota. Si un cliente invoca directamente el modo practice remoto, se mantienen autenticación y reserva de cuota. Los errores no guardan documentos ni registros de conversación. Las explicaciones generadas no tienen la certificación semántica de MathEngine; este comprueba solo los objetos admitidos.
+
+El nuevo endpoint está implementado y comprobado localmente, pero **no desplegado**. La integración con Auth/runtime y un modelo real debe revisarse en un entorno de pruebas antes de habilitarla; no se acredita una llamada real al proveedor con las pruebas simuladas.
 
 ## Revisión y despliegue remoto
 
@@ -113,6 +121,7 @@ Conserva la verificación de JWT del usuario. Configura Auth con el dominio publ
 - RAG: modelo/dimensión compatibles y trabajo completo antes de buscar.
 - Tutor documental: defaults SQL de 30 consultas/hora, 150/24 h por usuario, 2.000/24 h globales, una consulta concurrente, 5 chunks y 1.500 tokens máximos de salida. La entrada se acota a su presupuesto de 8.000 mediante bytes UTF-8 y margen de formato: una estimación conservadora, no un tokenizer del modelo. Si no caben pregunta e instrucciones, la consulta se rechaza.
 - Tutor de práctica: 10 consultas por hora UTC y 25 por día UTC; reserva antes de llamar al proveedor y sin devolución automática si falla.
+- Studio Agent comparte esa cuota; sin herramientas externas ni ejecución de código, con hasta 20 acciones, 4.500 tokens de salida y timeout de 30 s. Los límites y el modelo se deciden en servidor.
 - `health` indica configuración del servidor; no consulta al proveedor ni acredita disponibilidad real del modelo. GET y POST rechazan el servicio si falla la lectura de límites o está pausado.
 
 La reserva del tutor documental se completa tanto en éxito como en error; su confirmación es idempotente y se reintenta una vez. Si ambos intentos fallan, la función devuelve error explícito. Las reservas comparten bloqueo sobre la configuración global para evitar exceder el cupo mediante llamadas concurrentes de distintas cuentas. PostgreSQL guarda cada intercambio completo en una sola transacción, ordena los mensajes por conversación y deriva documento/páginas de las citas a partir de los chunks autorizados.
@@ -130,5 +139,14 @@ deno test --allow-env --config supabase/functions/tutor-chat/deno.json supabase/
 ```
 
 Las suites `src/test/block*.remote.test.ts` requieren `SUPABASE_TEST_URL`, `SUPABASE_TEST_PUBLISHABLE_KEY` y `SUPABASE_TEST_SERVICE_ROLE_KEY` en el proceso. Crean identidades y recursos de prueba; ejecútalas en un proyecto destinado a integración. No se ejecutaron en esta auditoría.
+
+Tras Agent se repitieron las 138 pruebas SQL locales y se comprobó que las diez migraciones locales siguen alineadas, sin modificaciones nuevas. Los siete endpoints pasan Deno check y `deno lint supabase/functions`. Las siete regresiones nuevas del agente se suman a las trece del tutor documental:
+
+```powershell
+deno check --config supabase/functions/studio-agent/deno.json supabase/functions/studio-agent/index.ts
+deno test --config supabase/functions/studio-agent/deno.json supabase/functions/studio-agent/handler_test.ts
+```
+
+CI incorpora la comprobación y pruebas del nuevo endpoint. Se probaron auth ausente, cuota denegada/error, falta de secreto, tamaño/formato, respuesta incompleta, rechazo, errores del proveedor, práctica determinista e imposibilidad de aceptar una acción de código. No se ejecutaron despliegues ni escrituras en el proyecto remoto durante esta intervención.
 
 Los resultados de Deno, frontend, dependencias y defectos conocidos se centralizan en [AUDITORIA.md](../docs/AUDITORIA.md).

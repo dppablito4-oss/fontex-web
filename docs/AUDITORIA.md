@@ -8,6 +8,8 @@
 
 La revisión inicial encontró dos defectos P1 y ocho P2, 13 alertas de dependencias y dos migraciones sin aplicar en la base local. El historial de esa revisión permanece en [REPORTES.md](REPORTES.md). Este documento describe el estado posterior a la corrección.
 
+**Incremento posterior:** se revisó `main`/`origin/main` en `1d627cc`, limpio y sincronizado, antes de crear `feat/fontex-agent`. El [registro de Fontex Agent](architecture/fontex-agent.md) documenta acciones atómicas, backend y familias nuevas, implementadas en tres fases verificadas. La suite actual suma 199 pruebas frontend aprobadas (7 remotas omitidas), 20 Deno y 138 SQL locales; lint, typecheck, build y check de siete funciones correctos. Se conservan las diez correcciones de esta auditoría. Agent no introduce dependencias npm, migraciones ni permisos nuevos, y queda sin publicar/desplegar. Su conexión real con proveedor/Auth/runtime, revisión visual y E2E no se acreditan con estas pruebas.
+
 ## Correcciones y evidencia
 
 | ID | Prioridad original | Corrección | Evidencia |

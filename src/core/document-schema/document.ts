@@ -1,4 +1,6 @@
 import { parseOperation } from "../math-engine/fractions.ts";
+import { analyzeCollection, numberLineTicks } from "../math-engine/numbers.ts";
+import { solveLinearEquation, type LinearCoefficients } from "../math-engine/equations.ts";
 
 export type Shape = "bar" | "circle";
 export type FractionData = {
@@ -9,6 +11,9 @@ export type FractionData = {
 export type OperationData = { expression: string; stage: number; shape: Shape };
 export type TextData = { content: string; fontSize: number };
 export type SequenceData = { start: number; difference: number; count: number };
+export type CollectionData = { values: number[] };
+export type NumberLineData = { min: number; max: number; step: number; points: number[] };
+export type LinearEquationData = LinearCoefficients & { stage: number };
 type ObjectBase = {
   id: string;
   label: string;
@@ -23,6 +28,9 @@ export type MathObject = ObjectBase &
     | { type: "operation"; data: OperationData }
     | { type: "text"; data: TextData }
     | { type: "sequence"; data: SequenceData }
+    | { type: "collection"; data: CollectionData }
+    | { type: "number-line"; data: NumberLineData }
+    | { type: "linear-equation"; data: LinearEquationData }
   );
 export type ObjectType = MathObject["type"];
 export type StudioDocument = {
@@ -91,6 +99,25 @@ export function validateObject(value: unknown): value is MathObject {
         integer(d.difference, -100, 100) &&
         integer(d.count, 2, 8)
       );
+    case "collection":
+      try {
+        if (!Array.isArray(d.values)) return false;
+        analyzeCollection(d.values);
+        return true;
+      } catch { return false; }
+    case "number-line":
+      try {
+        if (!integer(d.min, -100, 100) || !integer(d.max, -100, 100) || !integer(d.step, 1, 50)
+          || !Array.isArray(d.points) || d.points.length > 12 || !d.points.every(point => integer(point, d.min as number, d.max as number)) || new Set(d.points).size !== d.points.length) return false;
+        numberLineTicks(d.min as number, d.max as number, d.step as number);
+        return true;
+      } catch { return false; }
+    case "linear-equation":
+      try {
+        if (![d.a, d.b, d.c, d.d].every(value => integer(value, -1000, 1000)) || !integer(d.stage, 0, 2)) return false;
+        solveLinearEquation({ a: d.a as number, b: d.b as number, c: d.c as number, d: d.d as number });
+        return true;
+      } catch { return false; }
     default:
       return false;
   }
@@ -131,7 +158,7 @@ export function parseDocument(value: unknown): StudioDocument {
           y: item.y,
           width: item.width,
           height: item.height,
-          data: { ...item.data },
+          data: structuredClone(item.data),
         }) as MathObject,
     ),
   };

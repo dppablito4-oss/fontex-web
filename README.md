@@ -4,13 +4,14 @@
 
 Fontex combina un editor de materiales matemáticos, **Fontex Studio**, con un aula de práctica y una plataforma de consulta de PDF con tutor documental. Su principio es *fuentes puestas en contexto*.
 
-Estado revisado el **11 de noviembre de 2026**, sobre `main` en `3a26911` y las correcciones locales posteriores. La versión declarada en `package.json` es `0.6.0`. Los diez hallazgos de la [auditoría](docs/AUDITORIA.md) están corregidos y verificados localmente; su publicación requiere desplegar los cambios de frontend, funciones y migraciones.
+Estado revisado el **11 de noviembre de 2026**: `main` y `origin/main` coincidían en `1d627cc`, sin cambios locales. Fontex Agent se desarrolla en la rama local `feat/fontex-agent`, sin publicación ni despliegue. La versión declarada en `package.json` sigue siendo `0.6.0`. Se conservan las correcciones de la [auditoría](docs/AUDITORIA.md) y todas las experiencias existentes.
 
 ## Qué incluye
 
 | Área | Capacidades actuales | Dónde se guardan los datos |
 |---|---|---|
-| Studio | Fracciones en barras/círculos, suma y resta guiadas, texto, sucesiones aritméticas, arrastre, inspector, historial y presentación | `localStorage`, separado por usuario o invitado |
+| Studio | Fracciones, operaciones guiadas, texto, sucesiones, colecciones de enteros, recta numérica y ecuaciones lineales; inspector, historial y presentación | `localStorage`, separado por usuario o invitado |
+| Fontex Agent | Acciones estructuradas con vista previa y deshacer atómico; aprender/resolver con IA opcional y práctica local con pistas graduadas | Materiales locales; contexto enviado al backend solo al consultar IA |
 | Materiales de Studio | Crear desde plantillas, abrir, duplicar objetos, importar y exportar `.fontex.json` | En este navegador; exportación manual entre equipos |
 | Aula de práctica | Fracciones, decimales, proporciones y funciones; teoría, ejercicios y consultas | Progreso en `localStorage`; PDF añadidos en IndexedDB |
 | Identidad y aulas | Registro, confirmación de correo, sesión, perfiles, invitaciones, roles y grupos | Supabase Auth y PostgreSQL con RLS |
@@ -59,6 +60,14 @@ Ese endpoint existe al ejecutar el servidor de Vite; GitHub Pages sirve archivos
 
 Consulta la [guía del backend](supabase/README.md) para migraciones, funciones y configuración local completa.
 
+### Fontex Agent en Studio
+
+Abre **Fontex Agent** en el panel derecho. Aprender y Resolver requieren sesión y la Edge Function `studio-agent` configurada con `OPENAI_API_KEY` en el servidor. No usan el plugin local de Vite ni una clave del navegador. El modelo se puede configurar con `FONTEX_AGENT_MODEL`; debe admitir Responses y Structured Outputs. Se reutiliza la cuota existente del tutor de práctica.
+
+Selecciona un objeto y elige Practicar para recibir pregunta, estrategia y comprobación progresivas. Esa ruta usa MathEngine, funciona sin sesión ni red y no consume IA. Para los demás modos, revisa los valores propuestos antes de aplicar: el lote completo se deshace en un paso. Si el material cambió, debes preparar otra propuesta. Las acciones locales y la lectura del contexto permanecen disponibles sin backend.
+
+Los niveles Inicial, Primaria, Secundaria y Universidad introductoria ajustan el acompañamiento, sin representar currículos completos. Las explicaciones libres de IA pueden equivocarse; la comprobación del motor solo cubre los objetos y operaciones admitidos. Studio conserva documentos anteriores y guardado local. Una sesión cargada permite editar sin red; no se añadió caché/PWA para garantizar reapertura desde cero sin internet. Contratos, límites, fases y resultados en [Fontex Agent](docs/architecture/fontex-agent.md).
+
 ## Rutas
 
 Las rutas se escriben después de `#` para admitir recargas en GitHub Pages.
@@ -87,12 +96,12 @@ npm run build
 Resultado de la revisión del 11 de noviembre de 2026:
 
 - Lint, TypeScript y compilación: correctos.
-- Vitest: **141 pruebas aprobadas y 7 omitidas**, en 27 archivos aprobados y 4 omitidos. Las omitidas requieren configuración de integración remota.
-- Deno: seis Edge Functions comprobadas, 13 regresiones de backend aprobadas y lint de `supabase/functions` correcto.
-- PostgreSQL local: **138 pruebas aprobadas**; migraciones locales actualizadas y advisors/lint sin incidencias.
-- `npm audit`: **0 vulnerabilidades** después de actualizar las resoluciones afectadas.
+- Vitest: **199 pruebas aprobadas y 7 omitidas**, en 33 archivos aprobados y 4 omitidos. Las omitidas requieren configuración de integración remota.
+- Deno: siete Edge Functions comprobadas; **20 pruebas** de handlers (13 existentes y 7 del agente) aprobadas; lint de `supabase/functions` correcto.
+- PostgreSQL local: **138 pruebas aprobadas**, incluidas cuotas reutilizadas; diez migraciones alineadas con los archivos del repositorio. Agent no añade migraciones ni permisos.
+- No se añadieron dependencias npm. La auditoría previa registró 0 vulnerabilidades.
 
-El [informe de auditoría](docs/AUDITORIA.md) detalla las correcciones, evidencias y comprobaciones pendientes. Estos resultados no certifican el despliegue remoto ni equivalen a pruebas E2E.
+El [informe de auditoría](docs/AUDITORIA.md) y el [registro de Agent](docs/architecture/fontex-agent.md) detallan evidencias y límites. No se probó una llamada real al proveedor ni el nuevo endpoint desplegado. Revisión visual, accesibilidad manual y E2E siguen pendientes; estas pruebas no certifican producción.
 
 ## Despliegue en GitHub Pages
 

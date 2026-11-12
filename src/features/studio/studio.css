@@ -196,6 +196,14 @@
 .st-agent :is(p, li) { margin-block: 8px; line-height: 1.5; overflow-wrap: anywhere; }
 .st-agent ul { padding-left: 16px; }
 .st-agent-message { white-space: pre-wrap; }
+.st-collection ol { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; padding: 0; }
+.st-collection li { min-width: 44px; padding: 9px; border-radius: 8px; background: var(--st-soft); text-align: center; font-size: 20px; font-weight: 600; }
+.st-number-stats { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 20px; }
+.st-number-stats dt { color: var(--st-muted); font-size: 11px; }
+.st-number-stats dd { margin: 4px 0 0; font-size: 18px; font-weight: 600; }
+.st-number-line svg { display: block; width: 100%; min-width: 400px; }
+.st-equation-expression { font-size: 26px; text-align: center; margin-block: 10px; }
+.st-equation-result { font-size: 24px; text-align: center; color: var(--st-piece-primary); font-weight: 700; }
 .st-app .st-exit-presentation { position: fixed; top: 16px; right: 20px; z-index: 50; box-shadow: 0 4px 18px rgb(var(--ui-shadow) / .16); }
 .st-exit-presentation small { color: var(--st-muted); font-size: 10px; font-weight: 400; }
 .st-presenting { position: fixed; inset: 0; z-index: 1000; height: 100dvh; min-height: 0; background: var(--st-background); }

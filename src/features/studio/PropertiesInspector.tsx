@@ -7,6 +7,10 @@ import {
 } from "../../core/document-schema/document";
 import { parseOperation } from "../../core/math-engine/fractions";
 
+function NumericField({ name, label, value, min, max }: { name: string; label: string; value: number; min: number; max: number }) {
+  return <label>{label}<input type="number" name={name} defaultValue={value} min={min} max={max} step={1} required /></label>;
+}
+
 export function PropertiesInspector({
   object,
   onApply,
@@ -23,6 +27,7 @@ export function PropertiesInspector({
       return typeof value === "string" ? value : "";
     };
     const num = (key: string) => Number(read(key));
+    const numbers = (key: string) => read(key).trim() ? read(key).trim().split(/[,\s]+/).map(Number) : [];
     let next = fitObject({
       ...object,
       label: read("label"),
@@ -33,6 +38,15 @@ export function PropertiesInspector({
     });
     try {
       switch (object.type) {
+        case "collection":
+          next = { ...next, type: "collection", data: { values: numbers("values") } };
+          break;
+        case "number-line":
+          next = { ...next, type: "number-line", data: { min: num("min"), max: num("max"), step: num("step"), points: numbers("points") } };
+          break;
+        case "linear-equation":
+          next = { ...next, type: "linear-equation", data: { a: num("a"), b: num("b"), c: num("c"), d: num("d"), stage: num("stage") } };
+          break;
         case "fraction":
           next = {
             ...object,
@@ -83,7 +97,7 @@ export function PropertiesInspector({
       }
       if (!validateObject(next))
         throw new Error(
-          "Revisa los valores. Las fracciones admiten hasta 3 unidades y denominadores de 1 a 24.",
+          "Revisa los valores y los límites indicados para este objeto.",
         );
       onApply(next);
       setError("");
@@ -99,6 +113,17 @@ export function PropertiesInspector({
         Nombre del objeto
         <input name="label" defaultValue={object.label} maxLength={120} />
       </label>
+      {object.type === "collection" && <><label>Enteros de la colección<input name="values" aria-describedby="st-collection-hint" defaultValue={object.data.values.join(", ")} maxLength={180} required /></label><small id="st-collection-hint">De 1 a 24 enteros entre −1000 y 1000, separados por comas.</small></>}
+      {object.type === "number-line" && <>
+        <div className="st-field-pair"><NumericField name="min" label="Mínimo de la recta" value={object.data.min} min={-100} max={100} /><NumericField name="max" label="Máximo de la recta" value={object.data.max} min={-100} max={100} /></div>
+        <NumericField name="step" label="Tamaño del paso" value={object.data.step} min={1} max={50} />
+        <label>Puntos enteros<input name="points" aria-describedby="st-line-hint" defaultValue={object.data.points.join(", ")} maxLength={100} /></label><small id="st-line-hint">Hasta 12 puntos distintos dentro del rango. Rango divisible por el paso; hasta 40 marcas.</small>
+      </>}
+      {object.type === "linear-equation" && <>
+        <small>ax + b = cx + d · coeficientes enteros de −1000 a 1000; dominio real.</small>
+        <div className="st-field-pair">{(["a", "b", "c", "d"] as const).map(name => <NumericField key={name} name={name} label={`Coeficiente ${name}`} value={object.data[name]} min={-1000} max={1000} />)}</div>
+        <label>Etapa de la ecuación<select name="stage" defaultValue={object.data.stage}><option value={0}>Igualdad original</option><option value={1}>Agrupar términos</option><option value={2}>Comprobar</option></select></label>
+      </>}
       {object.type === "fraction" && (
         <div className="st-field-pair">
           <label>

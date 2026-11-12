@@ -23,6 +23,8 @@ Studio usa una cabecera compacta, paleta de objetos, tablero e inspector. En tab
 
 Los SVG comparten `--ui-math-primary`, `--ui-math-secondary` y `--ui-math-empty`, con valores para ambos temas. Las pruebas comprueban contraste mínimo 3:1 de piezas coloreadas frente a la tarjeta y a las piezas vacías. Texto, formularios, errores y foco conservan sus tokens semánticos.
 
+Fontex Agent ocupa un panel desplegable dentro del inspector, conservando el editor y sus rutas. Agrupa modo/nivel, orientación y vista previa de acciones; el JSON local y el contexto quedan bajo controles avanzados. No aplica cambios automáticamente. Las figuras de colecciones, rectas y ecuaciones usan los mismos tokens; los puntos demasiado próximos se identifican en una lista para evitar etiquetas superpuestas. Las nuevas ayudas de formulario usan `aria-describedby`, separadas del nombre del campo. La revisión visual de estos controles sigue pendiente.
+
 ## Paleta oficial
 
 | Color | HEX | Uso |

@@ -1,12 +1,13 @@
 # Documentación de Fontex
 
-Actualizada el **11 de noviembre de 2026** a partir de `main` en `3a26911` y las correcciones locales de la auditoría.
+Actualizada el **11 de noviembre de 2026**: base `main`/`origin/main` en `1d627cc`; Fontex Agent implementado en la rama local `feat/fontex-agent`, sin publicar.
 
 | Documento | Qué resuelve |
 |---|---|
 | [README principal](../README.md) | Instalación, capacidades, rutas y despliegue del frontend |
 | [Arquitectura](architecture/overview.md) | Componentes, flujos y separación entre datos locales y remotos |
 | [Fontex Studio](architecture/studio.md) | Objetos matemáticos, JSON versión 1, guardado y límites del editor |
+| [Fontex Agent](architecture/fontex-agent.md) | Tres fases, acciones, backend, pedagogía, pruebas y límites reales |
 | [Supabase](../supabase/README.md) | Migraciones, tablas, funciones, secretos y pruebas de backend |
 | [Sistema de diseño](design/DESIGN_SYSTEM.md) | Tokens, temas y estilos propios de Studio |
 | [Dependencias](decisions/DEPENDENCIES.md) | Uso de paquetes, herramientas y estado de auditoría |

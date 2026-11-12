@@ -34,6 +34,18 @@ export const objectRegistry = {
     height: 370,
     data: { start: 2, difference: 2, count: 5 },
   },
+  collection: {
+    name: "Colección numérica", width: 600, height: 300,
+    data: { values: [2, 4, 6, 8] },
+  },
+  "number-line": {
+    name: "Recta numérica", width: 850, height: 300,
+    data: { min: -5, max: 5, step: 1, points: [-3, 0, 2] },
+  },
+  "linear-equation": {
+    name: "Ecuación lineal", width: 700, height: 380,
+    data: { a: 2, b: 3, c: 0, d: 11, stage: 0 },
+  },
 } as const;
 
 export function createObject(type: ObjectType, index = 0): MathObject {
@@ -46,7 +58,7 @@ export function createObject(type: ObjectType, index = 0): MathObject {
     y: 60 + (index % 5) * 36,
     width: entry.width,
     height: entry.height,
-    data: { ...entry.data },
+    data: structuredClone(entry.data),
   } as MathObject);
 }
 

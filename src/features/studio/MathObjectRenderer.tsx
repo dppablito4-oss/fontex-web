@@ -7,6 +7,7 @@ import type {
 } from "../../core/document-schema/document";
 import { sequenceTerms } from "../../core/math-engine/sequences";
 import { parseOperation } from "../../core/math-engine/fractions";
+import { CollectionObject, LinearEquationObject, NumberLineObject } from "./ExtendedMathObjects";
 
 function FractionLabel({ n, d }: { n: number; d: number }) {
   return (
@@ -217,6 +218,9 @@ export function MathObjectRenderer({
   onChange: (object: MathObject) => void;
 }) {
   switch (object.type) {
+    case "collection": return <CollectionObject data={object.data} />;
+    case "number-line": return <NumberLineObject data={object.data} />;
+    case "linear-equation": return <LinearEquationObject data={object.data} onChange={data => onChange({ ...object, data })} />;
     case "fraction":
       return <FractionObject data={object.data} />;
     case "operation":

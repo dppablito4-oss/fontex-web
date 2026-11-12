@@ -1,6 +1,6 @@
 # Arquitectura actual de Fontex
 
-**Revisión:** 11 de noviembre de 2026 · código base `3a26911` · versión declarada `0.6.0`.
+**Revisión:** 11 de noviembre de 2026 · base `main` en `1d627cc`, cambios locales en `feat/fontex-agent` · versión declarada `0.6.0`.
 
 ## Experiencias y fronteras
 
@@ -13,6 +13,9 @@ flowchart TD
     App --> Academic[Espacio académico]
     Studio --> Local[localStorage por usuario o invitado]
     Studio --> JSON[Importación y exportación JSON]
+    Studio --> Agent[Ejecutor validado y práctica local]
+    Agent --> AgentAPI[studio-agent con sesión y cuota]
+    AgentAPI --> AI
     Practice --> Progress[localStorage e IndexedDB]
     Practice --> LocalAPI[Plugin local de Vite]
     Practice --> PracticeAPI[practice-tutor con sesión]
@@ -35,7 +38,8 @@ La separación local por usuario organiza los datos en el navegador. No es aisla
 | `src/app/App.tsx` | Experiencias, rutas y guardas de sesión |
 | `src/app/layouts/AppShell.tsx` | Navegación académica y selección de aula |
 | `src/core/document-schema` | Objetos y validación de materiales versión 1 |
-| `src/core/math-engine` | Fracciones y sucesiones |
+| `src/core/math-engine` | Fracciones, sucesiones, colecciones, rectas y ecuaciones lineales exactas |
+| `src/core/agent` | Acciones, contratos, contexto calculado, esquema de salida y práctica determinista |
 | `src/core/object-registry` | Catálogo y plantillas |
 | `src/features/studio` | Editor, historial, presentación y guardado local |
 | `src/features/demo` | Práctica, progreso, PDF locales y selección del tutor |
@@ -49,11 +53,11 @@ La separación local por usuario organiza los datos en el navegador. No es aisla
 
 `StudioShell` monta un editor con una clave React derivada del usuario o de `guest`; cambiar de cuenta reinicia el estado y recupera su espacio local. `CanvasViewport` gestiona movimiento con puntero y teclado. `PropertiesInspector` valida formularios; `MathObjectRenderer` presenta SVG y texto.
 
-Los tipos son fracción, operación guiada, texto y sucesión aritmética. El motor acepta suma/resta de dos fracciones no negativas con resultado no negativo. `src/features/canvas/fractions.ts` reexporta el motor para mantener el laboratorio anterior.
+Los cuatro tipos originales se conservan, junto a colecciones de enteros, recta numérica y ecuaciones lineales. El motor original sigue aceptando suma/resta de dos fracciones no negativas con resultado no negativo. `src/features/canvas/fractions.ts` reexporta el motor para mantener el laboratorio anterior.
 
 `useStudioDocument` mantiene hasta 40 estados previos. Los cambios aplicados, deshacer y rehacer intentan guardar inmediatamente; el arrastre confirma un cambio al soltar. `document-store` reemplaza una instantánea completa bajo `fontex-studio-v2:<propietario>`: documentos y material activo cambian juntos mediante un único `setItem`. Lee el formato anterior y solo elimina sus claves después de confirmar la nueva instantánea. Si falla guardar el material nuevo, el editor conserva el actual y devuelve el error al llamante.
 
-Importar valida el formato y asigna un nuevo ID al material. Exportar descarga el documento completo como JSON. No existen tablas ni funciones de Supabase para materiales de Studio. Los detalles están en [studio.md](studio.md).
+Importar valida el formato y asigna un nuevo ID al material. Exportar descarga el documento completo como JSON. No existen tablas remotas para los materiales. `studio-agent` propone cambios sin guardarlos: el cliente los valida, exige vista previa y los confirma en un único paso del historial. Practicar se calcula localmente; Aprender/Resolver usan la función autenticada con contexto y cuota existentes. Los detalles están en [studio.md](studio.md) y [fontex-agent.md](fontex-agent.md).
 
 ## Identidad, aulas y permisos
 

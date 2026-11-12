@@ -12,6 +12,35 @@ Cada reporte incluye alcance, cambios, archivos relevantes, validaciones reales,
 
 ---
 
+## Fontex Agent — tres fases verificadas en rama local
+
+**Fecha:** 11 de noviembre de 2026
+
+**Base real:** `main` limpio en `1d627cc`, coincidente con `origin/main` tras fetch. Rama de trabajo `feat/fontex-agent`. Se mantienen Studio, Fracciones, Práctica y las rutas académicas.
+
+### Implementación incremental
+
+1. Acciones `create/update/delete`, contexto calculado, validación estricta de objetos/lotes, vista previa y comparación de instantánea. Una transacción crea un único paso de historial y guardado local; un fallo no aplica cambios parciales. Se verificó antes de la fase siguiente: lint/typecheck/build y 155 pruebas aprobadas, 7 remotas omitidas. Commit local `082eb37`.
+2. Backend `studio-agent` con autenticación existente, cuota compartida, secreto solo en servidor, JSON Schema estricto y validación final con el mismo núcleo. Aprender/Resolver proponen cambios revisables; Practicar usa MathEngine y pistas deterministas sin proveedor, también offline. Cuatro niveles de acompañamiento, sin cobertura curricular exhaustiva. Se verificó antes de ampliar tipos: 170 frontend y 7 Deno nuevos, además de lint/typecheck/build/check. Commit local `c3f6d46`.
+3. Colecciones de enteros con multiplicidades y media racional; recta con puntos enteros y marcas acotadas; ecuaciones `ax + b = cx + d` con resultado racional, ninguna o infinitas soluciones. Se ampliaron registro, esquema, renderizadores, inspector, contexto y prácticas, conservando los cuatro tipos originales y el almacenamiento v2. Las copias de listas son profundas. Documentos anteriores siguen siendo legibles; clientes antiguos no reconocen los tipos nuevos.
+
+### Resultado final local
+
+- Lint, typecheck y build correctos.
+- 199 pruebas frontend aprobadas y 7 remotas omitidas, en 33 archivos aprobados y 4 omitidos.
+- Más de 5.000 operaciones de fracciones y 6.561 combinaciones de ecuaciones comprobadas con aritmética exacta; pruebas de clasificación, rangos, recuperación, transacciones y pistas.
+- Siete funciones pasan Deno check; 20 regresiones Deno de handlers aprobadas; lint de Edge Functions correcto. CI incorpora el nuevo endpoint.
+- 138 pruebas SQL locales aprobadas; diez migraciones alineadas. No se añadieron migraciones, permisos ni dependencias npm.
+- Documentación, README, configuración de ejemplo y guía de backend actualizados. Artefacto JS sin configuración privada ni llamada directa al proveedor del agente.
+
+### Límites y revisión pendiente
+
+No se hizo push, merge ni despliegue. No se invocó un modelo real ni se probó la integración Auth/runtime/CORS desplegada. Revisión visual, lector de pantalla y E2E siguen pendientes. El texto libre de IA puede equivocarse; MathEngine solo verifica los objetos acotados. Editar y practicar localmente no requiere red; no se añadió PWA/caché para reapertura desde cero sin conexión. No hay sincronización de materiales entre equipos, ejecución de código generado ni currículos completos.
+
+Contratos, ejemplos, límites por objeto y comprobaciones antes de publicar: [Fontex Agent](architecture/fontex-agent.md).
+
+---
+
 ## v0.6.3 — Interfaz compacta y tema oscuro compartido
 
 **Fecha:** 11 de noviembre de 2026

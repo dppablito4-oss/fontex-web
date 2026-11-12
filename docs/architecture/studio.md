@@ -1,6 +1,6 @@
 # Fontex Studio — primer incremento
 
-**Revisión documental:** 11 de noviembre de 2026, código base `3a26911`. La versión declarada de la aplicación sigue siendo `0.6.0`.
+**Revisión documental:** 11 de noviembre de 2026, base `main` en `1d627cc` y rama local `feat/fontex-agent`. La versión declarada de la aplicación sigue siendo `0.6.0`.
 
 Fontex permite construir una explicación matemática con objetos independientes. Fracciones y sucesiones usan el mismo lienzo, inspector, historial y guardado. La prioridad es preparar y presentar materiales durante clases presenciales.
 
@@ -28,6 +28,9 @@ Un documento contiene `schemaVersion`, `id`, `title`, `updatedAt` y una colecci�
 - `operation`: expresión, etapa y representación.
 - `text`: contenido y tamaño de letra.
 - `sequence`: primer término, diferencia y cantidad de términos.
+- `collection`: lista de enteros con multiplicidades; cantidad, suma, extremos y media racional.
+- `number-line`: extremos, paso entero y puntos enteros dentro del rango.
+- `linear-equation`: coeficientes de `ax + b = cx + d` y etapa de explicación.
 
 El formato inicial usa un solo lienzo de 1600 × 1100. Los objetos se mantienen completamente dentro de sus límites. Importar otro formato o una futura versión exige una migración explícita; no se interpreta código del documento. React presenta el texto como contenido literal.
 
@@ -41,6 +44,9 @@ Límites matemáticos actuales:
 | Operación guiada | Dos fracciones con suma/resta; denominadores 1–24; denominador común hasta 60; resultado no negativo |
 | Texto | Hasta 5.000 caracteres; tamaño entero de 14–48 |
 | Sucesión aritmética | Inicio entero entre −1.000 y 1.000; diferencia entera entre −100 y 100; 2–8 términos |
+| Colección numérica | 1–24 enteros entre −1.000 y 1.000; conserva repetidos |
+| Recta numérica | Extremos enteros −100–100; paso 1–50; rango divisible por el paso; máximo 40 marcas y 12 puntos distintos |
+| Ecuación lineal | Coeficientes enteros −1.000–1.000; dominio real; solución racional única, ninguna o infinitas; tres etapas |
 
 El documento admite título de hasta 160 caracteres y etiquetas de hasta 120. Cada objeto mide al menos 240 × 160 y se ajusta al tablero. No hay páginas adicionales, colaboración ni exportación PDF integrada.
 
@@ -54,7 +60,9 @@ La instantánea se reemplaza con un único `localStorage.setItem`: si falla, per
 
 Exportar JSON sigue siendo la copia portátil disponible; borrar datos del navegador puede eliminar los materiales locales. No hay coordinación de ediciones simultáneas entre varias pestañas.
 
-Este incremento de Studio no añade tablas, políticas RLS ni funciones de Supabase. Las cuentas usan el flujo existente. Studio se abre en `/#/` o `/#/lienzo`; el laboratorio anterior queda en `/#/fracciones` y las rutas académicas siguen disponibles.
+Agent no añade tablas ni políticas RLS; añade una función de propuestas, sin sincronizar los documentos locales. Las cuentas usan el flujo existente. Studio se abre en `/#/` o `/#/lienzo`; el laboratorio anterior queda en `/#/fracciones` y las rutas académicas siguen disponibles.
+
+El esquema sigue en versión 1 con una extensión de tipos: el lector actual abre documentos anteriores sin migrarlos. Los clientes antiguos no reconocen los tres tipos nuevos. Las listas anidadas se copian en profundidad al validar y crear objetos. El formato de almacenamiento y la separación por cuenta no cambian. Los lotes del agente se validan completos, se revisan con una instantánea y se aplican/deshacen atómicamente. Véase [Fontex Agent](fontex-agent.md).
 
 ## Presentación y controles
 
@@ -70,7 +78,7 @@ Comandos: `npm run lint`, `npm run typecheck`, `npm run test`, `npm run build`.
 
 Las pruebas automatizadas incluyen:
 
-- Roundtrip de los cuatro tipos y rechazo de documentos inválidos.
+- Roundtrip de los siete tipos, compatibilidad con los cuatro originales y rechazo de documentos inválidos.
 - Conservación de textos, posiciones y datos matemáticos al recuperar.
 - Separación de cuentas e invitados y errores de almacenamiento.
 - Crear, editar, duplicar, eliminar, deshacer y rehacer.
@@ -81,7 +89,7 @@ Las pruebas automatizadas incluyen:
 
 Las pruebas remotas requieren su configuración de integración; no se consideran ejecutadas si Vitest las omite.
 
-Tras la actualización de interfaz del 11 de noviembre, la suite completa de frontend obtuvo 141 pruebas aprobadas y 7 omitidas; lint, TypeScript y build pasaron. La herramienta de navegador bloqueó la revisión visual porque no pudo verificar la URL de Windows; no se ejecutó la siguiente prueba manual. El [informe de auditoría](../AUDITORIA.md) centraliza el estado técnico y sus límites.
+Tras Fontex Agent, la suite completa obtuvo 199 pruebas aprobadas y 7 omitidas; lint, TypeScript y build pasaron. Incluye nuevos tipos, exactitud racional, pistas y el ejecutor. La revisión visual continúa pendiente tras el bloqueo previo de la herramienta de navegador; no se ejecutó la siguiente prueba manual. El [registro del agente](fontex-agent.md) y la [auditoría](../AUDITORIA.md) distinguen resultados locales de verificaciones remotas.
 
 Prueba manual para clase:
 
@@ -94,4 +102,4 @@ Prueba manual para clase:
 
 ## Próximos incrementos
 
-Guardar en Supabase con políticas por propietario; incorporar nuevas familias de objetos (recta numérica, funciones, ecuaciones); generación de documentos estructurados mediante IA, siempre validada con el mismo esquema; caché de la aplicación para garantizar reapertura sin internet. Ninguno de esos puntos se anuncia como implementado en este incremento.
+Guardar en Supabase con políticas por propietario, funciones generales, caché de aplicación para reapertura sin red y ampliar cobertura pedagógica son trabajo futuro. La recta, las ecuaciones lineales y las propuestas estructuradas del agente ya están implementadas localmente con el alcance acotado descrito arriba; su integración remota aún requiere revisión y despliegue separados.

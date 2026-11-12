@@ -4,6 +4,32 @@ import { createDocument, createObject } from "../object-registry/registry";
 import { sequenceTerms } from "../math-engine/sequences";
 
 describe("Documentos matemáticos versionados", () => {
+  it("mantiene documentos v1 de los cuatro tipos originales y añade familias sin migrar el guardado", () => {
+    const original = createDocument();
+    original.objects.push(createObject("fraction"), createObject("sequence"));
+    const serialized = JSON.stringify(original);
+    expect(parseDocument(JSON.parse(serialized))).toEqual(original);
+    for (const type of ["collection", "number-line", "linear-equation"] as const) original.objects.push(createObject(type));
+    const parsed = parseDocument(JSON.parse(JSON.stringify(original)));
+    expect(parsed.schemaVersion).toBe(1);
+    expect(parsed).toEqual(original);
+    const collection = parsed.objects.find(object => object.type === "collection")!;
+    if (collection.type === "collection") collection.data.values.push(999);
+    expect(parsed).not.toEqual(original);
+    const first = createObject("collection"), second = createObject("collection");
+    if (first.type === "collection" && second.type === "collection") { first.data.values[0] = 999; expect(second.data.values[0]).toBe(2); }
+  });
+  it.each([
+    { type: "collection", data: { values: [] } },
+    { type: "collection", data: { values: [1, "2"] } },
+    { type: "number-line", data: { min: -5, max: 5, step: 1, points: [6] } },
+    { type: "number-line", data: { min: -5, max: 5, step: 1, points: [1, 1] } },
+    { type: "number-line", data: { min: -100, max: 100, step: 1, points: [] } },
+    { type: "linear-equation", data: { a: 1.5, b: 0, c: 0, d: 0, stage: 0 } },
+    { type: "linear-equation", data: { a: 1, b: 0, c: 0, d: 0, stage: 3 } },
+  ])("rechaza datos inválidos de la familia $type", invalid => {
+    expect(() => parseDocument({ ...createDocument("blank"), objects: [{ ...createObject("text"), ...invalid }] })).toThrow();
+  });
   it("serializa fracciones, textos y sucesiones con el mismo esquema", () => {
     const document = createDocument("blank");
     document.objects = [

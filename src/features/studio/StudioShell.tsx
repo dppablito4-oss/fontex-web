@@ -133,7 +133,7 @@ function StudioEditor({ owner }: { owner: string }) {
       label: `${selected.label.slice(0, 110)} (copia)`,
       x: selected.x + 30,
       y: selected.y + 30,
-      data: { ...selected.data },
+      data: structuredClone(selected.data),
     } as MathObject);
     store.update((current) => ({
       ...current,
@@ -330,7 +330,7 @@ function StudioEditor({ owner }: { owner: string }) {
                   className={`st-type-icon st-type-${type}`}
                 >
                   {
-                    { fraction: "⅔", operation: "±", text: "T", sequence: "⋯" }[
+                    { fraction: "⅔", operation: "±", text: "T", sequence: "⋯", collection: "#", "number-line": "↔", "linear-equation": "𝑥" }[
                       type
                     ]
                   }
