@@ -1,4 +1,4 @@
-import { FunctionsHttpError } from "@supabase/supabase-js";
+import { FunctionsFetchError, FunctionsHttpError } from "@supabase/supabase-js";
 import { supabase } from "../../lib/supabase/client";
 import {
   type AgentRequest,
@@ -29,8 +29,17 @@ export async function requestAgent(value: AgentRequest) {
       ? result.error.context
       : null;
     if (response instanceof Response) {
-      if (response.status === 401) {
+      if (response.status === 401 || response.status === 403) {
         throw new Error("Inicia sesión de nuevo para consultar al agente.");
+      }
+      if (response.status === 404) {
+        throw new Error("El agente aún no está disponible en el servidor. Intenta más tarde.");
+      }
+      if (response.status === 400) {
+        throw new Error("No se pudo enviar esta consulta. Prueba con un material más pequeño o una consulta más breve.");
+      }
+      if (response.status === 422) {
+        throw new Error("La IA no devolvió una propuesta válida. Intenta describir el cambio con más detalle.");
       }
       if (response.status === 429) {
         throw new Error(
@@ -42,6 +51,15 @@ export async function requestAgent(value: AgentRequest) {
           "La IA no está disponible en el servidor. Studio sigue disponible.",
         );
       }
+      if (response.status === 502) {
+        throw new Error("El proveedor de IA no pudo responder. Intenta de nuevo en unos momentos.");
+      }
+      if (response.status === 504) {
+        throw new Error("La IA tardó demasiado en responder. Intenta con una consulta más breve.");
+      }
+    }
+    if (result.error instanceof FunctionsFetchError) {
+      throw new Error("No se pudo conectar con el agente. Comprueba tu conexión e intenta de nuevo.");
     }
     throw new Error(
       "No se pudo obtener una propuesta del agente. El material no cambió.",

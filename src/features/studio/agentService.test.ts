@@ -1,4 +1,4 @@
-import { FunctionsHttpError } from "@supabase/supabase-js";
+import { FunctionsFetchError, FunctionsHttpError } from "@supabase/supabase-js";
 import { beforeEach, expect, it, vi } from "vitest";
 import { createDocument } from "../../core/object-registry/registry";
 import type { AgentRequest } from "../../core/agent/protocol";
@@ -49,13 +49,35 @@ it("invoca únicamente el backend y valida la respuesta antes de aplicarla", asy
   invoke.mockResolvedValueOnce({ data: { code: "eval()" }, error: null });
   await expect(requestAgent(input)).rejects.toThrow(/propuesta válida/);
 });
-it.each([401, 429, 503])(
+it.each([
+  [400, /consulta más breve/],
+  [401, /Inicia sesión/],
+  [403, /Inicia sesión/],
+  [404, /aún no está disponible/],
+  [422, /propuesta válida/],
+  [429, /límite de consultas/],
+  [502, /proveedor de IA/],
+  [503, /no está disponible en el servidor/],
+  [504, /tardó demasiado/],
+] as const)(
   "muestra errores seguros del backend (%i)",
-  async (status) => {
+  async (status, message) => {
     invoke.mockResolvedValueOnce({
       data: null,
       error: new FunctionsHttpError(new Response(null, { status })),
     });
-    await expect(requestAgent(request())).rejects.toThrow();
+    await expect(requestAgent(request())).rejects.toThrow(message);
   },
 );
+it("distingue un fallo de conexión y no muestra errores internos del servidor", async () => {
+  invoke.mockResolvedValueOnce({
+    data: null,
+    error: new FunctionsFetchError(new Error("private provider details")),
+  });
+  await expect(requestAgent(request())).rejects.toThrow(/conectar con el agente/);
+  invoke.mockResolvedValueOnce({
+    data: null,
+    error: new FunctionsHttpError(Response.json({ message: "private provider details" }, { status: 500 })),
+  });
+  await expect(requestAgent(request())).rejects.toThrow(/El material no cambió/);
+});

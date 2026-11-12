@@ -110,10 +110,16 @@ Configura `OPENAI_API_KEY` en los secretos del proyecto. Mantén modelo y dimens
 Para esta corrección, aplica las migraciones revisadas **antes** de desplegar `tutor-chat`: su nueva escritura depende de `internal_store_tutor_exchange`. Despliega después las funciones y el frontend. Ningún cambio de esta intervención se ha aplicado a producción.
 
 ```powershell
-npx supabase functions deploy document-upload document-delete document-process document-search tutor-chat practice-tutor --project-ref TU_PROJECT_REF --use-api
+npx supabase functions deploy document-upload document-delete document-process document-search tutor-chat practice-tutor studio-agent --project-ref TU_PROJECT_REF --use-api
 ```
 
 Conserva la verificación de JWT del usuario. Configura Auth con el dominio publicado y los retornos locales; `config.toml` no demuestra que los mismos valores estén aplicados en el servicio alojado.
+
+### Studio Agent: despliegue verificado el 11 de noviembre de 2026
+
+`studio-agent` ya está desplegado en el proyecto piloto. El fallo de la captura era un `OPTIONS 404`: Pages había publicado el panel, pero faltaba la función. Se comprobó CORS (`204`), rechazo sin sesión (`401`) y una consulta autenticada real: «Crea una fracción impropia y explícame» devolvió `200`, explicación y una acción `create` válida para `3/2`. Se conservan Auth, cuota y validación del lote. Este resultado corresponde a Studio Agent; no acredita el despliegue de cambios de otros endpoints.
+
+Publicar Pages no despliega las funciones. Al cambiar Studio Agent, empaqueta también sus imports de `src/core` desde la raíz del repositorio. Comprueba siempre una consulta con sesión después de desplegar; una compilación o un preflight correctos no verifican al proveedor.
 
 ## Límites y salud
 

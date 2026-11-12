@@ -1,5 +1,13 @@
 # Fontex Agent — desarrollo incremental
 
+## Corrección de producción — 11 de noviembre de 2026
+
+Los logs confirmaron `OPTIONS 404` en `/functions/v1/studio-agent`: el frontend estaba publicado y la función no existía. Se desplegó en el proyecto del frontend, conservando `verify_jwt: true`, el middleware autenticado, el secreto existente y la RPC de cuota (verificada presente), sin migraciones ni cambios de permisos.
+
+La comprobación remota obtuvo CORS `204`, petición sin autenticación `401` y consulta con sesión de pruebas `200`. La solicitud «Crea una fracción impropia y explícame» produjo una acción `create` para `3/2` y una explicación en español. Se cerró la sesión de pruebas. Esta comprobación sustituye la limitación histórica de integración no desplegada descrita más abajo; no sustituye una revisión visual en navegador.
+
+El cliente distingue errores de consulta, sesión, endpoint ausente, propuesta inválida, cuota, proveedor, conexión y timeout, sin mostrar respuestas privadas del proveedor. El handler distingue timeout `504` y conexión al proveedor `502`. Verificación: lint, typecheck, build, 206 pruebas frontend aprobadas (7 remotas omitidas) y 7 pruebas del handler aprobadas, incluida la regresión de timeout.
+
 Base revisada: `main` / `origin/main` en `1d627cc`, sin cambios locales. Las tres fases se desarrollaron y verificaron en `feat/fontex-agent`. Posteriormente, por solicitud del usuario, se integraron en `main` para publicar el frontend con Pages, conservando la base en `backup/main-before-fontex-agent-20261111`. El endpoint de IA no se despliega con Pages.
 
 ## Estado de partida

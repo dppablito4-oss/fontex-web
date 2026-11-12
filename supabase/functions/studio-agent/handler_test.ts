@@ -28,6 +28,7 @@ type Options = {
   raw?: string;
   method?: string;
   networkError?: boolean;
+  timeout?: boolean;
 };
 async function run(options: Options = {}) {
   let calls = 0, quotas = 0;
@@ -40,6 +41,9 @@ async function run(options: Options = {}) {
       calls++;
       providerBody = JSON.parse(String(init?.body));
       if (options.networkError) return Promise.reject(new Error("network"));
+      if (options.timeout) {
+        return Promise.reject(new DOMException("timeout", "TimeoutError"));
+      }
       return Promise.resolve(
         Response.json(
           options.model ??
@@ -171,6 +175,7 @@ Deno.test("agent: valida el lote completo y rechaza acciones ejecutables y respu
   ) assert.equal((await run({ model })).status, 422);
   assert.equal((await run({ status: 503 })).status, 502);
   assert.equal((await run({ networkError: true })).status, 502);
+  assert.equal((await run({ timeout: true })).status, 504);
 });
 Deno.test("agent: crear un objeto válido produce una propuesta sin escribir documentos remotos", async () => {
   const object = createObject("fraction");
