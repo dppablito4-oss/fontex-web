@@ -73,6 +73,10 @@
           ""
         ]
       }
+    ],
+    "grades": [
+      5,
+      6
     ]
   },
   {
@@ -132,6 +136,10 @@
           "Suma por columnas y conserva los centésimos. Alinea 1,20 con 0,35."
         ]
       }
+    ],
+    "grades": [
+      5,
+      6
     ]
   },
   {
@@ -191,6 +199,10 @@
           "Duplicar la distancia tendría que duplicar el costo total. Aquí pasas de S/ 7 a S/ 9."
         ]
       }
+    ],
+    "grades": [
+      1,
+      2
     ]
   },
   {
@@ -247,6 +259,1195 @@
         "misconceptions": [
           "El 2 multiplica a x y es la pendiente. La ordenada se obtiene evaluando f(0).",
           "El eje vertical se cruza cuando x = 0. La altura en ese punto es f(0), que vale 1.",
+          ""
+        ]
+      }
+    ],
+    "grades": [
+      2,
+      3
+    ]
+  },
+  {
+    "id": "inicial-3",
+    "level": "inicial",
+    "grade": "3 años",
+    "grades": [
+      3
+    ],
+    "code": "MAT INICIAL-3",
+    "title": "Contamos hasta tres",
+    "description": "Cuenta objetos con acompañamiento de una persona adulta.",
+    "pdf": "guia-inicial-3.pdf",
+    "source": "Guía · Contamos hasta tres",
+    "prompt": "Contar una sola vez Para la persona adulta: coloca tres tapas grandes sobre una mesa?",
+    "pages": [
+      {
+        "pageNumber": 1,
+        "heading": "Contar una sola vez",
+        "text": "Para la persona adulta: coloca tres tapas grandes sobre una mesa. Acompaña al niño o niña a señalar una tapa mientras dice uno, la siguiente mientras dice dos y la última mientras dice tres. Cada objeto recibe una sola palabra y la última palabra indica cuántos hay.\n\nSi vuelves a contar una tapa, el resultado cambia por error. Sepárenlas despacio y vuelvan a tocar cada una una sola vez. No hace falta leer números ni escribir. Usa objetos grandes, seguros y fáciles de distinguir."
+      },
+      {
+        "pageNumber": 2,
+        "heading": "La cantidad se conserva",
+        "text": "Muestra dos tapas juntas y luego sepáralas sin añadir ni quitar ninguna. Siguen siendo dos. La distancia entre los objetos no cambia la cantidad. Pide que el niño o niña compruebe contando.\n\nDespués compara dos tapas con tres tapas. Forma parejas, una de cada grupo: en el grupo de tres sobra una. Hay más en ese grupo. Formula las preguntas en voz alta y deja que responda señalando o moviendo objetos; las opciones escritas son una ayuda para quien acompaña."
+      }
+    ],
+    "questions": [
+      {
+        "text": "Señalas tres tapas una sola vez: uno, dos, tres. ¿Cuántas hay?",
+        "options": [
+          "Dos",
+          "Tres",
+          "Cuatro"
+        ],
+        "correct": 1,
+        "hint": "Toca una tapa por cada palabra.",
+        "feedback": "Hay tres tapas. La última palabra del conteo fue tres.",
+        "page": 1,
+        "misconceptions": [
+          "Dos deja una tapa sin contar.",
+          "",
+          "Cuatro contaría alguna tapa dos veces."
+        ]
+      },
+      {
+        "text": "Separaste dos tapas sin añadir ni quitar ninguna. ¿Cuántas quedan?",
+        "options": [
+          "Dos",
+          "Tres",
+          "Una"
+        ],
+        "correct": 0,
+        "hint": "Vuelve a tocar cada tapa.",
+        "feedback": "Siguen siendo dos: solo cambió la distancia.",
+        "page": 2,
+        "misconceptions": [
+          "",
+          "Separarlas no añade una tapa.",
+          "Separarlas no quita una tapa."
+        ]
+      },
+      {
+        "text": "Emparejas dos tapas con un grupo de tres. ¿En qué grupo sobra una?",
+        "options": [
+          "En el de dos",
+          "No sobra ninguna",
+          "En el de tres"
+        ],
+        "correct": 2,
+        "hint": "Junta una tapa de cada grupo.",
+        "feedback": "En el grupo de tres sobra una; ese grupo tiene más.",
+        "page": 2,
+        "misconceptions": [
+          "El grupo de dos usa sus dos tapas al formar parejas.",
+          "Dos parejas usan dos de las tres tapas; queda una.",
+          ""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "inicial-4",
+    "level": "inicial",
+    "grade": "4 años",
+    "grades": [
+      4
+    ],
+    "code": "MAT INICIAL-4",
+    "title": "Agrupamos y comparamos",
+    "description": "Clasifica objetos por una característica y compara cantidades hasta cinco.",
+    "pdf": "guia-inicial-4.pdf",
+    "source": "Guía · Agrupamos y comparamos",
+    "prompt": "Clasificar por color Para la persona adulta: prepara dos tapas rojas y tres tapas azules?",
+    "pages": [
+      {
+        "pageNumber": 1,
+        "heading": "Clasificar por color",
+        "text": "Para la persona adulta: prepara dos tapas rojas y tres tapas azules. Pide agruparlas por color: todas las rojas juntas y todas las azules juntas. En esta actividad el criterio es el color, aunque algunas tapas tengan tamaños distintos. Cuenta una sola vez cada tapa.\n\nHay dos rojas y tres azules; en total hay cinco. Reunir los grupos no crea objetos nuevos: seguimos contando las mismas cinco tapas. La actividad se realiza con objetos seguros y preguntas orales, sin exigir lectura."
+      },
+      {
+        "pageNumber": 2,
+        "heading": "Comparar con parejas",
+        "text": "Para comparar, forma una pareja con una tapa roja y una azul. Repite hasta que uno de los grupos se termine. Con dos rojas y tres azules formas dos parejas y sobra una azul: hay más azules.\n\nPuedes cambiar el orden de las tapas y comprobar de nuevo. El orden no cambia la cantidad de cada color. Si quitas la azul sobrante, los dos grupos quedan con la misma cantidad: dos y dos."
+      }
+    ],
+    "questions": [
+      {
+        "text": "El criterio es el color. ¿Qué tapas van juntas?",
+        "options": [
+          "Las del mismo tamaño",
+          "Las del mismo color",
+          "Las más cercanas"
+        ],
+        "correct": 1,
+        "hint": "Observa el criterio pedido.",
+        "feedback": "Si clasificamos por color, juntamos las del mismo color.",
+        "page": 1,
+        "misconceptions": [
+          "El tamaño sería un criterio diferente.",
+          "",
+          "La cercanía no cambia el color."
+        ]
+      },
+      {
+        "text": "Hay dos tapas rojas y tres azules. ¿Cuántas tapas hay en total?",
+        "options": [
+          "Cinco",
+          "Tres",
+          "Dos"
+        ],
+        "correct": 0,
+        "hint": "Cuenta todas una sola vez.",
+        "feedback": "Dos y tres reúnen cinco tapas.",
+        "page": 1,
+        "misconceptions": [
+          "",
+          "Tres cuenta solo las azules.",
+          "Dos cuenta solo las rojas."
+        ]
+      },
+      {
+        "text": "Emparejas dos rojas con tres azules. ¿Qué ocurre?",
+        "options": [
+          "Sobra una roja",
+          "Quedan iguales sin quitar nada",
+          "Sobra una azul"
+        ],
+        "correct": 2,
+        "hint": "Cada roja recibe una azul.",
+        "feedback": "Formas dos parejas y sobra una azul.",
+        "page": 2,
+        "misconceptions": [
+          "Las dos rojas ya están emparejadas.",
+          "Queda una azul sin pareja.",
+          ""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "inicial-5",
+    "level": "inicial",
+    "grade": "5 años",
+    "grades": [
+      5
+    ],
+    "code": "MAT INICIAL-5",
+    "title": "Patrones y cantidades hasta diez",
+    "description": "Continúa patrones sencillos y comprueba cantidades con objetos.",
+    "pdf": "guia-inicial-5.pdf",
+    "source": "Guía · Patrones y cantidades hasta diez",
+    "prompt": "Patrón que se repite Un patrón repite una regla?",
+    "pages": [
+      {
+        "pageNumber": 1,
+        "heading": "Patrón que se repite",
+        "text": "Un patrón repite una regla. Si colocamos rojo, azul, rojo, azul, el grupo que se repite es rojo-azul. Después del último azul viene rojo. Pide explicar la regla usando las palabras de los colores o señalando, sin exigir letras.\n\nPara la persona adulta: deja que el niño o niña arme otro patrón con objetos seguros. Dos objetos pueden seguir el mismo patrón aunque cambien de forma. Lo que comprobamos es el orden de los colores."
+      },
+      {
+        "pageNumber": 2,
+        "heading": "Contar y completar diez",
+        "text": "Coloca siete fichas grandes y añade tres. Cuenta todas una sola vez: ahora hay diez. También puedes contar desde siete: ocho, nueve, diez. Añadir tres aumenta la cantidad en tres.\n\nSi tienes diez y retiras dos, quedan ocho. Compruébalo moviendo las fichas que retiras a otro lugar y contando solo las que quedaron. La persona adulta lee las preguntas y acepta respuestas con objetos o palabras antes de elegir una opción."
+      }
+    ],
+    "questions": [
+      {
+        "text": "Rojo, azul, rojo, azul. ¿Qué color sigue?",
+        "options": [
+          "Azul",
+          "Rojo",
+          "Cualquier color"
+        ],
+        "correct": 1,
+        "hint": "Se repite rojo-azul.",
+        "feedback": "Después de azul vuelve rojo.",
+        "page": 1,
+        "misconceptions": [
+          "Dos azules seguidos cambiarían la regla.",
+          "",
+          "La regla determina el color que sigue."
+        ]
+      },
+      {
+        "text": "Tienes siete fichas y añades tres. ¿Cuántas hay?",
+        "options": [
+          "Diez",
+          "Ocho",
+          "Nueve"
+        ],
+        "correct": 0,
+        "hint": "Cuenta ocho, nueve, diez al añadirlas.",
+        "feedback": "Siete más tres son diez.",
+        "page": 2,
+        "misconceptions": [
+          "",
+          "Ocho cuenta solo una ficha añadida.",
+          "Nueve cuenta solo dos fichas añadidas."
+        ]
+      },
+      {
+        "text": "De diez fichas retiras dos. ¿Cuántas quedan?",
+        "options": [
+          "Doce",
+          "Siete",
+          "Ocho"
+        ],
+        "correct": 2,
+        "hint": "Aparta dos y cuenta las demás.",
+        "feedback": "Diez menos dos son ocho.",
+        "page": 2,
+        "misconceptions": [
+          "Retirar disminuye la cantidad; no la aumenta.",
+          "Solo retiraste dos, no tres.",
+          ""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "primaria-1",
+    "level": "primaria",
+    "grade": "1.º",
+    "grades": [
+      1
+    ],
+    "code": "MAT PRIMARIA-1",
+    "title": "Sumar y restar hasta veinte",
+    "description": "Representa sumas y restas con fichas y comprueba operaciones inversas.",
+    "pdf": "guia-primaria-1.pdf",
+    "source": "Guía · Sumar y restar hasta veinte",
+    "prompt": "Sumar es reunir Si tienes ocho fichas y recibes cinco, reúnes ocho más cinco?",
+    "pages": [
+      {
+        "pageNumber": 1,
+        "heading": "Sumar es reunir",
+        "text": "Si tienes ocho fichas y recibes cinco, reúnes ocho más cinco. Puedes completar primero diez: de las cinco nuevas tomas dos para llegar de ocho a diez y después añades las tres restantes. Así, 8 + 5 = 13.\n\nUna suma también puede dibujarse. Lo importante es contar cada ficha una sola vez y mantener la misma unidad. Cambiar el orden de los grupos no cambia el total: 8 + 5 = 5 + 8."
+      },
+      {
+        "pageNumber": 2,
+        "heading": "Restar y comprobar",
+        "text": "Restar puede representar quitar. Si de trece fichas quitas cinco, quedan ocho: 13 − 5 = 8. La suma permite comprobarlo: 8 + 5 = 13.\n\nTambién puedes buscar cuánto falta. De nueve a doce faltan tres, porque 9 + 3 = 12. Usa dibujos o una recta con saltos de una unidad. No confundas los saltos con la cantidad de marcas que ves."
+      }
+    ],
+    "questions": [
+      {
+        "text": "¿Cuánto es 8 + 5?",
+        "options": [
+          "12",
+          "13",
+          "14"
+        ],
+        "correct": 1,
+        "hint": "Completa diez y añade lo que falta.",
+        "feedback": "8 + 2 = 10 y quedan 3; el total es 13.",
+        "page": 1,
+        "misconceptions": [
+          "De las cinco fichas quedan tres después de completar diez.",
+          "",
+          "Revisa que no hayas contado una ficha dos veces."
+        ]
+      },
+      {
+        "text": "¿Cuánto es 13 − 5?",
+        "options": [
+          "8",
+          "18",
+          "9"
+        ],
+        "correct": 0,
+        "hint": "Comprueba qué número sumado a cinco da trece.",
+        "feedback": "13 − 5 = 8, porque 8 + 5 = 13.",
+        "page": 2,
+        "misconceptions": [
+          "",
+          "Sumaste en lugar de quitar.",
+          "9 + 5 = 14, no 13."
+        ]
+      },
+      {
+        "text": "De nueve a doce, ¿cuánto falta?",
+        "options": [
+          "Dos",
+          "Cuatro",
+          "Tres"
+        ],
+        "correct": 2,
+        "hint": "Cuenta los saltos 10, 11 y 12.",
+        "feedback": "Faltan tres: 9 + 3 = 12.",
+        "page": 2,
+        "misconceptions": [
+          "Dos saltos llegan a once.",
+          "Cuatro saltos llegan a trece.",
+          ""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "primaria-2",
+    "level": "primaria",
+    "grade": "2.º",
+    "grades": [
+      2
+    ],
+    "code": "MAT PRIMARIA-2",
+    "title": "Decenas, unidades y reagrupación",
+    "description": "Lee números y reagrupa diez unidades como una decena.",
+    "pdf": "guia-primaria-2.pdf",
+    "source": "Guía · Decenas, unidades y reagrupación",
+    "prompt": "Valor posicional En 47, el 4 representa cuatro decenas, es decir, cuarenta; el 7 representa siete unidades?",
+    "pages": [
+      {
+        "pageNumber": 1,
+        "heading": "Valor posicional",
+        "text": "En 47, el 4 representa cuatro decenas, es decir, cuarenta; el 7 representa siete unidades. Por eso 47 = 40 + 7. Un mismo dígito puede valer distinto según su posición: el 4 de 47 no vale cuatro unidades.\n\nUna decena equivale a diez unidades. Puedes cambiar una decena por diez unidades sin alterar el total. Usa paquetes de diez palitos y palitos sueltos para comprobarlo."
+      },
+      {
+        "pageNumber": 2,
+        "heading": "Reagrupar al sumar y restar",
+        "text": "Para sumar 28 + 15, reúne ocho y cinco unidades: son trece unidades. Cambia diez de ellas por una decena. Quedan tres unidades y cuatro decenas en total, así que 28 + 15 = 43.\n\nPara restar 52 − 18, cambia una de las cinco decenas por diez unidades. Ahora tienes cuatro decenas y doce unidades. Quita una decena y ocho unidades: quedan tres decenas y cuatro unidades, es decir, 34. Comprueba: 34 + 18 = 52."
+      }
+    ],
+    "questions": [
+      {
+        "text": "¿Qué representa el 4 en 47?",
+        "options": [
+          "Cuatro unidades",
+          "Cuarenta unidades",
+          "Siete unidades"
+        ],
+        "correct": 1,
+        "hint": "Está en la posición de las decenas.",
+        "feedback": "Cuatro decenas equivalen a cuarenta unidades.",
+        "page": 1,
+        "misconceptions": [
+          "El 4 está en las decenas, no en las unidades.",
+          "",
+          "Siete es el dígito de las unidades."
+        ]
+      },
+      {
+        "text": "¿Cuánto es 28 + 15?",
+        "options": [
+          "43",
+          "33",
+          "313"
+        ],
+        "correct": 0,
+        "hint": "Cambia diez de las trece unidades por una decena.",
+        "feedback": "Dos decenas, una decena y la decena reagrupada dan cuatro decenas; quedan tres unidades.",
+        "page": 2,
+        "misconceptions": [
+          "",
+          "Falta sumar la decena que se formó con diez unidades.",
+          "No pegues los resultados de cada columna; reagrupa."
+        ]
+      },
+      {
+        "text": "¿Cuánto es 52 − 18?",
+        "options": [
+          "46",
+          "44",
+          "34"
+        ],
+        "correct": 2,
+        "hint": "Representa 52 como cuatro decenas y doce unidades.",
+        "feedback": "12 − 8 = 4 y 4 − 1 = 3 decenas; quedan 34.",
+        "page": 2,
+        "misconceptions": [
+          "No se resta siempre la cifra menor de la mayor.",
+          "Al cambiar una decena por diez unidades quedan cuatro decenas, no cinco.",
+          ""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "primaria-3",
+    "level": "primaria",
+    "grade": "3.º",
+    "grades": [
+      3
+    ],
+    "code": "MAT PRIMARIA-3",
+    "title": "Multiplicar y repartir",
+    "description": "Relaciona grupos iguales, multiplicación y división exacta.",
+    "pdf": "guia-primaria-3.pdf",
+    "source": "Guía · Multiplicar y repartir",
+    "prompt": "Grupos iguales Cuatro bolsas con seis semillas cada una contienen 6 + 6 + 6 + 6 = 24 semillas?",
+    "pages": [
+      {
+        "pageNumber": 1,
+        "heading": "Grupos iguales",
+        "text": "Cuatro bolsas con seis semillas cada una contienen 6 + 6 + 6 + 6 = 24 semillas. Podemos escribir 4 × 6 = 24. Multiplicar sirve aquí para contar grupos iguales, no para juntar grupos con cantidades diferentes.\n\nUn arreglo con cuatro filas de seis puntos también tiene veinticuatro puntos. Si lo giras, ves seis filas de cuatro; el total se conserva: 4 × 6 = 6 × 4."
+      },
+      {
+        "pageNumber": 2,
+        "heading": "División exacta",
+        "text": "Repartir veinticuatro semillas entre cuatro bolsas por igual deja seis en cada una: 24 ÷ 4 = 6. Comprueba multiplicando 4 × 6 = 24.\n\nOtra pregunta es cuántas bolsas de seis puedes formar con veinticuatro semillas. La respuesta es cuatro: 24 ÷ 6 = 4. En una división, identifica si buscas el tamaño de cada grupo o la cantidad de grupos. Esta guía trabaja repartos exactos con divisor distinto de cero."
+      }
+    ],
+    "questions": [
+      {
+        "text": "Cuatro bolsas tienen seis semillas cada una. ¿Cuántas semillas hay?",
+        "options": [
+          "10",
+          "24",
+          "46"
+        ],
+        "correct": 1,
+        "hint": "Suma seis cuatro veces.",
+        "feedback": "4 × 6 = 24 semillas.",
+        "page": 1,
+        "misconceptions": [
+          "4 + 6 no cuenta cuatro grupos de seis.",
+          "",
+          "No se unen las cifras para multiplicar."
+        ]
+      },
+      {
+        "text": "Repartes 24 semillas entre cuatro bolsas por igual. ¿Cuántas van en cada bolsa?",
+        "options": [
+          "6",
+          "4",
+          "20"
+        ],
+        "correct": 0,
+        "hint": "Busca qué número multiplicado por cuatro da 24.",
+        "feedback": "24 ÷ 4 = 6; cada bolsa recibe seis.",
+        "page": 2,
+        "misconceptions": [
+          "",
+          "Cuatro es la cantidad de bolsas, no el tamaño de cada grupo.",
+          "Restar cuatro una sola vez no reparte entre cuatro grupos."
+        ]
+      },
+      {
+        "text": "¿Cuántas bolsas de seis semillas formas con 24?",
+        "options": [
+          "Seis",
+          "Dieciocho",
+          "Cuatro"
+        ],
+        "correct": 2,
+        "hint": "Cuenta 6, 12, 18, 24.",
+        "feedback": "Formas cuatro grupos de seis.",
+        "page": 2,
+        "misconceptions": [
+          "Seis es el tamaño de cada grupo.",
+          "Quitar seis una vez no cuenta todos los grupos.",
+          ""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "primaria-4",
+    "level": "primaria",
+    "grade": "4.º",
+    "grades": [
+      4
+    ],
+    "code": "MAT PRIMARIA-4",
+    "title": "Fracciones y área rectangular",
+    "description": "Usa partes iguales y distingue área de perímetro.",
+    "pdf": "guia-primaria-4.pdf",
+    "source": "Guía · Fracciones y área rectangular",
+    "prompt": "Partes de la misma unidad Una fracción compara partes iguales de una unidad?",
+    "pages": [
+      {
+        "pageNumber": 1,
+        "heading": "Partes de la misma unidad",
+        "text": "Una fracción compara partes iguales de una unidad. Si un rectángulo se divide en cuatro partes de igual área y coloreas tres, coloreaste 3/4. El denominador cuenta las partes iguales de la unidad y el numerador cuenta las elegidas.\n\nPara sumar 1/4 + 2/4, las piezas tienen el mismo tamaño. Juntas tres cuartos: 1/4 + 2/4 = 3/4. El denominador no se suma porque la unidad sigue dividida en cuatro partes iguales."
+      },
+      {
+        "pageNumber": 2,
+        "heading": "Área y perímetro",
+        "text": "Un rectángulo de seis centímetros de largo y cuatro de ancho puede cubrirse con cuatro filas de seis cuadrados de un centímetro de lado. Su área es 6 × 4 = 24 cm².\n\nEl perímetro mide el borde: 6 + 4 + 6 + 4 = 20 cm. Área y perímetro responden preguntas distintas y usan unidades distintas. Comprueba siempre si se pide cubrir la superficie o recorrer el borde."
+      }
+    ],
+    "questions": [
+      {
+        "text": "¿Cuánto es 1/4 + 2/4?",
+        "options": [
+          "3/8",
+          "3/4",
+          "2/4"
+        ],
+        "correct": 1,
+        "hint": "Junta piezas que ya tienen el mismo tamaño.",
+        "feedback": "Un cuarto más dos cuartos son tres cuartos.",
+        "page": 1,
+        "misconceptions": [
+          "Sumar denominadores cambia el tamaño de las piezas.",
+          "",
+          "Debes contar las tres piezas reunidas."
+        ]
+      },
+      {
+        "text": "¿Cuál es el área de un rectángulo de 6 cm por 4 cm?",
+        "options": [
+          "24 cm²",
+          "20 cm",
+          "10 cm²"
+        ],
+        "correct": 0,
+        "hint": "Cuenta cuatro filas de seis cuadrados.",
+        "feedback": "El área es 6 × 4 = 24 cm².",
+        "page": 2,
+        "misconceptions": [
+          "",
+          "20 cm corresponde al perímetro, no al área.",
+          "Sumar largo y ancho no cuenta todos los cuadrados."
+        ]
+      },
+      {
+        "text": "¿Cuál es su perímetro?",
+        "options": [
+          "24 cm²",
+          "10 cm",
+          "20 cm"
+        ],
+        "correct": 2,
+        "hint": "Suma los cuatro lados.",
+        "feedback": "6 + 4 + 6 + 4 = 20 cm.",
+        "page": 2,
+        "misconceptions": [
+          "24 cm² mide la superficie.",
+          "Diez cuenta solo dos lados; faltan los otros dos.",
+          ""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "primaria-5",
+    "level": "primaria",
+    "grade": "5.º",
+    "grades": [
+      5
+    ],
+    "code": "MAT PRIMARIA-5",
+    "title": "Porcentajes como partes de cien",
+    "description": "Relaciona fracción, decimal y porcentaje en cantidades sencillas.",
+    "pdf": "guia-primaria-5.pdf",
+    "source": "Guía · Porcentajes como partes de cien",
+    "prompt": "Partes de cien Un porcentaje expresa cuántas partes se toman de cada cien?",
+    "pages": [
+      {
+        "pageNumber": 1,
+        "heading": "Partes de cien",
+        "text": "Un porcentaje expresa cuántas partes se toman de cada cien. Veinticinco por ciento se escribe 25 % y equivale a 25/100 = 1/4 = 0,25. La cuadrícula de cien casillas permite representar esas veinticinco partes.\n\nLa cantidad de casillas no es siempre la cantidad de dinero u objetos del problema: la cuadrícula representa una proporción de una unidad completa."
+      },
+      {
+        "pageNumber": 2,
+        "heading": "Calcular una parte",
+        "text": "Para hallar 25 % de 200 soles, toma la cuarta parte de 200: 200 ÷ 4 = 50 soles. También puedes calcular 200 × 25/100 = 50.\n\nUn descuento de 25 % sobre 200 soles reduce el precio en 50 soles. El precio que queda es 200 − 50 = 150 soles. Diferencia el monto del descuento del precio final. Para comprobar, 50 + 150 debe recuperar el precio original."
+      }
+    ],
+    "questions": [
+      {
+        "text": "¿Qué fracción equivale a 25 %?",
+        "options": [
+          "1/2",
+          "1/4",
+          "3/4"
+        ],
+        "correct": 1,
+        "hint": "Simplifica 25/100.",
+        "feedback": "25/100 = 1/4 al dividir ambos términos entre 25.",
+        "page": 1,
+        "misconceptions": [
+          "La mitad representa 50 %, no 25 %.",
+          "",
+          "Tres cuartos representan 75 %."
+        ]
+      },
+      {
+        "text": "¿Cuánto es 25 % de S/ 200?",
+        "options": [
+          "S/ 50",
+          "S/ 25",
+          "S/ 150"
+        ],
+        "correct": 0,
+        "hint": "Busca la cuarta parte de 200.",
+        "feedback": "200 ÷ 4 = 50 soles.",
+        "page": 2,
+        "misconceptions": [
+          "",
+          "25 soles sería 25 % de 100 soles.",
+          "150 soles es el precio restante después del descuento."
+        ]
+      },
+      {
+        "text": "Se descuenta 25 % de S/ 200. ¿Cuál es el precio final?",
+        "options": [
+          "S/ 50",
+          "S/ 175",
+          "S/ 150"
+        ],
+        "correct": 2,
+        "hint": "Resta al precio original el descuento de 50 soles.",
+        "feedback": "200 − 50 = 150 soles.",
+        "page": 2,
+        "misconceptions": [
+          "50 soles es el descuento, no el precio restante.",
+          "El descuento es 25 % de 200, no 25 soles.",
+          ""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "primaria-6",
+    "level": "primaria",
+    "grade": "6.º",
+    "grades": [
+      6
+    ],
+    "code": "MAT PRIMARIA-6",
+    "title": "Promedios y comparación de datos",
+    "description": "Calcula la media y la mediana e interpreta su significado.",
+    "pdf": "guia-primaria-6.pdf",
+    "source": "Guía · Promedios y comparación de datos",
+    "prompt": "Media como reparto equitativo Las cantidades 2, 3, 3, 4 y 8 suman 20?",
+    "pages": [
+      {
+        "pageNumber": 1,
+        "heading": "Media como reparto equitativo",
+        "text": "Las cantidades 2, 3, 3, 4 y 8 suman 20. Su media es 20 ÷ 5 = 4, porque hay cinco datos. Imagina repartir el total de manera equitativa entre cinco grupos: a cada uno le corresponderían cuatro.\n\nLa media no tiene que aparecer entre los datos. Si las cantidades fueran 2 y 3, la media sería 2,5. No dividas entre el dato mayor ni entre el número de valores diferentes."
+      },
+      {
+        "pageNumber": 2,
+        "heading": "Mediana y datos extremos",
+        "text": "La mediana es el dato central cuando ordenas los valores. En 2, 3, 3, 4 y 8, el central es 3. La moda es 3 porque se repite más veces. Media, mediana y moda pueden ser diferentes.\n\nSi cambias 8 por 18, la suma pasa a 30 y la media a 6, pero la mediana sigue siendo 3. Un dato extremo puede mover bastante la media. Describe qué medida usas y evita afirmar que todas las personas tienen la cantidad promedio."
+      }
+    ],
+    "questions": [
+      {
+        "text": "¿Cuál es la media de 2, 3, 3, 4 y 8?",
+        "options": [
+          "3",
+          "4",
+          "5"
+        ],
+        "correct": 1,
+        "hint": "Suma los cinco valores y divide entre cinco.",
+        "feedback": "20 ÷ 5 = 4.",
+        "page": 1,
+        "misconceptions": [
+          "Tres es la mediana y la moda de este conjunto.",
+          "",
+          "Hay cinco datos, pero eso no es su media."
+        ]
+      },
+      {
+        "text": "¿Cuál es la mediana de 2, 3, 3, 4 y 8?",
+        "options": [
+          "3",
+          "4",
+          "8"
+        ],
+        "correct": 0,
+        "hint": "Busca el tercer dato en la lista ordenada.",
+        "feedback": "El tercer dato es 3 y deja dos datos a cada lado.",
+        "page": 2,
+        "misconceptions": [
+          "",
+          "Cuatro es la media, no el dato central.",
+          "Ocho es el mayor valor, no el central."
+        ]
+      },
+      {
+        "text": "Si cambias 8 por 18, ¿qué sucede?",
+        "options": [
+          "La media sigue en 4",
+          "La mediana se vuelve 18",
+          "La media es 6 y la mediana sigue en 3"
+        ],
+        "correct": 2,
+        "hint": "La nueva suma es 30 y siguen siendo cinco datos.",
+        "feedback": "30 ÷ 5 = 6; el dato central continúa siendo 3.",
+        "page": 2,
+        "misconceptions": [
+          "La suma aumenta en diez, por lo que la media también cambia.",
+          "El dato mayor no pasa a ser el central.",
+          ""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "secundaria-1",
+    "level": "secundaria",
+    "grade": "1.º",
+    "grades": [
+      1
+    ],
+    "code": "MAT SECUNDARIA-1",
+    "title": "Enteros y ecuaciones",
+    "description": "Interpreta números con signo y conserva la igualdad al resolver.",
+    "pdf": "guia-secundaria-1.pdf",
+    "source": "Guía · Enteros y ecuaciones",
+    "prompt": "Enteros en una recta Los enteros incluyen números negativos, cero y positivos?",
+    "pages": [
+      {
+        "pageNumber": 1,
+        "heading": "Enteros en una recta",
+        "text": "Los enteros incluyen números negativos, cero y positivos. En una recta, los números aumentan hacia la derecha. Por eso −2 es mayor que −5: está más a la derecha. El valor absoluto mide distancia al cero; no indica por sí solo cuál número es mayor.\n\nPara sumar −3 + 5, empieza en −3 y avanza cinco unidades a la derecha. Llegas a 2. Restar un número positivo mueve hacia la izquierda: 2 − 4 = −2."
+      },
+      {
+        "pageNumber": 2,
+        "heading": "Conservar la igualdad",
+        "text": "Una ecuación es una igualdad con una incógnita. En 2x + 3 = 11, resta tres en ambos lados para obtener 2x = 8. Luego divide ambos lados entre dos: x = 4.\n\nHacer la misma operación válida en ambos lados conserva la igualdad. Comprueba sustituyendo: 2 × 4 + 3 = 11. No basta mover símbolos sin explicar qué operación haces. No se puede dividir entre cero."
+      }
+    ],
+    "questions": [
+      {
+        "text": "¿Cuál es mayor?",
+        "options": [
+          "−5",
+          "−2",
+          "Son iguales"
+        ],
+        "correct": 1,
+        "hint": "Busca el que esté más a la derecha.",
+        "feedback": "−2 está a la derecha de −5, así que es mayor.",
+        "page": 1,
+        "misconceptions": [
+          "El valor absoluto mayor no hace mayor a un entero negativo.",
+          "",
+          "Son posiciones distintas de la recta."
+        ]
+      },
+      {
+        "text": "¿Cuánto es −3 + 5?",
+        "options": [
+          "2",
+          "−8",
+          "−2"
+        ],
+        "correct": 0,
+        "hint": "Desde −3 avanza cinco unidades a la derecha.",
+        "feedback": "Tres unidades llegan a cero y dos más llegan a 2.",
+        "page": 1,
+        "misconceptions": [
+          "",
+          "Sumar un positivo mueve a la derecha, no a la izquierda.",
+          "Después de llegar a cero faltan dos pasos positivos."
+        ]
+      },
+      {
+        "text": "¿Qué valor resuelve 2x + 3 = 11?",
+        "options": [
+          "7",
+          "5,5",
+          "4"
+        ],
+        "correct": 2,
+        "hint": "Resta tres en ambos lados y después divide entre dos.",
+        "feedback": "x = 4; 2 × 4 + 3 = 11.",
+        "page": 2,
+        "misconceptions": [
+          "Resta tres antes de dividir entre dos.",
+          "Dividir once entre dos deja sin tratar el término +3.",
+          ""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "secundaria-2",
+    "level": "secundaria",
+    "grade": "2.º",
+    "grades": [
+      2
+    ],
+    "code": "MAT SECUNDARIA-2",
+    "title": "Sistemas de dos ecuaciones",
+    "description": "Encuentra dos valores que cumplan ambas ecuaciones.",
+    "pdf": "guia-secundaria-2.pdf",
+    "source": "Guía · Sistemas de dos ecuaciones",
+    "prompt": "Dos condiciones a la vez Considera el sistema x + y = 10 y x − y = 2?",
+    "pages": [
+      {
+        "pageNumber": 1,
+        "heading": "Dos condiciones a la vez",
+        "text": "Considera el sistema x + y = 10 y x − y = 2. Una solución debe cumplir las dos igualdades con los mismos valores de x e y. Un par que solo cumple una ecuación no resuelve el sistema.\n\nAl sumar las igualdades, y y −y se cancelan: 2x = 12. Entonces x = 6. Sustituye en x + y = 10 para obtener y = 4. Comprueba: 6 + 4 = 10 y 6 − 4 = 2."
+      },
+      {
+        "pageNumber": 2,
+        "heading": "Una, ninguna o muchas soluciones",
+        "text": "En el plano, cada ecuación lineal con dos incógnitas representa una recta. Dos rectas que se cortan en un punto tienen una solución común.\n\nSi las ecuaciones son x + y = 10 y 2x + 2y = 20, representan la misma recta y hay infinitas soluciones. Si son x + y = 10 y x + y = 12, son incompatibles y no hay solución. No todos los sistemas tienen una única solución."
+      }
+    ],
+    "questions": [
+      {
+        "text": "¿Qué par resuelve x + y = 10 y x − y = 2?",
+        "options": [
+          "x = 4, y = 6",
+          "x = 6, y = 4",
+          "x = 5, y = 5"
+        ],
+        "correct": 1,
+        "hint": "Suma ambas ecuaciones para eliminar y.",
+        "feedback": "6 + 4 = 10 y 6 − 4 = 2.",
+        "page": 1,
+        "misconceptions": [
+          "4 − 6 = −2, no 2.",
+          "",
+          "5 − 5 = 0, no 2."
+        ]
+      },
+      {
+        "text": "¿Cuántas soluciones tienen x + y = 10 y 2x + 2y = 20?",
+        "options": [
+          "Infinitas",
+          "Una",
+          "Ninguna"
+        ],
+        "correct": 0,
+        "hint": "Divide la segunda ecuación entre dos.",
+        "feedback": "La segunda repite la primera; ambas describen la misma recta.",
+        "page": 2,
+        "misconceptions": [
+          "",
+          "No aparece una condición independiente que determine un solo punto.",
+          "Las ecuaciones son compatibles, pues son equivalentes."
+        ]
+      },
+      {
+        "text": "¿Cuántas soluciones tienen x + y = 10 y x + y = 12?",
+        "options": [
+          "Una",
+          "Infinitas",
+          "Ninguna"
+        ],
+        "correct": 2,
+        "hint": "La misma suma no puede tener dos resultados diferentes.",
+        "feedback": "No existe un par cuya suma sea diez y doce al mismo tiempo.",
+        "page": 2,
+        "misconceptions": [
+          "Ningún par cumple las dos condiciones.",
+          "Las rectas son distintas y paralelas, no coincidentes.",
+          ""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "secundaria-3",
+    "level": "secundaria",
+    "grade": "3.º",
+    "grades": [
+      3
+    ],
+    "code": "MAT SECUNDARIA-3",
+    "title": "Ecuaciones cuadráticas",
+    "description": "Factoriza casos sencillos e interpreta sus soluciones reales.",
+    "pdf": "guia-secundaria-3.pdf",
+    "source": "Guía · Ecuaciones cuadráticas",
+    "prompt": "Producto igual a cero Una ecuación cuadrática tiene un término x² con coeficiente distinto de cero?",
+    "pages": [
+      {
+        "pageNumber": 1,
+        "heading": "Producto igual a cero",
+        "text": "Una ecuación cuadrática tiene un término x² con coeficiente distinto de cero. En x² − 5x + 6 = 0 buscamos dos números que sumen −5 y cuyo producto sea 6: −2 y −3. Por eso x² − 5x + 6 = (x − 2)(x − 3).\n\nSi un producto de números reales vale cero, al menos uno de sus factores vale cero. Entonces x − 2 = 0 o x − 3 = 0, y las soluciones son x = 2 y x = 3. Comprueba cada una en la ecuación original."
+      },
+      {
+        "pageNumber": 2,
+        "heading": "No perder soluciones",
+        "text": "En x² = 9, las soluciones reales son 3 y −3 porque ambos números al cuadrado dan nueve. La raíz cuadrada principal de 9 es 3, pero resolver x² = 9 requiere considerar ambos signos.\n\nLa ecuación x² + 1 = 0 no tiene soluciones reales: el cuadrado de un real nunca es negativo. El conjunto numérico importa. Esta guía se limita a soluciones reales y no estudia números complejos."
+      }
+    ],
+    "questions": [
+      {
+        "text": "¿Cuáles son las soluciones de x² − 5x + 6 = 0?",
+        "options": [
+          "−2 y −3",
+          "2 y 3",
+          "5 y 6"
+        ],
+        "correct": 1,
+        "hint": "Factoriza como (x − 2)(x − 3).",
+        "feedback": "Cada factor puede valer cero: x = 2 o x = 3.",
+        "page": 1,
+        "misconceptions": [
+          "Los factores son x − 2 y x − 3, no x + 2 y x + 3.",
+          "",
+          "Sustituir cinco o seis no hace cero la expresión."
+        ]
+      },
+      {
+        "text": "¿Cuáles son las soluciones reales de x² = 9?",
+        "options": [
+          "−3 y 3",
+          "Solo 3",
+          "Solo −3"
+        ],
+        "correct": 0,
+        "hint": "Comprueba los cuadrados de ambos signos.",
+        "feedback": "3² = 9 y (−3)² = 9.",
+        "page": 2,
+        "misconceptions": [
+          "",
+          "La solución negativa también satisface la ecuación.",
+          "La solución positiva también satisface la ecuación."
+        ]
+      },
+      {
+        "text": "¿Cuántas soluciones reales tiene x² + 1 = 0?",
+        "options": [
+          "Una",
+          "Dos",
+          "Ninguna"
+        ],
+        "correct": 2,
+        "hint": "El cuadrado de un real es mayor o igual que cero.",
+        "feedback": "Exigiría x² = −1, imposible en los reales.",
+        "page": 2,
+        "misconceptions": [
+          "Cero tampoco sirve: 0² + 1 = 1.",
+          "No hay reales cuyo cuadrado sea −1.",
+          ""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "secundaria-4",
+    "level": "secundaria",
+    "grade": "4.º",
+    "grades": [
+      4
+    ],
+    "code": "MAT SECUNDARIA-4",
+    "title": "Triángulos rectángulos",
+    "description": "Usa Pitágoras y razones trigonométricas en un triángulo rectángulo.",
+    "pdf": "guia-secundaria-4.pdf",
+    "source": "Guía · Triángulos rectángulos",
+    "prompt": "Teorema de Pitágoras En un triángulo rectángulo, los lados que forman el ángulo recto son los catetos?",
+    "pages": [
+      {
+        "pageNumber": 1,
+        "heading": "Teorema de Pitágoras",
+        "text": "En un triángulo rectángulo, los lados que forman el ángulo recto son los catetos. El lado opuesto al ángulo recto es la hipotenusa y es el más largo. Si los catetos miden 3 y 4, el cuadrado de la hipotenusa es 3² + 4² = 25; la hipotenusa mide 5.\n\nEl teorema a² + b² = c² se aplica a triángulos rectángulos. No uses la suma de los catetos como longitud de la hipotenusa."
+      },
+      {
+        "pageNumber": 2,
+        "heading": "Razones según el ángulo",
+        "text": "Respecto de un ángulo agudo, el seno es cateto opuesto dividido entre hipotenusa; el coseno es cateto adyacente dividido entre hipotenusa y la tangente es opuesto dividido entre adyacente.\n\nEn un triángulo de lados 3, 4 y 5, toma el ángulo cuyo lado opuesto mide 3. Su seno es 3/5 y su coseno es 4/5. Si cambias el ángulo de referencia, cambian el cateto opuesto y el adyacente. La hipotenusa sigue siendo 5."
+      }
+    ],
+    "questions": [
+      {
+        "text": "Los catetos miden 3 y 4. ¿Cuánto mide la hipotenusa?",
+        "options": [
+          "7",
+          "5",
+          "25"
+        ],
+        "correct": 1,
+        "hint": "Calcula 3² + 4² y después su raíz positiva.",
+        "feedback": "9 + 16 = 25 y la raíz positiva de 25 es 5.",
+        "page": 1,
+        "misconceptions": [
+          "La hipotenusa no es la suma de los catetos.",
+          "",
+          "25 es el cuadrado de la hipotenusa, no su longitud."
+        ]
+      },
+      {
+        "text": "En el triángulo 3-4-5, el lado opuesto al ángulo mide 3. ¿Cuál es su seno?",
+        "options": [
+          "3/5",
+          "4/5",
+          "3/4"
+        ],
+        "correct": 0,
+        "hint": "Divide el cateto opuesto entre la hipotenusa.",
+        "feedback": "Seno = 3/5.",
+        "page": 2,
+        "misconceptions": [
+          "",
+          "4/5 es el coseno para este ángulo.",
+          "3/4 es la tangente para este ángulo."
+        ]
+      },
+      {
+        "text": "Con el mismo ángulo de referencia, ¿cuál es el coseno?",
+        "options": [
+          "3/5",
+          "5/4",
+          "4/5"
+        ],
+        "correct": 2,
+        "hint": "Divide el cateto adyacente entre la hipotenusa.",
+        "feedback": "Coseno = 4/5.",
+        "page": 2,
+        "misconceptions": [
+          "3/5 es el seno de este ángulo.",
+          "La razón es adyacente/hipotenusa, no su inversa.",
+          ""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "secundaria-5",
+    "level": "secundaria",
+    "grade": "5.º",
+    "grades": [
+      5
+    ],
+    "code": "MAT SECUNDARIA-5",
+    "title": "Probabilidad y crecimiento compuesto",
+    "description": "Distingue independencia, probabilidad y aumentos sucesivos.",
+    "pdf": "guia-secundaria-5.pdf",
+    "source": "Guía · Probabilidad y crecimiento compuesto",
+    "prompt": "Eventos independientes Una moneda equilibrada tiene dos resultados igualmente probables?",
+    "pages": [
+      {
+        "pageNumber": 1,
+        "heading": "Eventos independientes",
+        "text": "Una moneda equilibrada tiene dos resultados igualmente probables. La probabilidad de cara es 1/2. Al lanzarla dos veces de manera independiente, las cuatro parejas CC, CS, SC y SS son igualmente probables. La probabilidad de dos caras es 1/4.\n\nLa independencia significa que el resultado del primer lanzamiento no modifica la probabilidad de cara en el segundo. Aunque hayan salido varias caras, el siguiente lanzamiento no queda obligado a dar sello."
+      },
+      {
+        "pageNumber": 2,
+        "heading": "Aumentos sucesivos",
+        "text": "Si una cantidad de 100 aumenta 10 %, pasa a 110. Si luego aumenta otro 10 %, el segundo aumento se calcula sobre 110: 110 × 1,10 = 121. El aumento total es 21 %, no 20 %.\n\nEn general, repetir dos aumentos de tasa r multiplica el inicio por (1 + r)². Este ejemplo supone una tasa constante, sin comisiones ni movimientos adicionales. Para una disminución de 10 % se usa el factor 0,90."
+      }
+    ],
+    "questions": [
+      {
+        "text": "Una moneda equilibrada se lanza dos veces de forma independiente. ¿Cuál es la probabilidad de dos caras?",
+        "options": [
+          "1/2",
+          "1/4",
+          "1"
+        ],
+        "correct": 1,
+        "hint": "Enumera CC, CS, SC y SS.",
+        "feedback": "Una de las cuatro parejas es CC, por lo que la probabilidad es 1/4.",
+        "page": 1,
+        "misconceptions": [
+          "1/2 es la probabilidad de cara en un lanzamiento.",
+          "",
+          "Dos caras no es un resultado seguro."
+        ]
+      },
+      {
+        "text": "Tras varias caras en una moneda equilibrada e independiente, ¿cuál es la probabilidad de cara en el siguiente lanzamiento?",
+        "options": [
+          "1/2",
+          "0",
+          "1"
+        ],
+        "correct": 0,
+        "hint": "La moneda no recuerda los resultados anteriores.",
+        "feedback": "La independencia conserva la probabilidad de cara en 1/2.",
+        "page": 1,
+        "misconceptions": [
+          "",
+          "Las caras anteriores no obligan a que salga sello.",
+          "Las caras anteriores no aseguran otra cara."
+        ]
+      },
+      {
+        "text": "100 aumenta 10 % y después otro 10 %. ¿Cuál es el resultado?",
+        "options": [
+          "120",
+          "110",
+          "121"
+        ],
+        "correct": 2,
+        "hint": "Aplica el segundo aumento sobre 110.",
+        "feedback": "100 × 1,10 × 1,10 = 121.",
+        "page": 2,
+        "misconceptions": [
+          "Los porcentajes sucesivos se calculan sobre bases diferentes.",
+          "110 solo incorpora el primer aumento.",
+          ""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "universidad-cambio",
+    "level": "universidad",
+    "grade": "Ingreso universitario",
+    "grades": [
+      1
+    ],
+    "code": "MAT UNIVERSIDAD-CAMBIO",
+    "title": "Cambio medio y derivada",
+    "description": "Introduce la derivada de x² a partir de pendientes secantes.",
+    "pdf": "guia-universidad-cambio.pdf",
+    "source": "Guía · Cambio medio y derivada",
+    "prompt": "Tasa de cambio media Para f(x) = x², entre x = 2 y x = 3 los valores de la función pasan de 4 a 9?",
+    "pages": [
+      {
+        "pageNumber": 1,
+        "heading": "Tasa de cambio media",
+        "text": "Para f(x) = x², entre x = 2 y x = 3 los valores de la función pasan de 4 a 9. La tasa de cambio media es (9 − 4)/(3 − 2) = 5. Es la pendiente de una recta secante entre dos puntos, no el valor de la función.\n\nEn un intervalo de a a a + h con h distinto de cero, la tasa es ((a + h)² − a²)/h = (2ah + h²)/h = 2a + h. El cociente solo puede simplificarse después de establecer que h no es cero."
+      },
+      {
+        "pageNumber": 2,
+        "heading": "Derivada como límite",
+        "text": "Cuando h se aproxima a cero, 2a + h se aproxima a 2a. Por definición, la derivada de f(x) = x² en a es f′(a) = 2a. En a = 3, f′(3) = 6. Esta es la pendiente de la tangente y describe la tasa de cambio instantánea.\n\nNo sustituimos h = 0 en el cociente original, porque produciría una división entre cero. Calculamos un límite de valores con h distinto de cero. La función x² está definida y es derivable en todos los reales; otras funciones pueden tener puntos donde no existe derivada."
+      }
+    ],
+    "questions": [
+      {
+        "text": "Para f(x) = x², ¿cuál es la tasa media entre x = 2 y x = 3?",
+        "options": [
+          "9",
+          "5",
+          "6"
+        ],
+        "correct": 1,
+        "hint": "Divide el cambio en f entre el cambio en x.",
+        "feedback": "(9 − 4)/(3 − 2) = 5.",
+        "page": 1,
+        "misconceptions": [
+          "Nueve es f(3), no la tasa de cambio.",
+          "",
+          "Seis es la derivada en 3, no la tasa media en ese intervalo."
+        ]
+      },
+      {
+        "text": "Si f(x) = x², ¿cuánto vale f′(3)?",
+        "options": [
+          "6",
+          "9",
+          "3"
+        ],
+        "correct": 0,
+        "hint": "Usa f′(a) = 2a.",
+        "feedback": "f′(3) = 2 × 3 = 6.",
+        "page": 2,
+        "misconceptions": [
+          "",
+          "Nueve es el valor de la función en tres.",
+          "La derivada duplica a, no lo deja igual."
+        ]
+      },
+      {
+        "text": "¿Por qué no ponemos h = 0 en el cociente original?",
+        "options": [
+          "Porque h siempre debe ser positivo",
+          "Porque f(3) no existe",
+          "Porque produciría una división entre cero"
+        ],
+        "correct": 2,
+        "hint": "Distingue el valor en cero del límite cuando h se acerca a cero.",
+        "feedback": "El cociente original divide entre h; el límite estudia valores cercanos con h distinto de cero.",
+        "page": 2,
+        "misconceptions": [
+          "h puede acercarse a cero desde ambos lados.",
+          "f(3) = 9 sí existe.",
           ""
         ]
       }

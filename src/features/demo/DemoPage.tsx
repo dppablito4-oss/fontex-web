@@ -9,10 +9,12 @@ import { useAuth } from "../auth/AuthProvider";
 import { BrandMark } from "../../components/BrandMark";
 import { ThemeToggle } from "../theme/ThemeToggle";
 import { PdfViewer } from "../library/components/PdfViewer";
+import { AcademicMarkdown } from "../tutor/components/AcademicMarkdown";
 import { type Citation, type DemoMaterial, type Exchange, type TutorConnection, findCitation, indexMaterial, readMaterials, requestTutor, tutorAvailable, writeMaterial } from "./demoService";
 import lessons from "../../../supabase/functions/_shared/practice/lessons.json";
 import { type TutorMode, trustedResources } from "../../../supabase/functions/_shared/practice/models";
 import "./demo.css";
+import { availableGrades, gradeLabel, lessonLevel, lessonLevels, type LessonLevel } from "./lesson-catalog";
 
 const sections = [
   { id: "aula", label: "Inicio", icon: LayoutGrid },
@@ -23,7 +25,6 @@ const sections = [
 ] as const;
 
 type Section = (typeof sections)[number]["id"];
-type Level = "primaria" | "secundaria";
 type Progress = { answers: Record<number, number>; exchanges: Exchange[] };
 type Saved = { lessonId: string; progress: Record<string, Progress> };
 type Viewer = { document: { title: string; originalFilename: string }; blob: Blob; page: number };
@@ -76,7 +77,8 @@ function DemoWorkspace({ accountId, authStatus }: { accountId?: string; authStat
   const [saved, setSaved] = useState(() => readProgress(storageKey));
   const savedRef = useRef(saved);
   const [section, setSection] = useState<Section>("aula");
-  const [level, setLevel] = useState<Level>(saved.lessonId === "funciones" || saved.lessonId === "proporciones" ? "secundaria" : "primaria");
+  const [level, setLevel] = useState<LessonLevel>(() => lessonLevel(saved.lessonId));
+  const [grade, setGrade] = useState<number | "all">("all");
   const [activeExercise, setActiveExercise] = useState(0);
   const [coach, setCoach] = useState<Record<string, string>>({});
   const [connection, setConnection] = useState<TutorConnection | null>(null);
@@ -109,6 +111,9 @@ function DemoWorkspace({ accountId, authStatus }: { accountId?: string; authStat
   const coachText = coach[`${lesson.id}:${activeExercise}:${activeAnswer}`];
   const theoryPage = lesson.pages.find((page) => page.pageNumber === activeQuestion?.page);
   const mistake = activeAnswer !== undefined && activeAnswer !== activeQuestion.correct;
+  const catalogLessons = lessons.filter(item => item.level === level && (grade === "all" || item.grades.includes(grade)));
+  const featuredLesson = catalogLessons.find(item => item.id === lesson.id) ?? catalogLessons[0]!;
+  const featuredAnswered = Object.keys(saved.progress[featuredLesson.id]?.answers ?? {}).length;
 
   useEffect(() => {
     const previousTitle = document.title;
@@ -325,7 +330,7 @@ function DemoWorkspace({ accountId, authStatus }: { accountId?: string; authStat
         </header>
         <main className={`fd-main fd-page-${section}`}>
           <header className="fd-intro">
-            {section !== "aula" && <p className="fd-topic-context">{lesson.title} <span>·</span> {lesson.grade} de {lesson.level}</p>}
+            {section !== "aula" && <p className="fd-topic-context">{lesson.title} <span>·</span> {lesson.grade} · {lessonLevels[lessonLevel(lesson.id)]}</p>}
             <h1 ref={heading} tabIndex={-1}>{sectionHeadings[section]}</h1>
           </header>
 
@@ -333,13 +338,13 @@ function DemoWorkspace({ accountId, authStatus }: { accountId?: string; authStat
             <>
               <section className="fd-hero" aria-labelledby="lesson-title">
                 <div className="fd-hero-copy">
-                  <h2 id="lesson-title">{lesson.title}</h2>
-                  <p>{lesson.description}</p>
+                  <h2 id="lesson-title">{featuredLesson.title}</h2>
+                  <p>{featuredLesson.description}</p>
                   <div className="fd-hero-actions">
-                    <button className="fd-button" onClick={continueLesson} type="button">
-                      {answered === lesson.questions.length ? "Ver práctica" : answered ? "Continuar práctica" : "Empezar tema"} <ArrowRight size={17} />
+                    <button className="fd-button" onClick={() => featuredLesson.id === lesson.id ? continueLesson() : selectLesson(featuredLesson.id)} type="button">
+                      {featuredAnswered === featuredLesson.questions.length ? "Ver práctica" : featuredAnswered ? "Continuar práctica" : "Empezar tema"} <ArrowRight size={17} />
                     </button>
-                    {answered > 0 && <span>{answered} de {lesson.questions.length} resueltos</span>}
+                    {featuredAnswered > 0 && <span>{featuredAnswered} de {featuredLesson.questions.length} resueltos</span>}
                   </div>
                 </div>
                 <div className="fd-hero-mark" aria-hidden="true">
@@ -355,17 +360,22 @@ function DemoWorkspace({ accountId, authStatus }: { accountId?: string; authStat
                 <div className="fd-flex">
                 <h2 id="fd-topics">Temas</h2>
                   <div className="fd-segment" role="group" aria-label="Nivel educativo">
-                    <button aria-pressed={level === "primaria"} onClick={() => setLevel("primaria")} type="button">Primaria</button>
-                    <button aria-pressed={level === "secundaria"} onClick={() => setLevel("secundaria")} type="button">Secundaria</button>
+                    {Object.entries(lessonLevels).map(([value, label]) => <button key={value} aria-pressed={level === value} onClick={() => { setLevel(value as LessonLevel); setGrade("all"); }} type="button">{label}</button>)}
                   </div>
                 </div>
+                <div className="fd-catalog-filter">
+                  <label>Grado o etapa<select value={grade} onChange={event => setGrade(event.target.value === "all" ? "all" : Number(event.target.value))}>
+                    <option value="all">Todos</option>{availableGrades(level).map(value => <option key={value} value={value}>{gradeLabel(level, value)}</option>)}
+                  </select></label>
+                  <p>Guías introductorias de Matemática; no cubren el currículo completo de cada grado.{level === "inicial" ? " Actividades con acompañamiento de una persona adulta." : ""}</p>
+                </div>
                 <div className="fd-topic-grid">
-                  {lessons.filter((item) => item.level === level).map((item) => {
-                    const Icon = topicIcons[item.id] ?? Sigma;
+                  {catalogLessons.map((item) => {
+                    const Icon = topicIcons[item.id] ?? (item.level === "inicial" ? Hash : Sigma);
                     return (
                       <button className="fd-topic" key={item.id} onClick={() => selectLesson(item.id)} type="button">
                         <span className="fd-symbol"><Icon size={19} aria-hidden="true" /></span>
-                        <span><strong>{item.title}</strong><small>{item.grade} de {item.level} · {item.questions.length} ejercicios</small></span>
+                        <span><strong>{item.title}</strong><small>{item.grade} · {lessonLevels[lessonLevel(item.id)]} · {item.questions.length} ejercicios</small></span>
                         <ChevronRight size={16} aria-hidden="true" />
                       </button>
                     );
@@ -446,7 +456,7 @@ function DemoWorkspace({ accountId, authStatus }: { accountId?: string; authStat
                       <p className="fd-question">{asked}</p>
                       <div className="fd-answer">
                         <p className="fd-answer-label">Fontex</p>
-                        {reply && <p className="fd-tutor-text">{reply.text}</p>}
+                        {reply && <AcademicMarkdown content={reply.text} />}
                         {citation && <>{!reply && <blockquote>{citation.excerpt}</blockquote>}{cite(citation)}</>}
                         {reply?.sources.map(({ title, url }) => <a className="fd-cite fd-web-source" href={url} key={url} rel="noreferrer" target="_blank">{title} <ArrowRight size={15} /></a>)}
                         {!reply && !citation && <p>{tutorMode === "study" ? "No encontré una respuesta en los materiales de este tema. Prueba con otra pregunta o añade una lectura." : pendingTutor && index === 0 ? "Preparando una respuesta…" : "No pude responder esa pregunta. Inténtalo de nuevo."}</p>}

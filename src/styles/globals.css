@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+.academic-markdown { min-width: 0; overflow-wrap: anywhere; }
+.academic-markdown .katex-display { overflow-x: auto; overflow-y: hidden; max-width: 100%; padding-block: .25rem; }
+.academic-markdown .katex { font-size: 1.1em; }
+
 @theme inline {
   --color-background: var(--ui-background);
   --color-surface: var(--ui-surface);
