@@ -4,6 +4,8 @@
 
 Fontex combina un editor de materiales matemáticos, **Fontex Studio**, con un aula de práctica y una plataforma de consulta de PDF con tutor documental. Su principio es *fuentes puestas en contexto*.
 
+El aula de práctica incluye **19 guías introductorias, 38 páginas y 54 ejercicios**, con filtros para inicial (3–5 años), cada grado de primaria y secundaria e ingreso universitario. No cubre el currículo completo de cada grado. Los PDF, lecturas y ejercicios comparten una fuente de contenido. Consulta el [catálogo y su publicación coordinada](docs/architecture/practice-catalog.md).
+
 Estado revisado el **11 de noviembre de 2026**: Fontex Agent se integró en `main` desde `feat/fontex-agent` tras verificar sus tres fases. El `main` anterior (`1d627cc`) se conserva en `backup/main-before-fontex-agent-20261111`. El frontend se publica mediante el workflow de Pages al subir `main`; el endpoint nuevo de IA requiere despliegue separado. La versión declarada en `package.json` sigue siendo `0.6.0`. Se conservan las correcciones de la [auditoría](docs/AUDITORIA.md) y todas las experiencias existentes.
 
 ## Qué incluye
@@ -13,7 +15,7 @@ Estado revisado el **11 de noviembre de 2026**: Fontex Agent se integró en `mai
 | Studio | Fracciones, operaciones guiadas, texto, sucesiones, colecciones de enteros, recta numérica y ecuaciones lineales; inspector, historial y presentación | `localStorage`, separado por usuario o invitado |
 | Fontex Agent | Acciones estructuradas con vista previa y deshacer atómico; aprender/resolver con IA opcional y práctica local con pistas graduadas | Materiales locales; contexto enviado al backend solo al consultar IA |
 | Materiales de Studio | Crear desde plantillas, abrir, duplicar objetos, importar y exportar `.fontex.json` | En este navegador; exportación manual entre equipos |
-| Aula de práctica | Fracciones, decimales, proporciones y funciones; teoría, ejercicios y consultas | Progreso en `localStorage`; PDF añadidos en IndexedDB |
+| Aula de práctica | 19 guías por nivel y grado; teoría, ejercicios, PDF y consultas | Progreso en `localStorage`; PDF añadidos en IndexedDB |
 | Identidad y aulas | Registro, confirmación de correo, sesión, perfiles, invitaciones, roles y grupos | Supabase Auth y PostgreSQL con RLS |
 | Biblioteca | PDF privados, visor, compartición por aula/grupo, extracción e indexación | Supabase Storage privado y PostgreSQL |
 | Tutor documental | Recuperación híbrida, modo estricto/comparativo, tutoría guiada, conversaciones y citas con página | Edge Functions y PostgreSQL |
@@ -154,7 +156,7 @@ docs/                    Guías, decisiones e historial
 
 Studio usa un lienzo de 1600 × 1100, hasta 80 objetos y 40 cambios de historial. Importa documentos versión 1 de hasta 1 MiB. No incluye sincronización remota de materiales, edición colaborativa, varias páginas ni exportación PDF integrada.
 
-La biblioteca remota acepta PDF de hasta 5 MiB y 100 páginas con texto seleccionable; no implementa OCR. El tutor estricto exige una salida estructurada y citas de los fragmentos enviados al modelo; si faltan o son inválidas, se abstiene. Esa validación no certifica por sí sola la exactitud de cada afirmación. El renderizador académico admite un subconjunto de Markdown y sustituciones matemáticas, incluidos exponentes numéricos completos; no es un motor LaTeX completo.
+La biblioteca remota acepta PDF de hasta 5 MiB y 100 páginas con texto seleccionable; no implementa OCR. El tutor estricto exige una salida estructurada y citas de los fragmentos enviados al modelo; si faltan o son inválidas, se abstiene. Esa validación no certifica por sí sola la exactitud de cada afirmación. Los tutores comparten un renderizador de Markdown y fórmulas compatibles con KaTeX, incluidas fracciones, raíces y exponentes. No ejecuta HTML de los mensajes ni comandos confiables de KaTeX.
 
 Studio, Fracciones, Práctica y las vistas académicas comparten los temas claro y oscuro. El selector de luna/sol conserva la elección al navegar; sin elección manual se usa la preferencia del sistema. Los dibujos matemáticos también adaptan sus colores. El guardado local sigue usando una instantánea atómica por cuenta, sin sincronización entre equipos. La revisión visual en navegador, las pruebas E2E y la verificación del despliegue remoto siguen pendientes.
 

@@ -16,6 +16,25 @@ beforeEach(() => {
 });
 
 describe("Tutor personal de Matemática", () => {
+  it("filtra por grado, reinicia el filtro al cambiar de nivel y abre las guías nuevas", async () => {
+    render(<ThemeProvider><DemoPage /></ThemeProvider>);
+    fireEvent.change(screen.getByRole("combobox", { name: "Grado o etapa" }), { target: { value: "1" } });
+    expect(screen.queryByRole("button", { name: /fracciones equivalentes.*ejercicios/i })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /sumar y restar hasta veinte.*ejercicios/i }));
+    expect(screen.getByRole("heading", { name: "Sumar es reunir" })).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "Inicio" }));
+    fireEvent.click(screen.getByRole("button", { name: "Inicial" }));
+    expect(screen.getByRole("heading", { name: "Contamos hasta tres" })).toBeVisible();
+    expect(screen.getByRole("combobox", { name: "Grado o etapa" })).toHaveValue("all");
+    fireEvent.change(screen.getByRole("combobox", { name: "Grado o etapa" }), { target: { value: "3" } });
+    fireEvent.click(screen.getByRole("button", { name: /contamos hasta tres.*ejercicios/i }));
+    expect(screen.getByRole("heading", { name: "Contar una sola vez" })).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "Inicio" }));
+    fireEvent.click(screen.getByRole("button", { name: "Universidad introductoria" }));
+    fireEvent.click(screen.getByRole("button", { name: /cambio medio y derivada.*ejercicios/i }));
+    expect(screen.getByRole("heading", { name: "Tasa de cambio media" })).toBeVisible();
+    await waitFor(() => expect(readMaterials).toHaveBeenCalled());
+  });
   it("recupera la página de la guía y se abstiene fuera del tema", () => {
     const fraction = lessons.find(({ id }) => id === "fracciones")!;
     const functions = lessons.find(({ id }) => id === "funciones")!;
