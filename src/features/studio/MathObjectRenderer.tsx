@@ -241,7 +241,7 @@ function OperationObject({
     </div>
   );
 }
-function ObjectVisual({
+export function ObjectVisual({
   object,
   onChange,
 }: {

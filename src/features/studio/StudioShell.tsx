@@ -1,3 +1,7 @@
+import { TeachingMode } from "./teaching-mode";
+import { LessonPlayer } from "./LessonPlayer";
+import { agentModes, type AgentMode } from "../../core/agent/protocol";
+import { readableBatch, organizeObjects } from "./object-layout";
 import { TeachingLevel } from "./teaching-level";
 import type { AgentLevel } from "../../core/agent/protocol";
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
@@ -57,6 +61,8 @@ function StudioEditor({ owner }: { owner: string }) {
   const store = useStudioDocument(owner);
   const doc = store.document;
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [mode, setMode] = useState<AgentMode>("learn");
+  const [playerOpen, setPlayerOpen] = useState(false);
   const [level, setLevel] = useState<AgentLevel>("primary");
   const [zoom, setZoom] = useState(() =>
     window.innerWidth < 760 ? 0.65 : 1,
@@ -243,7 +249,7 @@ function StudioEditor({ owner }: { owner: string }) {
     }
   }
   return (
-    <TeachingLevel.Provider value={level}><div ref={root} className={`st-app ${presenting ? "st-presenting" : ""}`}>
+    <TeachingMode.Provider value={mode}><TeachingLevel.Provider value={level}><div ref={root} className={`st-app ${presenting ? "st-presenting" : ""}`}>
       <header className="st-header">
         <a href="#/" className="st-brand" aria-label="Fontex Studio">
           <span>
@@ -294,7 +300,8 @@ function StudioEditor({ owner }: { owner: string }) {
             {store.saved ? <Check size={18} /> : <Save size={18} />}
           </button>
           <ThemeToggle className="st-theme-toggle" />
-          <button className="st-primary" aria-label="Presentar" title="Presentar" onClick={() => void present()}>
+          <button className="st-primary" aria-label="Recorrer material" title="Recorrer material" disabled={!doc.objects.length} onClick={() => setPlayerOpen(true)}><Expand size={17} /><span className="st-action-label">Recorrer</span></button>
+          <button className="st-icon-button" aria-label="Presentar" title="Presentar" onClick={() => void present()}>
             <Expand size={17} />
             <span className="st-action-label">Presentar</span>
           </button>
@@ -376,12 +383,15 @@ function StudioEditor({ owner }: { owner: string }) {
             <span>
               Lienzo
             </span>
+            <button className="st-organize" disabled={!doc.objects.length} onClick={() => store.update(current => ({ ...current, objects: organizeObjects(current.objects) }))}>Organizar lienzo</button>
             <span>{doc.objects.length} {doc.objects.length === 1 ? "objeto" : "objetos"}</span>
           </div>
+          <div className="st-learning-toolbar"><nav aria-label="Modo del material">{Object.entries(agentModes).map(([value, label]) => <button key={value} aria-pressed={mode === value} onClick={() => setMode(value as AgentMode)}>{label}</button>)}</nav><button className="st-primary" disabled={!doc.objects.length} onClick={() => setPlayerOpen(true)}>Ver como lección</button><small>Pellizca para ampliar · Ctrl + rueda en PC</small></div>
           <CanvasViewport
             objects={doc.objects}
             selectedId={selectedId}
             zoom={zoom}
+            onZoom={setZoom}
             presenting={presenting}
             onSelect={setSelectedId}
             onChange={changeObject}
@@ -402,8 +412,8 @@ function StudioEditor({ owner }: { owner: string }) {
               </output>
               <button
                 aria-label="Acercar"
-                disabled={zoom >= 1.5}
-                onClick={() => setZoom((value) => Math.min(1.5, value + 0.1))}
+                disabled={zoom >= 2.5}
+                onClick={() => setZoom((value) => Math.min(2.5, value + 0.1))}
               >
                 <Plus size={16} />
               </button>
@@ -453,9 +463,16 @@ function StudioEditor({ owner }: { owner: string }) {
               <p>Selecciona un objeto</p>
             </div>
           )}
-          <StudioAgentPanel key={doc.id} document={doc} selectedId={selectedId} authenticated={!!user} teachingLevel={level} onLevelChange={setLevel} onApply={store.execute} />
+          <StudioAgentPanel key={`${doc.id}:${mode}`} document={doc} selectedId={selectedId} onSelect={setSelectedId} authenticated={!!user} teachingLevel={level} onLevelChange={setLevel} teachingMode={mode} onModeChange={setMode} onApply={(batch, expected) => {
+            const formatted = readableBatch(batch, expected);
+            const applied = store.execute(formatted, expected);
+            const first = formatted.actions.find(action => action.kind === "create");
+            if (applied && first?.kind === "create") setSelectedId(first.object.id);
+            return applied;
+          }} />
         </aside>
       </div>
+      {playerOpen && <LessonPlayer document={doc} onClose={() => setPlayerOpen(false)} />}
       {presenting && (
         <button
           className="st-exit-presentation"
@@ -532,6 +549,6 @@ function StudioEditor({ owner }: { owner: string }) {
           <p>Sin materiales.</p>
         )}
       </dialog>
-    </div></TeachingLevel.Provider>
+    </div></TeachingLevel.Provider></TeachingMode.Provider>
   );
 }

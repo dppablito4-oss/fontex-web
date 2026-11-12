@@ -116,6 +116,12 @@ export function equivalentAnswer(
   attempt: string,
   expected: { n: number; d: number },
 ): boolean | null {
+  const decimal = attempt.trim().match(/^(-?)(\d{1,6})[.,](\d{1,6})$/);
+  if (decimal) {
+    const scale = 10 ** decimal[3]!.length;
+    const numerator = (Number(decimal[2]) * scale + Number(decimal[3])) * (decimal[1] ? -1 : 1);
+    return numerator * expected.d === expected.n * scale;
+  }
   const match = attempt.trim().match(/^(-?\d{1,6})(?:\s*\/\s*(-?\d{1,6}))?$/);
   if (!match) return null;
   const n = Number(match[1]), d = Number(match[2] ?? 1);
@@ -157,8 +163,8 @@ export function practiceReply(request: AgentRequest): AgentReply {
       ? "Tu respuesta aún no coincide. Revisa un paso."
       : answer === null
       ? (object?.type === "linear-equation"
-        ? "Escribe un entero, una fracción a/b, «sin solución» o «infinitas»."
-        : "Escribe un entero o una fracción a/b; el denominador debe ser distinto de cero.")
+        ? "Escribe un entero, un decimal, una fracción a/b, «sin solución» o «infinitas»."
+        : "Escribe un entero, un decimal o una fracción a/b; el denominador debe ser distinto de cero.")
       : "";
     const initialStrategies: Record<MathObject["type"], string> = {
       geometry: "Cuenta los cuadrados de cada fila. Dos triángulos iguales forman un rectángulo.",

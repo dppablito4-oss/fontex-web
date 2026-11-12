@@ -65,8 +65,8 @@ describe("Fontex Studio", () => {
     fireEvent.click(screen.getByRole("button", { name: "Añadir ecuación lineal" }));
     fireEvent.change(inspector().getByLabelText("Coeficiente d"), { target: { value: "4" } });
     fireEvent.click(inspector().getByRole("button", { name: "Aplicar cambios" }));
-    fireEvent.click(screen.getByRole("button", { name: "Agrupar términos" }));
-    fireEvent.click(screen.getByRole("button", { name: "Comprobar solución" }));
+    fireEvent.change(inspector().getByLabelText("Etapa de la ecuación"), { target: { value: "2" } });
+    fireEvent.click(inspector().getByRole("button", { name: "Aplicar cambios" }));
     expect(screen.getByText("x = 1/2")).toBeInTheDocument();
     view.unmount();
     render(<ThemeProvider><StudioShell /></ThemeProvider>);
@@ -132,9 +132,12 @@ describe("Fontex Studio", () => {
   });
   it("explica la homogeneización y el resultado sin llamadas de IA", () => {
     render(<ThemeProvider><StudioShell /></ThemeProvider>);
-    fireEvent.click(screen.getByRole("button", { name: "Homogeneizar" }));
-    expect(screen.getByText(/El m.c.m. de 3 y 6 es 6/)).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Ver resultado" }));
+    fireEvent.click(screen.getByRole("button", { name: "Siguiente paso" }));
+    expect(screen.getByRole("heading", { name: "Busca piezas del mismo tamaño" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Siguiente paso" }));
+    expect(screen.getByRole("heading", { name: "Transforma la primera fracción" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Siguiente paso" }));
+    fireEvent.click(screen.getByRole("button", { name: "Siguiente paso" }));
     expect(screen.getByText("Resultado simplificado: 7/6")).toBeInTheDocument();
   });
   it("usa el mismo editor para crear, modificar y recuperar sucesiones", () => {

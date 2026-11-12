@@ -1,3 +1,4 @@
+import { useCanvasGestures } from "./useCanvasGestures";
 import {
   type KeyboardEvent,
   type PointerEvent,
@@ -13,7 +14,9 @@ import {
   fitObject,
   type MathObject,
 } from "../../core/document-schema/document";
-import { MathObjectRenderer } from "./MathObjectRenderer";
+import { GuidedObject } from "./GuidedObject";
+import { useContext } from "react";
+import { TeachingMode } from "./teaching-mode";
 import { resizeObject } from "./object-layout";
 
 export function CanvasViewport({
@@ -25,6 +28,7 @@ export function CanvasViewport({
   onChange,
   onDelete,
   children,
+  onZoom,
 }: {
   objects: MathObject[];
   selectedId: string | null;
@@ -34,7 +38,11 @@ export function CanvasViewport({
   onChange: (object: MathObject) => void;
   onDelete: (id: string) => void;
   children?: ReactNode;
+  onZoom?: (zoom: number) => void;
 }) {
+  const viewport = useRef<HTMLDivElement>(null);
+  useCanvasGestures(viewport, zoom, onZoom);
+  const mode = useContext(TeachingMode);
   const drag = useRef<
     { object: MathObject; x: number; y: number; resizing: boolean } | null
   >(
@@ -42,6 +50,13 @@ export function CanvasViewport({
   );
   const [preview, setPreview] = useState<MathObject | null>(null);
   const height = boardHeight(preview ? objects.map(o => o.id === preview.id ? preview : o) : objects);
+  useEffect(() => {
+    const element = viewport.current, object = objects.find(o => o.id === selectedId);
+    if (!element?.clientWidth || !object) return;
+    const top = object.y * zoom, left = object.x * zoom;
+    if (top < element.scrollTop || top > element.scrollTop + element.clientHeight - 80) element.scrollTop = Math.max(0, top - 24);
+    if (left < element.scrollLeft || left > element.scrollLeft + element.clientWidth - 80) element.scrollLeft = Math.max(0, left - 24);
+  }, [selectedId, objects, zoom]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
   const expanded = objects.find((object) => object.id === expandedId);
@@ -137,7 +152,7 @@ export function CanvasViewport({
     }
   }
   return (
-    <div className="st-viewport" onClick={() => onSelect(null)}>
+    <div ref={viewport} className="st-viewport" onClick={() => onSelect(null)}>
       <div
         className="st-board-space"
         style={{ width: BOARD.width * zoom, height: height * zoom }}
@@ -206,7 +221,7 @@ export function CanvasViewport({
                   <Maximize2 size={16} />
                 </button>
                 <div className="st-object-content">
-                  <MathObjectRenderer object={object} onChange={onChange} />
+                  <GuidedObject key={`${object.id}:${mode}:${JSON.stringify(object.data)}`} object={object} />
                 </div>
                 {!presenting && (
                   <button
@@ -251,7 +266,7 @@ export function CanvasViewport({
               </button>
             </div>
             <div className="st-expanded-content">
-              <MathObjectRenderer object={expanded} onChange={onChange} />
+              <GuidedObject key={`${expanded.id}:${mode}:${JSON.stringify(expanded.data)}`} object={expanded} />
             </div>
           </>
         )}

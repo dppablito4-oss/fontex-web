@@ -1,3 +1,4 @@
+import { modeDescriptions } from "./teaching-mode";
 import { type FormEvent, useEffect, useRef, useState } from "react";
 import {
   type ActionBatch,
@@ -18,11 +19,14 @@ import { requestAgent } from "./agentService";
 
 type Proposal = { batch: ActionBatch; snapshot: StudioDocument };
 export function StudioAgentPanel(
-  { document, selectedId, onApply, authenticated = false, teachingLevel, onLevelChange }: {
+  { document, selectedId, onApply, authenticated = false, teachingLevel, onLevelChange, teachingMode, onModeChange, onSelect }: {
     document: StudioDocument;
     selectedId: string | null;
     onApply: (batch: ActionBatch, expected: StudioDocument) => boolean;
     authenticated?: boolean;
+    onSelect?: (id: string | null) => void;
+    teachingMode?: AgentMode;
+    onModeChange?: (mode: AgentMode) => void;
     teachingLevel?: AgentLevel;
     onLevelChange?: (level: AgentLevel) => void;
   },
@@ -34,7 +38,8 @@ export function StudioAgentPanel(
   const [source, setSource] = useState("");
   const [proposal, setProposal] = useState<Proposal | null>(null);
   const [error, setError] = useState("");
-  const [mode, setMode] = useState<AgentMode>("learn");
+  const [localMode, setMode] = useState<AgentMode>("learn");
+  const mode = teachingMode ?? localMode;
   const [localLevel, setLevel] = useState<AgentLevel>("primary");
   const level = teachingLevel ?? localLevel;
   const [question, setQuestion] = useState("");
@@ -121,6 +126,7 @@ export function StudioAgentPanel(
       <summary>Fontex Agent</summary>
       <label className="st-autonomous"><input type="checkbox" checked={autonomous} disabled={busy} onChange={e => setAutonomous(e.target.checked)} />Aplicar cambios automáticamente</label>
       <p>Organiza el material y explica los pasos. Puedes deshacer cada intervención completa.</p>
+      <p className="st-mode-description">{modeDescriptions[mode]}</p>
       <form onSubmit={(event) => void consult(event)}>
         <label>
           Modo<select
@@ -128,6 +134,7 @@ export function StudioAgentPanel(
             disabled={busy}
             onChange={(event) => {
               setMode(event.target.value as AgentMode);
+              onModeChange?.(event.target.value as AgentMode);
               resetResponse();
             }}
           >
@@ -165,6 +172,7 @@ export function StudioAgentPanel(
             />
           </label>
         )}
+        {mode === "practice" && onSelect && <label>Ejercicio del lienzo<select value={selectedId ?? ""} onChange={e => { onSelect(e.target.value || null); resetResponse(); }}><option value="">Selecciona un módulo</option>{document.objects.filter(o => o.type !== "text").map(o => <option key={o.id} value={o.id}>{o.label}</option>)}</select></label>}
         {mode === "practice" && (
           <label>
             Tu respuesta<input

@@ -117,3 +117,13 @@ Guardar en Supabase con políticas por propietario, funciones generales, caché 
 - Geometría añade rectángulos y triángulos rectángulos con base y altura perpendicular enteras de 1 a 100, representación proporcional y área exacta, sin inferir perímetros de triángulos a partir de medidas insuficientes.
 - «Exportar PDF» abre la impresión de un documento separado con todos los objetos ordenados por posición vertical y sus explicaciones completas, independientemente del zoom y tamaño de tarjeta. Elegir «Guardar como PDF». El JSON continúa disponible para conservar el material editable.
 - Validación: 219 pruebas frontend y 7 pruebas del handler con Node y transformación TypeScript; lint y build correctos. No se pudo completar la comprobación visual en Chromium local porque el entorno deniega la creación de sockets del navegador. La salida HTML del PDF y el contenido fuera de pantalla tienen cobertura de pruebas.
+
+### Lección visual y navegación (12 de noviembre)
+
+El lienzo representa cada módulo con dos zonas: una visual amplia y un panel de explicación. Las zonas usan consultas de contenedor para apilarse en espacios estrechos, incluido el teléfono. «Ver como lección» / «Recorrer» abre una vista de lectura adaptable a pantalla completa; conserva el orden vertical y permite pasar entre módulos sin modificar los datos del documento.
+
+Los modos se comparten entre el agente y el material: Aprender muestra un paso a la vez y sincroniza la representación de operaciones/ecuaciones; Practicar mantiene la operación original, oculta las estadísticas y ofrece respuesta, pista y comprobación progresiva con evaluación exacta local; Resolver muestra el resultado y el desarrollo completo. El formato PDF conserva todas las explicaciones. La práctica admite decimales de hasta seis cifras con punto o coma, además de fracciones y enteros.
+
+La creación del agente usa tarjetas de 1100 px de ancho, apiladas bajo el material existente; al aplicar, selecciona el primer objeto nuevo. «Organizar lienzo» adapta materiales anteriores en una operación reversible. Los datos matemáticos no cambian. La edición manual y el JSON siguen disponibles.
+
+El zoom interno admite pellizco de dos dedos, Ctrl/Cmd + rueda y los botones del editor (20–250 %). La posición bajo el gesto se conserva al ampliar; la rueda sin modificadores mantiene el desplazamiento normal. El modo oscuro usa negro #000 en superficies y lienzo con acentos menta, lavanda, azul y ámbar.

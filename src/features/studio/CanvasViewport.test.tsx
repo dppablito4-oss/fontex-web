@@ -49,11 +49,11 @@ it("mantiene los pasos matemáticos interactivos en la vista ampliada", () => {
   const dialog = screen.getByRole("dialog", {
     name: "Vista ampliada: Operación guiada",
   });
-  fireEvent.click(within(dialog).getByRole("button", { name: "Homogeneizar" }));
-  expect(change).toHaveBeenCalledWith({
-    ...object,
-    data: { ...object.data, stage: 1 },
-  });
+  fireEvent.click(within(dialog).getByRole("button", { name: "Siguiente paso" }));
+  fireEvent.click(within(dialog).getByRole("button", { name: "Siguiente paso" }));
+  expect(within(dialog).getByRole("heading", { name: "Transforma la primera fracción" })).toBeInTheDocument();
+  expect(change).not.toHaveBeenCalled();
+  expect(object.data).toMatchObject({ stage: 0 });
 });
 it("previsualiza el tamaño según el zoom y confirma un único cambio al soltar", () => {
   const { change } = canvas();
