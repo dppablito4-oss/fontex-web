@@ -77,6 +77,14 @@ export function readProposal(payload: unknown, document: StudioDocument) {
       documentId: document.id,
       actions: value.actions,
     });
+    // Stack newly generated modules below existing content instead of covering it.
+    let bottom = Math.max(20, ...document.objects.map(o => o.y + o.height));
+    for (const action of batch.actions) {
+      if (action.kind === "create") {
+        action.object.y = bottom + 40;
+        bottom = action.object.y + action.object.height;
+      }
+    }
     const next = batch.actions.length
       ? executeActions(document, batch)
       : document;

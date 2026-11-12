@@ -290,3 +290,13 @@
   .st-wordmark { font-size: 20px; }
   .st-app .st-header-actions > :is(button, a) { width: 30px; height: 32px; padding: 6px; }
 }
+.st-lesson { margin-top: 22px; border-top: 1px solid var(--st-line); padding-top: 12px; font-size: 15px; line-height: 1.65; }
+.st-lesson summary { cursor:pointer; font-weight:650; }
+.st-lesson ol { list-style:none; padding:0; margin:14px 0; display:grid; gap:12px; }
+.st-lesson li { border-left:3px solid var(--st-piece-primary); padding:8px 14px; background:var(--st-soft); border-radius:0 8px 8px 0; }
+.st-lesson p { margin:5px 0 0; }
+.st-geometry svg { width:100%; max-height:300px; }
+.st-geometry p { line-height:1.6; }
+.st-agent label.st-autonomous { display:flex; align-items:center; gap:8px; }
+.st-agent .st-autonomous input { width:18px; height:18px; }
+.st-product-grid { max-width:300px; width:100%; }

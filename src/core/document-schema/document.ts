@@ -2,6 +2,7 @@ import { parseStudioOperation } from "../math-engine/studio-operations.ts";
 import { analyzeCollection, numberLineTicks } from "../math-engine/numbers.ts";
 import { solveLinearEquation, type LinearCoefficients } from "../math-engine/equations.ts";
 
+import { type GeometryData } from "../math-engine/geometry.ts";
 export type Shape = "bar" | "circle";
 export type FractionData = {
   numerator: number;
@@ -24,6 +25,7 @@ type ObjectBase = {
 };
 export type MathObject = ObjectBase &
   (
+    | { type: "geometry"; data: GeometryData }
     | { type: "fraction"; data: FractionData }
     | { type: "operation"; data: OperationData }
     | { type: "text"; data: TextData }
@@ -41,6 +43,11 @@ export type StudioDocument = {
   objects: MathObject[];
 };
 export const BOARD = { width: 1600, height: 1100 };
+// Objects retain bounded sizes; the document grows downwards as content is added.
+export const MAX_Y = 1_000_000;
+export function boardHeight(objects: MathObject[]) {
+  return Math.max(BOARD.height, ...objects.map(o => o.y + o.height + 300));
+}
 export const MAX_OBJECTS = 80;
 export const uid = () => crypto.randomUUID();
 const record = (value: unknown): value is Record<string, unknown> =>
@@ -64,12 +71,14 @@ export function validateObject(value: unknown): value is MathObject {
     !number(value.width, 240, BOARD.width) ||
     !number(value.height, 160, BOARD.height) ||
     !number(value.x, 0, BOARD.width - value.width) ||
-    !number(value.y, 0, BOARD.height - value.height) ||
+    !number(value.y, 0, MAX_Y - value.height) ||
     !record(value.data)
   )
     return false;
   const d = value.data;
   switch (value.type) {
+    case "geometry":
+      return (d.figure === "rectangle" || d.figure === "triangle") && integer(d.base, 1, 100) && integer(d.height, 1, 100);
     case "fraction":
       return (
         integer(d.numerator, 0, 72) &&
@@ -172,6 +181,6 @@ export function fitObject(object: MathObject): MathObject {
     width,
     height,
     x: Math.max(0, Math.min(BOARD.width - width, object.x)),
-    y: Math.max(0, Math.min(BOARD.height - height, object.y)),
+    y: Math.max(0, Math.min(MAX_Y - height, object.y)),
   };
 }

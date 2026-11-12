@@ -1,3 +1,7 @@
+import { useContext } from "react";
+import { LessonSteps } from "./LessonSteps";
+import { TeachingLevel } from "./teaching-level";
+import { GeometryObject } from "./GeometryObject";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import type {
   FractionData,
@@ -124,6 +128,11 @@ function MultiplicationObject({ data, operation, onChange }: { data: OperationDa
         {data.stage === 2 && simplified.d > 60 && <small>La fracción exacta se muestra numéricamente para evitar un dibujo con demasiadas divisiones.</small>}
       </div></>}
     </div>
+    {a.n <= a.d && b.n <= b.d && a.d * b.d <= 144 && <figure>
+      <svg className="st-product-grid" viewBox={`0 0 ${a.d * 24} ${b.d * 24}`} role="img" aria-label={`${a.n * b.n} de ${a.d * b.d} celdas en el cruce de las fracciones`}>
+        {Array.from({ length: a.d * b.d }, (_, i) => { const col = i % a.d, row = Math.floor(i / a.d); return <rect key={i} x={col * 24} y={row * 24} width={24} height={24} fill={col < a.n && row < b.n ? "var(--st-piece-primary)" : col < a.n || row < b.n ? "var(--st-piece-secondary)" : "var(--st-piece-empty)"} stroke="var(--st-piece-stroke)" />; })}
+      </svg><figcaption>Azul: cruce de las dos partes, {total}/{denominator} de una unidad. Naranja: partes de una sola selección.</figcaption>
+    </figure>}
     <p className="st-math-explanation" aria-live="polite">{data.stage === 0
       ? "Multiplicar por una fracción significa tomar esa parte de otra cantidad. Los dibujos representan los dos factores; no necesitamos un denominador común."
       : data.stage === 1 ? `Multiplicamos numeradores: ${a.n} × ${b.n} = ${total}. Multiplicamos denominadores: ${a.d} × ${b.d} = ${denominator}. El producto es ${total}/${denominator}.`
@@ -232,14 +241,16 @@ function OperationObject({
     </div>
   );
 }
-export function MathObjectRenderer({
+function ObjectVisual({
   object,
   onChange,
 }: {
   object: MathObject;
   onChange: (object: MathObject) => void;
 }) {
+  const level = useContext(TeachingLevel);
   switch (object.type) {
+    case "geometry": return <GeometryObject data={object.data} />;
     case "collection": return <CollectionObject data={object.data} />;
     case "number-line": return <NumberLineObject data={object.data} />;
     case "linear-equation": return <LinearEquationObject data={object.data} onChange={data => onChange({ ...object, data })} />;
@@ -289,9 +300,9 @@ export function MathObjectRenderer({
             {object.data.difference >= 0 ? "Sumamos" : "Restamos"}{" "}
             <strong>{Math.abs(object.data.difference)}</strong> en cada paso.
           </p>
-          <p className="st-sequence-rule">
+          {level !== "initial" && level !== "primary" && <p className="st-sequence-rule">
             aₙ = {object.data.start} + (n − 1) × ({object.data.difference})
-          </p>
+          </p>}
           <small>
             Las figuras con 0 a 30 puntos se muestran pictóricamente; los demás
             términos se muestran como números.
@@ -300,4 +311,8 @@ export function MathObjectRenderer({
       );
     }
   }
+}
+
+export function MathObjectRenderer(props: { object: MathObject; onChange: (object: MathObject) => void }) {
+ return <><ObjectVisual {...props} /><LessonSteps object={props.object} /></>;
 }

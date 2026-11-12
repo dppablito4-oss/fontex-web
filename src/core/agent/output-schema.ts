@@ -12,6 +12,7 @@ const integer = (minimum: number, maximum: number) => ({
 const string = { type: "string" };
 const shape = { type: "string", enum: ["bar", "circle"] };
 const data = {
+  geometry: { figure: { type: "string", enum: ["rectangle", "triangle"] }, base: integer(1, 100), height: integer(1, 100) },
   fraction: { numerator: integer(0, 72), denominator: integer(1, 24), shape },
   operation: {
     expression: {
@@ -66,7 +67,7 @@ export const agentOutputSchema = object({
                 type: { type: "string", enum: [type] },
                 label: string,
                 x: { type: "number", minimum: 0, maximum: 1600 },
-                y: { type: "number", minimum: 0, maximum: 1100 },
+                y: { type: "number", minimum: 0, maximum: 1000000 },
                 width: { type: "number", minimum: 240, maximum: 1600 },
                 height: { type: "number", minimum: 160, maximum: 1100 },
                 data: object(properties),

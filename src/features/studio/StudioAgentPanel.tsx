@@ -18,18 +18,25 @@ import { requestAgent } from "./agentService";
 
 type Proposal = { batch: ActionBatch; snapshot: StudioDocument };
 export function StudioAgentPanel(
-  { document, selectedId, onApply, authenticated = false }: {
+  { document, selectedId, onApply, authenticated = false, teachingLevel, onLevelChange }: {
     document: StudioDocument;
     selectedId: string | null;
     onApply: (batch: ActionBatch, expected: StudioDocument) => boolean;
     authenticated?: boolean;
+    teachingLevel?: AgentLevel;
+    onLevelChange?: (level: AgentLevel) => void;
   },
 ) {
+  const [autonomous, setAutonomous] = useState(true);
+  const currentDocument = useRef(document);
+  useEffect(() => { currentDocument.current = document; }, [document]);
+  const [applied, setApplied] = useState(false);
   const [source, setSource] = useState("");
   const [proposal, setProposal] = useState<Proposal | null>(null);
   const [error, setError] = useState("");
   const [mode, setMode] = useState<AgentMode>("learn");
-  const [level, setLevel] = useState<AgentLevel>("primary");
+  const [localLevel, setLevel] = useState<AgentLevel>("primary");
+  const level = teachingLevel ?? localLevel;
   const [question, setQuestion] = useState("");
   const [attempt, setAttempt] = useState("");
   const [hintLevel, setHintLevel] = useState(0);
@@ -48,6 +55,7 @@ export function StudioAgentPanel(
     generation.current++;
     setProposal(null);
     setReply(null);
+    setApplied(false);
     setError("");
     setHintLevel(0);
   }
@@ -57,6 +65,7 @@ export function StudioAgentPanel(
     pending.current = true;
     const version = ++generation.current;
     const snapshot = structuredClone(document);
+    setApplied(false);
     setBusy(true);
     setError("");
     setProposal(null);
@@ -76,7 +85,14 @@ export function StudioAgentPanel(
       setReplyContext(contextKey);
       setHintLevel(nextHint);
       if (response.batch.actions.length) {
-        setProposal({ batch: response.batch, snapshot });
+        executeActions(snapshot, response.batch);
+        if (JSON.stringify(currentDocument.current) !== JSON.stringify(snapshot)) {
+          throw new Error("El material cambió mientras trabajaba. Repite la consulta para usar el contexto actual.");
+        }
+        if (autonomous) {
+          if (!onApply(response.batch, snapshot)) throw new Error("No se pudieron aplicar los cambios. El material sigue intacto.");
+          setApplied(true);
+        } else setProposal({ batch: response.batch, snapshot });
       }
     } catch (e) {
       if (version === generation.current) {
@@ -101,8 +117,10 @@ export function StudioAgentPanel(
     }
   }
   return (
-    <details className="st-agent">
+    <details className="st-agent" open>
       <summary>Fontex Agent</summary>
+      <label className="st-autonomous"><input type="checkbox" checked={autonomous} disabled={busy} onChange={e => setAutonomous(e.target.checked)} />Aplicar cambios automáticamente</label>
+      <p>Organiza el material y explica los pasos. Puedes deshacer cada intervención completa.</p>
       <form onSubmit={(event) => void consult(event)}>
         <label>
           Modo<select
@@ -124,6 +142,7 @@ export function StudioAgentPanel(
             disabled={busy}
             onChange={(event) => {
               setLevel(event.target.value as AgentLevel);
+              onLevelChange?.(event.target.value as AgentLevel);
               resetResponse();
             }}
           >
@@ -176,12 +195,13 @@ export function StudioAgentPanel(
             : "Consultar"}
         </button>
       </form>
-      {reply && replyContext === contextKey && (
+      {reply && (applied || replyContext === contextKey) && (
         <section aria-label="Orientación del agente" aria-live="polite">
+          {applied && <p role="status">Cambios aplicados al lienzo. Puedes usar Deshacer.</p>}
           <p className="st-agent-message">{reply.message}</p>
           {reply.verification.length > 0 && (
             <details>
-              <summary>Comprobación con MathEngine</summary>
+              <summary>Comprobación matemática exacta</summary>
               <ul>
                 {reply.verification.map((text, i) => <li key={i}>{text}</li>)}
               </ul>

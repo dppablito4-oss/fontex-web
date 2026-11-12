@@ -88,7 +88,7 @@ it("practica sin sesión con pistas graduadas y sin cambios automáticos", async
 });
 
 it.each(["learn", "solve"] as const)(
-  "consulta %s con nivel y revisa antes de aplicar",
+  "consulta %s con nivel y aplica automáticamente",
   async (mode) => {
     const doc = createDocument();
     const object = createObject("text");
@@ -126,8 +126,8 @@ it.each(["learn", "solve"] as const)(
         question: "Crea un ejemplo",
       }),
     );
-    expect(apply).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole("button", { name: "Aplicar acciones" }));
+    expect(apply).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("status")).toHaveTextContent("Cambios aplicados");
     expect(apply).toHaveBeenCalledWith(
       expect.objectContaining({ documentId: doc.id }),
       doc,

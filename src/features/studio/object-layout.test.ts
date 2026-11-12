@@ -13,7 +13,7 @@ it("limita el tamaño sin mover el ancla ni cambiar los datos matemáticos", () 
     x: 1000,
     y: 700,
     width: BOARD.width - 1000,
-    height: BOARD.height - 700,
+    height: BOARD.height,
     data: object.data,
   });
   expect(

@@ -1,5 +1,6 @@
 import {
   BOARD,
+  MAX_Y,
   type MathObject,
   MAX_OBJECTS,
   parseDocument,
@@ -31,6 +32,7 @@ export function exactKeys(
     keys.every((key) => Object.hasOwn(value, key));
 }
 const dataKeys: Record<MathObject["type"], string[]> = {
+  geometry: ["figure", "base", "height"],
   fraction: ["numerator", "denominator", "shape"],
   operation: ["expression", "stage", "shape"],
   text: ["content", "fontSize"],
@@ -102,10 +104,10 @@ export function parseBatch(value: unknown): ActionBatch {
             ((candidate.x as number) + (candidate.width as number) >
                 BOARD.width ||
               (candidate.y as number) + (candidate.height as number) >
-                BOARD.height)
+                MAX_Y)
           ) {
             hint =
-              "El objeto debe caber en el lienzo: x + width ≤1600 e y + height ≤1100. Usa los tamaños iniciales y ajusta su posición.";
+              "El objeto debe caber en el lienzo: x + width ≤1600 e y + height ≤1000000. Usa los tamaños iniciales y ajusta su posición.";
           }
         }
         throw new Error(
@@ -196,6 +198,8 @@ export function readStudioContext(
     },
     mathematics: snapshot.objects.map((object) => {
       switch (object.type) {
+        case "geometry":
+          return { id: object.id, area: { n: object.data.base * object.data.height, d: object.data.figure === "triangle" ? 2 : 1 } };
         case "fraction": {
           const divisor = gcd(object.data.numerator, object.data.denominator);
           return {

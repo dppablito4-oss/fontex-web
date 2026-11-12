@@ -32,8 +32,8 @@ describe("Fontex Studio", () => {
     const article = screen.getByRole("article", { name: "Fracción" });
     expect(article).toHaveStyle({ width: "440px", height: "340px" });
     fireEvent.keyDown(screen.getByRole("button", { name: "Cambiar tamaño de Fracción" }), { key: "ArrowDown", shiftKey: true });
-    expect(article).toHaveStyle({ height: "400px" });
-    expect(lastMaterial(localStorage, "guest")?.objects.find(object => object.type === "fraction")?.height).toBe(400);
+    expect(article).toHaveStyle({ height: "440px" });
+    expect(lastMaterial(localStorage, "guest")?.objects.find(object => object.type === "fraction")?.height).toBe(440);
     fireEvent.click(screen.getByRole("button", { name: "Deshacer" }));
     expect(article).toHaveStyle({ height: "340px" });
   });

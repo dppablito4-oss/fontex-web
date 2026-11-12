@@ -34,6 +34,11 @@ export type ExactTarget = {
 };
 export function exactTarget(object: MathObject): ExactTarget | null {
   switch (object.type) {
+    case "geometry": {
+      const { base, height, figure } = object.data;
+      const d = figure === "triangle" ? 2 : 1;
+      return { answer: { n: base * height, d }, prompt: "Calcula el área en unidades cuadradas.", strategy: figure === "triangle" ? "Multiplica base por altura perpendicular y divide entre dos." : "Cuenta las filas y las columnas; multiplica base por altura.", result: `${base * height / d}` };
+    }
     case "fraction": {
       const { numerator: n, denominator: d } = object.data;
       const divisor = gcd(n, d);
@@ -156,6 +161,7 @@ export function practiceReply(request: AgentRequest): AgentReply {
         : "Escribe un entero o una fracción a/b; el denominador debe ser distinto de cero.")
       : "";
     const initialStrategies: Record<MathObject["type"], string> = {
+      geometry: "Cuenta los cuadrados de cada fila. Dos triángulos iguales forman un rectángulo.",
       fraction:
         "Cuenta las partes coloreadas y las partes de una unidad. Pide ayuda para escribir esos dos números como una fracción.",
       operation:

@@ -7,6 +7,7 @@ import {
 } from "../document-schema/document.ts";
 
 export const objectRegistry = {
+  geometry: { name: "Geometría: áreas", width: 720, height: 640, data: { figure: "rectangle", base: 6, height: 4 } },
   fraction: {
     name: "Fracción",
     width: 440,

@@ -107,3 +107,13 @@ Prueba manual para clase:
 ## Próximos incrementos
 
 Guardar en Supabase con políticas por propietario, funciones generales, caché de aplicación para reapertura sin red y ampliar cobertura pedagógica son trabajo futuro. La recta, las ecuaciones lineales y las propuestas estructuradas del agente ya están implementadas localmente con el alcance acotado descrito arriba; su integración remota aún requiere revisión y despliegue separados.
+
+### Actualización: agente autónomo y material imprimible
+
+- El agente aplica por defecto cada lote validado como una sola transacción reversible. La opción «Aplicar cambios automáticamente» permite volver a la revisión manual. Si el documento cambia durante la consulta, el lote se descarta y se solicita una nueva consulta.
+- Los objetos nuevos del agente se colocan debajo del contenido existente con separación. El lienzo conserva 1600 px de ancho y crece según su contenido; se admite una coordenada vertical de hasta un millón de píxeles y 80 objetos. El tamaño de cada tarjeta sigue acotado para mantener su edición legible.
+- El nivel del agente también controla las explicaciones del material: primaria usa lenguaje de piezas y conteo; secundaria introduce propiedades y notación formal. Las sucesiones ocultan la fórmula general en inicial/primaria. El nivel adapta la explicación; no cambia silenciosamente los datos matemáticos existentes.
+- Cada familia matemática incluye una explicación ordenada calculada desde sus datos. Fracciones separa unidad, denominador, numerador, equivalencia y comprobación; operaciones separa las dos equivalencias, cálculo y simplificación. Multiplicación muestra una cuadrícula de intersección para fracciones propias con hasta 144 celdas. Colecciones añade puntos para cantidades de 0 a 20.
+- Geometría añade rectángulos y triángulos rectángulos con base y altura perpendicular enteras de 1 a 100, representación proporcional y área exacta, sin inferir perímetros de triángulos a partir de medidas insuficientes.
+- «Exportar PDF» abre la impresión de un documento separado con todos los objetos ordenados por posición vertical y sus explicaciones completas, independientemente del zoom y tamaño de tarjeta. Elegir «Guardar como PDF». El JSON continúa disponible para conservar el material editable.
+- Validación: 219 pruebas frontend y 7 pruebas del handler con Node y transformación TypeScript; lint y build correctos. No se pudo completar la comprobación visual en Chromium local porque el entorno deniega la creación de sockets del navegador. La salida HTML del PDF y el contenido fuera de pantalla tienen cobertura de pruebas.

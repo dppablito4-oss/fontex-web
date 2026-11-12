@@ -39,6 +39,9 @@ export function PropertiesInspector({
     });
     try {
       switch (object.type) {
+        case "geometry":
+          next = { ...next, type: "geometry", data: { figure: read("figure") as "rectangle" | "triangle", base: num("base"), height: num("geometryHeight") } };
+          break;
         case "collection":
           next = { ...next, type: "collection", data: { values: numbers("values") } };
           break;
@@ -114,6 +117,11 @@ export function PropertiesInspector({
         Nombre del objeto
         <input name="label" defaultValue={object.label} maxLength={120} />
       </label>
+      {object.type === "geometry" && <>
+        <label>Figura<select name="figure" defaultValue={object.data.figure}><option value="rectangle">Rectángulo</option><option value="triangle">Triángulo rectángulo</option></select></label>
+        <NumericField name="base" label="Base (unidades)" value={object.data.base} min={1} max={100} />
+        <NumericField name="geometryHeight" label="Altura perpendicular (unidades)" value={object.data.height} min={1} max={100} />
+      </>}
       {object.type === "collection" && <><label>Enteros de la colección<input name="values" aria-describedby="st-collection-hint" defaultValue={object.data.values.join(", ")} maxLength={180} required /></label><small id="st-collection-hint">De 1 a 24 enteros entre −1000 y 1000, separados por comas.</small></>}
       {object.type === "number-line" && <>
         <div className="st-field-pair"><NumericField name="min" label="Mínimo de la recta" value={object.data.min} min={-100} max={100} /><NumericField name="max" label="Máximo de la recta" value={object.data.max} min={-100} max={100} /></div>
@@ -272,7 +280,7 @@ export function PropertiesInspector({
               name="y"
               type="number"
               min={0}
-              max={1100}
+              max={1000000}
               required
               defaultValue={Math.round(object.y)}
             />

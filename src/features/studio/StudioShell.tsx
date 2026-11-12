@@ -1,3 +1,5 @@
+import { TeachingLevel } from "./teaching-level";
+import type { AgentLevel } from "../../core/agent/protocol";
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import {
   Copy,
@@ -55,6 +57,7 @@ function StudioEditor({ owner }: { owner: string }) {
   const store = useStudioDocument(owner);
   const doc = store.document;
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [level, setLevel] = useState<AgentLevel>("primary");
   const [zoom, setZoom] = useState(() =>
     window.innerWidth < 760 ? 0.65 : 1,
   );
@@ -240,7 +243,7 @@ function StudioEditor({ owner }: { owner: string }) {
     }
   }
   return (
-    <div ref={root} className={`st-app ${presenting ? "st-presenting" : ""}`}>
+    <TeachingLevel.Provider value={level}><div ref={root} className={`st-app ${presenting ? "st-presenting" : ""}`}>
       <header className="st-header">
         <a href="#/" className="st-brand" aria-label="Fontex Studio">
           <span>
@@ -330,7 +333,7 @@ function StudioEditor({ owner }: { owner: string }) {
                   className={`st-type-icon st-type-${type}`}
                 >
                   {
-                    { fraction: "⅔", operation: "±", text: "T", sequence: "⋯", collection: "#", "number-line": "↔", "linear-equation": "𝑥" }[
+                    { geometry: "△", fraction: "⅔", operation: "±", text: "T", sequence: "⋯", collection: "#", "number-line": "↔", "linear-equation": "𝑥" }[
                       type
                     ]
                   }
@@ -343,8 +346,9 @@ function StudioEditor({ owner }: { owner: string }) {
           <div className="st-palette-divider" />
           <div className="st-section-label">Archivo</div>
           <div className="st-file-buttons">
+            <button onClick={() => { setNotice("En la ventana de impresión, elige Guardar como PDF. Se incluyen todos los objetos y sus explicaciones."); void import("./export-pdf").then(({ exportPDF }) => exportPDF(doc, level)).catch(e => setNotice(e instanceof Error ? e.message : "No se pudo exportar el PDF.")); }}><Download size={17} /> Exportar PDF</button>
             <button onClick={exportDocument}>
-              <Download size={17} /> Exportar
+              <Download size={17} /> Guardar JSON
             </button>
             <button onClick={() => file.current?.click()}>
               <Upload size={17} /> Importar
@@ -449,7 +453,7 @@ function StudioEditor({ owner }: { owner: string }) {
               <p>Selecciona un objeto</p>
             </div>
           )}
-          <StudioAgentPanel key={doc.id} document={doc} selectedId={selectedId} authenticated={!!user} onApply={store.execute} />
+          <StudioAgentPanel key={doc.id} document={doc} selectedId={selectedId} authenticated={!!user} teachingLevel={level} onLevelChange={setLevel} onApply={store.execute} />
         </aside>
       </div>
       {presenting && (
@@ -528,6 +532,6 @@ function StudioEditor({ owner }: { owner: string }) {
           <p>Sin materiales.</p>
         )}
       </dialog>
-    </div>
+    </div></TeachingLevel.Provider>
   );
 }

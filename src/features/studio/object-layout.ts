@@ -9,6 +9,6 @@ export function resizeObject(
   return {
     ...object,
     width: Math.max(240, Math.min(BOARD.width - object.x, width)),
-    height: Math.max(160, Math.min(BOARD.height - object.y, height)),
+    height: Math.max(160, Math.min(BOARD.height, height)),
   };
 }

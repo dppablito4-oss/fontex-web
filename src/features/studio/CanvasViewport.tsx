@@ -9,6 +9,7 @@ import {
 import { GripHorizontal, Maximize2, MoveDiagonal2, X } from "lucide-react";
 import {
   BOARD,
+  boardHeight,
   fitObject,
   type MathObject,
 } from "../../core/document-schema/document";
@@ -40,6 +41,7 @@ export function CanvasViewport({
     null,
   );
   const [preview, setPreview] = useState<MathObject | null>(null);
+  const height = boardHeight(preview ? objects.map(o => o.id === preview.id ? preview : o) : objects);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
   const expanded = objects.find((object) => object.id === expandedId);
@@ -138,13 +140,13 @@ export function CanvasViewport({
     <div className="st-viewport" onClick={() => onSelect(null)}>
       <div
         className="st-board-space"
-        style={{ width: BOARD.width * zoom, height: BOARD.height * zoom }}
+        style={{ width: BOARD.width * zoom, height: height * zoom }}
       >
         <div
           className="st-board"
           style={{
             width: BOARD.width,
-            height: BOARD.height,
+            height,
             transform: `scale(${zoom})`,
           }}
         >

@@ -19,7 +19,7 @@ export function CollectionObject({ data }: { data: CollectionData }) {
   return (
     <div className="st-collection">
       <ol aria-label="Números de la colección">
-        {data.values.map((value, index) => <li key={index}>{value}</li>)}
+        {data.values.map((value, index) => <li key={index}>{value}{value >= 0 && value <= 20 && <div className="st-dots" role="img" aria-label={`${value} puntos`}>{Array.from({ length: value }, (_, i) => <span key={i} />)}</div>}</li>)}
       </ol>
       <dl className="st-number-stats">
         <div>
