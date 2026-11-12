@@ -1,0 +1,80 @@
+[
+  {
+    "type": "template",
+    "name": "confirmation",
+    "subject": "Bienvenido a Fontex: confirma tu correo",
+    "file": "confirmation.html"
+  },
+  {
+    "type": "template",
+    "name": "magic_link",
+    "subject": "Tu enlace para entrar a Fontex",
+    "file": "magic_link.html"
+  },
+  {
+    "type": "template",
+    "name": "recovery",
+    "subject": "Recupera tu contraseña de Fontex",
+    "file": "recovery.html"
+  },
+  {
+    "type": "template",
+    "name": "invite",
+    "subject": "Te invitaron a Fontex",
+    "file": "invite.html"
+  },
+  {
+    "type": "template",
+    "name": "email_change",
+    "subject": "Confirma tu cambio de correo en Fontex",
+    "file": "email_change.html"
+  },
+  {
+    "type": "template",
+    "name": "reauthentication",
+    "subject": "Tu código de verificación de Fontex",
+    "file": "reauthentication.html"
+  },
+  {
+    "type": "notification",
+    "name": "password_changed",
+    "subject": "Tu contraseña de Fontex cambió",
+    "file": "password_changed_notification.html"
+  },
+  {
+    "type": "notification",
+    "name": "email_changed",
+    "subject": "El correo de tu cuenta de Fontex cambió",
+    "file": "email_changed_notification.html"
+  },
+  {
+    "type": "notification",
+    "name": "phone_changed",
+    "subject": "El teléfono de tu cuenta de Fontex cambió",
+    "file": "phone_changed_notification.html"
+  },
+  {
+    "type": "notification",
+    "name": "mfa_factor_enrolled",
+    "subject": "Se añadió una verificación de seguridad en Fontex",
+    "file": "mfa_factor_enrolled_notification.html"
+  },
+  {
+    "type": "notification",
+    "name": "mfa_factor_unenrolled",
+    "subject": "Se retiró una verificación de seguridad en Fontex",
+    "file": "mfa_factor_unenrolled_notification.html"
+  },
+  {
+    "type": "notification",
+    "name": "identity_linked",
+    "subject": "Se vinculó un acceso a tu cuenta de Fontex",
+    "file": "identity_linked_notification.html"
+  },
+  {
+    "type": "notification",
+    "name": "identity_unlinked",
+    "subject": "Se desvinculó un acceso de tu cuenta de Fontex",
+    "file": "identity_unlinked_notification.html"
+  }
+]

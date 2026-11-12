@@ -8,6 +8,7 @@ import { AppShell } from "./layouts/AppShell";
 import { AdminPage } from "../features/administration/AdminPage";
 import { AuthLoadingPage, AuthPage } from "../features/auth/AuthPage";
 import { useAuth } from "../features/auth/AuthProvider";
+import { PasswordRecoveryPage } from "../features/auth/PasswordRecoveryPage";
 import { ClassroomPage } from "../features/classrooms/ClassroomPage";
 import { GroupPage } from "../features/groups/GroupPage";
 import { HomePage } from "../features/home/HomePage";
@@ -35,7 +36,14 @@ export function App() {
   const tutorSignIn = useMatch("/ingresar-tutor");
   const signInRoute = useMatch("/ingresar");
   const signUpRoute = useMatch("/crear-cuenta");
+  const recoveryRoute = useMatch("/recuperar-contrasena");
+  const passwordRoute = useMatch("/nueva-contrasena");
   const authRoute = tutorSignIn || signInRoute || signUpRoute;
+
+  if (recoveryRoute || passwordRoute) {
+    if (status === "loading") return <AuthLoadingPage />;
+    return <PasswordRecoveryPage key={passwordRoute ? "update" : "request"} updating={!!passwordRoute} />;
+  }
 
   if (canvasRoute || canvasAlias) return <StudioShell />;
   if (fractionsRoute) return <FractionCanvas />;

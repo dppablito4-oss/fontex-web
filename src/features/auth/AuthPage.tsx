@@ -84,6 +84,7 @@ export function AuthPage({ initialMode = 'signin' }: { initialMode?: Mode }) {
         <Button className="w-full" disabled={pending || !configured} type="submit">{pending ? 'Procesando…' : mode === 'signin' ? 'Entrar a Fontex' : 'Crear cuenta'}{!pending && <ArrowRight className="size-4"/>}</Button>
       </form>
       {mode === 'signin' && <div className="mt-5 text-center"><button type="button" disabled={pending || !configured || cooldown > 0} className="text-xs font-semibold text-primary underline disabled:opacity-50" onClick={() => void resend()}>{cooldown > 0 ? `Reenviar confirmación en ${cooldown} s` : 'Reenviar correo de confirmación'}</button>{confirmationEmail && <p className="mt-2 break-words text-xs text-muted-foreground">Confirma el correo indicado antes de entrar.</p>}</div>}
+      {mode === 'signin' && <a className="mt-5 block text-center text-sm font-semibold text-primary underline" href="#/recuperar-contrasena">Olvidé mi contraseña</a>}
       <a className="mt-6 flex items-center justify-center gap-2 text-sm font-semibold text-primary" href="#/"><ArrowLeft size={15}/> Continuar al lienzo sin cuenta</a>
       </Card>
     </div>
