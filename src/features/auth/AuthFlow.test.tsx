@@ -7,6 +7,7 @@ import { App } from '../../app/App';
 import { ThemeProvider } from '../theme/ThemeProvider';
 const mocked = vi.hoisted(() => ({
   getSession: vi.fn(), signInWithPassword: vi.fn(), signUp: vi.fn(), signOut: vi.fn(), resend: vi.fn(),
+  resetPasswordForEmail: vi.fn(), updateUser: vi.fn(),
   listener: null as null | ((event: string, session: unknown) => void),
 }));
 vi.mock('../../lib/supabase/client', () => ({ supabase: {
@@ -29,8 +30,56 @@ beforeEach(() => {
   mocked.signInWithPassword.mockResolvedValue({ data: { session }, error: null });
   mocked.signUp.mockResolvedValue({ data: { session: null, user: { id: 'test-user' } }, error: null });
   mocked.signOut.mockResolvedValue({ error: null }); mocked.resend.mockResolvedValue({ error: null });
+  mocked.resetPasswordForEmail.mockResolvedValue({ data: {}, error: null });
+  mocked.updateUser.mockResolvedValue({ data: { user: session.user }, error: null });
 });
 describe('Acceso completo a Fontex', () => {
+  it('permite solicitar recuperación con retorno sin fragmento y sin revelar cuentas existentes', async () => {
+    renderFlow();
+    fireEvent.click(await screen.findByRole('link', { name: 'Olvidé mi contraseña' }));
+    await screen.findByRole('heading', { name: 'Recupera tu cuenta' });
+    fireEvent.change(screen.getByLabelText('Correo'), { target: { value: 'student@example.com' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Enviar enlace de recuperación' }));
+    expect(await screen.findByRole('status')).toHaveTextContent('Si existe una cuenta');
+    expect(mocked.resetPasswordForEmail).toHaveBeenCalledWith('student@example.com', { redirectTo: 'http://localhost:3000/' });
+  });
+  it('no deja cambiar una contraseña desde un enlace sin sesión válida', async () => {
+    renderFlow('/nueva-contrasena');
+    expect(await screen.findByRole('button', { name: 'Guardar nueva contraseña' })).toBeDisabled();
+    expect(screen.getByRole('alert')).toHaveTextContent('Abre el enlace');
+    expect(mocked.updateUser).not.toHaveBeenCalled();
+  });
+  it('abre el cambio de contraseña tras PASSWORD_RECOVERY y lo conserva al recargar la ruta', async () => {
+    const view = renderFlow('/');
+    await screen.findByRole('link', { name: 'Iniciar sesión' });
+    act(() => mocked.listener?.('PASSWORD_RECOVERY', session));
+    await screen.findByRole('heading', { name: 'Elige una nueva contraseña' });
+    expect(window.location.hash).toBe('#/nueva-contrasena');
+    view.unmount();
+    mocked.getSession.mockResolvedValue({ data: { session }, error: null });
+    renderFlow('/nueva-contrasena');
+    expect(await screen.findByRole('button', { name: 'Guardar nueva contraseña' })).toBeEnabled();
+    fireEvent.change(screen.getByLabelText('Nueva contraseña'), { target: { value: 'New-Test-123!' } });
+    fireEvent.change(screen.getByLabelText('Confirmar nueva contraseña'), { target: { value: 'Different-123!' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar nueva contraseña' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('no coinciden');
+    expect(mocked.updateUser).not.toHaveBeenCalled();
+    fireEvent.change(screen.getByLabelText('Confirmar nueva contraseña'), { target: { value: 'New-Test-123!' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar nueva contraseña' }));
+    expect(await screen.findByRole('status')).toHaveTextContent('Tu contraseña se actualizó');
+    expect(mocked.updateUser).toHaveBeenCalledWith({ password: 'New-Test-123!' });
+  });
+  it('permite reintentar el envío de recuperación después de un error de SMTP', async () => {
+    mocked.resetPasswordForEmail.mockResolvedValueOnce({ data: null, error: { status: 429 } });
+    renderFlow('/recuperar-contrasena');
+    const submit = await screen.findByRole('button', { name: 'Enviar enlace de recuperación' });
+    fireEvent.change(screen.getByLabelText('Correo'), { target: { value: 'student@example.com' } });
+    fireEvent.click(submit);
+    expect(await screen.findByRole('alert')).toHaveTextContent('demasiados intentos');
+    expect(submit).toBeEnabled();
+    fireEvent.click(submit);
+    expect(await screen.findByRole('status')).toHaveTextContent('Si existe una cuenta');
+  });
   it('abre el acceso desde el lienzo y vuelve al lienzo con una sesión válida', async () => {
     renderFlow('/');
     fireEvent.click(await screen.findByRole('link', { name: 'Iniciar sesión' }));

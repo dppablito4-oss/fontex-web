@@ -8,6 +8,8 @@ export function readableAuthError(error: unknown): string {
     case 'over_email_send_rate_limit': case 'over_request_rate_limit': return 'Se han hecho demasiados intentos. Espera unos minutos antes de volver a intentarlo.';
     case 'email_address_invalid': return 'Introduce un correo electrónico válido.';
     case 'weak_password': return 'La contraseña es demasiado débil. Usa al menos 8 caracteres y combina letras, números y símbolos.';
+    case 'same_password': return 'Elige una contraseña diferente de la anterior.';
+    case 'session_not_found': case 'session_expired': return 'Tu sesión venció. Solicita otro enlace de recuperación.';
     case 'signup_disabled': return 'El registro de cuentas no está disponible en este momento.';
     case 'otp_expired': case 'access_denied': return 'El enlace de confirmación venció o ya fue utilizado. Solicita uno nuevo o inicia sesión si ya confirmaste tu correo.';
   }

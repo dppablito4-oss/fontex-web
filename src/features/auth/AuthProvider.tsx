@@ -102,6 +102,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setStatus(nextSession ? "authenticated" : "anonymous");
       if (nextSession) setError(null);
       if (!nextSession) setProfile(null);
+      if (event === "PASSWORD_RECOVERY" && nextSession) {
+        // Supabase has consumed the callback fragment before emitting this event.
+        // Replace it with a normal HashRouter route, also preserving reloads.
+        window.location.replace(`${window.location.pathname}${window.location.search}#/nueva-contrasena`);
+      }
     });
 
     return () => {
