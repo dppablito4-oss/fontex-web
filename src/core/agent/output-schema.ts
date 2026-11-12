@@ -1,0 +1,21 @@
+const object = (properties: Record<string, unknown>) => ({ type: "object", properties, required: Object.keys(properties), additionalProperties: false });
+const integer = (minimum: number, maximum: number) => ({ type: "integer", minimum, maximum });
+const string = { type: "string" };
+const shape = { type: "string", enum: ["bar", "circle"] };
+const data = {
+  fraction: { numerator: integer(0, 72), denominator: integer(1, 24), shape },
+  operation: { expression: string, stage: integer(0, 2), shape },
+  text: { content: string, fontSize: integer(14, 48) },
+  sequence: { start: integer(-1000, 1000), difference: integer(-100, 100), count: integer(2, 8) },
+};
+export const agentOutputSchema = object({
+  message: string,
+  actions: { type: "array", maxItems: 20, items: { anyOf: [
+    object({ kind: { type: "string", enum: ["create", "update"] }, object: { anyOf: Object.entries(data).map(([type, properties]) => object({
+      id: string, type: { type: "string", enum: [type] }, label: string,
+      x: { type: "number", minimum: 0, maximum: 1600 }, y: { type: "number", minimum: 0, maximum: 1100 },
+      width: { type: "number", minimum: 240, maximum: 1600 }, height: { type: "number", minimum: 160, maximum: 1100 }, data: object(properties),
+    })) } }),
+    object({ kind: { type: "string", enum: ["delete"] }, id: string }),
+  ] } },
+});

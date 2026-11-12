@@ -448,7 +448,7 @@ function StudioEditor({ owner }: { owner: string }) {
               <p>Selecciona un objeto</p>
             </div>
           )}
-          <StudioAgentPanel key={doc.id} document={doc} selectedId={selectedId} onApply={store.execute} />
+          <StudioAgentPanel key={doc.id} document={doc} selectedId={selectedId} authenticated={!!user} onApply={store.execute} />
         </aside>
       </div>
       {presenting && (

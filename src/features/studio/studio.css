@@ -195,6 +195,7 @@
 .st-agent pre { max-height: 230px; overflow: auto; padding: 8px; background: var(--st-background); font-size: 10px; }
 .st-agent :is(p, li) { margin-block: 8px; line-height: 1.5; overflow-wrap: anywhere; }
 .st-agent ul { padding-left: 16px; }
+.st-agent-message { white-space: pre-wrap; }
 .st-app .st-exit-presentation { position: fixed; top: 16px; right: 20px; z-index: 50; box-shadow: 0 4px 18px rgb(var(--ui-shadow) / .16); }
 .st-exit-presentation small { color: var(--st-muted); font-size: 10px; font-weight: 400; }
 .st-presenting { position: fixed; inset: 0; z-index: 1000; height: 100dvh; min-height: 0; background: var(--st-background); }

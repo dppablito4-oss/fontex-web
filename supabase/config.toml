@@ -416,3 +416,6 @@ enabled = true
 
 [functions.practice-tutor]
 verify_jwt = true
+
+[functions.studio-agent]
+verify_jwt = true
