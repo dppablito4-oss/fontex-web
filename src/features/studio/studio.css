@@ -352,15 +352,31 @@
 .st-type-operation { color:#96620b; background:#fff0cf; }
 .st-type-text,.st-type-number-line { color:#376ab2; background:#e3efff; }
 .st-type-sequence,.st-type-linear-equation { color:#7655bb; background:#eee5ff; }
-:root[data-theme="dark"] .st-app { --st-background:#000; --st-surface:#000; --st-soft:#101013; --st-line:#292930; --st-ink:#f4f2ff; --st-muted:#b7b5c9; --st-piece-empty:#222228; --st-piece-stroke:#000; }
+/* Keep the AMOLED canvas black; separate chrome and controls with neutral surfaces. */
+:root[data-theme="dark"] .st-app {
+  --st-background: #000;
+  --st-surface: #111113;
+  --st-soft: #1c1c20;
+  --st-line: #34343a;
+  --st-control: #55555f;
+  --st-ink: #f4f4f5;
+  --st-muted: #b7b7c0;
+  --st-primary: #e4e4e7;
+  --st-on-primary: #18181b;
+  --st-piece-empty: #25252b;
+  --st-piece-stroke: #000;
+  --st-button-surface: #242427;
+  --st-button-hover: #323237;
+  --st-button-border: #484850;
+}
 :root[data-theme="dark"] .st-board { background:#000; box-shadow:none; }
 :root[data-theme="dark"] .st-viewport { background-color:#000; background-image:radial-gradient(#27272d .7px,transparent .7px); }
 :root[data-theme="dark"] .st-type-fraction,:root[data-theme="dark"] .st-type-collection,:root[data-theme="dark"] .st-type-geometry { color:#8be6c4; background:#10271f; }
 :root[data-theme="dark"] .st-type-operation { color:#ffce8b; background:#2a2111; }
 :root[data-theme="dark"] .st-type-text,:root[data-theme="dark"] .st-type-number-line { color:#a4caff; background:#142238; }
 :root[data-theme="dark"] .st-type-sequence,:root[data-theme="dark"] .st-type-linear-equation { color:#c8b2ff; background:#241b34; }
-:root[data-theme="dark"] .st-add-buttons button { border-color:#292930; background:#080809; }
-:root[data-theme="dark"] .st-agent option { background:#000; color:#f4f2ff; }
+:root[data-theme="dark"] .st-app .st-add-buttons button { border-color:var(--st-button-border); background:var(--st-button-surface); }
+:root[data-theme="dark"] .st-agent option { background:#17171a; color:var(--st-ink); }
 @container (max-width: 680px) {
  .st-guided { grid-template-columns:minmax(0, 1fr); gap:18px; }
  .st-visual-panel { min-height:210px; padding:18px 12px; }
@@ -383,3 +399,62 @@
 .st-learning-toolbar > .st-primary { margin-left:auto; }
 @media(max-width:760px) { .st-learning-toolbar { padding:10px; gap:8px; } .st-learning-toolbar > small { flex-basis:100%; } .st-app .st-learning-toolbar > button { font-size:11px; padding:6px 8px; } }
 .st-guided-learn .st-number-stats { display:none; }
+
+/* Neutral control hierarchy, scoped to Studio so the light theme stays intact. */
+:root[data-theme="dark"] .st-app button,
+:root[data-theme="dark"] .st-app .st-account-link {
+  background: var(--st-button-surface);
+  border-color: var(--st-button-border);
+  color: var(--st-ink);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / .035);
+}
+:root[data-theme="dark"] .st-app button:hover:not(:disabled),
+:root[data-theme="dark"] .st-app .st-account-link:hover {
+  background: var(--st-button-hover);
+  border-color: #686873;
+}
+:root[data-theme="dark"] .st-app button:active:not(:disabled) { background: #3c3c42; }
+:root[data-theme="dark"] .st-app button.st-primary {
+  background: var(--st-primary);
+  border-color: var(--st-primary);
+  color: var(--st-on-primary);
+  box-shadow: none;
+}
+:root[data-theme="dark"] .st-app button.st-primary:hover:not(:disabled) {
+  background: #fafafa;
+  border-color: #fafafa;
+  filter: none;
+}
+:root[data-theme="dark"] .st-app .st-learning-toolbar nav button {
+  background: #1c1c20;
+  border-color: #484850;
+  color: #c8c8cf;
+}
+:root[data-theme="dark"] .st-app .st-learning-toolbar nav button[aria-pressed="true"] {
+  background: #3a3a40;
+  color: #fff;
+  border-color: #9696a2;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / .08);
+}
+:root[data-theme="dark"] .st-app :is(input,textarea,select):not([type="checkbox"]):not([type="file"]) {
+  background: #17171a;
+  border-color: var(--st-control);
+  color: var(--st-ink);
+}
+:root[data-theme="dark"] .st-app :is(input,textarea)::placeholder { color: #9999a5; }
+:root[data-theme="dark"] .st-app :is(input,textarea,select):focus-visible {
+  border-color: #c6c6d0;
+  outline-color: var(--ui-focus);
+}
+:root[data-theme="dark"] .st-app .st-object-handle { background: #19191d; color: #c8c8d0; }
+:root[data-theme="dark"] .st-app .st-visual-panel { border-color: #34343b; }
+:root[data-theme="dark"] .st-app .st-story-eyebrow { color: #c4b5fd; }
+:root[data-theme="dark"] .st-app .st-mode-description { color: #d4d4dc; }
+:root[data-theme="dark"] .st-app .st-shortcuts a { background: #18181b; color: #c7c7d0; }
+:root[data-theme="dark"] .st-app .st-shortcuts a:hover { background: #29292f; color: #fff; }
+@media (prefers-reduced-motion: reduce) { .st-app :is(button,a) { transition: none; } }
+:root[data-theme="dark"] .st-app button.st-primary:active:not(:disabled) {
+  background: #c4c4cc;
+  border-color: #c4c4cc;
+  color: var(--st-on-primary);
+}
