@@ -12,6 +12,9 @@ import {
 
 import { analyzePolygon, analyzeFactors, factorAnswer } from "../math-engine/adapted-modules.ts";
 
+import { isLearningObject, learningTypes, type LearningType, type ExactAnswer } from "../math-engine/learning-types.ts";
+import { learningLesson, symbolicAnswer } from "../math-engine/learning-modules.ts";
+
 export const levelGuidance: Record<AgentLevel, string> = {
   initial:
     "Usa frases cortas, conteo y objetos concretos. Explica los símbolos; pide acompañamiento si el contenido supera el nivel inicial.",
@@ -29,12 +32,13 @@ const introductions: Record<AgentLevel, string> = {
   introductory: "Identifica el dominio y la propiedad que conserva el valor.",
 };
 export type ExactTarget = {
-  answer: { n: number; d: number } | { factors: number[] } | "none" | "all";
+  answer: ExactAnswer;
   prompt: string;
   strategy: string;
   result: string;
 };
 export function exactTarget(object: MathObject): ExactTarget | null {
+  if (isLearningObject(object)) return learningLesson(object);
   switch (object.type) {
     case "polygon": {
       const p = analyzePolygon(object.data.vertices);
@@ -126,17 +130,18 @@ export function equivalentAnswer(
   attempt: string,
   expected: { n: number; d: number },
 ): boolean | null {
-  const decimal = attempt.trim().match(/^(-?)(\d{1,6})[.,](\d{1,6})$/);
+  if (!Number.isSafeInteger(expected.n) || !Number.isSafeInteger(expected.d) || !expected.d) return null;
+  const decimal = attempt.trim().match(/^(-?)(\d{1,12})[.,](\d{1,6})$/);
   if (decimal) {
-    const scale = 10 ** decimal[3]!.length;
-    const numerator = (Number(decimal[2]) * scale + Number(decimal[3])) * (decimal[1] ? -1 : 1);
-    return numerator * expected.d === expected.n * scale;
+    const scale = 10n ** BigInt(decimal[3]!.length);
+    const numerator = (BigInt(decimal[2]!) * scale + BigInt(decimal[3]!)) * (decimal[1] ? -1n : 1n);
+    return numerator * BigInt(expected.d) === BigInt(expected.n) * scale;
   }
-  const match = attempt.trim().match(/^(-?\d{1,6})(?:\s*\/\s*(-?\d{1,6}))?$/);
+  const match = attempt.trim().match(/^(-?\d{1,12})(?:\s*\/\s*(-?\d{1,12}))?$/);
   if (!match) return null;
-  const n = Number(match[1]), d = Number(match[2] ?? 1);
+  const n = BigInt(match[1]!), d = BigInt(match[2] ?? "1");
   if (!d) return null;
-  return n * expected.d === expected.n * d;
+  return n * BigInt(expected.d) === BigInt(expected.n) * d;
 }
 export function practiceReply(request: AgentRequest): AgentReply {
   const object = request.document.objects.find((item) =>
@@ -166,6 +171,8 @@ export function practiceReply(request: AgentRequest): AgentReply {
         : ["infinitas", "infinitas soluciones", "todos los reales"].includes(
           normalized,
         )
+      : "pi" in target.answer || "values" in target.answer
+      ? symbolicAnswer(request.attempt, target.answer)
       : "factors" in target.answer
       ? factorAnswer(request.attempt, target.answer.factors)
       : equivalentAnswer(request.attempt, target.answer);
@@ -174,11 +181,12 @@ export function practiceReply(request: AgentRequest): AgentReply {
       : answer === false
       ? "Tu respuesta aún no coincide. Revisa un paso."
       : answer === null
-      ? (object?.type === "factorization" ? "Escribe un producto de primos, por ejemplo 2 × 2 × 3 o 2^2 × 3." : object?.type === "linear-equation"
+      ? (object?.type === "circle" ? "Escribe el resultado exacto con π, por ejemplo 9π o 9*pi." : object?.type === "statistics" && object.data.task === "mode" ? "Escribe todas las modas separadas por comas, o sin moda si no hay datos repetidos." : object?.type === "factorization" ? "Escribe un producto de primos, por ejemplo 2 × 2 × 3 o 2^2 × 3." : object?.type === "linear-equation" || object?.type === "algebra-tiles"
         ? "Escribe un entero, un decimal, una fracción a/b, «sin solución» o «infinitas»."
         : "Escribe un entero, un decimal o una fracción a/b; el denominador debe ser distinto de cero.")
       : "";
     const initialStrategies: Record<MathObject["type"], string> = {
+      ...Object.fromEntries(learningTypes.map(type => [type, "Observa el dibujo y cuenta las unidades con acompañamiento. Relaciona cada cambio con la pregunta."])) as Record<LearningType, string>,
       polygon: "Cuenta cuadrados completos y junta las partes de cuadrados de la figura.",
       factorization: "Empieza probando grupos de dos y pide acompañamiento para las divisiones.",
       geometry: "Cuenta los cuadrados de cada fila. Dos triángulos iguales forman un rectángulo.",

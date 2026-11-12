@@ -1,3 +1,4 @@
+import { enforceSelectedIntent } from "./intents.ts";
 import { readStudioContext } from "../../../src/core/agent/actions.ts";
 import { agentOutputSchema } from "../../../src/core/agent/output-schema.ts";
 import {
@@ -124,6 +125,8 @@ export function createAgentHandler(
                   "Explica cada paso: qué hacemos, por qué conserva el valor y cómo leer el dibujo. Inicial: conteo hasta 10, colecciones y patrones sin fórmulas; primaria: piezas, unidades y ejemplos; secundaria: propiedades y equivalencias; universidad introductoria: dominio, justificación y comprobación. No eleves la dificultad sin que se pida.",
                   "Multiplicación de fracciones: usa operation con expression como 3/2 × 4/3; no requiere homogeneizar. No crees fraction si el resultado supera 3 unidades o denominador 24. Nunca cambies cantidades para que quepan en el dibujo.",
                   "Módulos adaptados de Mathigon: polygon para polígonos simples de 3 a 8 vértices {x,y} enteros 0–20 ordenados por el contorno, sin cruces; factorization para descomposición de un entero de 2 a 360 en factores primos. Crea objetos reales de esos tipos, no solo textos. No uses polígono para círculos ni transformes un número fuera de rango. La biblioteca calcula áreas, perímetros y factores: no inventes esos valores. Para inicial, prioriza figuras y conteo; introduce factores primos con acompañamiento a partir de primaria avanzada.",
+                  "Ampliación de módulos: percentage expresa part/whole de quantity (portion), descuento restante (discount) o proporcionalidad directa (ratio). divisibility calcula gcd o lcm de a,b entre 2 y 360. angle: giro antihorario degrees 0–360. circle: radius 1–100 y task area o circumference; conserva π exacto, indica aproximaciones como tales. statistics: 1–24 enteros 0–100 y tarea mean, median o mode. probability: coin con outcomes=2, dice con outcomes=6 o spinner con outcomes 2–12 equiprobables; favorable de 0 a outcomes, trials 10–200, seed entero 1–2147483646. algebra-tiles: ax+b=cx+d, a,c 0–8 y b,d −20..20. powers-roots: base 0–12, exponent 1–3; para root solo índices 2 o 3 y raíces exactas, el radicando es base^exponent. measurement: value 0–10000 y from/to de la misma magnitud; unidades mm,cm,m,km; mm2,cm2,m2; mL,L; s,min,h. Nunca conviertas magnitudes incompatibles ni representes una raíz irracional como exacta.",
+                  "Órdenes sobre el objeto seleccionado: al pedir más sencillo, conserva ID y tipo y adapta cantidades o texto al nivel, sin tocar otros objetos; al pedir otro ejemplo, crea un objeto del mismo tipo con ID y datos nuevos y conserva el original. Al pedir explicar solo un paso, responde únicamente ese paso justificado, sin crear ni modificar material. Para práctica formula un ejercicio sin adelantar respuestas. No asegures haber cambiado una configuración del navegador, un modo o una selección: solo puedes realizar las acciones de Studio del esquema.",
                   levelGuidance[input.level],
                   "Cobertura introductoria y acotada; no prometas cubrir todos los niveles ni validar el texto libre. Puedes responder sin acciones.",
                 ].join("\n"),
@@ -170,6 +173,7 @@ export function createAgentHandler(
         try {
           const payload: unknown = await response.json();
           const proposal = readProposal(payload, input.document);
+          enforceSelectedIntent(input, proposal.batch);
           const verification = proposal.document.objects.flatMap((object) => {
             const target = exactTarget(object);
             return target

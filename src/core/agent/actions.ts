@@ -16,6 +16,9 @@ import { solveLinearEquation } from "../math-engine/equations.ts";
 
 import { analyzePolygon, analyzeFactors } from "../math-engine/adapted-modules.ts";
 
+import { learningDataKeys } from "./learning-schema.ts";
+import { isLearningObject } from "../math-engine/learning-types.ts";
+import { learningLesson } from "../math-engine/learning-modules.ts";
 export type StudioAction =
   | { kind: "create"; object: MathObject }
   | { kind: "update"; object: MathObject }
@@ -34,6 +37,7 @@ export function exactKeys(
     keys.every((key) => Object.hasOwn(value, key));
 }
 const dataKeys: Record<MathObject["type"], string[]> = {
+  ...learningDataKeys,
   polygon: ["vertices"],
   factorization: ["number"],
   geometry: ["figure", "base", "height"],
@@ -201,6 +205,7 @@ export function readStudioContext(
         "Dos fracciones con +, − o ×; cada factor de hasta 3 unidades y denominador 1–24. Suma/resta: m.c.m. ≤60 y resultado ≥0. Multiplicación: resultado hasta 9 unidades; usar operation para el producto, no un objeto fraction si supera sus límites.",
     },
     mathematics: snapshot.objects.map((object) => {
+      if (isLearningObject(object)) return { id: object.id, type: object.type, calculation: learningLesson(object).facts };
       switch (object.type) {
         case "polygon": return { id: object.id, polygon: analyzePolygon(object.data.vertices) };
         case "factorization": return { id: object.id, factorization: analyzeFactors(object.data.number) };

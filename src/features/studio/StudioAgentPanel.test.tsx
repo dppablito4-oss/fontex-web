@@ -134,3 +134,9 @@ it.each(["learn", "solve"] as const)(
     );
   },
 );
+it("convierte el módulo seleccionado a práctica sin IA ni cambios de datos", () => {
+  const doc=createDocument(),mode=vi.fn(),apply=vi.fn();
+  render(<StudioAgentPanel document={doc} selectedId={doc.objects[0]!.id} onApply={apply} onModeChange={mode}/>);
+  fireEvent.click(screen.getByRole("button",{name:"Practicar esto"}));
+  expect(mode).toHaveBeenCalledWith("practice");expect(apply).not.toHaveBeenCalled();
+});

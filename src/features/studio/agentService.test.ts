@@ -81,3 +81,11 @@ it("distingue un fallo de conexión y no muestra errores internos del servidor",
   });
   await expect(requestAgent(request())).rejects.toThrow(/El material no cambió/);
 });
+it("explica un paso local sin sesión ni red y sin llamar a la IA", async () => {
+  const online = vi.spyOn(navigator,"onLine","get").mockReturnValue(false);
+  try {
+    const input=request();input.selectedId=input.document.objects[0]!.id;input.question="Explica solo el paso 2";
+    const reply=await requestAgent(input);
+    expect(reply.message).toContain("Paso 2:");expect(reply.batch.actions).toEqual([]);expect(invoke).not.toHaveBeenCalled();
+  } finally { online.mockRestore(); }
+});

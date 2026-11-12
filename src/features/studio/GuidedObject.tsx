@@ -35,7 +35,7 @@ export function GuidedObject({ object }: { object: MathObject }) {
       {practice ? <>
         <span className="st-story-eyebrow">TU TURNO</span><h3>{target?.prompt}</h3>
         <p>Observa la representación. Puedes pedir una pista cuando la necesites.</p>
-        <form onSubmit={e => { e.preventDefault(); check(hint); }}><label>Respuesta del módulo<input value={answer} onChange={e => { setAnswer(e.target.value); setFeedback(""); }} maxLength={120} placeholder={object.type === "factorization" ? "Ejemplo: 2^2 × 3" : "Ejemplo: 3/2"} /></label><button className="st-primary" type="submit">Comprobar respuesta</button></form>
+        <form onSubmit={e => { e.preventDefault(); check(hint); }}><label>Respuesta del módulo<input value={answer} onChange={e => { setAnswer(e.target.value); setFeedback(""); }} maxLength={120} placeholder={object.type === "factorization" ? "Ejemplo: 2^2 × 3" : object.type === "circle" ? "Ejemplo: 9π" : object.type === "statistics" && object.data.task === "mode" ? "Ejemplo: 2, 3 o sin moda" : "Ejemplo: 3/2"} /></label><button className="st-primary" type="submit">Comprobar respuesta</button></form>
         {feedback && <p role="status" className="st-story-feedback">{feedback}</p>}
         <button type="button" disabled={hint >= 2} onClick={() => check(hint + 1)}><Lightbulb size={16} />{hint === 0 ? "Dame una pista" : hint === 1 ? "Mostrar comprobación" : "Comprobación mostrada"}</button>
       </> : mode === "solve" ? <>

@@ -157,3 +157,7 @@ Studio usa un lienzo de 1600 × 1100, hasta 80 objetos y 40 cambios de historial
 La biblioteca remota acepta PDF de hasta 5 MiB y 100 páginas con texto seleccionable; no implementa OCR. El tutor estricto exige una salida estructurada y citas de los fragmentos enviados al modelo; si faltan o son inválidas, se abstiene. Esa validación no certifica por sí sola la exactitud de cada afirmación. El renderizador académico admite un subconjunto de Markdown y sustituciones matemáticas, incluidos exponentes numéricos completos; no es un motor LaTeX completo.
 
 Studio, Fracciones, Práctica y las vistas académicas comparten los temas claro y oscuro. El selector de luna/sol conserva la elección al navegar; sin elección manual se usa la preferencia del sistema. Los dibujos matemáticos también adaptan sus colores. El guardado local sigue usando una instantánea atómica por cuenta, sin sincronización entre equipos. La revisión visual en navegador, las pruebas E2E y la verificación del despliegue remoto siguen pendientes.
+
+### Catálogo ampliado de Studio
+
+Studio incluye porcentajes/proporciones, MCD/MCM, ángulos, círculos, estadística visual, probabilidad, álgebra con piezas, potencias/raíces y conversiones de unidades. Se pueden buscar en la biblioteca de objetos y crear mediante el agente. El panel incorpora «Más sencillo», «Otro ejemplo», «Practicar esto» y «Explicar paso». Ver [cobertura, ejemplos y límites](docs/architecture/learning-catalog.md).

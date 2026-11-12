@@ -1,3 +1,4 @@
+import { explainStepReply } from "./agent-intents";
 import { FunctionsFetchError, FunctionsHttpError } from "@supabase/supabase-js";
 import { supabase } from "../../lib/supabase/client";
 import {
@@ -11,6 +12,8 @@ import { practiceReply } from "../../core/agent/pedagogy";
 export async function requestAgent(value: AgentRequest) {
   const input = parseAgentRequest(value);
   if (input.mode === "practice") return practiceReply(input);
+  const explanation = explainStepReply(input);
+  if (explanation) return explanation;
   if (!navigator.onLine) {
     throw new Error(
       "No hay conexión. Puedes seguir editando y practicando con el material.",

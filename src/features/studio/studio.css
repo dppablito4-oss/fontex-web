@@ -471,3 +471,36 @@
 .st-type-factorization { color:#7655bb; background:#eee5ff; }
 :root[data-theme="dark"] .st-app .st-type-polygon { color:#8be6c4; background:#10271f; }
 :root[data-theme="dark"] .st-app .st-type-factorization { color:#c8b2ff; background:#241b34; }
+.st-learning-visual > div { width:100%; }
+.st-learning-visual svg { display:block; width:100%; max-height:420px; }
+.st-learning-visual p { font-size:14px; line-height:1.6; margin:12px 0; }
+.st-learning-amounts { display:flex; flex-wrap:wrap; justify-content:center; gap:20px; }
+.st-learning-amount { padding:12px; text-align:center; border:1px solid var(--st-line); border-radius:12px; margin-block:10px; }
+.st-learning-amount small { display:block; color:var(--st-muted); font-size:12px; }
+.st-learning-amount strong { display:block; font-size:28px; margin-top:4px; }
+.st-percent-picture > svg { max-width:300px; margin:auto; }
+.st-prime-row { display:flex; align-items:center; gap:12px; padding:14px 0; }
+.st-prime-row > strong { font-size:30px; }
+.st-prime-row > div { display:flex; flex-wrap:wrap; gap:8px; }
+.st-prime-chip { padding:8px 12px; border-radius:8px; background:var(--st-soft); color:var(--st-piece-secondary); font-size:24px; }
+.st-outcomes { display:flex; flex-wrap:wrap; gap:10px; padding:12px; }
+.st-outcomes > span { padding:12px; border:1px solid var(--st-line); border-radius:12px; font-size:22px; }
+.st-outcomes .favorable { border-color:var(--st-piece-primary); color:var(--st-piece-primary); background:var(--st-soft); }
+.st-balance-tiles { display:grid; grid-template-columns:1fr auto 1fr; gap:14px; align-items:center; padding:16px 0; }
+.st-tile-side { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:7px; min-height:120px; }
+.st-algebra-x,.st-algebra-unit { display:grid; place-items:center; border-radius:5px; color:var(--st-ink); font-size:18px; font-weight:650; border:2px solid var(--st-piece-primary); background:var(--st-soft); }
+.st-algebra-x { width:36px; height:90px; }
+.st-algebra-unit { width:36px; height:36px; }
+.st-tile-side .negative { border-color:var(--st-piece-secondary); color:var(--st-piece-secondary); border-style:dashed; }
+.st-tile-equals { font-size:32px; }
+.st-agent-shortcuts { display:flex; flex-wrap:wrap; gap:8px; margin:14px 0; padding:12px; border:1px solid var(--st-line); border-radius:12px; }
+.st-agent-shortcuts label { margin:0; flex-basis:100%; }
+.st-agent-shortcuts input { max-width:100px; }
+.st-type-percentage,.st-type-divisibility,.st-type-powers-roots,.st-type-measurement { color:#96620b; background:#fff0cf; }
+.st-type-angle,.st-type-circle { color:#148065; background:#d8f8eb; }
+.st-type-statistics,.st-type-probability,.st-type-algebra-tiles { color:#7655bb; background:#eee5ff; }
+:root[data-theme="dark"] .st-app :is(.st-type-percentage,.st-type-divisibility,.st-type-powers-roots,.st-type-measurement) { color:#ffce8b; background:#2a2111; }
+:root[data-theme="dark"] .st-app :is(.st-type-angle,.st-type-circle) { color:#8be6c4; background:#10271f; }
+:root[data-theme="dark"] .st-app :is(.st-type-statistics,.st-type-probability,.st-type-algebra-tiles) { color:#c8b2ff; background:#241b34; }
+.st-module-search { display:block; width:100%; border:1px solid var(--st-control); border-radius:9px; padding:10px; margin:10px 0 14px; background:var(--st-background); color:var(--st-ink); font-size:12px; }
+.st-learning-statistics svg { max-height:none; }

@@ -1,3 +1,4 @@
+import { learningIcons } from "../../core/object-registry/learning-registry";
 import { TeachingMode } from "./teaching-mode";
 import { LessonPlayer } from "./LessonPlayer";
 import { agentModes, type AgentMode } from "../../core/agent/protocol";
@@ -61,6 +62,8 @@ function StudioEditor({ owner }: { owner: string }) {
   const store = useStudioDocument(owner);
   const doc = store.document;
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [moduleFilter, setModuleFilter] = useState("");
+  const normalizeModule = (s: string) => s.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
   const [mode, setMode] = useState<AgentMode>("learn");
   const [playerOpen, setPlayerOpen] = useState(false);
   const [level, setLevel] = useState<AgentLevel>("primary");
@@ -327,8 +330,9 @@ function StudioEditor({ owner }: { owner: string }) {
       <div className="st-layout">
         <aside className="st-palette" aria-label="Herramientas del editor">
           <h1 className="st-section-label">Objetos</h1>
+          <input className="st-module-search" aria-label="Buscar objeto" placeholder="Buscar módulo…" value={moduleFilter} onChange={e => setModuleFilter(e.target.value)} />
           <div className="st-add-buttons">
-            {(Object.keys(objectRegistry) as ObjectType[]).map((type) => (
+            {(Object.keys(objectRegistry) as ObjectType[]).filter(type => normalizeModule(objectRegistry[type].name).includes(normalizeModule(moduleFilter))).map((type) => (
               <button
                 key={type}
                 aria-label={`Añadir ${objectRegistry[type].name.toLocaleLowerCase("es")}`}
@@ -340,7 +344,7 @@ function StudioEditor({ owner }: { owner: string }) {
                   className={`st-type-icon st-type-${type}`}
                 >
                   {
-                    { polygon: "⬡", factorization: "pⁿ", geometry: "△", fraction: "⅔", operation: "±", text: "T", sequence: "⋯", collection: "#", "number-line": "↔", "linear-equation": "𝑥" }[
+                    { ...learningIcons, polygon: "⬡", factorization: "pⁿ", geometry: "△", fraction: "⅔", operation: "±", text: "T", sequence: "⋯", collection: "#", "number-line": "↔", "linear-equation": "𝑥" }[
                       type
                     ]
                   }

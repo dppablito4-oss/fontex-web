@@ -4,6 +4,8 @@ import { solveLinearEquation, type LinearCoefficients } from "../math-engine/equ
 
 import { type GeometryData } from "../math-engine/geometry.ts";
 import { analyzePolygon, analyzeFactors, type PolygonData, type FactorizationData } from "../math-engine/adapted-modules.ts";
+import { type LearningPayload, isLearningObject } from "../math-engine/learning-types.ts";
+import { validateLearning } from "../math-engine/learning-modules.ts";
 export type Shape = "bar" | "circle";
 export type FractionData = {
   numerator: number;
@@ -26,6 +28,7 @@ type ObjectBase = {
 };
 export type MathObject = ObjectBase &
   (
+    | LearningPayload
     | { type: "polygon"; data: PolygonData }
     | { type: "factorization"; data: FactorizationData }
     | { type: "geometry"; data: GeometryData }
@@ -135,7 +138,7 @@ export function validateObject(value: unknown): value is MathObject {
         return true;
       } catch { return false; }
     default:
-      return false;
+      return typeof value.type === "string" && isLearningObject({ type: value.type, data: d }) && validateLearning({ type: value.type, data: d } as LearningPayload);
   }
 }
 

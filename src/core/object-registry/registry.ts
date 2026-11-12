@@ -6,7 +6,9 @@ import {
   type StudioDocument,
 } from "../document-schema/document.ts";
 
+import { learningRegistry } from "./learning-registry.ts";
 export const objectRegistry = {
+  ...learningRegistry,
   polygon: { name: "Polígonos", width: 1100, height: 720, data: { vertices: [{ x: 0, y: 0 }, { x: 6, y: 0 }, { x: 6, y: 4 }, { x: 0, y: 4 }] } },
   factorization: { name: "Factores primos", width: 1100, height: 720, data: { number: 36 } },
   geometry: { name: "Geometría: áreas", width: 720, height: 640, data: { figure: "rectangle", base: 6, height: 4 } },

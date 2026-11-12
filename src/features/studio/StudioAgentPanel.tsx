@@ -1,3 +1,5 @@
+import { lessonSteps } from "./lesson-steps";
+import { isExerciseIntent } from "./agent-intents";
 import { modeDescriptions } from "./teaching-mode";
 import { type FormEvent, useEffect, useRef, useState } from "react";
 import {
@@ -42,6 +44,9 @@ export function StudioAgentPanel(
   const mode = teachingMode ?? localMode;
   const [localLevel, setLevel] = useState<AgentLevel>("primary");
   const level = teachingLevel ?? localLevel;
+  const [explainStep, setExplainStep] = useState(1);
+  const selectedObject = document.objects.find(o => o.id === selectedId);
+  const stepCount = selectedObject ? lessonSteps(selectedObject, level).length : 0;
   const [question, setQuestion] = useState("");
   const [attempt, setAttempt] = useState("");
   const [hintLevel, setHintLevel] = useState(0);
@@ -64,9 +69,13 @@ export function StudioAgentPanel(
     setError("");
     setHintLevel(0);
   }
-  async function consult(event?: FormEvent, nextHint = 0) {
+  async function consult(event?: FormEvent, nextHint = 0, command?: string) {
     event?.preventDefault();
     if (pending.current) return;
+    if (isExerciseIntent(command ?? question)) {
+      if (!selectedObject || selectedObject.type === "text") { setError("Selecciona un módulo matemático para practicar."); return; }
+      setMode("practice"); onModeChange?.("practice"); resetResponse(); return;
+    }
     pending.current = true;
     const version = ++generation.current;
     const snapshot = structuredClone(document);
@@ -81,7 +90,7 @@ export function StudioAgentPanel(
         selectedId,
         mode,
         level,
-        question: question.trim() || "Ayúdame con el objeto seleccionado.",
+        question: command ?? (question.trim() || "Ayúdame con el objeto seleccionado."),
         attempt,
         hintLevel: nextHint,
       });
@@ -127,6 +136,14 @@ export function StudioAgentPanel(
       <label className="st-autonomous"><input type="checkbox" checked={autonomous} disabled={busy} onChange={e => setAutonomous(e.target.checked)} />Aplicar cambios automáticamente</label>
       <p>Organiza el material y explica los pasos. Puedes deshacer cada intervención completa.</p>
       <p className="st-mode-description">{modeDescriptions[mode]}</p>
+      {mode !== "practice" && <div className="st-agent-shortcuts" aria-label="Acciones sobre el módulo seleccionado">
+        <button type="button" disabled={busy || !authenticated || !selectedObject} onClick={() => void consult(undefined, 0, "Haz más sencillo el módulo seleccionado para el nivel actual; conserva su tipo y explica la adaptación.")}>Más sencillo</button>
+        <button type="button" disabled={busy || !authenticated || !selectedObject} onClick={() => void consult(undefined, 0, "Crea otro ejemplo del mismo tipo que el módulo seleccionado, con datos diferentes y sin modificar el original.")}>Otro ejemplo</button>
+        <button type="button" disabled={busy || !selectedObject || selectedObject.type === "text"} onClick={() => void consult(undefined, 0, "Convierte el módulo seleccionado en ejercicio")}>Practicar esto</button>
+        <label>Paso a explicar<input type="number" min={1} max={Math.max(1,stepCount)} value={Math.min(explainStep,Math.max(1,stepCount))} onChange={e => setExplainStep(Math.max(1,Number(e.target.value)||1))}/></label>
+        <button type="button" disabled={busy || !stepCount} onClick={() => void consult(undefined, 0, `Explica solo el paso ${Math.min(explainStep,stepCount)}`)}>Explicar paso</button>
+      </div>}
+
       <form onSubmit={(event) => void consult(event)}>
         <label>
           Modo<select

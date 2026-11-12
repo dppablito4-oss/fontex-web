@@ -18,6 +18,13 @@ const inspector = () =>
 afterEach(() => vi.restoreAllMocks());
 
 describe("Fontex Studio", () => {
+  it("busca los nuevos módulos sin afectar el material del lienzo", () => {
+    render(<ThemeProvider><StudioShell /></ThemeProvider>);
+    fireEvent.change(screen.getByLabelText("Buscar objeto"), { target: { value: "circulo" } });
+    expect(screen.getByRole("button", { name: "Añadir círculos" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Añadir fracción" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Mover Operación guiada" })).toBeInTheDocument();
+  });
   it("abre al 100 % en escritorio y permite restablecer el zoom", () => {
     render(<ThemeProvider><StudioShell /></ThemeProvider>);
     expect(screen.getByLabelText("Nivel de zoom")).toHaveTextContent("100%");

@@ -1,3 +1,4 @@
+import { learningSchemas } from "./learning-schema.ts";
 const object = (properties: Record<string, unknown>) => ({
   type: "object",
   properties,
@@ -12,6 +13,7 @@ const integer = (minimum: number, maximum: number) => ({
 const string = { type: "string" };
 const shape = { type: "string", enum: ["bar", "circle"] };
 const data = {
+  ...learningSchemas,
   polygon: { vertices: { type: "array", minItems: 3, maxItems: 8, items: object({ x: integer(0, 20), y: integer(0, 20) }) } },
   factorization: { number: integer(2, 360) },
   geometry: { figure: { type: "string", enum: ["rectangle", "triangle"] }, base: integer(1, 100), height: integer(1, 100) },

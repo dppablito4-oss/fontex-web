@@ -1,3 +1,4 @@
+import { enforceSelectedIntent } from "./intents.ts";
 import { strict as assert } from "node:assert";
 import {
   createDocument,
@@ -199,11 +200,22 @@ Deno.test("agent: crear un objeto válido produce una propuesta sin escribir doc
   assert.equal(result.quotas, 1);
 });
 Deno.test("agent: genera y verifica los módulos adaptados de Mathigon", async () => {
-  for (const type of ["polygon", "factorization"] as const) {
+  for (const type of ["polygon", "factorization", "percentage", "divisibility", "angle", "circle", "statistics", "probability", "algebra-tiles", "powers-roots", "measurement"] as const) {
     const object = createObject(type);
     const result = await run({ model: { status: "completed", output: [{ type: "message", content: [{ type: "output_text", text: JSON.stringify({ message: "Módulo preparado.", actions: [{ kind: "create", object }] }) }] }] } });
     assert.equal(result.status, 200);
     assert.equal(result.body.batch.actions[0].object.type, type);
     assert.equal(result.body.verification.length, 2);
   }
+});
+
+Deno.test("agent: las órdenes seleccionadas no pueden modificar otros módulos", () => {
+  const request = input(), selected = request.document.objects[0]!;
+  const other = request.document.objects[1]!;
+  const base = { ...request, mode: "learn" as const, level: "primary" as const, question: "Haz más sencillo el módulo seleccionado" };
+  assert.throws(() => enforceSelectedIntent(base, { documentId: request.document.id, actions: [{ kind: "update", object: other }] }));
+  enforceSelectedIntent(base, { documentId: request.document.id, actions: [{ kind: "update", object: selected }] });
+  assert.throws(() => enforceSelectedIntent({ ...base, question: "Crea otro ejemplo del mismo tipo" }, { documentId: request.document.id, actions: [{ kind: "create", object: { ...selected, id: "copy" } }] }));
+  assert.throws(() => enforceSelectedIntent({ ...base, question: "Crea otro ejemplo del mismo tipo" }, { documentId: request.document.id, actions: [{ kind: "delete", id: selected.id }] }));
+  assert.throws(() => enforceSelectedIntent({ ...base, question: "Explica solo el paso 2" }, { documentId: request.document.id, actions: [{ kind: "create", object: createObject("text") }] }));
 });

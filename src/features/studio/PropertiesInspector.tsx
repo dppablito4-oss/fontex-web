@@ -1,3 +1,6 @@
+import { isLearningObject } from "../../core/math-engine/learning-types";
+import { LearningInspector } from "./LearningInspector";
+import { readLearningData } from "./read-learning-data";
 import { useState, type FormEvent } from "react";
 import {
   fitObject,
@@ -38,7 +41,8 @@ export function PropertiesInspector({
       height: num("height"),
     });
     try {
-      switch (object.type) {
+      if (isLearningObject(object)) next = { ...next, ...readLearningData(object, fields) };
+      else switch (object.type) {
         case "polygon": {
           const vertices = read("vertices").trim().split(";").map(pair => { const xy = pair.trim().split(/[,\s]+/); if (xy.length !== 2 || xy.some(x => !x.trim())) throw new Error("Escribe x,y; x,y con dos números por vértice."); return { x: Number(xy[0]), y: Number(xy[1]) }; });
           next = { ...next, type: "polygon", data: { vertices } }; break;
@@ -122,6 +126,7 @@ export function PropertiesInspector({
         Nombre del objeto
         <input name="label" defaultValue={object.label} maxLength={120} />
       </label>
+      {isLearningObject(object) && <LearningInspector object={object} onResimulate={() => { if (object.type === "probability") onApply({ ...object, data: { ...object.data, seed: object.data.seed * 48271 % 2147483647 } }); }} />}
       {object.type === "polygon" && <><label>Vértices en orden<textarea name="vertices" rows={4} required maxLength={160} defaultValue={object.data.vertices.map(p => `${p.x},${p.y}`).join("; ")} /></label><small>De 3 a 8 puntos x,y separados por punto y coma; enteros de 0 a 20. Los lados no deben cruzarse.</small></>}
       {object.type === "factorization" && <NumericField name="factorNumber" label="Número a descomponer" value={object.data.number} min={2} max={360} />}
       {object.type === "geometry" && <>

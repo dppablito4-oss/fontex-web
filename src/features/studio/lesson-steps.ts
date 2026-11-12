@@ -4,7 +4,10 @@ import { gcd } from "../../core/math-engine/fractions";
 import { parseStudioOperation } from "../../core/math-engine/studio-operations";
 import { solveLinearEquation, equationResult } from "../../core/math-engine/equations";
 import { analyzePolygon, analyzeFactors } from "../../core/math-engine/adapted-modules";
+import { isLearningObject } from "../../core/math-engine/learning-types";
+import { learningLesson } from "../../core/math-engine/learning-modules";
 export function lessonSteps(object: MathObject, level: AgentLevel): [string, string][] {
+  if (isLearningObject(object)) return learningLesson(object, level).steps;
   const simple = level === "initial" || level === "primary";
   switch (object.type) {
     case "text": return [];

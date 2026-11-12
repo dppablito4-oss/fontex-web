@@ -58,3 +58,19 @@ export function primeFactorisation(n: number): number[] {
   for (let f = 2; f <= max; f++) if (n % f === 0) return primeFactorisation(f).concat(primeFactorisation(n / f));
   return [];
 }
+// Further adaptations from Fermat number-theory/statistics and Euclid angle/circle.
+export function commonDivisor(a: number, b: number): number {
+  a = Math.abs(a); b = Math.abs(b);
+  while (b) [a, b] = [b, a % b];
+  return a;
+}
+export const commonMultiple = (a: number, b: number) => Math.abs(a * b) / commonDivisor(a, b);
+export const meanValue = (values: number[]) => values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0;
+export function medianValue(values: number[]) {
+  if (!values.length) return 0;
+  const sorted = [...values].sort((a, b) => a - b), index = (sorted.length - 1) / 2;
+  return Number.isInteger(index) ? sorted[index]! : (sorted[Math.floor(index)]! + sorted[Math.ceil(index)]!) / 2;
+}
+export const circleArea = (radius: number) => Math.PI * radius ** 2;
+export const circleCircumference = (radius: number) => 2 * Math.PI * radius;
+export const toRadians = (degrees: number) => degrees * Math.PI / 180;

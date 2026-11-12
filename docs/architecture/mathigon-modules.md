@@ -40,3 +40,5 @@ La práctica, los cálculos y la representación se ejecutan localmente. La crea
 Pruebas del dominio completo de factores 2–360; áreas en ambas orientaciones, medias unidades y concavidad; rechazo de polígonos inválidos; serialización y transacciones del agente; práctica sin revelar resultados; inspector y PDF. Los tests del handler usan respuestas de proveedor simuladas, no certifican todavía la generación real de estos nuevos tipos con una sesión autenticada.
 
 Excalidraw y tldraw no se incorporan como dependencias de esta integración. Sus interfaces y ejemplos siguen siendo referencias para una futura ampliación del lienzo.
+
+La ampliación posterior añade las funciones de teoría de números, estadística y círculos del mismo origen MIT. El catálogo completo, sus límites y las acciones del agente se describen en [learning-catalog.md](learning-catalog.md).

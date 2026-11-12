@@ -1,3 +1,5 @@
+import { isLearningObject } from "../../core/math-engine/learning-types";
+import { LearningMathObject } from "./LearningMathObjects";
 import { PolygonObject, FactorizationObject } from "./AdaptedMathObjects";
 import { useContext } from "react";
 import { LessonSteps } from "./LessonSteps";
@@ -132,7 +134,7 @@ function MultiplicationObject({ data, operation, onChange }: { data: OperationDa
     {a.n <= a.d && b.n <= b.d && a.d * b.d <= 144 && <figure>
       <svg className="st-product-grid" viewBox={`0 0 ${a.d * 24} ${b.d * 24}`} role="img" aria-label={`${a.n * b.n} de ${a.d * b.d} celdas en el cruce de las fracciones`}>
         {Array.from({ length: a.d * b.d }, (_, i) => { const col = i % a.d, row = Math.floor(i / a.d); return <rect key={i} x={col * 24} y={row * 24} width={24} height={24} fill={col < a.n && row < b.n ? "var(--st-piece-primary)" : col < a.n || row < b.n ? "var(--st-piece-secondary)" : "var(--st-piece-empty)"} stroke="var(--st-piece-stroke)" />; })}
-      </svg><figcaption>Azul: cruce de las dos partes, {total}/{denominator} de una unidad. Naranja: partes de una sola selección.</figcaption>
+      </svg><figcaption>{data.stage === 0 ? "Azul: cruce de las dos partes. Cuenta las celdas azules y las celdas de la unidad." : `Azul: cruce de las dos partes, ${total}/${denominator} de una unidad.`} Naranja: partes de una sola selección.</figcaption>
     </figure>}
     <p className="st-math-explanation" aria-live="polite">{data.stage === 0
       ? "Multiplicar por una fracción significa tomar esa parte de otra cantidad. Los dibujos representan los dos factores; no necesitamos un denominador común."
@@ -254,6 +256,7 @@ export function ObjectVisual({
   concealAnswers?: boolean;
 }) {
   const level = useContext(TeachingLevel);
+  if (isLearningObject(object)) return <LearningMathObject object={object} lessonStep={lessonStep} concealAnswers={concealAnswers} />;
   switch (object.type) {
     case "polygon": return <PolygonObject data={object.data} lessonStep={lessonStep} concealAnswers={concealAnswers} />;
     case "factorization": return <FactorizationObject data={object.data} lessonStep={lessonStep} concealAnswers={concealAnswers} />;
