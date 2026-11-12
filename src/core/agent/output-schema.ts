@@ -13,7 +13,15 @@ const string = { type: "string" };
 const shape = { type: "string", enum: ["bar", "circle"] };
 const data = {
   fraction: { numerator: integer(0, 72), denominator: integer(1, 24), shape },
-  operation: { expression: string, stage: integer(0, 2), shape },
+  operation: {
+    expression: {
+      type: "string",
+      description:
+        "Dos fracciones con suma, resta o multiplicación: por ejemplo 3/2 × 4/3. Cada factor hasta 3 unidades y denominador 1–24.",
+    },
+    stage: integer(0, 2),
+    shape,
+  },
   text: { content: string, fontSize: integer(14, 48) },
   sequence: {
     start: integer(-1000, 1000),

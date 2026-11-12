@@ -1,4 +1,4 @@
-import { parseOperation } from "../math-engine/fractions.ts";
+import { parseStudioOperation } from "../math-engine/studio-operations.ts";
 import { analyzeCollection, numberLineTicks } from "../math-engine/numbers.ts";
 import { solveLinearEquation, type LinearCoefficients } from "../math-engine/equations.ts";
 
@@ -85,7 +85,7 @@ export function validateObject(value: unknown): value is MathObject {
       )
         return false;
       try {
-        parseOperation(d.expression);
+        parseStudioOperation(d.expression);
         return true;
       } catch {
         return false;

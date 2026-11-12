@@ -21,6 +21,16 @@ export const agentLevels = {
   secondary: "Secundaria",
   introductory: "Universidad introductoria",
 } as const;
+export const agentFailureMessages = {
+  AI_INCOMPLETE:
+    "La IA no terminó de generar el material. Vuelve a intentarlo; tu documento sigue intacto.",
+  AI_REFUSAL:
+    "La IA no pudo atender esta consulta. Tu documento sigue intacto.",
+  AI_INVALID_RESPONSE:
+    "No se pudo leer la propuesta de la IA. Vuelve a intentarlo; tu documento sigue intacto.",
+  AI_INVALID_ACTIONS:
+    "La propuesta no cumple los límites de Studio. No se aplicó ningún cambio; vuelve a intentarlo.",
+} as const;
 export type AgentMode = keyof typeof agentModes;
 export type AgentLevel = keyof typeof agentLevels;
 export type AgentRequest = {

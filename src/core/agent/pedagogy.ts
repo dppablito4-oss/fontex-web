@@ -1,4 +1,5 @@
-import { gcd, parseOperation } from "../math-engine/fractions.ts";
+import { gcd } from "../math-engine/fractions.ts";
+import { parseStudioOperation } from "../math-engine/studio-operations.ts";
 import { sequenceTerms } from "../math-engine/sequences.ts";
 import type { MathObject } from "../document-schema/document.ts";
 import type { AgentLevel, AgentReply, AgentRequest } from "./protocol.ts";
@@ -45,12 +46,13 @@ export function exactTarget(object: MathObject): ExactTarget | null {
       };
     }
     case "operation": {
-      const op = parseOperation(object.data.expression);
+      const op = parseStudioOperation(object.data.expression);
       return {
         answer: op.simplified,
         prompt: `Calcula ${object.data.expression}.`,
-        strategy:
-          "Primero busca divisiones del mismo tamaño; después opera los numeradores y conserva el denominador común.",
+        strategy: op.operator === "×"
+          ? "Multiplica numeradores entre sí y denominadores entre sí; después simplifica. Para multiplicar no hace falta un denominador común."
+          : "Primero busca divisiones del mismo tamaño; después opera los numeradores y conserva el denominador común.",
         result: `${op.simplified.n}/${op.simplified.d}`,
       };
     }
@@ -168,7 +170,10 @@ export function practiceReply(request: AgentRequest): AgentReply {
       text: "Observa el material con acompañamiento.",
     };
     const strategy = request.level === "initial" && object
-      ? initialStrategies[object.type]
+      ? object.type === "operation" &&
+          parseStudioOperation(object.data.expression).operator === "×"
+        ? "Multiplicar por una fracción significa tomar esa parte de otra cantidad. Usa dibujos y pide acompañamiento para los símbolos."
+        : initialStrategies[object.type]
       : target.strategy;
     const hint = request.hintLevel === 0
       ? target.prompt

@@ -5,7 +5,7 @@ import {
   type MathObject,
   type Shape,
 } from "../../core/document-schema/document";
-import { parseOperation } from "../../core/math-engine/fractions";
+import { parseStudioOperation } from "../../core/math-engine/studio-operations";
 
 function NumericField({ name, label, value, min, max }: { name: string; label: string; value: number; min: number; max: number }) {
   return <label>{label}<input type="number" name={name} defaultValue={value} min={min} max={max} step={1} required /></label>;
@@ -19,6 +19,7 @@ export function PropertiesInspector({
   onApply: (object: MathObject) => void;
 }) {
   const [error, setError] = useState("");
+  const multiplication = object.type === "operation" && parseStudioOperation(object.data.expression).operator === "×";
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const fields = new FormData(event.currentTarget);
@@ -61,7 +62,7 @@ export function PropertiesInspector({
           break;
         case "operation": {
           const expression = read("expression");
-          parseOperation(expression);
+          parseStudioOperation(expression);
           next = {
             ...object,
             ...next,
@@ -164,14 +165,14 @@ export function PropertiesInspector({
             />
           </label>
           <small>
-            Dos fracciones no negativas. Suma o resta; resultado ≥ 0 y
-            denominador común ≤ 60.
+            Dos fracciones no negativas, de hasta 3 unidades y denominador 1–24.
+            Suma, resta o multiplicación (×). En suma/resta: resultado ≥ 0 y m.c.m. ≤ 60.
           </small>
           <label>
             Paso
             <select name="stage" defaultValue={object.data.stage}>
               <option value={0}>1 · Representar</option>
-              <option value={1}>2 · Homogeneizar</option>
+              <option value={1}>{multiplication ? "2 · Multiplicar factores" : "2 · Homogeneizar"}</option>
               <option value={2}>3 · Resolver</option>
             </select>
           </label>

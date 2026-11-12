@@ -1,11 +1,14 @@
 import {
+  BOARD,
   type MathObject,
+  MAX_OBJECTS,
   parseDocument,
   type StudioDocument,
   validateObject,
 } from "../document-schema/document.ts";
 import { objectRegistry } from "../object-registry/registry.ts";
-import { gcd, parseOperation } from "../math-engine/fractions.ts";
+import { gcd } from "../math-engine/fractions.ts";
+import { parseStudioOperation } from "../math-engine/studio-operations.ts";
 import { sequenceTerms } from "../math-engine/sequences.ts";
 import { analyzeCollection, numberLineTicks } from "../math-engine/numbers.ts";
 import { solveLinearEquation } from "../math-engine/equations.ts";
@@ -61,7 +64,7 @@ export function parseBatch(value: unknown): ActionBatch {
       `El lote debe indicar el material y hasta ${MAX_ACTIONS} acciones.`,
     );
   }
-  for (const action of value.actions) {
+  for (const [index, action] of value.actions.entries()) {
     if (!record(action)) throw new Error("Acción inválida.");
     if (action.kind === "delete") {
       if (
@@ -74,7 +77,42 @@ export function parseBatch(value: unknown): ActionBatch {
       if (
         !exactKeys(action, ["kind", "object"]) || !strictObject(action.object)
       ) {
-        throw new Error("El objeto propuesto no cumple el esquema de Studio.");
+        let hint =
+          "Revisa los campos obligatorios, tipos y límites; no se admiten campos adicionales.";
+        const candidate = action.object;
+        if (record(candidate)) {
+          if (candidate.type === "fraction") {
+            hint =
+              "fraction: numerador entero ≥0, denominador entero 1–24 y valor ≤3 unidades; representa productos mayores con operation.";
+          }
+          if (
+            candidate.type === "operation" && record(candidate.data) &&
+            typeof candidate.data.expression === "string"
+          ) {
+            try {
+              parseStudioOperation(candidate.data.expression);
+            } catch (error) {
+              hint = error instanceof Error ? error.message : hint;
+            }
+          }
+          if (
+            [candidate.x, candidate.y, candidate.width, candidate.height].every(
+              (value) => typeof value === "number",
+            ) &&
+            ((candidate.x as number) + (candidate.width as number) >
+                BOARD.width ||
+              (candidate.y as number) + (candidate.height as number) >
+                BOARD.height)
+          ) {
+            hint =
+              "El objeto debe caber en el lienzo: x + width ≤1600 e y + height ≤1100. Usa los tamaños iniciales y ajusta su posición.";
+          }
+        }
+        throw new Error(
+          `El objeto propuesto no cumple el esquema de Studio. Acción ${
+            index + 1
+          }: ${hint}`,
+        );
       }
     } else {throw new Error(
         "Acción no permitida. Solo se admite crear, modificar o eliminar objetos.",
@@ -146,6 +184,16 @@ export function readStudioContext(
       ? selectedId
       : null,
     supportedTypes: Object.keys(objectRegistry),
+    creationDefaults: structuredClone(objectRegistry),
+    limits: {
+      board: { ...BOARD },
+      maxObjects: MAX_OBJECTS,
+      maxActions: MAX_ACTIONS,
+      fractions:
+        "Numerador entero no negativo, denominador 1–24, valor hasta 3 unidades.",
+      operations:
+        "Dos fracciones con +, − o ×; cada factor de hasta 3 unidades y denominador 1–24. Suma/resta: m.c.m. ≤60 y resultado ≥0. Multiplicación: resultado hasta 9 unidades; usar operation para el producto, no un objeto fraction si supera sus límites.",
+    },
     mathematics: snapshot.objects.map((object) => {
       switch (object.type) {
         case "fraction": {
@@ -161,7 +209,7 @@ export function readStudioContext(
         case "operation":
           return {
             id: object.id,
-            operation: parseOperation(object.data.expression),
+            operation: parseStudioOperation(object.data.expression),
           };
         case "sequence":
           return { id: object.id, terms: sequenceTerms(object.data) };

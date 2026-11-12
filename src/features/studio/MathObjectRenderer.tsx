@@ -6,7 +6,7 @@ import type {
   Shape,
 } from "../../core/document-schema/document";
 import { sequenceTerms } from "../../core/math-engine/sequences";
-import { parseOperation } from "../../core/math-engine/fractions";
+import { parseStudioOperation, type FractionProduct } from "../../core/math-engine/studio-operations";
 import { CollectionObject, LinearEquationObject, NumberLineObject } from "./ExtendedMathObjects";
 
 function FractionLabel({ n, d }: { n: number; d: number }) {
@@ -110,6 +110,27 @@ function FractionObject({ data }: { data: FractionData }) {
     </div>
   );
 }
+function MultiplicationObject({ data, operation, onChange }: { data: OperationData; operation: FractionProduct; onChange: (data: OperationData) => void }) {
+  const { a, b, total, denominator, simplified } = operation;
+  return <div className="st-operation">
+    <div className="st-operation-title"><strong>{data.expression}</strong><span>{["Representar", "Multiplicar", "Simplificar"][data.stage]} · {data.stage + 1}/3</span></div>
+    <div className="st-operands">
+      <div><FractionLabel n={a.n} d={a.d} /><FractionDrawing n={a.n} d={a.d} shape={data.shape} /></div>
+      <span className="st-operator">×</span>
+      <div><FractionLabel n={b.n} d={b.d} /><FractionDrawing n={b.n} d={b.d} shape={data.shape} /></div>
+      {data.stage > 0 && <><span className="st-operator">=</span><div>
+        <FractionLabel n={data.stage === 1 ? total : simplified.n} d={data.stage === 1 ? denominator : simplified.d} />
+        {data.stage === 2 && simplified.d <= 60 && <FractionDrawing n={simplified.n} d={simplified.d} shape={data.shape} />}
+        {data.stage === 2 && simplified.d > 60 && <small>La fracción exacta se muestra numéricamente para evitar un dibujo con demasiadas divisiones.</small>}
+      </div></>}
+    </div>
+    <p className="st-math-explanation" aria-live="polite">{data.stage === 0
+      ? "Multiplicar por una fracción significa tomar esa parte de otra cantidad. Los dibujos representan los dos factores; no necesitamos un denominador común."
+      : data.stage === 1 ? `Multiplicamos numeradores: ${a.n} × ${b.n} = ${total}. Multiplicamos denominadores: ${a.d} × ${b.d} = ${denominator}. El producto es ${total}/${denominator}.`
+      : `Simplificamos ${total}/${denominator} dividiendo numerador y denominador por el mismo divisor común. Resultado simplificado: ${simplified.n}/${simplified.d}.`}</p>
+    <div className="st-step-buttons"><button aria-label="Paso anterior" disabled={data.stage === 0} onClick={() => onChange({ ...data, stage: data.stage - 1 })}><ArrowLeft size={16} /> Anterior</button><button onClick={() => onChange({ ...data, stage: (data.stage + 1) % 3 })}>{["Multiplicar factores", "Simplificar producto", "Volver a representar"][data.stage]}<ArrowRight size={16} /></button></div>
+  </div>;
+}
 function OperationObject({
   data,
   onChange,
@@ -117,7 +138,8 @@ function OperationObject({
   data: OperationData;
   onChange: (data: OperationData) => void;
 }) {
-  const op = parseOperation(data.expression);
+  const op = parseStudioOperation(data.expression);
+  if (op.operator === "×") return <MultiplicationObject data={data} operation={op} onChange={onChange} />;
   const common = data.stage > 0;
   const result = data.stage === 2;
   const n1 = common ? op.left : op.a.n,
