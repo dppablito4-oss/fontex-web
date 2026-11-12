@@ -7,6 +7,9 @@ import { TeachingLevel } from "./teaching-level";
 import type { AgentLevel } from "../../core/agent/protocol";
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import {
+  ChevronDown,
+  MoreHorizontal,
+  Search,
   Copy,
   Check,
   Download,
@@ -63,12 +66,13 @@ function StudioEditor({ owner }: { owner: string }) {
   const doc = store.document;
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [moduleFilter, setModuleFilter] = useState("");
+  const [modulesOpen, setModulesOpen] = useState(false);
   const normalizeModule = (s: string) => s.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
   const [mode, setMode] = useState<AgentMode>("learn");
   const [playerOpen, setPlayerOpen] = useState(false);
   const [level, setLevel] = useState<AgentLevel>("primary");
   const [zoom, setZoom] = useState(() =>
-    window.innerWidth < 760 ? 0.65 : 1,
+    window.innerWidth < 760 ? 0.85 : 1,
   );
   const [presenting, setPresenting] = useState(false);
   const [materialsOpen, setMaterialsOpen] = useState(false);
@@ -76,6 +80,7 @@ function StudioEditor({ owner }: { owner: string }) {
   const root = useRef<HTMLDivElement>(null);
   const work = useRef<HTMLElement>(null);
   const file = useRef<HTMLInputElement>(null);
+  const modulesToggle = useRef<HTMLButtonElement>(null);
   const dialog = useRef<HTMLDialogElement>(null);
   const importBusy = useRef(false);
   const selected = doc.objects.find((object) => object.id === selectedId);
@@ -128,6 +133,8 @@ function StudioEditor({ owner }: { owner: string }) {
       objects: [...current.objects, next],
     }));
     setSelectedId(next.id);
+    setModulesOpen(false);
+    modulesToggle.current?.focus();
     setNotice("");
   }
   function remove(id: string) {
@@ -239,7 +246,7 @@ function StudioEditor({ owner }: { owner: string }) {
         /* Keep the visible exit available. */
       }
     }
-    setZoom(window.innerWidth < 760 ? 0.65 : 1);
+    setZoom(window.innerWidth < 760 ? 0.85 : 1);
   }
   async function leaveAccount() {
     if (!store.persist()) return;
@@ -303,7 +310,6 @@ function StudioEditor({ owner }: { owner: string }) {
             {store.saved ? <Check size={18} /> : <Save size={18} />}
           </button>
           <ThemeToggle className="st-theme-toggle" />
-          <button className="st-primary" aria-label="Recorrer material" title="Recorrer material" disabled={!doc.objects.length} onClick={() => setPlayerOpen(true)}><Expand size={17} /><span className="st-action-label">Recorrer</span></button>
           <button className="st-icon-button" aria-label="Presentar" title="Presentar" onClick={() => void present()}>
             <Expand size={17} />
             <span className="st-action-label">Presentar</span>
@@ -328,9 +334,29 @@ function StudioEditor({ owner }: { owner: string }) {
         </div>
       )}
       <div className="st-layout">
-        <aside className="st-palette" aria-label="Herramientas del editor">
-          <h1 className="st-section-label">Objetos</h1>
-          <input className="st-module-search" aria-label="Buscar objeto" placeholder="Buscar módulo…" value={moduleFilter} onChange={e => setModuleFilter(e.target.value)} />
+        <aside className="st-palette" aria-label="Herramientas del editor" onKeyDown={event => { if (event.key === "Escape") { setModulesOpen(false); modulesToggle.current?.focus(); } }}>
+          <div className="st-library-toolbar">
+            <button ref={modulesToggle} className="st-modules-toggle" aria-expanded={modulesOpen} aria-controls="st-module-catalog" onClick={() => setModulesOpen(open => !open)}>
+              <Plus size={19} /><span>Módulos</span><ChevronDown size={17} />
+            </button>
+            <div className="st-file-buttons">
+              <button onClick={() => { void import("./export-pdf").then(({ exportPDF }) => exportPDF(doc, level)).catch(e => setNotice(e instanceof Error ? e.message : "No se pudo exportar el PDF.")); }}><Download size={17} /><span>Exportar PDF</span></button>
+              <details className="st-more-options">
+                <summary aria-label="Más opciones de archivo" title="Más opciones"><MoreHorizontal size={21} /></summary>
+                <div className="st-file-menu">
+                  <button onClick={exportDocument}><Download size={17} /> Guardar JSON</button>
+                  <button onClick={() => file.current?.click()}><Upload size={17} /> Importar</button>
+                  <nav className="st-shortcuts" aria-label="Más herramientas">
+                    <a href="#/demo"><GraduationCap size={17} /> Práctica</a>
+                    <a href="#/fracciones"><Layers3 size={17} /> Fracciones</a>
+                    <a href={`${import.meta.env.BASE_URL}notices/mathigon.txt`} target="_blank" rel="noopener noreferrer">Créditos de módulos</a>
+                  </nav>
+                </div>
+              </details>
+            </div>
+          </div>
+          <div id="st-module-catalog" className="st-module-catalog" hidden={!modulesOpen}>
+          <label className="st-module-search-field"><Search size={19} aria-hidden="true" /><input className="st-module-search" aria-label="Buscar objeto" placeholder="Buscar módulo…" value={moduleFilter} onChange={e => setModuleFilter(e.target.value)} /></label>
           <div className="st-add-buttons">
             {(Object.keys(objectRegistry) as ObjectType[]).filter(type => normalizeModule(objectRegistry[type].name).includes(normalizeModule(moduleFilter))).map((type) => (
               <button
@@ -354,16 +380,7 @@ function StudioEditor({ owner }: { owner: string }) {
               </button>
             ))}
           </div>
-          <div className="st-palette-divider" />
-          <div className="st-section-label">Archivo</div>
-          <div className="st-file-buttons">
-            <button onClick={() => { setNotice("En la ventana de impresión, elige Guardar como PDF. Se incluyen todos los objetos y sus explicaciones."); void import("./export-pdf").then(({ exportPDF }) => exportPDF(doc, level)).catch(e => setNotice(e instanceof Error ? e.message : "No se pudo exportar el PDF.")); }}><Download size={17} /> Exportar PDF</button>
-            <button onClick={exportDocument}>
-              <Download size={17} /> Guardar JSON
-            </button>
-            <button onClick={() => file.current?.click()}>
-              <Upload size={17} /> Importar
-            </button>
+          {!Object.values(objectRegistry).some(module => normalizeModule(module.name).includes(normalizeModule(moduleFilter))) && <p className="st-search-empty" role="status">No encontramos ese módulo.</p>}
           </div>
           <input
             ref={file}
@@ -373,11 +390,6 @@ function StudioEditor({ owner }: { owner: string }) {
             aria-label="Importar material JSON"
             onChange={(event) => void importDocument(event)}
           />
-          <nav className="st-shortcuts" aria-label="Más herramientas">
-            <a href={`${import.meta.env.BASE_URL}notices/mathigon.txt`} target="_blank" rel="noopener noreferrer">Créditos de módulos</a>
-            <a href="#/demo"><GraduationCap size={17} /> Práctica</a>
-            <a href="#/fracciones"><Layers3 size={17} /> Fracciones</a>
-          </nav>
         </aside>
         <main
           ref={work}
@@ -391,7 +403,7 @@ function StudioEditor({ owner }: { owner: string }) {
             <button className="st-organize" disabled={!doc.objects.length} onClick={() => store.update(current => ({ ...current, objects: organizeObjects(current.objects) }))}>Organizar lienzo</button>
             <span>{doc.objects.length} {doc.objects.length === 1 ? "objeto" : "objetos"}</span>
           </div>
-          <div className="st-learning-toolbar"><nav aria-label="Modo del material">{Object.entries(agentModes).map(([value, label]) => <button key={value} aria-pressed={mode === value} onClick={() => setMode(value as AgentMode)}>{label}</button>)}</nav><button className="st-primary" disabled={!doc.objects.length} onClick={() => setPlayerOpen(true)}>Ver como lección</button><small>Pellizca para ampliar · Ctrl + rueda en PC</small></div>
+          <div className="st-learning-toolbar"><nav aria-label="Modo del material">{Object.entries(agentModes).map(([value, label]) => <button key={value} aria-pressed={mode === value} onClick={() => setMode(value as AgentMode)}>{label}</button>)}</nav><button className="st-primary" disabled={!doc.objects.length} onClick={() => setPlayerOpen(true)}>Ver como lección</button></div>
           <CanvasViewport
             objects={doc.objects}
             selectedId={selectedId}
@@ -430,7 +442,7 @@ function StudioEditor({ owner }: { owner: string }) {
           </div>
         </main>
         <aside className="st-inspector" aria-label="Propiedades del objeto">
-          <div className="st-inspector-heading">
+          {selected && <div className="st-inspector-heading">
             <h2>
               {selected ? objectRegistry[selected.type].name : "Propiedades"}
             </h2>
@@ -442,8 +454,8 @@ function StudioEditor({ owner }: { owner: string }) {
                 <X size={17} />
               </button>
             )}
-          </div>
-          {selected ? (
+          </div>}
+          {selected && (
             <>
               <div className="st-object-actions">
                 <button
@@ -462,11 +474,6 @@ function StudioEditor({ owner }: { owner: string }) {
                 onApply={changeObject}
               />
             </>
-          ) : (
-            <div className="st-inspector-empty">
-              <Layers3 size={26} aria-hidden="true" />
-              <p>Selecciona un objeto</p>
-            </div>
           )}
           <StudioAgentPanel key={`${doc.id}:${mode}`} document={doc} selectedId={selectedId} onSelect={setSelectedId} authenticated={!!user} teachingLevel={level} onLevelChange={setLevel} teachingMode={mode} onModeChange={setMode} onApply={(batch, expected) => {
             const formatted = readableBatch(batch, expected);

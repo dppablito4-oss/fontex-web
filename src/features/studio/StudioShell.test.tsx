@@ -18,8 +18,22 @@ const inspector = () =>
 afterEach(() => vi.restoreAllMocks());
 
 describe("Fontex Studio", () => {
+  it("mantiene el catálogo cerrado y permite desplegarlo sin cambiar el lienzo", () => {
+    render(<ThemeProvider><StudioShell /></ThemeProvider>);
+    const toggle = screen.getByRole("button", { name: "Módulos" });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByRole("button", { name: "Añadir fracción" })).not.toBeInTheDocument();
+    expect(screen.queryByText("Acciones locales")).not.toBeInTheDocument();
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByRole("button", { name: "Añadir fracción" })).toBeInTheDocument();
+    fireEvent.click(toggle);
+    expect(screen.queryByRole("button", { name: "Añadir fracción" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Mover Operación guiada" })).toBeInTheDocument();
+  });
   it("busca los nuevos módulos sin afectar el material del lienzo", () => {
     render(<ThemeProvider><StudioShell /></ThemeProvider>);
+    fireEvent.click(screen.getByRole("button", { name: "Módulos" }));
     fireEvent.change(screen.getByLabelText("Buscar objeto"), { target: { value: "circulo" } });
     expect(screen.getByRole("button", { name: "Añadir círculos" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Añadir fracción" })).not.toBeInTheDocument();
@@ -35,6 +49,7 @@ describe("Fontex Studio", () => {
   });
   it("guarda un cambio de tamaño con teclado y permite deshacerlo", () => {
     render(<ThemeProvider><StudioShell /></ThemeProvider>);
+    fireEvent.click(screen.getByRole("button", { name: "Módulos" }));
     fireEvent.click(screen.getByRole("button", { name: "Añadir fracción" }));
     const article = screen.getByRole("article", { name: "Fracción" });
     expect(article).toHaveStyle({ width: "440px", height: "340px" });
@@ -46,6 +61,7 @@ describe("Fontex Studio", () => {
   });
   it("edita colecciones, conserva multiplicidades y recupera las estadísticas", () => {
     const view = render(<ThemeProvider><StudioShell /></ThemeProvider>);
+    fireEvent.click(screen.getByRole("button", { name: "Módulos" }));
     fireEvent.click(screen.getByRole("button", { name: "Añadir colección numérica" }));
     fireEvent.change(inspector().getByLabelText("Enteros de la colección"), { target: { value: "1, 2, 2" } });
     fireEvent.click(inspector().getByRole("button", { name: "Aplicar cambios" }));
@@ -58,6 +74,7 @@ describe("Fontex Studio", () => {
   });
   it("edita rectas y rechaza pasos incompatibles sin perder el material", () => {
     render(<ThemeProvider><StudioShell /></ThemeProvider>);
+    fireEvent.click(screen.getByRole("button", { name: "Módulos" }));
     fireEvent.click(screen.getByRole("button", { name: "Añadir recta numérica" }));
     for (const [name, value] of [["Mínimo de la recta", "-4"], ["Máximo de la recta", "4"], ["Tamaño del paso", "2"], ["Puntos enteros", "-2, 2"]]) fireEvent.change(inspector().getByLabelText(name!), { target: { value } });
     fireEvent.click(inspector().getByRole("button", { name: "Aplicar cambios" }));
@@ -69,6 +86,7 @@ describe("Fontex Studio", () => {
   });
   it("resuelve una ecuación racional por etapas y conserva el resultado al reabrir", () => {
     const view = render(<ThemeProvider><StudioShell /></ThemeProvider>);
+    fireEvent.click(screen.getByRole("button", { name: "Módulos" }));
     fireEvent.click(screen.getByRole("button", { name: "Añadir ecuación lineal" }));
     fireEvent.change(inspector().getByLabelText("Coeficiente d"), { target: { value: "4" } });
     fireEvent.click(inspector().getByRole("button", { name: "Aplicar cambios" }));
@@ -81,6 +99,7 @@ describe("Fontex Studio", () => {
   });
   it("crea, edita, duplica y elimina; deshacer recupera el objeto con sus valores", () => {
     render(<ThemeProvider><StudioShell /></ThemeProvider>);
+    fireEvent.click(screen.getByRole("button", { name: "Módulos" }));
     fireEvent.click(screen.getByRole("button", { name: "Añadir fracción" }));
     fireEvent.change(inspector().getByLabelText("Numerador"), {
       target: { value: "3" },
@@ -217,6 +236,7 @@ describe("Fontex Studio", () => {
       .mockImplementation(() => {
         throw new Error("quota");
       });
+    fireEvent.click(screen.getByRole("button", { name: "Módulos" }));
     fireEvent.click(screen.getByRole("button", { name: "Añadir texto" }));
     expect(screen.getByRole("alert")).toHaveTextContent("No se pudo guardar");
     expect(inspector().getByLabelText("Contenido")).toBeInTheDocument();

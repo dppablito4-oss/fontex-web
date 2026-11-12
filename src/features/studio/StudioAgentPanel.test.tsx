@@ -47,19 +47,25 @@ it("reinicia las pistas visibles al cambiar de objeto sin perder el modo", async
   );
 });
 
-it("prepara una propuesta local y requiere aplicar la vista previa", () => {
+it("permite revisar cambios de la IA antes de aplicarlos sin mostrar datos técnicos", async () => {
   const doc = createDocument();
+  const object = createObject("fraction");
+  vi.spyOn(service, "requestAgent").mockResolvedValue({
+    message: "Una fracción para tu material.",
+    batch: { documentId: doc.id, actions: [{ kind: "create", object }] },
+    verification: [],
+  });
   const apply = vi.fn(() => true);
-  render(<StudioAgentPanel document={doc} selectedId={null} onApply={apply} />);
-  fireEvent.click(screen.getByText("Fontex Agent"));
-  fireEvent.click(screen.getByRole("button", { name: "Preparar ejemplo" }));
-  fireEvent.click(screen.getByRole("button", { name: "Revisar acciones" }));
+  render(<StudioAgentPanel document={doc} selectedId={null} authenticated onApply={apply} />);
+  expect(screen.queryByText("Acciones locales")).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("switch", { name: "Aplicar cambios automáticamente" }));
+  fireEvent.change(screen.getByLabelText("Consulta"), { target: { value: "Crea una fracción" } });
+  fireEvent.click(screen.getByRole("button", { name: "Consultar" }));
+  await screen.findByText("Una fracción para tu material.");
   expect(apply).not.toHaveBeenCalled();
+  expect(screen.queryByText("Valores propuestos")).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: "Aplicar acciones" }));
-  expect(apply).toHaveBeenCalledWith(
-    expect.objectContaining({ documentId: doc.id }),
-    doc,
-  );
+  expect(apply).toHaveBeenCalledWith(expect.objectContaining({ documentId: doc.id }), doc);
 });
 
 it("practica sin sesión con pistas graduadas y sin cambios automáticos", async () => {

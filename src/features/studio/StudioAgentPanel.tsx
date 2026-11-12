@@ -1,15 +1,13 @@
 import { lessonSteps } from "./lesson-steps";
 import { isExerciseIntent } from "./agent-intents";
-import { modeDescriptions } from "./teaching-mode";
+import { ArrowUp, Check, Sparkles } from "lucide-react";
+import { objectRegistry } from "../../core/object-registry/registry";
 import { type FormEvent, useEffect, useRef, useState } from "react";
 import {
   type ActionBatch,
   executeActions,
-  parseBatch,
-  readStudioContext,
 } from "../../core/agent/actions";
 import type { StudioDocument } from "../../core/document-schema/document";
-import { createObject } from "../../core/object-registry/registry";
 import {
   type AgentLevel,
   agentLevels,
@@ -37,7 +35,6 @@ export function StudioAgentPanel(
   const currentDocument = useRef(document);
   useEffect(() => { currentDocument.current = document; }, [document]);
   const [applied, setApplied] = useState(false);
-  const [source, setSource] = useState("");
   const [proposal, setProposal] = useState<Proposal | null>(null);
   const [error, setError] = useState("");
   const [localMode, setMode] = useState<AgentMode>("learn");
@@ -119,24 +116,10 @@ export function StudioAgentPanel(
       if (version === generation.current) setBusy(false);
     }
   }
-  function preview() {
-    try {
-      const batch = parseBatch(JSON.parse(source));
-      executeActions(document, batch);
-      setProposal({ batch, snapshot: structuredClone(document) });
-      setError("");
-    } catch (e) {
-      setProposal(null);
-      setError(e instanceof Error ? e.message : "Acciones inválidas.");
-    }
-  }
   return (
-    <details className="st-agent" open>
-      <summary>Fontex Agent</summary>
-      <label className="st-autonomous"><input type="checkbox" checked={autonomous} disabled={busy} onChange={e => setAutonomous(e.target.checked)} />Aplicar cambios automáticamente</label>
-      <p>Organiza el material y explica los pasos. Puedes deshacer cada intervención completa.</p>
-      <p className="st-mode-description">{modeDescriptions[mode]}</p>
-      {mode !== "practice" && <div className="st-agent-shortcuts" aria-label="Acciones sobre el módulo seleccionado">
+    <section className="st-agent" aria-label="Fontex Agent">
+      <header className="st-agent-heading"><span className="st-agent-avatar"><Sparkles size={22} aria-hidden="true" /></span><h2>Fontex Agent</h2></header>
+      {mode !== "practice" && selectedObject && <div className="st-agent-shortcuts" aria-label="Acciones sobre el módulo seleccionado">
         <button type="button" disabled={busy || !authenticated || !selectedObject} onClick={() => void consult(undefined, 0, "Haz más sencillo el módulo seleccionado para el nivel actual; conserva su tipo y explica la adaptación.")}>Más sencillo</button>
         <button type="button" disabled={busy || !authenticated || !selectedObject} onClick={() => void consult(undefined, 0, "Crea otro ejemplo del mismo tipo que el módulo seleccionado, con datos diferentes y sin modificar el original.")}>Otro ejemplo</button>
         <button type="button" disabled={busy || !selectedObject || selectedObject.type === "text"} onClick={() => void consult(undefined, 0, "Convierte el módulo seleccionado en ejercicio")}>Practicar esto</button>
@@ -145,6 +128,7 @@ export function StudioAgentPanel(
       </div>}
 
       <form onSubmit={(event) => void consult(event)}>
+        <div className="st-agent-settings">
         <label>
           Modo<select
             value={mode}
@@ -175,10 +159,12 @@ export function StudioAgentPanel(
             ))}
           </select>
         </label>
+        </div>
         {mode !== "practice" && (
-          <label>
+          <label className="st-agent-prompt">
             Consulta<textarea
-              rows={3}
+              placeholder="¿Qué quieres crear o explicar?"
+              rows={4}
               maxLength={1200}
               value={question}
               disabled={busy}
@@ -193,6 +179,7 @@ export function StudioAgentPanel(
         {mode === "practice" && (
           <label>
             Tu respuesta<input
+              placeholder="Escribe tu respuesta"
               value={attempt}
               maxLength={1200}
               disabled={busy}
@@ -208,8 +195,9 @@ export function StudioAgentPanel(
             <a href="#/ingresar">Inicia sesión</a> para consultar la IA.
           </p>
         )}
+        <label className="st-autonomous"><input type="checkbox" role="switch" checked={autonomous} disabled={busy} onChange={e => setAutonomous(e.target.checked)} /><span>Aplicar cambios automáticamente</span></label>
         <button
-          className="st-primary"
+          className="st-primary st-agent-submit"
           type="submit"
           disabled={busy || (mode !== "practice" && !authenticated)}
         >
@@ -217,16 +205,16 @@ export function StudioAgentPanel(
             ? "Preparando…"
             : mode === "practice"
             ? "Comprobar y orientar"
-            : "Consultar"}
+            : "Consultar"}<ArrowUp size={18} aria-hidden="true" />
         </button>
       </form>
       {reply && (applied || replyContext === contextKey) && (
         <section aria-label="Orientación del agente" aria-live="polite">
-          {applied && <p role="status">Cambios aplicados al lienzo. Puedes usar Deshacer.</p>}
+          {applied && <p role="status" className="st-agent-applied"><Check size={16} aria-hidden="true" />Cambios aplicados</p>}
           <p className="st-agent-message">{reply.message}</p>
           {reply.verification.length > 0 && (
             <details>
-              <summary>Comprobación matemática exacta</summary>
+              <summary>Ver comprobación</summary>
               <ul>
                 {reply.verification.map((text, i) => <li key={i}>{text}</li>)}
               </ul>
@@ -243,51 +231,6 @@ export function StudioAgentPanel(
           )}
         </section>
       )}
-      <details>
-        <summary>Acciones locales</summary>
-        <details>
-          <summary>Contexto del material</summary>
-          <pre>{JSON.stringify(readStudioContext(document, selectedId), null, 2)}</pre>
-        </details>
-        <button
-          type="button"
-          disabled={busy}
-          onClick={() => {
-            setSource(
-              JSON.stringify(
-                {
-                  documentId: document.id,
-                  actions: [{
-                    kind: "create",
-                    object: createObject("fraction", document.objects.length),
-                  }],
-                },
-                null,
-                2,
-              ),
-            );
-            setProposal(null);
-          }}
-        >
-          Preparar ejemplo
-        </button>
-        <label>
-          Acciones estructuradas<textarea
-            aria-label="Acciones estructuradas"
-            rows={7}
-            maxLength={100_000}
-            value={source}
-            disabled={busy}
-            onChange={(event) => {
-              setSource(event.target.value);
-              setProposal(null);
-            }}
-          />
-        </label>
-        <button type="button" disabled={busy} onClick={preview}>
-          Revisar acciones
-        </button>
-      </details>
       {error && <p role="alert" className="st-error">{error}</p>}
       {proposal && (
         <section aria-label="Vista previa de acciones">
@@ -302,17 +245,11 @@ export function StudioAgentPanel(
                   }`
                   : `${
                     action.kind === "create" ? "Crear" : "Modificar"
-                  }: ${action.object.label} (${action.object.type})`}
-                {action.kind !== "delete" && (
-                  <details>
-                    <summary>Valores propuestos</summary>
-                    <pre>{JSON.stringify(action.object, null, 2)}</pre>
-                  </details>
-                )}
+                  }: ${action.object.label}`}
+                {action.kind !== "delete" && <span className="st-proposal-type">{objectRegistry[action.object.type].name}</span>}
               </li>
             ))}
           </ul>
-          <p>El lote se puede deshacer en un paso.</p>
           {!proposalIsCurrent && (
             <p role="status">El material cambió. Prepara otra propuesta.</p>
           )}
@@ -323,7 +260,6 @@ export function StudioAgentPanel(
             onClick={() => {
               if (onApply(proposal.batch, proposal.snapshot)) {
                 setProposal(null);
-                setSource("");
               }
             }}
           >
@@ -331,6 +267,6 @@ export function StudioAgentPanel(
           </button>
         </section>
       )}
-    </details>
+    </section>
   );
 }
