@@ -51,7 +51,7 @@ describe('Acceso completo a Fontex', () => {
   });
   it('abre el cambio de contraseña tras PASSWORD_RECOVERY y lo conserva al recargar la ruta', async () => {
     const view = renderFlow('/');
-    await screen.findByRole('link', { name: 'Iniciar sesión' });
+    await screen.findByRole('link', { name: 'Entrar' });
     act(() => mocked.listener?.('PASSWORD_RECOVERY', session));
     await screen.findByRole('heading', { name: 'Elige una nueva contraseña' });
     expect(window.location.hash).toBe('#/nueva-contrasena');
@@ -81,15 +81,15 @@ describe('Acceso completo a Fontex', () => {
     expect(await screen.findByRole('status')).toHaveTextContent('Si existe una cuenta');
   });
   it('abre el acceso desde el lienzo y vuelve al lienzo con una sesión válida', async () => {
-    renderFlow('/');
-    fireEvent.click(await screen.findByRole('link', { name: 'Iniciar sesión' }));
+    renderFlow('/lienzo');
+    fireEvent.click(await screen.findByRole('link', { name: 'Entrar' }));
     await fillSignIn();
     fireEvent.click(screen.getByRole('button', { name: 'Entrar a Fontex' }));
-    expect(await screen.findByRole('button', { name: 'Cerrar sesión' })).toBeInTheDocument();
-    expect(window.location.hash).toBe('#/');
+    expect(await screen.findByRole('link', { name: 'Mi cuenta' })).toBeInTheDocument();
+    expect(window.location.hash).toBe('#/lienzo');
     expect(mocked.signInWithPassword).toHaveBeenCalledWith({ email: 'student@example.com', password: 'Testing-123!' });
     fireEvent.click(screen.getByRole('button', { name: 'Cerrar sesión' }));
-    expect(await screen.findByRole('link', { name: 'Iniciar sesión' })).toBeInTheDocument();
+    expect(await screen.findByRole('link', { name: 'Entrar' })).toBeInTheDocument();
   });
   it('crea una cuenta y explica la confirmación sin anunciar una sesión inexistente', async () => {
     renderFlow('/crear-cuenta');
@@ -129,8 +129,8 @@ describe('Acceso completo a Fontex', () => {
   it('recupera la sesión al recargar y permite salir del lienzo', async () => {
     mocked.getSession.mockResolvedValue({ data: { session }, error: null });
     renderFlow('/ingresar');
-    expect(await screen.findByRole('button', { name: 'Cerrar sesión' })).toBeInTheDocument();
-    expect(window.location.hash).toBe('#/');
+    expect(await screen.findByRole('link', { name: 'Mi cuenta' })).toBeInTheDocument();
+    expect(window.location.hash).toBe('#/lienzo');
   });
   it('una falla de red no deja la pantalla verificando la sesión para siempre', async () => {
     mocked.getSession.mockRejectedValue(new Error('Failed to fetch'));
@@ -141,11 +141,11 @@ describe('Acceso completo a Fontex', () => {
   it('una sesión inicial tardía no pisa un inicio de sesión más reciente', async () => {
     let resolveInitial!: (value: unknown) => void;
     mocked.getSession.mockImplementation(() => new Promise(resolve => { resolveInitial = resolve; }));
-    renderFlow('/');
+    renderFlow('/lienzo');
     act(() => mocked.listener?.('SIGNED_IN', session));
-    expect(await screen.findByRole('button', { name: 'Cerrar sesión' })).toBeInTheDocument();
+    expect(await screen.findByRole('link', { name: 'Mi cuenta' })).toBeInTheDocument();
     await act(async () => { resolveInitial({ data: { session: null }, error: null }); await Promise.resolve(); });
-    expect(screen.getByRole('button', { name: 'Cerrar sesión' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Mi cuenta' })).toBeInTheDocument();
   });
   it('no impone el mínimo de registro a contraseñas antiguas al iniciar sesión', () => {
     render(<ThemeProvider><AuthProvider><AuthPage/></AuthProvider></ThemeProvider>);

@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes, useMatch } from "react-router-dom";
 
 import { FractionCanvas } from "../features/canvas/FractionCanvas";
+import { LandingPage } from "../features/landing/LandingPage";
 import { StudioShell } from "../features/studio/StudioShell";
 
 import { AppShell } from "./layouts/AppShell";
@@ -30,7 +31,7 @@ const DemoPage = lazy(() =>
 export function App() {
   const { status } = useAuth();
   const demoRoute = useMatch("/demo");
-  const canvasRoute = useMatch("/");
+  const landingRoute = useMatch("/");
   const canvasAlias = useMatch("/lienzo");
   const fractionsRoute = useMatch("/fracciones");
   const tutorSignIn = useMatch("/ingresar-tutor");
@@ -45,13 +46,14 @@ export function App() {
     return <PasswordRecoveryPage key={passwordRoute ? "update" : "request"} updating={!!passwordRoute} />;
   }
 
-  if (canvasRoute || canvasAlias) return <StudioShell />;
+  if (landingRoute) return <LandingPage />;
+  if (canvasAlias) return <StudioShell />;
   if (fractionsRoute) return <FractionCanvas />;
 
   if (authRoute) {
     if (status === "loading") return <AuthLoadingPage />;
     if (status === "authenticated")
-      return <Navigate to={tutorSignIn ? "/demo" : "/"} replace />;
+      return <Navigate to={tutorSignIn ? "/demo" : "/lienzo"} replace />;
     return (
       <AuthPage
         key={signUpRoute ? "signup" : "signin"}

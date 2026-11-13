@@ -129,7 +129,7 @@ export function StudioAgentPanel(
 
       <form onSubmit={(event) => void consult(event)}>
         <div className="st-agent-settings">
-        <label>
+        {!teachingMode && <label>
           Modo<select
             value={mode}
             disabled={busy}
@@ -143,8 +143,8 @@ export function StudioAgentPanel(
               <option key={value} value={value}>{label}</option>
             ))}
           </select>
-        </label>
-        <label>
+        </label>}
+        {!teachingLevel && <label>
           Nivel<select
             value={level}
             disabled={busy}
@@ -158,7 +158,7 @@ export function StudioAgentPanel(
               <option key={value} value={value}>{label}</option>
             ))}
           </select>
-        </label>
+        </label>}
         </div>
         {mode !== "practice" && (
           <label className="st-agent-prompt">

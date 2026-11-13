@@ -1,7 +1,9 @@
+import { SiteHeader } from "../../components/ProductNavigation";
+import { moduleCatalog, moduleGroups, normalizeModule, type ModuleGroup } from "./module-catalog";
 import { learningIcons } from "../../core/object-registry/learning-registry";
 import { TeachingMode } from "./teaching-mode";
 import { LessonPlayer } from "./LessonPlayer";
-import { agentModes, type AgentMode } from "../../core/agent/protocol";
+import { agentLevels, agentModes, type AgentMode } from "../../core/agent/protocol";
 import { readableBatch, organizeObjects } from "./object-layout";
 import { TeachingLevel } from "./teaching-level";
 import type { AgentLevel } from "../../core/agent/protocol";
@@ -23,7 +25,7 @@ import {
   Trash2,
   Undo2,
   Upload,
-  UserRound,
+  Sparkles,
   X,
 } from "lucide-react";
 import {
@@ -41,7 +43,6 @@ import {
   objectRegistry,
 } from "../../core/object-registry/registry";
 import { useAuth } from "../auth/AuthProvider";
-import { ThemeToggle } from "../theme/ThemeToggle";
 import { CanvasViewport } from "./CanvasViewport";
 import { useStudioDocument } from "./useStudioDocument";
 import { StudioAgentPanel } from "./StudioAgentPanel";
@@ -65,7 +66,11 @@ function StudioEditor({ owner }: { owner: string }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [moduleFilter, setModuleFilter] = useState("");
   const [modulesOpen, setModulesOpen] = useState(false);
-  const normalizeModule = (s: string) => s.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
+  const [moduleGroup, setModuleGroup] = useState<ModuleGroup>("all");
+  const [assistantOpen, setAssistantOpen] = useState(false);
+  const assistantToggle = useRef<HTMLButtonElement>(null);
+  const assistantPanel = useRef<HTMLElement>(null);
+  const matchingModules = (Object.keys(objectRegistry) as ObjectType[]).filter(type => (moduleGroup === "all" || moduleCatalog[type].group === moduleGroup) && normalizeModule(`${objectRegistry[type].name} ${moduleCatalog[type].keywords}`).includes(normalizeModule(moduleFilter)));
   const [mode, setMode] = useState<AgentMode>("learn");
   const [playerOpen, setPlayerOpen] = useState(false);
   const [level, setLevel] = useState<AgentLevel>("primary");
@@ -257,13 +262,9 @@ function StudioEditor({ owner }: { owner: string }) {
   }
   return (
     <TeachingMode.Provider value={mode}><TeachingLevel.Provider value={level}><div ref={root} className={`st-app ${presenting ? "st-presenting" : ""}`}>
+      <SiteHeader current="lienzo" onNavigate={() => store.persist()} onSignOut={leaveAccount} />
       <header className="st-header">
-        <a href="#/" className="st-brand" aria-label="Fontex Studio">
-          <span>
-            <Layers3 size={24} />
-          </span>
-          <span className="st-wordmark">fontex <small>STUDIO</small></span>
-        </a>
+        <strong className="st-editor-label">Mi material</strong>
         <div className="st-document-heading">
           <input
             key={`${doc.id}:${doc.title}`}
@@ -306,13 +307,11 @@ function StudioEditor({ owner }: { owner: string }) {
           <button className="st-icon-button" aria-label="Guardar" title="Guardar" onClick={() => store.persist()}>
             {store.saved ? <Check size={18} /> : <Save size={18} />}
           </button>
-          <ThemeToggle className="st-theme-toggle" />
           <button className="st-icon-button" aria-label="Presentar" title="Presentar" onClick={() => void present()}>
             <Expand size={17} />
             <span className="st-action-label">Presentar</span>
           </button>
-          {user ? <button className="st-icon-button" aria-label="Cerrar sesión" title="Cerrar sesión" onClick={() => void leaveAccount()}><UserRound size={18} /></button>
-            : <a className="st-account-link" href="#/ingresar" aria-label="Iniciar sesión" title="Iniciar sesión" onClick={(event) => { if (!store.persist()) event.preventDefault(); }}><UserRound size={18} /></a>}
+
         </div>
       </header>
       {(store.error || accountError || notice) && !presenting && (
@@ -330,21 +329,22 @@ function StudioEditor({ owner }: { owner: string }) {
           </button>
         </div>
       )}
-      <div className="st-layout">
+      <div className={`st-layout ${assistantOpen ? "st-with-assistant" : ""}`}>
         <aside className="st-palette" aria-label="Herramientas del editor" onKeyDown={event => { if (event.key === "Escape") { setModulesOpen(false); modulesToggle.current?.focus(); } }}>
           <div className="st-library-toolbar">
             <button ref={modulesToggle} className="st-modules-toggle" aria-expanded={modulesOpen} aria-controls="st-module-catalog" onClick={() => setModulesOpen(open => !open)}>
               <Plus size={19} /><span>Módulos</span><ChevronDown size={17} />
             </button>
             <div className="st-file-buttons">
-              <button onClick={() => { void import("./export-pdf").then(({ exportPDF }) => exportPDF(doc, level)).catch(e => setNotice(e instanceof Error ? e.message : "No se pudo exportar el PDF.")); }}><Download size={17} /><span>Exportar PDF</span></button>
+              <button ref={assistantToggle} className="st-assistant-toggle" aria-label="Asistente" aria-expanded={assistantOpen} aria-controls="st-assistant-panel" onClick={() => { setAssistantOpen(open => !open); if (!assistantOpen) requestAnimationFrame(() => assistantPanel.current?.focus()); }}><Sparkles size={17} /><span>Asistente</span></button>
+              <button aria-label="Exportar PDF" onClick={() => { void import("./export-pdf").then(({ exportPDF }) => exportPDF(doc, level)).catch(e => setNotice(e instanceof Error ? e.message : "No se pudo exportar el PDF.")); }}><Download size={17} /><span className="st-export-label">Exportar PDF</span><span className="st-export-compact">PDF</span></button>
               <details className="st-more-options">
                 <summary aria-label="Más opciones de archivo" title="Más opciones"><MoreHorizontal size={21} /></summary>
                 <div className="st-file-menu">
                   <button onClick={exportDocument}><Download size={17} /> Guardar JSON</button>
                   <button onClick={() => file.current?.click()}><Upload size={17} /> Importar</button>
                   <nav className="st-shortcuts" aria-label="Más herramientas">
-                    <a href="#/demo"><GraduationCap size={17} /> Práctica</a>
+                    <a href="#/demo"><GraduationCap size={17} /> Aprender con guías</a>
                     <a href="#/fracciones"><Layers3 size={17} /> Fracciones</a>
                     <a href={`${import.meta.env.BASE_URL}notices/mathigon.txt`} target="_blank" rel="noopener noreferrer">Créditos de módulos</a>
                   </nav>
@@ -354,8 +354,10 @@ function StudioEditor({ owner }: { owner: string }) {
           </div>
           <div id="st-module-catalog" className="st-module-catalog" hidden={!modulesOpen}>
           <label className="st-module-search-field"><Search size={19} aria-hidden="true" /><input className="st-module-search" aria-label="Buscar objeto" placeholder="Buscar módulo…" value={moduleFilter} onChange={e => setModuleFilter(e.target.value)} /></label>
+          <nav className="st-module-groups" aria-label="Categorías de módulos">{Object.entries(moduleGroups).map(([key, label]) => <button key={key} aria-pressed={moduleGroup === key} onClick={() => setModuleGroup(key as ModuleGroup)}>{label}</button>)}</nav>
+          <p className="st-catalog-caption">Elige un módulo. Después edita sus valores directamente en el lienzo.</p>
           <div className="st-add-buttons">
-            {(Object.keys(objectRegistry) as ObjectType[]).filter(type => normalizeModule(objectRegistry[type].name).includes(normalizeModule(moduleFilter))).map((type) => (
+            {matchingModules.map((type) => (
               <button
                 key={type}
                 aria-label={`Añadir ${objectRegistry[type].name.toLocaleLowerCase("es")}`}
@@ -377,7 +379,7 @@ function StudioEditor({ owner }: { owner: string }) {
               </button>
             ))}
           </div>
-          {!Object.values(objectRegistry).some(module => normalizeModule(module.name).includes(normalizeModule(moduleFilter))) && <p className="st-search-empty" role="status">No encontramos ese módulo.</p>}
+          {!matchingModules.length && <p className="st-search-empty" role="status">No encontramos ese módulo.</p>}
           </div>
           <input
             ref={file}
@@ -393,14 +395,7 @@ function StudioEditor({ owner }: { owner: string }) {
           className="st-workspace"
           aria-label="Editor del material"
         >
-          <div className="st-workspace-heading">
-            <span>
-              Lienzo
-            </span>
-            <button className="st-organize" disabled={!doc.objects.length} onClick={() => store.update(current => ({ ...current, objects: organizeObjects(current.objects) }))}>Organizar lienzo</button>
-            <span>{doc.objects.length} {doc.objects.length === 1 ? "objeto" : "objetos"}</span>
-          </div>
-          <div className="st-learning-toolbar"><nav aria-label="Modo del material">{Object.entries(agentModes).map(([value, label]) => <button key={value} aria-pressed={mode === value} onClick={() => setMode(value as AgentMode)}>{label}</button>)}</nav><button className="st-primary" disabled={!doc.objects.length} onClick={() => setPlayerOpen(true)}>Ver como lección</button></div>
+          <div className="st-learning-toolbar"><nav aria-label="Modo del material">{Object.entries(agentModes).map(([value, label]) => <button key={value} aria-pressed={mode === value} onClick={() => setMode(value as AgentMode)}>{label}</button>)}</nav><label className="st-level-picker"><span>Nivel</span><select aria-label="Nivel del material" value={level} onChange={event => setLevel(event.target.value as AgentLevel)}>{Object.entries(agentLevels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label><button className="st-primary" disabled={!doc.objects.length} onClick={() => setPlayerOpen(true)}>Ver como lección</button></div>
           <CanvasViewport
             objects={doc.objects}
             selectedId={selectedId}
@@ -417,7 +412,7 @@ function StudioEditor({ owner }: { owner: string }) {
             onCancelEdit={store.cancelEdit}
           />
           <div className="st-canvas-footer">
-            <span>{presenting ? doc.title : null}</span>
+            <div className="st-canvas-summary"><span>{presenting ? doc.title : `${doc.objects.length} módulos`}</span><button className="st-organize" disabled={!doc.objects.length} onClick={() => store.update(current => ({ ...current, objects: organizeObjects(current.objects) }))}>Organizar lienzo</button></div>
             <div className="st-zoom">
               <button
                 aria-label="Alejar"
@@ -443,7 +438,8 @@ function StudioEditor({ owner }: { owner: string }) {
             </div>
           </div>
         </main>
-        <aside className="st-inspector" aria-label="Asistente del material">
+        <aside ref={assistantPanel} id="st-assistant-panel" hidden={!assistantOpen} tabIndex={-1} className="st-inspector" aria-label="Asistente del material" onKeyDown={event => { if (event.key === "Escape") { setAssistantOpen(false); assistantToggle.current?.focus(); } }}>
+          <div className="st-assistant-heading"><span>Ayuda para tu material</span><button aria-label="Cerrar asistente" onClick={() => { setAssistantOpen(false); assistantToggle.current?.focus(); }}><X size={18} /></button></div>
           <p className="st-inline-help">Edita los valores subrayados directamente en el lienzo. El dibujo se actualiza al escribir. Enter confirma y Escape cancela.</p>
           <StudioAgentPanel key={`${doc.id}:${mode}`} document={doc} selectedId={selectedId} onSelect={setSelectedId} authenticated={!!user} teachingLevel={level} onLevelChange={setLevel} teachingMode={mode} onModeChange={setMode} onApply={(batch, expected) => {
             const formatted = readableBatch(batch, expected);

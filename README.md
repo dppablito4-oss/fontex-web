@@ -12,7 +12,7 @@ Estado revisado el **11 de noviembre de 2026**: Fontex Agent se integró en `mai
 
 | Área | Capacidades actuales | Dónde se guardan los datos |
 |---|---|---|
-| Studio | Fracciones, operaciones guiadas, texto, sucesiones, colecciones de enteros, recta numérica y ecuaciones lineales; inspector, historial y presentación | `localStorage`, separado por usuario o invitado |
+| Studio | 19 módulos con edición directa en el lienzo; catálogo por temas, historial, presentación y PDF | `localStorage`, separado por usuario o invitado |
 | Fontex Agent | Acciones estructuradas con vista previa y deshacer atómico; aprender/resolver con IA opcional y práctica local con pistas graduadas | Materiales locales; contexto enviado al backend solo al consultar IA |
 | Materiales de Studio | Crear desde plantillas, abrir, duplicar objetos, importar y exportar `.fontex.json` | En este navegador; exportación manual entre equipos |
 | Aula de práctica | 19 guías por nivel y grado; teoría, ejercicios, PDF y consultas | Progreso en `localStorage`; PDF añadidos en IndexedDB |
@@ -32,7 +32,7 @@ npm ci
 npm run dev
 ```
 
-Abre `http://localhost:5173/#/`. Studio funciona sin configurar Supabase ni OpenAI. El laboratorio y el aula de práctica también tienen funciones locales; las cuentas, la biblioteca remota y el tutor documental requieren backend.
+Abre `http://localhost:5173/#/` para la presentación, o `http://localhost:5173/#/lienzo` para el editor. Studio funciona sin configurar Supabase ni OpenAI. El laboratorio y el aula de práctica también tienen funciones locales; las cuentas, la biblioteca remota y el tutor documental requieren backend.
 
 ### Configurar cuentas y servicios remotos
 
@@ -76,9 +76,10 @@ Las rutas se escriben después de `#` para admitir recargas en GitHub Pages.
 
 | Ruta | Vista | Acceso |
 |---|---|---|
-| `/#/`, `/#/lienzo` | Fontex Studio | Invitado o cuenta |
+| `/#/` | Presentación pública con ejemplo interactivo | Público |
+| `/#/lienzo` | Fontex Studio | Invitado o cuenta |
 | `/#/fracciones` | Laboratorio original de fracciones | Público |
-| `/#/demo` | Aula de práctica de Matemática | Funciones locales públicas; IA remota con sesión |
+| `/#/demo` (opcional `?nivel=inicial`, `primaria`, `secundaria` o `universidad`) | Aula de práctica de Matemática | Funciones locales públicas; IA remota con sesión |
 | `/#/ingresar`, `/#/crear-cuenta` | Acceso y registro | Requiere Supabase configurado |
 | `/#/ingresar-tutor` | Acceso con retorno al aula de práctica | Requiere Supabase configurado |
 | `/#/inicio`, `/#/aula`, `/#/grupo` | Espacio académico | Sesión cuando Supabase está configurado |
@@ -154,11 +155,11 @@ docs/                    Guías, decisiones e historial
 
 ## Límites actuales
 
-Studio usa un lienzo de 1600 × 1100, hasta 80 objetos y 40 cambios de historial. Importa documentos versión 1 de hasta 1 MiB. No incluye sincronización remota de materiales, edición colaborativa, varias páginas ni exportación PDF integrada.
+Studio usa un lienzo de 1600 de ancho que crece verticalmente desde 1100, hasta 80 objetos y 40 cambios de historial. Importa documentos versión 1 de hasta 1 MiB. Exporta el material completo a PDF. No incluye sincronización remota de materiales, edición colaborativa ni varias páginas de lienzo.
 
 La biblioteca remota acepta PDF de hasta 5 MiB y 100 páginas con texto seleccionable; no implementa OCR. El tutor estricto exige una salida estructurada y citas de los fragmentos enviados al modelo; si faltan o son inválidas, se abstiene. Esa validación no certifica por sí sola la exactitud de cada afirmación. Los tutores comparten un renderizador de Markdown y fórmulas compatibles con KaTeX, incluidas fracciones, raíces y exponentes. No ejecuta HTML de los mensajes ni comandos confiables de KaTeX.
 
-Studio, Fracciones, Práctica y las vistas académicas comparten los temas claro y oscuro. El selector de luna/sol conserva la elección al navegar; sin elección manual se usa la preferencia del sistema. Los dibujos matemáticos también adaptan sus colores. El guardado local sigue usando una instantánea atómica por cuenta, sin sincronización entre equipos. La revisión visual en navegador, las pruebas E2E y la verificación del despliegue remoto siguen pendientes.
+Studio, Fracciones, Práctica y las vistas académicas comparten los temas claro y oscuro. El selector de luna/sol conserva la elección al navegar; sin elección manual se usa la preferencia del sistema. Los dibujos matemáticos también adaptan sus colores. El guardado local sigue usando una instantánea atómica por cuenta, sin sincronización entre equipos. La presentación, el editor y las guías se verifican también en Chromium con tamaños de móvil, tableta y escritorio. La navegación común distingue Lienzo, Aprender y Mi espacio; el asistente del editor se abre a petición.
 
 ### Catálogo ampliado de Studio
 

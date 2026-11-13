@@ -43,7 +43,7 @@ export function PasswordRecoveryPage({ updating = false }: { updating?: boolean 
 
   return <main className="min-h-dvh bg-background px-4 py-8 text-foreground sm:px-8">
     <header className="mx-auto flex max-w-5xl items-center justify-between">
-      <a href="#/" aria-label="Volver al lienzo"><BrandMark /></a><ThemeToggle />
+      <a href="#/" aria-label="Volver a la presentación"><BrandMark /></a><ThemeToggle />
     </header>
     <Card className="mx-auto mt-10 w-full max-w-md p-6 sm:mt-14 sm:p-8">
       <h1 className="text-2xl font-bold">{updating ? "Elige una nueva contraseña" : "Recupera tu cuenta"}</h1>

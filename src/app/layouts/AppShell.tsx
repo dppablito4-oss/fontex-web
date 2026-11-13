@@ -1,3 +1,4 @@
+import { ProductLinks } from "../../components/ProductNavigation";
 import {
   BookOpenText,
   Bot,
@@ -103,7 +104,7 @@ export function AppShell() {
         )}
       >
         <div className="flex items-center justify-between px-2">
-          <BrandMark />
+          <a href="#/" aria-label="Fontex, presentación"><BrandMark /></a>
           <Button
             ref={closeMenuButtonRef}
             className="lg:hidden"
@@ -149,6 +150,7 @@ export function AppShell() {
         </div>
 
         <nav className="mt-7 space-y-1" aria-label="Navegación principal">
+          <p className="eyebrow px-3 pb-3">Aulas y documentos</p>
           {navigation.map(({ to, label, icon: Icon, end }) => (
             <NavLink
               key={to}
@@ -204,7 +206,7 @@ export function AppShell() {
       </aside>
 
       <div className="lg:pl-[17.5rem]">
-        <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-border/80 bg-background/90 px-4 backdrop-blur-md sm:px-7 lg:px-10">
+        <header className="fx-workspace-header sticky top-0 z-20 flex min-h-16 flex-wrap items-center justify-between gap-2 border-b border-border/80 bg-background/90 px-4 py-2 backdrop-blur-md sm:px-7 lg:px-10">
           <div className="flex items-center gap-3">
             <Button
               ref={openMenuButtonRef}
@@ -223,6 +225,7 @@ export function AppShell() {
             </div>
             {!authenticated && <div className="hidden lg:block"><DemoNotice /></div>}
           </div>
+          <ProductLinks current="espacio" />
           <ThemeToggle />
         </header>
 

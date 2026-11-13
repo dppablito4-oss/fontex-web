@@ -543,3 +543,57 @@
 .st-object-handle .st-inline-input { user-select: text; touch-action: manipulation; }
 .st-app .st-object-drag { width: 28px; height: 28px; min-height: 28px; flex: none; padding: 4px; border: 0; background: transparent; cursor: grab; touch-action: none; }
 .st-app .st-object-drag:active { cursor: grabbing; }
+
+/* The workspace follows the same three product areas as the public site. */
+.st-app > .fx-site-header { min-height: 60px; padding: 8px 20px; }
+.st-app > .fx-site-header .fx-product-links a { border: 0; background: transparent; color: var(--st-muted); font-size: 13px; min-height: 38px; padding: 8px 14px; }
+.st-app > .fx-site-header .fx-product-links a[aria-current="page"] { color: var(--st-primary); background: var(--ui-info-surface); }
+.st-app > .fx-site-header .fx-home-link { padding: 0; border: 0; background: transparent; }
+.st-app > .fx-site-header .fx-account { padding: 8px 0; border: 0; background: transparent; }
+.st-header { height: 56px; gap: 18px; }
+.st-editor-label { color: var(--st-muted); font-size: 11px; font-weight: 700; }
+.st-layout { grid-template-columns: minmax(0, 1fr); }
+.st-layout.st-with-assistant { grid-template-columns: minmax(0, 1fr) 350px; }
+.st-inspector[hidden] { display: none !important; }
+.st-inspector:focus { outline: none; }
+.st-library-toolbar { flex-wrap: wrap; }
+.st-assistant-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: var(--st-muted); font-size: 12px; }
+.st-app .st-assistant-heading button { padding: 4px; min-height: 30px; width: 30px; }
+.st-app .st-assistant-toggle[aria-expanded="true"] { background: var(--ui-info-surface); color: var(--st-primary); }
+.st-module-groups { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0; }
+.st-app .st-module-groups button { font-size: 12px; min-height: 34px; padding: 6px 12px; border-radius: 30px; }
+.st-app .st-module-groups button[aria-pressed="true"] { background: var(--st-primary); color: var(--st-on-primary); border-color: var(--st-primary); }
+.st-catalog-caption { margin-bottom: 12px; color: var(--st-muted); font-size: 12px; line-height: 1.6; }
+.st-level-picker { display: flex; align-items: center; gap: 8px; margin-left: 12px; font-size: 12px; color: var(--st-muted); }
+.st-level-picker select { color: var(--st-ink); padding: 8px; max-width: 220px; border: 1px solid var(--st-line); border-radius: 7px; background: var(--st-surface); }
+.st-learning-toolbar > .st-primary { margin-left: auto; }
+.st-canvas-summary { min-width: 0; display: flex; align-items: center; gap: 12px; font-size: 11px; color: var(--st-muted); }
+.st-app .st-canvas-summary .st-organize { min-height: 28px; padding: 4px 8px; font-size: 11px; }
+.st-presenting > .fx-site-header { display: none; }
+@media (max-width: 1050px) and (min-width: 761px) { .st-layout.st-with-assistant { grid-template-columns: minmax(0, 1fr) 310px; }.st-level-picker { margin-left: 0; } }
+@media (max-width: 760px) {
+  .st-app > .fx-site-header { padding: 10px 14px 5px; }
+  .st-header { min-height: 90px; padding: 7px 12px; }
+  .st-editor-label { align-self: center; }
+  .st-header-actions .st-action-label { display: none; }
+  .st-file-buttons { margin-left: auto; gap: 2px; }
+  .st-app .st-file-buttons > button { font-size: 12px; padding: 8px; }
+  .st-library-toolbar { gap: 6px; }
+  .st-modules-toggle { gap: 6px; }
+  .st-learning-toolbar { gap: 9px; padding: 10px 12px; }
+  .st-level-picker { margin-left: 0; font-size: 11px; }
+  .st-level-picker select { font-size: 11px; max-width: 160px; }
+  .st-learning-toolbar > .st-primary { font-size: 11px; padding: 8px; }
+  .st-with-assistant .st-inspector { position: fixed; inset: 12px 12px 12px auto; z-index: 40; width: min(360px, calc(100vw - 24px)); overflow: auto; border: 1px solid var(--st-line); border-radius: 12px; box-shadow: 0 18px 70px rgb(var(--ui-shadow) / .3); background: var(--st-surface); }
+  .st-canvas-summary > span { display: none; }
+}
+.st-app .st-header-actions button:has(.st-action-label) { width: auto; padding-inline: 12px; }
+.st-export-compact { display: none; }
+@media (max-width: 760px) {
+  .st-header { height: auto; min-height: 0; }
+  .st-app .st-header-actions button:has(.st-action-label) { width: 34px; padding-inline: 7px; }
+  .st-assistant-toggle > span, .st-export-label { display: none; }
+  .st-export-compact { display: inline; }
+  .st-app .st-assistant-toggle { width: 40px; }
+}
+.st-app .st-module-groups button[aria-pressed="true"]:hover:not(:disabled) { background: var(--st-primary); color: var(--st-on-primary); }

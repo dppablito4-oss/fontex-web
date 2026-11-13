@@ -16,6 +16,12 @@ beforeEach(() => {
 });
 
 describe("Tutor personal de Matemática", () => {
+  it.each([["inicial", "Inicial"], ["universidad", "Universidad introductoria"]])("abre el nivel %s desde la presentación", async (value, label) => {
+    window.location.hash = `#/demo?nivel=${value}`;
+    render(<ThemeProvider><DemoPage /></ThemeProvider>);
+    expect(screen.getByRole("button", { name: label })).toHaveAttribute("aria-pressed", "true");
+    await waitFor(() => expect(readMaterials).toHaveBeenCalled());
+  });
   it("filtra por grado, reinicia el filtro al cambiar de nivel y abre las guías nuevas", async () => {
     render(<ThemeProvider><DemoPage /></ThemeProvider>);
     fireEvent.change(screen.getByRole("combobox", { name: "Grado o etapa" }), { target: { value: "1" } });

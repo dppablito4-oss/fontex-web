@@ -17,7 +17,7 @@ function renderRoute(route = "/inicio") {
 }
 
 describe("Fontex shell", () => {
-  it.each(["/", "/fracciones", "/demo"])("permite alternar y conservar el tema desde %s", async (route) => {
+  it.each(["/", "/lienzo", "/fracciones", "/demo"])("permite alternar y conservar el tema desde %s", async (route) => {
     const view = renderRoute(route);
     fireEvent.click(await screen.findByRole("button", { name: "Activar tema oscuro" }));
     expect(document.documentElement).toHaveAttribute("data-theme", "dark");
@@ -26,6 +26,13 @@ describe("Fontex shell", () => {
     renderRoute(route);
     fireEvent.click(await screen.findByRole("button", { name: "Activar tema claro" }));
     expect(document.documentElement).toHaveAttribute("data-theme", "light");
+  });
+  it("presenta Fontex en la raíz y mantiene el editor en su ruta directa", () => {
+    const view = renderRoute("/");
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Entender cambia");
+    view.unmount();
+    renderRoute("/lienzo");
+    expect(screen.getByLabelText("Título del material")).toBeInTheDocument();
   });
   it.each([
     ["/inicio", /tus fuentes/i],

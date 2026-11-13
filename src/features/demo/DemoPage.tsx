@@ -1,3 +1,4 @@
+import { ProductLinks } from "../../components/ProductNavigation";
 import {
   ArrowRight, ArrowUp, BookOpen, Check, ChevronLeft, ChevronRight, ClipboardList,
   Divide, FileText, Hash, LayoutGrid, LibraryBig, Lightbulb, LoaderCircle,
@@ -77,7 +78,10 @@ function DemoWorkspace({ accountId, authStatus }: { accountId?: string; authStat
   const [saved, setSaved] = useState(() => readProgress(storageKey));
   const savedRef = useRef(saved);
   const [section, setSection] = useState<Section>("aula");
-  const [level, setLevel] = useState<LessonLevel>(() => lessonLevel(saved.lessonId));
+  const [level, setLevel] = useState<LessonLevel>(() => {
+    const requested = new URLSearchParams(window.location.hash.split("?")[1]).get("nivel");
+    return requested && Object.hasOwn(lessonLevels, requested) ? requested as LessonLevel : lessonLevel(saved.lessonId);
+  });
   const [grade, setGrade] = useState<number | "all">("all");
   const [activeExercise, setActiveExercise] = useState(0);
   const [coach, setCoach] = useState<Record<string, string>>({});
@@ -309,7 +313,8 @@ function DemoWorkspace({ accountId, authStatus }: { accountId?: string; authStat
   return (
     <div className="fd">
       <aside className="fd-side" aria-label="Menú del aula" inert={Boolean(viewer)}>
-        <button className="fd-brand" onClick={() => navigate("aula")} type="button"><BrandMark /></button>
+        <a className="fd-brand" href="#/" aria-label="Fontex, presentación"><BrandMark /></a>
+        <p className="fd-area-caption">GUÍAS Y PRÁCTICA</p>
         <nav className="fd-nav" aria-label="Secciones">
           {sections.map(({ id, label, icon: Icon }) => (
             <button aria-current={section === id ? "page" : undefined} className="fd-nav-button" key={id} onClick={() => navigate(id)} type="button">
@@ -321,10 +326,10 @@ function DemoWorkspace({ accountId, authStatus }: { accountId?: string; authStat
       <div className="fd-workspace" inert={Boolean(viewer)}>
         <header className="fd-top">
           <span className="fd-mobile-brand"><BrandMark /></span>
-          <span className="fd-subject">Matemática</span>
+          <ProductLinks current="aprender" />
           <div className="fd-top-actions">
             {authStatus === "anonymous" && <a className="fd-text-button" href="#/ingresar-tutor">Iniciar sesión</a>}
-            {authStatus === "authenticated" && <a className="fd-text-button" href="#/">Mi cuenta</a>}
+            {authStatus === "authenticated" && <a className="fd-text-button" href="#/inicio">Mi cuenta</a>}
             <ThemeToggle />
           </div>
         </header>

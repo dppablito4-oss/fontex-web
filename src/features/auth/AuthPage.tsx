@@ -65,8 +65,8 @@ export function AuthPage({ initialMode = 'signin' }: { initialMode?: Mode }) {
     finally { setPending(false); }
   }
   return <main className="min-h-dvh bg-background px-4 py-8 text-foreground sm:px-8">
-    <header className="mx-auto flex max-w-5xl items-center justify-between"><a href="#/" aria-label="Volver al lienzo"><BrandMark/></a><ThemeToggle/></header>
-    <div className="mx-auto mt-10 w-full max-w-md sm:mt-14"><div className="mb-6 text-center"><h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Bienvenido a Fontex</h1></div>
+    <header className="mx-auto flex max-w-5xl items-center justify-between"><a href="#/" aria-label="Volver a la presentación"><BrandMark/></a><ThemeToggle/></header>
+    <div className="mx-auto mt-10 w-full max-w-md sm:mt-14"><div className="mb-6 text-center"><h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Bienvenido a Fontex</h1><p className="mt-3 text-sm leading-6 text-muted-foreground">Tu cuenta reúne aulas, grupos y documentos. También puedes crear y explorar sin registrarte.</p></div>
       <Card className="p-6 sm:p-8"><div className="flex rounded-xl bg-subtle p-1" aria-label="Modo de acceso">
         <button aria-pressed={mode === 'signin'} disabled={pending} className={`flex-1 rounded-lg px-3 py-2 text-sm font-semibold ${mode === 'signin' ? 'bg-surface shadow-sm' : 'text-muted-foreground'}`} onClick={() => switchMode('signin')} type="button">Iniciar sesión</button>
         <button aria-pressed={mode === 'signup'} disabled={pending} className={`flex-1 rounded-lg px-3 py-2 text-sm font-semibold ${mode === 'signup' ? 'bg-surface shadow-sm' : 'text-muted-foreground'}`} onClick={() => switchMode('signup')} type="button">Crear cuenta</button>
@@ -85,7 +85,7 @@ export function AuthPage({ initialMode = 'signin' }: { initialMode?: Mode }) {
       </form>
       {mode === 'signin' && <div className="mt-5 text-center"><button type="button" disabled={pending || !configured || cooldown > 0} className="text-xs font-semibold text-primary underline disabled:opacity-50" onClick={() => void resend()}>{cooldown > 0 ? `Reenviar confirmación en ${cooldown} s` : 'Reenviar correo de confirmación'}</button>{confirmationEmail && <p className="mt-2 break-words text-xs text-muted-foreground">Confirma el correo indicado antes de entrar.</p>}</div>}
       {mode === 'signin' && <a className="mt-5 block text-center text-sm font-semibold text-primary underline" href="#/recuperar-contrasena">Olvidé mi contraseña</a>}
-      <a className="mt-6 flex items-center justify-center gap-2 text-sm font-semibold text-primary" href="#/"><ArrowLeft size={15}/> Continuar al lienzo sin cuenta</a>
+      <a className="mt-6 flex items-center justify-center gap-2 text-sm font-semibold text-primary" href="#/lienzo"><ArrowLeft size={15}/> Continuar al lienzo sin cuenta</a>
       </Card>
     </div>
   </main>;

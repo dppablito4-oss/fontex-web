@@ -30,6 +30,30 @@ describe("Fontex Studio", () => {
     expect(screen.queryByRole("button", { name: "Añadir fracción" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Mover Operación guiada" })).toBeInTheDocument();
   });
+  it("deja espacio al lienzo y abre el asistente sin duplicar sus ajustes", () => {
+    render(<ThemeProvider><StudioShell /></ThemeProvider>);
+    const toggle = screen.getByRole("button", { name: "Asistente" });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByRole("complementary", { name: "Asistente del material" })).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Nivel del material"), { target: { value: "secondary" } });
+    fireEvent.click(toggle);
+    expect(screen.getByRole("complementary", { name: "Asistente del material" })).toBeVisible();
+    expect(within(screen.getByRole("complementary", { name: "Asistente del material" })).queryByLabelText("Modo", { exact: true })).not.toBeInTheDocument();
+    expect(within(screen.getByRole("complementary", { name: "Asistente del material" })).queryByLabelText("Nivel", { exact: true })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Cerrar asistente" }));
+    expect(toggle).toHaveFocus();
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+  });
+  it("agrupa los módulos y reconoce búsquedas habituales en plural", () => {
+    render(<ThemeProvider><StudioShell /></ThemeProvider>);
+    fireEvent.click(screen.getByRole("button", { name: "Módulos" }));
+    fireEvent.click(screen.getByRole("button", { name: "Geometría" }));
+    expect(screen.getByRole("button", { name: "Añadir círculos" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Añadir fracción" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Todos" }));
+    fireEvent.change(screen.getByLabelText("Buscar objeto"), { target: { value: "fracciones" } });
+    expect(screen.getByRole("button", { name: "Añadir fracción" })).toBeInTheDocument();
+  });
   it("busca los nuevos módulos sin afectar el material del lienzo", () => {
     render(<ThemeProvider><StudioShell /></ThemeProvider>);
     fireEvent.click(screen.getByRole("button", { name: "Módulos" }));
