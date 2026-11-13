@@ -10,7 +10,7 @@ it("aplica Ctrl+rueda dentro del lienzo y conserva el scroll ordinario", () => {
   expect(zoom).not.toHaveBeenCalled();
   fireEvent.wheel(viewport, { deltaY: -100, ctrlKey: true, clientX: 50, clientY: 50 });
   expect(zoom).toHaveBeenLastCalledWith(expect.closeTo(Math.exp(0.5)));
-  expect(screen.getByText('Nuevo material')).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: 'Dale vida a una idea.' })).toBeInTheDocument();
 });
 it("pellizca solo el lienzo y mantiene límites de zoom", () => {
   const zoom = vi.fn();
