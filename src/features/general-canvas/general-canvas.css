@@ -27,3 +27,5 @@
 .gc-library { max-width:1440px; margin:auto; }
 .gc-without-expressions { display:block; }
 .gc-without-expressions :is(.gc-controls,.gc-expressions) { display:none; }
+/* Inline measurements keep their compact editable text styling inside imported scenes. */
+.gc-app .gc-legacy input.st-inline-input { min-width:3ch; padding:.08em .18em; border:0; border-bottom:1px dashed var(--st-muted); border-radius:0; background:transparent; color:inherit; font:inherit; line-height:1.35; }
