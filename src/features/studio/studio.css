@@ -780,3 +780,5 @@
 }
 .st-app .st-canvas-flow .st-visual-panel .st-circle svg { height: auto; aspect-ratio: 1; }
 .st-app .st-canvas-flow :is(.st-object-handle,.st-object-expand) { opacity: 1; }
+
+.st-file-menu .st-general-link { display: block; color: var(--st-primary); font-size: 12px; padding: 8px; }

@@ -1,0 +1,82 @@
+import { parseExpression, type Variables } from "./expression.ts";
+export type SceneElement = {
+  id: string;
+  kind: "plot" | "formula" | "table";
+  expressionId: string;
+} | { id: string; kind: "text"; text: string };
+export type Scene = {
+  version: 1;
+  parameters: Variables;
+  title: string;
+  expressions: { id: string; source: string }[];
+  elements: SceneElement[];
+};
+export function parseScene(value: unknown): Scene {
+  if (!value || typeof value !== "object") throw new Error("Escena inválida.");
+  const v = value as Record<string, unknown>;
+  if (
+    v.version !== 1 || typeof v.title !== "string" || v.title.length > 120 ||
+    !Array.isArray(v.expressions) || v.expressions.length < 1 ||
+    v.expressions.length > 8 || !Array.isArray(v.elements) ||
+    v.elements.length > 32
+  ) throw new Error("Revisa el título y los elementos de la escena.");
+  const raw = v.parameters ?? { a: 1, b: 0, c: -1 };
+  if (
+    !raw || typeof raw !== "object" ||
+    !["a", "b", "c"].every((k) =>
+      k in raw && typeof (raw as Record<string, unknown>)[k] === "number" &&
+      Number.isFinite((raw as Record<string, unknown>)[k]) &&
+      Math.abs((raw as Record<string, number>)[k]!) <= 5
+    )
+  ) throw new Error("Parámetros fuera de rango.");
+  const parameters: Variables = {
+    a: (raw as Variables).a,
+    b: (raw as Variables).b,
+    c: (raw as Variables).c,
+  };
+  const expressions = v.expressions.map((item: unknown) => {
+    if (
+      !item || typeof item !== "object" || !("id" in item) ||
+      typeof item.id !== "string" || !item.id || item.id.length > 80 ||
+      !("source" in item) || typeof item.source !== "string"
+    ) throw new Error("Expresión inválida.");
+    parseExpression(item.source);
+    return { id: item.id, source: item.source };
+  });
+  if (new Set(expressions.map((e) => e.id)).size !== expressions.length) {
+    throw new Error("Identificadores repetidos.");
+  }
+  const elements: SceneElement[] = v.elements.map((item: unknown) => {
+    if (
+      !item || typeof item !== "object" || !("id" in item) ||
+      typeof item.id !== "string" || item.id.length > 80 || !("kind" in item)
+    ) throw new Error("Elemento inválido.");
+    if (
+      item.kind === "text" && "text" in item && typeof item.text === "string" &&
+      item.text.length <= 5000
+    ) return { id: item.id, kind: "text", text: item.text };
+    if (
+      (item.kind === "plot" || item.kind === "formula" ||
+        item.kind === "table") &&
+      "expressionId" in item && typeof item.expressionId === "string" &&
+      expressions.some((e) => e.id === item.expressionId)
+    ) return { id: item.id, kind: item.kind, expressionId: item.expressionId };
+    throw new Error("El elemento referencia una expresión inexistente.");
+  });
+  if (new Set(elements.map((e) => e.id)).size !== elements.length) {
+    throw new Error("Elementos repetidos.");
+  }
+  return { version: 1, title: v.title, parameters, expressions, elements };
+}
+export function expressionScene(source: string): Scene {
+  return parseScene({
+    version: 1,
+    title: "Exploración matemática",
+    expressions: [{ id: "f", source }],
+    elements: [{ id: "formula", kind: "formula", expressionId: "f" }, {
+      id: "graph",
+      kind: "plot",
+      expressionId: "f",
+    }, { id: "table", kind: "table", expressionId: "f" }],
+  });
+}

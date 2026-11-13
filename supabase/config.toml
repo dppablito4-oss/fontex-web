@@ -480,3 +480,6 @@ content_path = "./supabase/templates/identity_linked_notification.html"
 enabled = true
 subject = "Se desvinculó un acceso de tu cuenta de Fontex"
 content_path = "./supabase/templates/identity_unlinked_notification.html"
+
+[functions.scene-agent]
+verify_jwt = true

@@ -61,5 +61,9 @@ jobs:
         run: deno test --config supabase/functions/studio-agent/deno.json supabase/functions/studio-agent/handler_test.ts
       - name: Test tutor failures and grounding
         run: deno test --allow-env --config supabase/functions/tutor-chat/deno.json supabase/functions/tutor-chat/handler_test.ts
+      - name: Check general scene agent
+        run: deno check --config supabase/functions/scene-agent/deno.json supabase/functions/scene-agent/index.ts
+      - name: Test general scene generation
+        run: deno test --config supabase/functions/scene-agent/deno.json supabase/functions/scene-agent/handler_test.ts
       - name: Lint Edge Functions
         run: deno lint supabase/functions
