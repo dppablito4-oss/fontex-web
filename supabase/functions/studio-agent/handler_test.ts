@@ -22,8 +22,6 @@ type Options = {
   status?: number;
   model?: unknown;
   unauthenticated?: boolean;
-  denied?: boolean;
-  quotaError?: boolean;
   missingKey?: boolean;
   request?: unknown;
   raw?: string;
@@ -32,7 +30,7 @@ type Options = {
   timeout?: boolean;
 };
 async function run(options: Options = {}) {
-  let calls = 0, quotas = 0;
+  let calls = 0;
   let providerBody: Record<string, unknown> = {};
   const requestInput = options.request ?? input();
   const handler = createAgentHandler(
@@ -77,27 +75,19 @@ async function run(options: Options = {}) {
     }),
     {
       userClaims: options.unauthenticated ? null : { id: "user" },
-      takeQuota: () => {
-        quotas++;
-        return options.quotaError
-          ? Promise.reject(new Error("db"))
-          : Promise.resolve(!options.denied);
-      },
     },
   );
   return {
     status: response.status,
     body: await response.json(),
     calls,
-    quotas,
     providerBody,
   };
 }
-Deno.test("agent: requiere autenticación antes de consumir cuotas o proveedor", async () => {
+Deno.test("agent: requiere autenticación antes de invocar al proveedor", async () => {
   const result = await run({ unauthenticated: true });
   assert.equal(result.status, 401);
   assert.equal(result.calls, 0);
-  assert.equal(result.quotas, 0);
 });
 Deno.test("agent: rechaza método, cuerpo inválido y cuerpos grandes", async () => {
   assert.equal((await run({ method: "GET" })).status, 405);
@@ -113,13 +103,10 @@ Deno.test("agent: rechaza método, cuerpo inválido y cuerpos grandes", async ()
     assert.equal(result.calls, 0);
   }
 });
-Deno.test("agent: secreto y cuota fallan de forma cerrada", async () => {
-  assert.equal((await run({ missingKey: true })).status, 503);
-  for (const options of [{ denied: true }, { quotaError: true }]) {
-    const result = await run(options);
-    assert.equal(result.status, options.denied ? 429 : 503);
-    assert.equal(result.calls, 0);
-  }
+Deno.test("agent: requiere la clave del servidor sin depender de cuotas compartidas", async () => {
+  const result = await run({ missingKey: true });
+  assert.equal(result.status, 503);
+  assert.equal(result.calls, 0);
 });
 Deno.test("agent: llama Responses con esquema estricto, sin herramientas ni almacenamiento", async () => {
   const result = await run();
@@ -197,7 +184,6 @@ Deno.test("agent: crear un objeto válido produce una propuesta sin escribir doc
   });
   assert.equal(result.status, 200);
   assert.equal(result.body.batch.actions.length, 1);
-  assert.equal(result.quotas, 1);
 });
 Deno.test("agent: genera y verifica los módulos adaptados de Mathigon", async () => {
   for (const type of ["regular-polygon", "polygon", "factorization", "percentage", "divisibility", "angle", "circle", "statistics", "probability", "algebra-tiles", "powers-roots", "measurement"] as const) {
@@ -251,7 +237,7 @@ Deno.test("agent: entrega texto incremental antes del lote completo y valida ant
     return Promise.resolve(new Response(new ReadableStream<Uint8Array>({ start(c) { provider = c; } }), { headers: { "Content-Type": "text/event-stream" } }));
   });
   const data = { ...input(), stream: true, task: "build", question: "Sí, adelante" };
-  const response = await handler(new Request("http://localhost", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) }), { userClaims: { id: "user" }, takeQuota: () => Promise.resolve(true) });
+  const response = await handler(new Request("http://localhost", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) }), { userClaims: { id: "user" } });
   const events = eventData(response.body!);
   assert.deepEqual((await events.next()).value, { type: "start" });
   const send = (event: unknown) => provider.enqueue(new TextEncoder().encode(`data: ${JSON.stringify(event)}\n\n`));
@@ -268,7 +254,7 @@ Deno.test("agent: entrega texto incremental antes del lote completo y valida ant
 Deno.test("agent: si se corta la transmisión no autoriza acciones parciales", async () => {
   const { eventData } = await import("../../../src/core/agent/event-stream.ts");
   const handler = createAgentHandler(() => "test-key", () => Promise.resolve(new Response('data: {"type":"response.output_text.delta","delta":"{\\\"message\\\":\\\"Parcial"}\n\n', { headers: { "Content-Type": "text/event-stream" } })));
-  const response = await handler(new Request("http://localhost", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...input(), question: "Explica", stream: true }) }), { userClaims: { id: "user" }, takeQuota: () => Promise.resolve(true) });
+  const response = await handler(new Request("http://localhost", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...input(), question: "Explica", stream: true }) }), { userClaims: { id: "user" } });
   const events = []; for await (const event of eventData(response.body!)) events.push(event);
   assert.ok(events.some(event => (event as { type: string }).type === "error"));
   assert.ok(!events.some(event => (event as { type: string }).type === "done"));
@@ -277,8 +263,21 @@ Deno.test("agent: si se corta la transmisión no autoriza acciones parciales", a
 Deno.test("agent: un corte de transporte no se presenta como JSON inválido", async () => {
   const { eventData } = await import("../../../src/core/agent/event-stream.ts");
   const handler = createAgentHandler(() => "test-key", () => Promise.resolve(new Response(new ReadableStream({ start(controller) { controller.error(new DOMException("aborted", "AbortError")); } }), { headers: { "Content-Type": "text/event-stream" } })));
-  const response = await handler(new Request("http://localhost", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...input(), question: "Explica", stream: true }) }), { userClaims: { id: "user" }, takeQuota: () => Promise.resolve(true) });
+  const response = await handler(new Request("http://localhost", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...input(), question: "Explica", stream: true }) }), { userClaims: { id: "user" } });
   const events = []; for await (const event of eventData(response.body!)) events.push(event);
   const error = events.find(event => (event as { type: string }).type === "error") as { error: { code: string } };
   assert.equal(error.error.code, "AI_INCOMPLETE");
+});
+
+Deno.test("agent: acepta consultas repetidas sin contador de consultas compartido", async () => {
+  const handler = createAgentHandler(
+    key => key === "OPENAI_API_KEY" ? "test-key" : undefined,
+    () => Promise.resolve(Response.json({ status: "completed", output: [{ type: "message", content: [{ type: "output_text", text: JSON.stringify({ message: "Explicación disponible.", actions: [] }) }] }] })),
+  );
+  const body = JSON.stringify({ ...input(), question: "Explica las fracciones" });
+  for (let i = 0; i < 40; i++) {
+    const response = await handler(new Request("http://localhost/studio-agent", { method: "POST", headers: { "Content-Type": "application/json" }, body }), { userClaims: { id: "user" } });
+    assert.equal(response.status, 200);
+    assert.equal((await response.json()).message, "Explicación disponible.");
+  }
 });

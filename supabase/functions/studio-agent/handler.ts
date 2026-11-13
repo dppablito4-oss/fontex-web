@@ -21,7 +21,6 @@ import { tutorModels } from "../_shared/practice/models.ts";
 const MAX_BYTES = 256 * 1024;
 type Context = {
   userClaims?: { id?: string } | null;
-  takeQuota: (userId: string) => Promise<boolean>;
 };
 function json(body: unknown, status = 200) {
   return Response.json(body, {
@@ -85,15 +84,6 @@ export function createAgentHandler(
         message:
           "La IA no está configurada en el servidor. Studio sigue disponible.",
       }, 503);
-    }
-    try {
-      if (!await context.takeQuota(userId)) {
-        return json({
-          message: "Alcanzaste el límite de consultas. Intenta más tarde.",
-        }, 429);
-      }
-    } catch {
-      return json({ message: "No se pudo comprobar el límite de uso." }, 503);
     }
     // Exact practice is deterministic: an LLM cannot accidentally disclose a later hint.
     if (input.mode === "practice") return json(practiceReply(input));
