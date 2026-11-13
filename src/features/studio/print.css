@@ -56,3 +56,4 @@ html, body { margin: 0; background: #fff !important; color: #24272b !important; 
 .st-print-document figcaption { margin-top: 6pt; font-size: 10pt; }
 .st-print-document .st-fraction { font-size: 22pt; }
 * { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+.st-print-document .st-regular-polygon svg { max-height: 90mm !important; }

@@ -70,8 +70,8 @@ export function useStudioDocument(owner: string) {
       return false;
     }
   }
-  function update(change: (document: StudioDocument) => StudioDocument, inlineEdit = false) {
-    if (inlineEdit) beginEdit(); else endEdit();
+  function update(change: (document: StudioDocument) => StudioDocument, inlineEdit = false, layoutOnly = false) {
+    if (!layoutOnly) { if (inlineEdit) beginEdit(); else endEdit(); }
     try {
       const current = historyRef.current;
       const changed = change(structuredClone(current.present));
@@ -81,9 +81,9 @@ export function useStudioDocument(owner: string) {
         updatedAt: new Date().toISOString(),
       });
       commit({
-        past: [...(edit.current ?? current).past.slice(-39), (edit.current ?? current).present],
+        past: layoutOnly ? current.past : [...(edit.current ?? current).past.slice(-39), (edit.current ?? current).present],
         present: next,
-        future: [],
+        future: layoutOnly ? current.future : [],
       });
       persist(next);
       return true;
@@ -163,6 +163,7 @@ export function useStudioDocument(owner: string) {
     saved,
     persist,
     update,
+    relayout: (change: (document: StudioDocument) => StudioDocument) => update(change, false, true),
     beginEdit,
     endEdit,
     cancelEdit,

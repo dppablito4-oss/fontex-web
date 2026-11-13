@@ -52,3 +52,22 @@ describe("Cambio de material con almacenamiento limitado", () => {
     } finally { write.mockRestore(); }
   });
 });
+
+it("ajusta el texto sin añadir pasos al historial ni perder rehacer", () => {
+  const original = createDocument("blank"); original.objects = [createObject("text")];
+  saveMaterial(localStorage, "guest", original);
+  const { result } = renderHook(() => useStudioDocument("guest"));
+  act(() => {
+    result.current.update(doc => ({...doc,objects:doc.objects.map(o=>o.type==="text"?{...o,data:{...o.data,content:"Contenido extenso"}}:o)}));
+    result.current.relayout(doc=>({...doc,objects:doc.objects.map(o=>({...o,height:2000}))}));
+  });
+  expect(result.current.document.objects[0]?.height).toBe(2000);
+  act(() => result.current.undo());
+  expect(result.current.document.objects[0]?.data).toEqual(original.objects[0]?.data);
+  expect(result.current.canUndo).toBe(false);
+  act(() => { result.current.relayout(doc=>({...doc,objects:doc.objects.map(o=>({...o,height:1200}))})); });
+  expect(result.current.canRedo).toBe(true);
+  act(() => result.current.redo());
+  expect(result.current.document.objects[0]?.data).toMatchObject({content:"Contenido extenso"});
+  expect(result.current.document.objects[0]?.height).toBe(2000);
+});

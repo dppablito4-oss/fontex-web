@@ -1,3 +1,4 @@
+import { validLengthUnit } from "../math-engine/regular-polygons.ts";
 import { parseStudioOperation } from "../math-engine/studio-operations.ts";
 import { analyzeCollection, numberLineTicks } from "../math-engine/numbers.ts";
 import { solveLinearEquation, type LinearCoefficients } from "../math-engine/equations.ts";
@@ -51,6 +52,8 @@ export type StudioDocument = {
 export const BOARD = { width: 1600, height: 1100 };
 // Objects retain bounded sizes; the document grows downwards as content is added.
 export const MAX_Y = 1_000_000;
+export const MAX_TEXT_HEIGHT = 100_000;
+export const maxObjectHeight = (object: { type: string }) => object.type === "text" ? MAX_TEXT_HEIGHT : BOARD.height;
 export function boardHeight(objects: MathObject[]) {
   return Math.max(BOARD.height, ...objects.map(o => o.y + o.height + 300));
 }
@@ -75,7 +78,7 @@ export function validateObject(value: unknown): value is MathObject {
     !value.id ||
     !string(value.label, 120) ||
     !number(value.width, 240, BOARD.width) ||
-    !number(value.height, 160, BOARD.height) ||
+    !number(value.height, 160, typeof value.type === "string" ? maxObjectHeight({ type: value.type }) : BOARD.height) ||
     !number(value.x, 0, BOARD.width - value.width) ||
     !number(value.y, 0, MAX_Y - value.height) ||
     !record(value.data)
@@ -84,11 +87,12 @@ export function validateObject(value: unknown): value is MathObject {
   const d = value.data;
   switch (value.type) {
     case "polygon":
+      if (d.unit !== undefined && !validLengthUnit(d.unit)) return false;
       try { if (!Array.isArray(d.vertices) || !d.vertices.every(p => record(p) && Object.keys(p).length === 2 && "x" in p && "y" in p)) return false; analyzePolygon(d.vertices as PolygonData["vertices"]); return true; } catch { return false; }
     case "factorization":
       try { analyzeFactors(d.number as number); return true; } catch { return false; }
     case "geometry":
-      return (d.figure === "rectangle" || d.figure === "triangle") && integer(d.base, 1, 100) && integer(d.height, 1, 100);
+      return (d.unit === undefined || validLengthUnit(d.unit)) && (d.figure === "rectangle" || d.figure === "triangle") && integer(d.base, 1, 100) && integer(d.height, 1, 100);
     case "fraction":
       return (
         integer(d.numerator, 0, 72) &&
@@ -185,7 +189,7 @@ export function parseDocument(value: unknown): StudioDocument {
 
 export function fitObject(object: MathObject): MathObject {
   const width = Math.max(240, Math.min(BOARD.width, object.width));
-  const height = Math.max(160, Math.min(BOARD.height, object.height));
+  const height = Math.max(160, Math.min(maxObjectHeight(object), object.height));
   return {
     ...object,
     width,

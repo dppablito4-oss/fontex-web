@@ -1,6 +1,6 @@
 import type { ActionBatch } from "../../core/agent/actions";
 import type { StudioDocument } from "../../core/document-schema/document";
-import { BOARD, type MathObject } from "../../core/document-schema/document";
+import { BOARD, maxObjectHeight, type MathObject } from "../../core/document-schema/document";
 
 export function resizeObject(
   object: MathObject,
@@ -11,7 +11,7 @@ export function resizeObject(
   return {
     ...object,
     width: Math.max(240, Math.min(BOARD.width - object.x, width)),
-    height: Math.max(160, Math.min(BOARD.height, height)),
+    height: Math.max(160, Math.min(maxObjectHeight(object), height)),
   };
 }
 

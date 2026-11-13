@@ -1,3 +1,4 @@
+import type { LengthUnit, RegularPolygonData } from "./regular-polygons.ts";
 export type Rational = { n: number; d: number };
 export type ExactAnswer = Rational | { factors: number[] } | { pi: number } | { values: number[] } | "none" | "all";
 export const unitDefinitions = {
@@ -8,10 +9,11 @@ export const unitDefinitions = {
 } as const;
 export type Unit = keyof typeof unitDefinitions;
 export type LearningDataMap = {
+  "regular-polygon": RegularPolygonData;
   percentage: { part: number; whole: number; quantity: number; task: "portion" | "discount" | "ratio" };
   divisibility: { a: number; b: number; task: "gcd" | "lcm" };
   angle: { degrees: number };
-  circle: { radius: number; task: "area" | "circumference" };
+  circle: { radius: number; task: "area" | "circumference"; unit?: LengthUnit };
   statistics: { values: number[]; task: "mean" | "median" | "mode" };
   probability: { experiment: "coin" | "dice" | "spinner"; outcomes: number; favorable: number; trials: number; seed: number };
   "algebra-tiles": { a: number; b: number; c: number; d: number };
@@ -20,7 +22,7 @@ export type LearningDataMap = {
 };
 export type LearningType = keyof LearningDataMap;
 export type LearningPayload = { [K in LearningType]: { type: K; data: LearningDataMap[K] } }[LearningType];
-export const learningTypes = ["percentage", "divisibility", "angle", "circle", "statistics", "probability", "algebra-tiles", "powers-roots", "measurement"] as const;
+export const learningTypes = ["regular-polygon", "percentage", "divisibility", "angle", "circle", "statistics", "probability", "algebra-tiles", "powers-roots", "measurement"] as const;
 /** Narrows the type of objects from an already validated Studio document. */
 export function isLearningObject(value: { type: string; data: unknown }): value is LearningPayload {
   return (learningTypes as readonly string[]).includes(value.type);

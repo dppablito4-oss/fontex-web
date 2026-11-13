@@ -24,7 +24,7 @@ function seed(type: ObjectType) {
   return object;
 }
 const changes: [ObjectType, string, string, unknown][] = [
-  ["fraction", "numerator", "3", 3], ["operation", "expression", "1/2 + 1/4", "1/2 + 1/4"],
+  ["regular-polygon", "sideLength", "2.5", 2.5], ["fraction", "numerator", "3", 3], ["operation", "expression", "1/2 + 1/4", "1/2 + 1/4"],
   ["text", "content", "Una explicación\ncon dos líneas", "Una explicación\ncon dos líneas"],
   ["sequence", "difference", "3", 3], ["collection", "values", "1, 2, 2", [1, 2, 2]],
   ["number-line", "points", "-2, 2", [-2, 2]], ["linear-equation", "d", "4", 4],

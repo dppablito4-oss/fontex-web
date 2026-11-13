@@ -12,6 +12,8 @@ import { gcd } from "../math-engine/fractions.ts";
 import { parseStudioOperation } from "../math-engine/studio-operations.ts";
 import { sequenceTerms } from "../math-engine/sequences.ts";
 import { analyzeCollection, numberLineTicks } from "../math-engine/numbers.ts";
+import { geometryPerimeter } from "../math-engine/geometry.ts";
+import { unitOf } from "../math-engine/regular-polygons.ts";
 import { solveLinearEquation } from "../math-engine/equations.ts";
 
 import { analyzePolygon, analyzeFactors } from "../math-engine/adapted-modules.ts";
@@ -49,6 +51,14 @@ const dataKeys: Record<MathObject["type"], string[]> = {
   "number-line": ["min", "max", "step", "points"],
   "linear-equation": ["a", "b", "c", "d", "stage"],
 };
+function strictDataKeys(value: MathObject): boolean {
+  let keys = dataKeys[value.type];
+  if (["geometry", "polygon", "circle"].includes(value.type)) {
+    keys = keys.filter(key => key !== "unit");
+    if (Object.hasOwn(value.data, "unit")) keys = [...keys, "unit"];
+  }
+  return exactKeys(value.data, keys);
+}
 function strictObject(value: unknown): value is MathObject {
   return validateObject(value) &&
     exactKeys(value, [
@@ -61,7 +71,7 @@ function strictObject(value: unknown): value is MathObject {
       "height",
       "data",
     ]) &&
-    exactKeys(value.data, dataKeys[value.type]);
+    strictDataKeys(value);
 }
 export function parseBatch(value: unknown): ActionBatch {
   if (
@@ -207,10 +217,10 @@ export function readStudioContext(
     mathematics: snapshot.objects.map((object) => {
       if (isLearningObject(object)) return { id: object.id, type: object.type, calculation: learningLesson(object).facts };
       switch (object.type) {
-        case "polygon": return { id: object.id, polygon: analyzePolygon(object.data.vertices) };
+        case "polygon": return { id: object.id, polygon: analyzePolygon(object.data.vertices), unit: unitOf(object.data) };
         case "factorization": return { id: object.id, factorization: analyzeFactors(object.data.number) };
         case "geometry":
-          return { id: object.id, area: { n: object.data.base * object.data.height, d: object.data.figure === "triangle" ? 2 : 1 } };
+          return { id: object.id, area: { n: object.data.base * object.data.height, d: object.data.figure === "triangle" ? 2 : 1 }, perimeter: geometryPerimeter(object.data), unit: unitOf(object.data) };
         case "fraction": {
           const divisor = gcd(object.data.numerator, object.data.denominator);
           return {

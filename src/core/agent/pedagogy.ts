@@ -1,3 +1,4 @@
+import { unitOf } from "../math-engine/regular-polygons.ts";
 import { gcd } from "../math-engine/fractions.ts";
 import { parseStudioOperation } from "../math-engine/studio-operations.ts";
 import { sequenceTerms } from "../math-engine/sequences.ts";
@@ -42,7 +43,7 @@ export function exactTarget(object: MathObject): ExactTarget | null {
   switch (object.type) {
     case "polygon": {
       const p = analyzePolygon(object.data.vertices);
-      return { answer: p.areaFraction, prompt: "Calcula el área del polígono en unidades cuadradas.", strategy: "Usa los cuadrados de la cuadrícula y divide la figura en partes conocidas; no confundas área y perímetro.", result: String(p.area) };
+      return { answer: p.areaFraction, prompt: `Calcula el área del polígono en ${unitOf(object.data)}².`, strategy: "Usa los cuadrados de la cuadrícula y divide la figura en partes conocidas; no confundas área y perímetro.", result: String(p.area) };
     }
     case "factorization": {
       const f = analyzeFactors(object.data.number);
@@ -51,7 +52,7 @@ export function exactTarget(object: MathObject): ExactTarget | null {
     case "geometry": {
       const { base, height, figure } = object.data;
       const d = figure === "triangle" ? 2 : 1;
-      return { answer: { n: base * height, d }, prompt: "Calcula el área en unidades cuadradas.", strategy: figure === "triangle" ? "Multiplica base por altura perpendicular y divide entre dos." : "Cuenta las filas y las columnas; multiplica base por altura.", result: `${base * height / d}` };
+      return { answer: { n: base * height, d }, prompt: `Calcula el área en ${unitOf(object.data)}².`, strategy: figure === "triangle" ? "Multiplica base por altura perpendicular y divide entre dos." : "Cuenta las filas y las columnas; multiplica base por altura.", result: `${base * height / d}` };
     }
     case "fraction": {
       const { numerator: n, denominator: d } = object.data;
@@ -187,6 +188,7 @@ export function practiceReply(request: AgentRequest): AgentReply {
       : "";
     const initialStrategies: Record<MathObject["type"], string> = {
       ...Object.fromEntries(learningTypes.map(type => [type, "Observa el dibujo y cuenta las unidades con acompañamiento. Relaciona cada cambio con la pregunta."])) as Record<LearningType, string>,
+      "regular-polygon": "Cuenta los lados iguales y recorre el borde sin saltarte ninguno.",
       polygon: "Cuenta cuadrados completos y junta las partes de cuadrados de la figura.",
       factorization: "Empieza probando grupos de dos y pide acompañamiento para las divisiones.",
       geometry: "Cuenta los cuadrados de cada fila. Dos triángulos iguales forman un rectángulo.",

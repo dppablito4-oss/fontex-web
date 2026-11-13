@@ -611,3 +611,30 @@
   .st-app .st-canvas-summary .st-organize { font-size: 10px; padding-inline: 6px; white-space: nowrap; }
   .st-app .st-zoom button { width: 26px; min-height: 28px; height: 28px; padding: 4px; }.st-zoom output { font-size: 11px; }
 }
+
+/* A single workspace: objects and text sit directly on the page. */
+.st-app .st-board { background: transparent !important; border: 0; box-shadow: none !important; }
+.st-app .st-object { background: transparent; border: 1px solid transparent; border-radius: 5px; box-shadow: none; }
+.st-app .st-object.selected { border-color: var(--st-primary); box-shadow: 0 0 0 1px color-mix(in srgb, var(--st-primary) 25%, transparent); }
+.st-app .st-object-handle { background: transparent; border: 0; min-height: 32px; height: 32px; opacity: 0; transition: opacity .15s; }
+.st-app .st-object:is(:hover,:focus-within,.selected) .st-object-handle { opacity: 1; }
+.st-app .st-object .st-visual-panel { border: 0; border-radius: 0; background: transparent; min-height: 0; padding: 12px; box-shadow: none; }
+.st-app .st-object .st-object-content { padding: 12px; }
+.st-app .st-object .st-inline-input { background: transparent !important; box-shadow: none; }
+.st-app .st-object-text .st-story-text { padding: 0; margin: 0; max-width: none; }
+.st-app .st-object-text .st-object-content { overflow: hidden; }
+.st-app .st-inline-multiline textarea { overflow: hidden; resize: none; max-height: none; min-height: 1.7em; padding: 0; border: 0; border-radius: 0; text-align: left; }
+.st-app .st-object-text .st-inline-multiline textarea:focus-visible { outline: none; border: 0; box-shadow: none; }
+.st-app .st-object-text:focus-within { border-color: var(--st-primary); }
+.st-app .st-object-text .st-text-content .st-inline-caption { opacity: 0; font-size: 11px; transition: opacity .15s; }
+.st-app .st-object-text:is(:hover,:focus-within,.selected) .st-inline-caption { opacity: 1; }
+.st-app .st-object-expand, .st-app .st-resize-handle { opacity: 0; background: transparent; }
+.st-app .st-object:is(:hover,:focus-within,.selected) :is(.st-object-expand,.st-resize-handle) { opacity: 1; }
+@media (hover: none) { .st-app .st-object-handle, .st-app .st-object-expand, .st-app .st-resize-handle { opacity: 1; } }
+.st-regular-controls { display: flex; flex-wrap: wrap; align-items: end; gap: 15px; margin: 0 0 15px; font-size: 16px; }
+.st-regular-controls label > span:first-child { display: block; font-size: 11px; color: var(--st-muted); margin-bottom: 5px; }
+.st-regular-polygon > svg { width: 100%; max-height: 400px; display: block; }
+.st-regular-note, .st-polygon-advanced { color: var(--st-muted); font-size: 12px; line-height: 1.7; }
+.st-polygon-advanced summary { cursor: pointer; }.st-polygon-advanced > p { margin: 10px 0; }
+.st-polygon-sides { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 12px; }.st-polygon-sides > span { white-space: nowrap; }
+:root[data-theme="dark"] .st-app .st-object :is(.st-visual-panel,.st-object-handle) { background: transparent; border: 0; }

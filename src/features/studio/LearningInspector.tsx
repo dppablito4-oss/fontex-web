@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { unitDefinitions, type LearningPayload } from "../../core/math-engine/learning-types";
-function N({name,label,value,min,max}:{name:string;label:string;value:number;min:number;max:number}) { return <label>{label}<input name={`m_${name}`} type="number" min={min} max={max} step={1} required defaultValue={value} /></label>; }
+function N({name,label,value,min,max,step=1}:{name:string;label:string;value:number;min:number;max:number;step?:number}) { return <label>{label}<input name={`m_${name}`} type="number" min={min} max={max} step={step} required defaultValue={value} /></label>; }
 function Choice({name,label,value,options}:{name:string;label:string;value:string;options:[string,string][]}) { return <label>{label}<select name={`m_${name}`} defaultValue={value}>{options.map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></label>; }
 export function LearningInspector({object,onResimulate}:{object:LearningPayload;onResimulate:()=>void}) {
   const [experiment,setExperiment]=useState(object.type === "probability" ? object.data.experiment : "dice");
   switch(object.type) {
+    case "regular-polygon": return <><N name="sides" label="Número de lados" value={object.data.sides} min={3} max={12}/><N step={.01} name="sideLength" label="Longitud del lado" value={object.data.sideLength} min={.01} max={1000}/><Choice name="unit" label="Unidad" value={object.data.unit} options={[["u","u"],["mm","mm"],["cm","cm"],["m","m"],["km","km"]]}/></>;
     case "percentage": return <><N name="part" label="Partes elegidas" value={object.data.part} min={0} max={100}/><N name="whole" label="Partes del total" value={object.data.whole} min={1} max={100}/><N name="quantity" label="Cantidad total" value={object.data.quantity} min={0} max={10000}/><Choice name="task" label="Problema de proporción" value={object.data.task} options={[["portion","Calcular una parte"],["discount","Descuento: cantidad restante"],["ratio","Proporcionalidad directa"]]}/></>;
     case "divisibility": return <><N name="a" label="Primer número" value={object.data.a} min={2} max={360}/><N name="b" label="Segundo número" value={object.data.b} min={2} max={360}/><Choice name="task" label="Cálculo de divisibilidad" value={object.data.task} options={[["gcd","Máximo común divisor"],["lcm","Mínimo común múltiplo"]]}/></>;
     case "angle": return <N name="degrees" label="Medida del ángulo (grados)" value={object.data.degrees} min={0} max={360}/>;

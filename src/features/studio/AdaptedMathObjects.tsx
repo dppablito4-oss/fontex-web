@@ -1,12 +1,11 @@
+import { unitOf, measureText } from "../../core/math-engine/regular-polygons";
 import { InlineValue, InlineOnly } from "./InlineValue";
-import { useContext, useId } from "react";
+import { useId } from "react";
 import type { PolygonData, FactorizationData } from "../../core/math-engine/adapted-modules";
 import { analyzePolygon, analyzeFactors } from "../../core/math-engine/adapted-modules";
-import { TeachingLevel } from "./teaching-level";
 type Display = { lessonStep?: number; concealAnswers?: boolean };
 export function PolygonObject({ data, lessonStep = Infinity, concealAnswers = false }: { data: PolygonData } & Display) {
-  const level = useContext(TeachingLevel);
-  const advanced = level === "secondary" || level === "introductory";
+  const unit = unitOf(data);
   const clipId = useId().replace(/:/g, "");
   const analysis = analyzePolygon(data.vertices);
   const minX = Math.min(...data.vertices.map(p => p.x)), maxX = Math.max(...data.vertices.map(p => p.x));
@@ -22,11 +21,12 @@ export function PolygonObject({ data, lessonStep = Infinity, concealAnswers = fa
         {Array.from({ length: maxX - minX + 1 }, (_, i) => <line key={`x${i}`} x1={x(minX + i)} x2={x(minX + i)} y1={y(maxY)} y2={y(minY)} />)}
         {Array.from({ length: maxY - minY + 1 }, (_, i) => <line key={`y${i}`} x1={x(minX)} x2={x(maxX)} y1={y(minY + i)} y2={y(minY + i)} />)}
       </g>
-      {data.vertices.map((p, i) => <g key={i}><circle cx={x(p.x)} cy={y(p.y)} r="4" fill="var(--st-ink)" /><text x={x(p.x)} y={y(p.y) - 10} textAnchor="middle" fontSize="13" fill="var(--st-ink)">{String.fromCharCode(65 + i)}{advanced ? ` (${p.x},${p.y})` : ""}</text></g>)}
+      {data.vertices.map((p, i) => <g key={i}><circle cx={x(p.x)} cy={y(p.y)} r="4" fill="var(--st-ink)" /><text x={x(p.x)} y={y(p.y) - 10} textAnchor="middle" fontSize="13" fill="var(--st-ink)">{String.fromCharCode(65 + i)}</text></g>)}
     </svg>
-    <InlineOnly><p className="st-inline-caption">Vértices: <InlineValue field="vertices" value={data.vertices.map(p => `${p.x},${p.y}`).join("; ")} /></p></InlineOnly>
-    <p>Cada cuadrado tiene lado 1 unidad. El relleno muestra la superficie; el contorno marca el borde.</p>
-    {!concealAnswers && lessonStep >= 2 && <dl className="st-number-stats"><div><dt>Área exacta</dt><dd>{analysis.area} u²</dd></div>{lessonStep >= 3 && <div><dt>Perímetro aproximado</dt><dd>≈ {analysis.perimeter.toFixed(3)} u</dd></div>}</dl>}
+    <InlineOnly><p className="st-inline-caption">Unidad: <InlineValue field="unit" value={unit} /></p><details className="st-polygon-advanced"><summary>Editar vértices (avanzado)</summary><p>Vértices: <InlineValue field="vertices" value={data.vertices.map(p => `${p.x},${p.y}`).join("; ")} /></p><small>Las longitudes por sí solas no determinan un polígono irregular. Los vértices definen sus lados y ángulos.</small></details></InlineOnly>
+    <p className="st-polygon-sides">{data.vertices.map((p, i) => { const q = data.vertices[(i + 1) % data.vertices.length]!, length = Math.hypot(q.x - p.x, q.y - p.y); return <span key={i}>{String.fromCharCode(65 + i)}{String.fromCharCode(65 + (i + 1) % data.vertices.length)}: {Number.isInteger(length) ? "" : "≈ "}{measureText(length)} {unit}</span>; })}</p>
+    <p>Cada cuadrado tiene lado 1 {unit}. El relleno muestra la superficie; el contorno marca el borde.</p>
+    {!concealAnswers && lessonStep >= 2 && <dl className="st-number-stats"><div><dt>Área exacta</dt><dd>{analysis.area} {unit}²</dd></div>{lessonStep >= 3 && <div><dt>Perímetro aproximado</dt><dd>≈ {analysis.perimeter.toFixed(3)} {unit}</dd></div>}</dl>}
   </div>;
 }
 export function FactorizationObject({ data, lessonStep = Infinity, concealAnswers = false }: { data: FactorizationData } & Display) {

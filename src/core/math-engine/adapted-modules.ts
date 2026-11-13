@@ -1,5 +1,6 @@
+import type { LengthUnit } from "./regular-polygons.ts";
 import { polygonPerimeter, primeFactorisation, signedPolygonArea, type Vertex } from "../vendor/mathigon.ts";
-export type PolygonData = { vertices: Vertex[] };
+export type PolygonData = { vertices: Vertex[]; unit?: LengthUnit };
 export type FactorizationData = { number: number };
 const cross = (a: Vertex, b: Vertex, c: Vertex) => (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
 const onSegment = (a: Vertex, b: Vertex, c: Vertex) => cross(a, b, c) === 0 && c.x >= Math.min(a.x, b.x) && c.x <= Math.max(a.x, b.x) && c.y >= Math.min(a.y, b.y) && c.y <= Math.max(a.y, b.y);

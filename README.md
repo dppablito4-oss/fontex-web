@@ -12,7 +12,7 @@ Estado revisado el **11 de noviembre de 2026**: Fontex Agent se integró en `mai
 
 | Área | Capacidades actuales | Dónde se guardan los datos |
 |---|---|---|
-| Studio | 19 módulos con edición directa en el lienzo; catálogo por temas, historial, presentación y PDF | `localStorage`, separado por usuario o invitado |
+| Studio | 20 módulos con edición directa en el lienzo; catálogo por temas, historial, presentación y PDF | `localStorage`, separado por usuario o invitado |
 | Fontex Agent | Acciones estructuradas con vista previa y deshacer atómico; aprender/resolver con IA opcional y práctica local con pistas graduadas | Materiales locales; contexto enviado al backend solo al consultar IA |
 | Materiales de Studio | Crear desde plantillas, abrir, duplicar objetos, importar y exportar `.fontex.json` | En este navegador; exportación manual entre equipos |
 | Aula de práctica | 19 guías por nivel y grado; teoría, ejercicios, PDF y consultas | Progreso en `localStorage`; PDF añadidos en IndexedDB |
@@ -164,3 +164,11 @@ Studio, Fracciones, Práctica y las vistas académicas comparten los temas claro
 ### Catálogo ampliado de Studio
 
 Studio incluye porcentajes/proporciones, MCD/MCM, ángulos, círculos, estadística visual, probabilidad, álgebra con piezas, potencias/raíces y conversiones de unidades. Se pueden buscar en la biblioteca de objetos y crear mediante el agente. El panel incorpora «Más sencillo», «Otro ejemplo», «Practicar esto» y «Explicar paso». Ver [cobertura, ejemplos y límites](docs/architecture/learning-catalog.md).
+
+### Figuras con medidas y objetos sin marcos
+
+El lienzo y los objetos son transparentes; los controles aparecen al seleccionar o enfocar un objeto. El texto se ajusta a su contenido sin scroll interno y desplaza los objetos inferiores de la misma columna. Ese ajuste de diseño no añade pasos al historial.
+
+El módulo `regular-polygon` admite de 3 a 12 lados y una longitud común de 0,01 a 1000 con hasta dos decimales, en u, mm, cm, m o km. Calcula el perímetro exacto y el área (aproximada salvo en el cuadrado); reserva la fórmula de apotema para secundaria e introducción universitaria. Geometría, círculos y polígonos también admiten unidades. Los documentos anteriores sin unidad siguen interpretándose en u.
+
+Los irregulares se mantienen definidos por vértices ordenados en el editor avanzado; ahora muestran las medidas de cada lado. Un conjunto de longitudes sin ángulos o vértices no determina, en general, una figura ni un área únicas. No se ha añadido un constructor libre basado solo en lados.

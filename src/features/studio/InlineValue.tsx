@@ -1,4 +1,4 @@
-import { useContext, useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useContext, useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode, type TextareaHTMLAttributes } from "react";
 import { InlineEditingContext } from "./inline-editing-context";
 import { editField, fieldSpec, fieldValue, formatField } from "./inline-fields";
 
@@ -46,8 +46,8 @@ export function InlineValue({ field, value, index, children, readOnly = false }:
   };
   return <span className={`st-inline-value ${spec.kind === "multiline" ? "st-inline-multiline" : ""}`} onPointerDown={event => event.stopPropagation()} onDoubleClick={event => event.stopPropagation()}>
     {spec.choices ? <select {...common} className="st-inline-input">{Object.entries(spec.choices).map(([key, caption]) => <option key={key} value={key}>{caption}</option>)}</select>
-      : spec.kind === "multiline" ? <textarea {...common} className="st-inline-input" rows={Math.min(12, Math.max(3, text.split("\n").length))} maxLength={5000} />
-      : <input {...common} className="st-inline-input" inputMode={!spec.kind || index !== undefined ? "numeric" : "text"} maxLength={field === "label" ? 120 : 500} style={{ width: `${Math.min(45, Math.max(2, text.length + 1))}ch` }} />}
+      : spec.kind === "multiline" ? <GrowingText resizeKey={editor.object.type === "text" ? editor.object.data.fontSize : undefined} {...common} className="st-inline-input" maxLength={5000} />
+      : <input {...common} className="st-inline-input" inputMode={spec.kind === "decimal" ? "decimal" : !spec.kind || index !== undefined ? "numeric" : "text"} maxLength={field === "label" ? 120 : 500} style={{ width: `${Math.min(45, Math.max(2, text.length + 1))}ch` }} />}
     {error && <span className="st-inline-error" role="alert" id={id}>{error}</span>}
   </span>;
 }
@@ -64,4 +64,22 @@ export function InlineSvgValue({ field, value, x, y, width = 120, prefix = "", s
   const editor = useContext(InlineEditingContext);
   return editor ? <foreignObject x={x - width / 2} y={y - 27} width={width} height="64"><div className="st-inline-svg-caption">{prefix}<InlineValue field={field} value={value} />{suffix}</div></foreignObject>
     : <text x={x} y={y} textAnchor="middle" fill="currentColor" fontSize="16">{prefix}{value}{suffix}</text>;
+}
+
+function GrowingText({ resizeKey, ...props }: TextareaHTMLAttributes<HTMLTextAreaElement> & { resizeKey?: number }) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  useLayoutEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+    const fit = () => { element.style.height = "auto"; element.style.height = `${element.scrollHeight + 1}px`; };
+    fit();
+    let width = element.getBoundingClientRect().width;
+    const observer = new ResizeObserver(() => {
+      const next = element.getBoundingClientRect().width;
+      if (Math.abs(next - width) > .5) { width = next; fit(); }
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [props.value, resizeKey]);
+  return <textarea {...props} ref={ref} rows={1} />;
 }

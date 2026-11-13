@@ -1,3 +1,4 @@
+import { regularPolygonInfo, measureText, validLengthUnit, unitOf } from "./regular-polygons.ts";
 import { commonDivisor, commonMultiple, medianValue, meanValue, circleArea, circleCircumference } from "../vendor/mathigon.ts";
 import { analyzeFactors } from "./adapted-modules.ts";
 import { solveLinearEquation, linearSide, equationResult } from "./equations.ts";
@@ -29,9 +30,9 @@ export function angleInfo(d: LearningDataMap["angle"]) {
   return { degrees, classification: degrees === 0 ? "nulo" : degrees < 90 ? "agudo" : degrees === 90 ? "recto" : degrees < 180 ? "obtuso" : degrees === 180 ? "llano" : degrees < 360 ? "cóncavo" : "completo" };
 }
 export function circleInfo(d: LearningDataMap["circle"]) {
-  requireValid(int(d.radius, 1, 100) && ["area", "circumference"].includes(d.task), "El radio debe ser entero de 1 a 100.");
+  requireValid((d.unit === undefined || validLengthUnit(d.unit)) && int(d.radius, 1, 100) && ["area", "circumference"].includes(d.task), "El radio debe ser entero de 1 a 100.");
   const coefficient = d.task === "area" ? d.radius ** 2 : 2 * d.radius;
-  return { diameter: 2 * d.radius, coefficient, approximate: d.task === "area" ? circleArea(d.radius) : circleCircumference(d.radius), units: d.task === "area" ? "u²" : "u" };
+  return { diameter: 2 * d.radius, coefficient, approximate: d.task === "area" ? circleArea(d.radius) : circleCircumference(d.radius), units: d.task === "area" ? `${unitOf(d)}²` : unitOf(d) };
 }
 export function statisticsInfo(d: LearningDataMap["statistics"]) {
   requireValid(Array.isArray(d.values) && d.values.length >= 1 && d.values.length <= 24 && d.values.every(n => int(n, 0, 100)) && ["mean", "median", "mode"].includes(d.task), "Usa de 1 a 24 datos enteros de 0 a 100.");
@@ -69,6 +70,17 @@ export type LearningLesson = { answer: ExactAnswer; result: string; prompt: stri
 export function learningLesson(object: LearningPayload, level: string = "primary"): LearningLesson {
   const simple = level === "primary" || level === "initial";
   switch (object.type) {
+    case "regular-polygon": {
+      const d = object.data, a = regularPolygonInfo(d), perimeter = rational(Math.round(d.sideLength * 100) * d.sides, 100);
+      const initial = level === "initial";
+      const steps: [string, string][] = [
+        ["Reconoce una figura regular", `${a.name}: tiene ${d.sides} lados de ${d.sideLength} ${d.unit}. Sus lados y ángulos son iguales.`],
+        [initial ? "Recorre el borde" : "Calcula el perímetro", initial ? `Con una persona adulta, señala cada lado una sola vez y recorre todo el borde. Cada lado mide ${d.sideLength} ${d.unit}.` : `Sumamos ${d.sides} lados iguales: ${d.sides} × ${d.sideLength} = ${a.perimeter} ${d.unit}. El perímetro mide el borde.`],
+        ["Distingue borde y superficie", `El perímetro mide ${a.perimeter} ${d.unit}. El área mide la superficie interior y se expresa en ${d.unit}², no en ${d.unit}.`],
+        [initial ? "Explora la superficie" : "Relaciona el área", initial ? "Colorea el interior o cúbrelo con piezas. Compara lo que ocupa la figura con el camino que recorriste por el borde." : d.sides === 4 ? `En el cuadrado, área = lado × lado = ${d.sideLength} × ${d.sideLength} = ${measureText(a.area, a.areaExact)} ${d.unit}².` : simple ? `Podemos cubrir el interior con cuadrados o descomponer la figura. Área aproximada: ${measureText(a.area, a.areaExact)} ${d.unit}². La fórmula general se trabaja más adelante.` : `Apotema = lado ÷ [2 tan(π/${d.sides})] ≈ ${measureText(a.apothem)} ${d.unit}. Área = perímetro × apotema ÷ 2 ≈ ${measureText(a.area, a.areaExact)} ${d.unit}². Las aproximaciones se redondean al final.`],
+      ];
+      return { answer: perimeter, result: `${a.perimeter}`, prompt: `¿Cuánto mide el perímetro de este ${a.name.toLocaleLowerCase("es")} en ${d.unit}?`, strategy: `Suma sus ${d.sides} lados iguales o multiplica ${d.sides} por ${d.sideLength}.`, facts: a, steps };
+    }
     case "percentage": {
       const d = object.data, a = percentageInfo(d);
       return { answer: a.answer, result: fractionText(a.answer), prompt: d.task === "discount" ? `¿Cuánto queda de ${d.quantity} tras descontar ${fractionText(a.percent)} %?` : `Si corresponden ${d.part} de cada ${d.whole}, ¿cuánto corresponde a ${d.quantity}?`, strategy: "Divide la cantidad entre las partes del total y multiplica por las partes elegidas. Para un descuento resta esa parte de la cantidad inicial.", facts: a,
@@ -87,7 +99,7 @@ export function learningLesson(object: LearningPayload, level: string = "primary
     case "circle": {
       const d = object.data, a = circleInfo(d);
       return { answer: { pi: a.coefficient }, result: `${a.coefficient}π`, prompt: `Calcula ${d.task === "area" ? "el área" : "la longitud de la circunferencia"} de radio ${d.radius}. Responde exactamente con π, por ejemplo 9π.`, strategy: d.task === "area" ? "Área = π × radio². No confundas radio con diámetro." : "Longitud = 2 × π × radio. El diámetro equivale a dos radios.", facts: a,
-        steps: [["Identifica el radio", `Del centro al borde hay ${d.radius} unidades. El diámetro mide ${a.diameter} unidades.`], ["Distingue longitud y superficie", "La circunferencia es el borde; el círculo incluye la superficie interior. Longitud en u y área en u²."], ["Sustituye en la fórmula", d.task === "area" ? `A = π × ${d.radius}² = ${a.coefficient}π u².` : `C = 2 × π × ${d.radius} = ${a.coefficient}π u.`], ["Separa exactitud y aproximación", `Resultado exacto: ${a.coefficient}π ${a.units}. Con π aproximado: ≈ ${a.approximate.toFixed(3)} ${a.units}. No son dos resultados exactos distintos.`]] };
+        steps: [["Identifica el radio", `Del centro al borde hay ${d.radius} ${unitOf(d)}. El diámetro mide ${a.diameter} ${unitOf(d)}.`], ["Distingue longitud y superficie", `La circunferencia es el borde; el círculo incluye la superficie interior. Longitud en ${unitOf(d)} y área en ${unitOf(d)}².`], ["Sustituye en la fórmula", d.task === "area" ? `A = π × ${d.radius}² = ${a.coefficient}π ${unitOf(d)}².` : `C = 2 × π × ${d.radius} = ${a.coefficient}π ${unitOf(d)}.`], ["Separa exactitud y aproximación", `Resultado exacto: ${a.coefficient}π ${a.units}. Con π aproximado: ≈ ${a.approximate.toFixed(3)} ${a.units}. No son dos resultados exactos distintos.`]] };
     }
     case "statistics": {
       const d = object.data, a = statisticsInfo(d);

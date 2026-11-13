@@ -1,3 +1,5 @@
+import { unitOf, measureText } from "../../core/math-engine/regular-polygons";
+import { geometryPerimeter } from "../../core/math-engine/geometry";
 import type { AgentLevel } from "../../core/agent/protocol";
 import type { MathObject } from "../../core/document-schema/document";
 import { gcd } from "../../core/math-engine/fractions";
@@ -12,8 +14,8 @@ export function lessonSteps(object: MathObject, level: AgentLevel): [string, str
   switch (object.type) {
     case "text": return [];
     case "polygon": {
-      const p = analyzePolygon(object.data.vertices);
-      return [["Reconoce la figura", `El contorno tiene ${p.sides} lados. Cada cuadrado de la cuadrícula mide 1 unidad de lado.`], ["Distingue borde y superficie", "El perímetro recorre el borde. El área cuenta la superficie que ocupa la figura; se mide en unidades cuadradas."], ["Calcula el área", simple ? `Cuenta cuadrados completos y combina las partes. Puedes descomponer el polígono en rectángulos y triángulos. El área total es ${p.area} unidades cuadradas.` : `Con vértices ordenados, área = |Σ(xᵢyᵢ₊₁ − xᵢ₊₁yᵢ)| ÷ 2 = ${p.area}. La orientación no cambia el área.`], ["Comprueba el perímetro", `Suma las longitudes de los ${p.sides} lados: perímetro ≈ ${p.perimeter.toFixed(3)} unidades. Es una aproximación decimal; el área calculada con esta cuadrícula es exacta.`]];
+      const p = analyzePolygon(object.data.vertices), unit = unitOf(object.data);
+      return [["Reconoce la figura", `El contorno tiene ${p.sides} lados. Cada cuadrado de la cuadrícula mide 1 ${unit} de lado.`], ["Distingue borde y superficie", "El perímetro recorre el borde. El área cuenta la superficie que ocupa la figura; se mide en unidades cuadradas."], ["Calcula el área", simple ? `Cuenta cuadrados completos y combina las partes. Puedes descomponer el polígono en rectángulos y triángulos. El área total es ${p.area} ${unit}².` : `Con vértices ordenados, área = |Σ(xᵢyᵢ₊₁ − xᵢ₊₁yᵢ)| ÷ 2 = ${p.area} ${unit}². La orientación no cambia el área.`], ["Comprueba el perímetro", `Suma las longitudes de los ${p.sides} lados: perímetro ≈ ${p.perimeter.toFixed(3)} ${unit}. Es una aproximación decimal; el área calculada con esta cuadrícula es exacta.`]];
     }
     case "factorization": {
       const f = analyzeFactors(object.data.number);
@@ -48,8 +50,8 @@ export function lessonSteps(object: MathObject, level: AgentLevel): [string, str
       return steps;
     }
     case "geometry": {
-      const d = object.data;
-      return [["Identifica las medidas", `La base mide ${d.base} unidades y la altura perpendicular ${d.height}. La figura conserva esa proporción.`], ["Construye un rectángulo", `${d.base} columnas × ${d.height} filas = ${d.base * d.height} unidades cuadradas. Cada cuadrado de lado 1 cubre una unidad cuadrada.`], ["Calcula el área", d.figure === "triangle" ? `Dos triángulos iguales completan el rectángulo. Uno ocupa la mitad: (${d.base} × ${d.height}) ÷ 2 = ${d.base * d.height / 2} unidades cuadradas.` : `Área = base × altura = ${d.base * d.height} unidades cuadradas.`], ["Comprueba las unidades", "El área mide superficie en unidades cuadradas, no la longitud del borde. La altura se mide perpendicularmente a la base."]];
+      const d = object.data, unit = unitOf(d), perimeter = geometryPerimeter(d);
+      return [["Identifica las medidas", `La base mide ${d.base} ${unit} y la altura perpendicular ${d.height} ${unit}. La figura conserva esa proporción.`], ["Construye un rectángulo", `${d.base} columnas × ${d.height} filas = ${d.base * d.height} ${unit}². Cada cuadrado de lado 1 ${unit} cubre una unidad cuadrada.`], ["Calcula el área", d.figure === "triangle" ? `Dos triángulos iguales completan el rectángulo. Uno ocupa la mitad: (${d.base} × ${d.height}) ÷ 2 = ${d.base * d.height / 2} ${unit}².` : `Área = base × altura = ${d.base * d.height} ${unit}².`], ["Comprueba el perímetro", d.figure === "triangle" ? `También cuenta el lado inclinado. Su longitud se obtiene con Pitágoras; el perímetro es ${Number.isInteger(perimeter) ? "" : "aproximadamente "}${measureText(perimeter)} ${unit}.` : `Sumamos los cuatro lados: 2 × (${d.base} + ${d.height}) = ${perimeter} ${unit}. Área y perímetro miden cosas distintas.`]];
     }
     case "sequence": return [["Observa el inicio", `El primer término es ${object.data.start}. Los puntos representan unidades cuando la cantidad es pequeña.`], ["Reconoce el cambio", `De un término al siguiente ${object.data.difference >= 0 ? "añadimos" : "quitamos"} ${Math.abs(object.data.difference)}.`], ["Continúa el patrón", `Tras ${object.data.count} términos, el siguiente es ${object.data.start + object.data.difference * object.data.count}. ${simple ? "Repite el mismo cambio una vez más." : "Regla general: aₙ = a₁ + (n − 1)d."}`]];
     case "collection": {

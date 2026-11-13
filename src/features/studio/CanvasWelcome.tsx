@@ -15,7 +15,7 @@ export function CanvasWelcome({ onAdd, onBrowse }: { onAdd?: (type: ObjectType) 
     <p className="st-welcome-copy">Empieza con algo sencillo. Cambia sus valores<br className="st-welcome-break" /> y descubre lo que pasa.</p>
     {onAdd && <div className="st-welcome-starters" aria-label="Empezar un material">
       <button onClick={() => onAdd("fraction")}><span className="st-welcome-icon mint"><Grid2X2 size={19} /></span><span><strong>Explorar fracciones</strong><small>Ver las partes de un todo</small></span><ArrowRight size={16} /></button>
-      <button onClick={() => onAdd("geometry")}><span className="st-welcome-icon blue"><Shapes size={19} /></span><span><strong>Crear geometría</strong><small>Descubrir formas y medidas</small></span><ArrowRight size={16} /></button>
+      <button onClick={() => onAdd("regular-polygon")}><span className="st-welcome-icon blue"><Shapes size={19} /></span><span><strong>Crear geometría</strong><small>Descubrir formas y medidas</small></span><ArrowRight size={16} /></button>
       <button onClick={() => onAdd("text")}><span className="st-welcome-icon lilac"><Type size={19} /></span><span><strong>Escribir una explicación</strong><small>Dar contexto a tu material</small></span><ArrowRight size={16} /></button>
     </div>}
     {onBrowse && <button className="st-welcome-browse" onClick={onBrowse}>Ver todos los módulos<ArrowRight size={14} /></button>}

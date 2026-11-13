@@ -1,3 +1,5 @@
+import { unitOf } from "../../core/math-engine/regular-polygons";
+import { RegularPolygonObject } from "./RegularPolygonObject";
 import { InlineValue, InlineOnly, InlineEquation, InlineSvgValue } from "./InlineValue";
 import { useId } from "react";
 import type { LearningPayload, LearningDataMap } from "../../core/math-engine/learning-types";
@@ -29,7 +31,7 @@ function AnglePicture({data,step,hidden}:{data:LearningDataMap["angle"]}&Display
 }
 function CirclePicture({data,step,hidden}:{data:LearningDataMap["circle"]}&Display) {
   const a=circleInfo(data);
-  return <div><InlineOnly><p className="st-inline-caption"><InlineValue field="task" value={data.task} /></p></InlineOnly><svg viewBox="0 0 320 300" role="img" aria-label={`Círculo de radio ${data.radius} unidades`}><circle cx="160" cy="140" r="110" fill={data.task==="area"?"var(--st-piece-primary)":"var(--st-piece-empty)"} fillOpacity="0.4" stroke="var(--st-piece-primary)" strokeWidth="4"/><circle cx="160" cy="140" r="4" fill="currentColor"/><line x1="160" y1="140" x2="270" y2="140" stroke="currentColor" strokeWidth="3"/><InlineSvgValue field="radius" value={data.radius} x={210} y={130} width={120} prefix="r = " /><line x1="50" y1="140" x2="160" y2="140" stroke="currentColor" strokeDasharray="5 5"/><text x="160" y="280" textAnchor="middle" fill="currentColor" fontSize="16">Diámetro: {a.diameter} u</text></svg>{!hidden&&step>=2&&<Amount label={data.task==="area"?"Área exacta":"Longitud exacta"}>{a.coefficient}π {a.units}</Amount>}{!hidden&&step>=3&&<p>≈ {a.approximate.toFixed(3)} {a.units}</p>}</div>;
+  return <div><InlineOnly><p className="st-inline-caption"><InlineValue field="task" value={data.task} /> · <InlineValue field="unit" value={unitOf(data)} /></p></InlineOnly><svg viewBox="0 0 320 300" role="img" aria-label={`Círculo de radio ${data.radius} ${unitOf(data)}`}><circle cx="160" cy="140" r="110" fill={data.task==="area"?"var(--st-piece-primary)":"var(--st-piece-empty)"} fillOpacity="0.4" stroke="var(--st-piece-primary)" strokeWidth="4"/><circle cx="160" cy="140" r="4" fill="currentColor"/><line x1="160" y1="140" x2="270" y2="140" stroke="currentColor" strokeWidth="3"/><InlineSvgValue field="radius" value={data.radius} x={210} y={130} width={120} prefix="r = " /><line x1="50" y1="140" x2="160" y2="140" stroke="currentColor" strokeDasharray="5 5"/><text x="160" y="280" textAnchor="middle" fill="currentColor" fontSize="16">Diámetro: {a.diameter} {unitOf(data)}</text></svg>{!hidden&&step>=2&&<Amount label={data.task==="area"?"Área exacta":"Longitud exacta"}>{a.coefficient}π {a.units}</Amount>}{!hidden&&step>=3&&<p>≈ {a.approximate.toFixed(3)} {a.units}</p>}</div>;
 }
 function FrequencyBars({bars,label}:{bars:{label:string;count:number}[];label:string}) {
   const height=bars.length*32+20,max=Math.max(1,...bars.map(b=>b.count));
@@ -61,6 +63,7 @@ function MeasurementPicture({data,step,hidden}:{data:LearningDataMap["measuremen
 export function LearningMathObject({object,lessonStep=Infinity,concealAnswers=false}:{object:LearningPayload;lessonStep?:number;concealAnswers?:boolean}) {
   const display={step:lessonStep,hidden:concealAnswers};
   return <div className={`st-learning-visual st-learning-${object.type}`}>{(()=>{switch(object.type){
+    case "regular-polygon":return <RegularPolygonObject data={object.data} {...display}/>;
     case "percentage":return <PercentagePicture data={object.data} {...display}/>;
     case "divisibility":return <DivisibilityPicture data={object.data} {...display}/>;
     case "angle":return <AnglePicture data={object.data} {...display}/>;

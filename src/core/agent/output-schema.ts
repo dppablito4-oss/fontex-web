@@ -1,3 +1,4 @@
+import { MAX_TEXT_HEIGHT } from "../document-schema/document.ts";
 import { learningSchemas } from "./learning-schema.ts";
 const object = (properties: Record<string, unknown>) => ({
   type: "object",
@@ -14,9 +15,9 @@ const string = { type: "string" };
 const shape = { type: "string", enum: ["bar", "circle"] };
 const data = {
   ...learningSchemas,
-  polygon: { vertices: { type: "array", minItems: 3, maxItems: 8, items: object({ x: integer(0, 20), y: integer(0, 20) }) } },
+  polygon: { unit: { type: "string", enum: ["u", "mm", "cm", "m", "km"] }, vertices: { type: "array", minItems: 3, maxItems: 8, items: object({ x: integer(0, 20), y: integer(0, 20) }) } },
   factorization: { number: integer(2, 360) },
-  geometry: { figure: { type: "string", enum: ["rectangle", "triangle"] }, base: integer(1, 100), height: integer(1, 100) },
+  geometry: { figure: { type: "string", enum: ["rectangle", "triangle"] }, base: integer(1, 100), height: integer(1, 100), unit: { type: "string", enum: ["u", "mm", "cm", "m", "km"] } },
   fraction: { numerator: integer(0, 72), denominator: integer(1, 24), shape },
   operation: {
     expression: {
@@ -73,7 +74,7 @@ export const agentOutputSchema = object({
                 x: { type: "number", minimum: 0, maximum: 1600 },
                 y: { type: "number", minimum: 0, maximum: 1000000 },
                 width: { type: "number", minimum: 240, maximum: 1600 },
-                height: { type: "number", minimum: 160, maximum: 1100 },
+                height: { type: "number", minimum: 160, maximum: type === "text" ? MAX_TEXT_HEIGHT : 1100 },
                 data: object(properties),
               })
             ),

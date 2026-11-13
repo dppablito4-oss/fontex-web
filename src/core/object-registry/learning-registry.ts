@@ -1,4 +1,5 @@
 export const learningRegistry = {
+  "regular-polygon": { name: "Figuras regulares", width: 1000, height: 680, data: { sides: 6, sideLength: 4, unit: "cm" } },
   percentage: { name: "Porcentajes y proporciones", width: 1100, height: 720, data: { part: 25, whole: 100, quantity: 200, task: "portion" } },
   divisibility: { name: "MCD y MCM", width: 1100, height: 720, data: { a: 12, b: 18, task: "gcd" } },
   angle: { name: "Ángulos", width: 1100, height: 720, data: { degrees: 60 } },
@@ -9,4 +10,4 @@ export const learningRegistry = {
   "powers-roots": { name: "Potencias y raíces", width: 1100, height: 720, data: { base: 4, exponent: 2, task: "power" } },
   measurement: { name: "Medidas y conversiones", width: 1100, height: 720, data: { value: 2, from: "m", to: "cm" } },
 } as const;
-export const learningIcons = { percentage: "%", divisibility: "∩", angle: "∠", circle: "◯", statistics: "▥", probability: "⚄", "algebra-tiles": "x+", "powers-roots": "√", measurement: "↔u" };
+export const learningIcons = { "regular-polygon": "⬡", percentage: "%", divisibility: "∩", angle: "∠", circle: "◯", statistics: "▥", probability: "⚄", "algebra-tiles": "x+", "powers-roots": "√", measurement: "↔u" };

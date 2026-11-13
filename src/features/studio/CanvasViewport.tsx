@@ -4,6 +4,7 @@ import {
   type PointerEvent,
   type ReactNode,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
 } from "react";
@@ -14,6 +15,7 @@ import {
   fitObject,
   type MathObject,
   type ObjectType,
+  MAX_TEXT_HEIGHT,
 } from "../../core/document-schema/document";
 import { InlineEditingContext, type InlineEditing } from "./inline-editing-context";
 import { InlineValue } from "./InlineValue";
@@ -38,6 +40,7 @@ export function CanvasViewport({
   onBeginEdit,
   onEndEdit,
   onCancelEdit,
+  onTextGrow,
   children,
   onZoom,
 }: {
@@ -55,6 +58,7 @@ export function CanvasViewport({
   onBeginEdit?: () => void;
   onEndEdit?: () => void;
   onCancelEdit?: () => void;
+  onTextGrow?: (id: string, height: number) => void;
   children?: ReactNode;
   onZoom?: (zoom: number) => void;
 }) {
@@ -70,14 +74,29 @@ export function CanvasViewport({
     null,
   );
   const [preview, setPreview] = useState<MathObject | null>(null);
+  const selectedScroll = useRef<{ id: string | null; zoom: number }>({ id: null, zoom: NaN });
   const height = boardHeight(preview ? objects.map(o => o.id === preview.id ? preview : o) : objects);
   useEffect(() => {
     const element = viewport.current, object = objects.find(o => o.id === selectedId);
     if (!element?.clientWidth || !object) return;
+    if (selectedScroll.current.id === selectedId && selectedScroll.current.zoom === zoom) return;
+    selectedScroll.current = { id: selectedId, zoom };
     const top = object.y * zoom, left = object.x * zoom;
     if (top < element.scrollTop || top > element.scrollTop + element.clientHeight - 80) element.scrollTop = Math.max(0, top - 24);
     if (left < element.scrollLeft || left > element.scrollLeft + element.clientWidth - 80) element.scrollLeft = Math.max(0, left - 24);
   }, [selectedId, objects, zoom]);
+  useLayoutEffect(() => {
+    if (!onTextGrow || presenting) return;
+    const nodes = viewport.current?.querySelectorAll<HTMLElement>(".st-object-text");
+    for (const node of nodes ?? []) {
+      const object = objects.find(item => item.id === node.dataset.objectId);
+      const content = node.querySelector<HTMLElement>(".st-object-content");
+      const header = node.querySelector<HTMLElement>(".st-object-handle");
+      if (!object || !content || !header) continue;
+      const height = Math.min(MAX_TEXT_HEIGHT, Math.ceil(content.scrollHeight + header.offsetHeight + 2));
+      if (height > object.height + 1) onTextGrow(object.id, height);
+    }
+  }, [objects, onTextGrow, presenting]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
   const expanded = objects.find((object) => object.id === expandedId);
@@ -202,6 +221,7 @@ export function CanvasViewport({
                   width: shown.width,
                   height: shown.height,
                 }}
+                data-object-id={object.id}
                 aria-label={object.label || "Objeto matemático"}
                 onClick={(event) => {
                   event.stopPropagation();

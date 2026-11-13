@@ -262,7 +262,7 @@ export function ObjectVisual({
   switch (object.type) {
     case "polygon": return <PolygonObject data={object.data} lessonStep={lessonStep} concealAnswers={concealAnswers} />;
     case "factorization": return <FactorizationObject data={object.data} lessonStep={lessonStep} concealAnswers={concealAnswers} />;
-    case "geometry": return <GeometryObject data={object.data} />;
+    case "geometry": return <GeometryObject data={object.data} lessonStep={lessonStep} concealAnswers={concealAnswers} />;
     case "collection": return <CollectionObject data={object.data} />;
     case "number-line": return <NumberLineObject data={object.data} />;
     case "linear-equation": return <LinearEquationObject data={object.data} onChange={data => onChange({ ...object, data })} />;

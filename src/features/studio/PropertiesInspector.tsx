@@ -45,11 +45,11 @@ export function PropertiesInspector({
       else switch (object.type) {
         case "polygon": {
           const vertices = read("vertices").trim().split(";").map(pair => { const xy = pair.trim().split(/[,\s]+/); if (xy.length !== 2 || xy.some(x => !x.trim())) throw new Error("Escribe x,y; x,y con dos números por vértice."); return { x: Number(xy[0]), y: Number(xy[1]) }; });
-          next = { ...next, type: "polygon", data: { vertices } }; break;
+          next = { ...next, type: "polygon", data: { ...object.data, vertices } }; break;
         }
         case "factorization": next = { ...next, type: "factorization", data: { number: num("factorNumber") } }; break;
         case "geometry":
-          next = { ...next, type: "geometry", data: { figure: read("figure") as "rectangle" | "triangle", base: num("base"), height: num("geometryHeight") } };
+          next = { ...next, type: "geometry", data: { ...object.data, figure: read("figure") as "rectangle" | "triangle", base: num("base"), height: num("geometryHeight") } };
           break;
         case "collection":
           next = { ...next, type: "collection", data: { values: numbers("values") } };

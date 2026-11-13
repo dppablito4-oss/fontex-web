@@ -407,6 +407,12 @@ function StudioEditor({ owner }: { owner: string }) {
             onChange={changeObject}
             onInlineChange={object => changeObject(object, true)}
             onDelete={remove}
+            onTextGrow={(id, height) => store.relayout(current => {
+              const object = current.objects.find(item => item.id === id);
+              if (!object || object.type !== "text" || height <= object.height) return current;
+              const delta = height - object.height, bottom = object.y + object.height;
+              return { ...current, objects: current.objects.map(item => item.id === id ? fitObject({ ...item, height }) : item.y >= bottom && item.x < object.x + object.width && item.x + item.width > object.x ? fitObject({ ...item, y: item.y + delta }) : item) };
+            })}
             onAdd={add}
             onBrowse={() => { setModuleFilter(""); setModuleGroup("all"); setModulesOpen(true); requestAnimationFrame(() => moduleSearch.current?.focus()); }}
             onDuplicate={duplicate}
