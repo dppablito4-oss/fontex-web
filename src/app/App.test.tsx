@@ -17,9 +17,9 @@ function renderRoute(route = "/inicio") {
 }
 
 describe("Fontex shell", () => {
-  it.each(["/", "/lienzo", "/fracciones", "/demo"])("permite alternar y conservar el tema desde %s", async (route) => {
+  it.each(["/", "/lienzo", "/lienzo-clasico", "/fracciones", "/demo"])("permite alternar y conservar el tema desde %s", async (route) => {
     const view = renderRoute(route);
-    fireEvent.click(await screen.findByRole("button", { name: "Activar tema oscuro" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Activar tema oscuro" }, { timeout: 5000 }));
     expect(document.documentElement).toHaveAttribute("data-theme", "dark");
     expect(localStorage.getItem("fontex-theme")).toBe("dark");
     view.unmount();
@@ -31,7 +31,7 @@ describe("Fontex shell", () => {
     const view = renderRoute("/");
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Entender cambia");
     view.unmount();
-    renderRoute("/lienzo");
+    renderRoute("/lienzo-clasico");
     expect(screen.getByLabelText("Título del material")).toBeInTheDocument();
   });
   it.each([

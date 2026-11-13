@@ -363,7 +363,7 @@ function StudioEditor({ owner }: { owner: string }) {
               <details className="st-more-options">
                 <summary aria-label="Más opciones de archivo" title="Más opciones"><MoreHorizontal size={21} /></summary>
                 <div className="st-file-menu">
-                  <a className="st-general-link" href="#/laboratorio">Lienzo general · prototipo</a><button onClick={exportDocument}><Download size={17} /> Guardar JSON</button>
+                  <a className="st-general-link" href="#/laboratorio">Abrir lienzo general</a><button onClick={exportDocument}><Download size={17} /> Guardar JSON</button>
                   <button onClick={() => file.current?.click()}><Upload size={17} /> Importar</button>
                   <nav className="st-shortcuts" aria-label="Más herramientas">
                     <a href="#/demo"><GraduationCap size={17} /> Aprender con guías</a>

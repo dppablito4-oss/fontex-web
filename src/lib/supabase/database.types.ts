@@ -26,6 +26,12 @@ type Relationship = {
 export type Database = {
   public: {
     Tables: {
+      visual_scenes: {
+        Row: { user_id: string; id: string; scene: Json; revision: number; updated_at: string };
+        Insert: { user_id: string; id: string; scene: Json; revision: number };
+        Update: { scene?: Json; revision?: number };
+        Relationships: [];
+      };
       studio_workspaces: {
         Row: { user_id: string; state: Json; revision: number; updated_at: string };
         Insert: { user_id: string; state: Json; revision: number; updated_at?: string };

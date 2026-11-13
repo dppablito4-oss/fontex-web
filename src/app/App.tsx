@@ -36,6 +36,7 @@ export function App() {
   const demoRoute = useMatch("/demo");
   const landingRoute = useMatch("/");
   const canvasAlias = useMatch("/lienzo");
+  const classicRoute = useMatch("/lienzo-clasico");
   const fractionsRoute = useMatch("/fracciones");
   const tutorSignIn = useMatch("/ingresar-tutor");
   const signInRoute = useMatch("/ingresar");
@@ -49,9 +50,9 @@ export function App() {
     return <PasswordRecoveryPage key={passwordRoute ? "update" : "request"} updating={!!passwordRoute} />;
   }
 
-  if (generalRoute) return <Suspense fallback={<div>Preparando el lienzo general…</div>}><GeneralCanvas /></Suspense>;
+  if (generalRoute || canvasAlias) return <Suspense fallback={<div>Preparando el lienzo general…</div>}><GeneralCanvas /></Suspense>;
   if (landingRoute) return <LandingPage />;
-  if (canvasAlias) return <StudioShell />;
+  if (classicRoute) return <StudioShell />;
   if (fractionsRoute) return <FractionCanvas />;
 
   if (authRoute) {
