@@ -27,12 +27,13 @@ describe("Fontex shell", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Activar tema claro" }));
     expect(document.documentElement).toHaveAttribute("data-theme", "light");
   });
-  it("presenta Fontex en la raíz y mantiene el editor en su ruta directa", () => {
+  it("presenta Fontex en la raíz y redirige el editor anterior al lienzo general", async () => {
     const view = renderRoute("/");
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Entender cambia");
     view.unmount();
     renderRoute("/lienzo-clasico");
-    expect(screen.getByLabelText("Título del material")).toBeInTheDocument();
+    expect(await screen.findByLabelText("Nombre de la escena")).toBeInTheDocument();
+    expect(window.location.hash).toBe("#/lienzo");
   });
   it.each([
     ["/inicio", /tus fuentes/i],

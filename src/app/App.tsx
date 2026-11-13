@@ -3,7 +3,6 @@ import { Navigate, Route, Routes, useMatch } from "react-router-dom";
 
 import { FractionCanvas } from "../features/canvas/FractionCanvas";
 import { LandingPage } from "../features/landing/LandingPage";
-import { StudioShell } from "../features/studio/StudioShell";
 
 import { AppShell } from "./layouts/AppShell";
 import { AdminPage } from "../features/administration/AdminPage";
@@ -52,7 +51,7 @@ export function App() {
 
   if (generalRoute || canvasAlias) return <Suspense fallback={<div>Preparando el lienzo general…</div>}><GeneralCanvas /></Suspense>;
   if (landingRoute) return <LandingPage />;
-  if (classicRoute) return <StudioShell />;
+  if (classicRoute) return <Navigate to="/lienzo" replace />;
   if (fractionsRoute) return <FractionCanvas />;
 
   if (authRoute) {

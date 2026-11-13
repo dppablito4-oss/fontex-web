@@ -1,10 +1,12 @@
 # Documentación de Fontex
 
-Actualizada el **11 de noviembre de 2026**: Fontex Agent integrado en `main`; base anterior `1d627cc` conservada en `backup/main-before-fontex-agent-20261111`. Pages publica el frontend desde `main`; el endpoint del agente sigue pendiente de despliegue separado.
+Actualizada el **13 de noviembre de 2026**: el lienzo general es el editor principal y usa `visual_scenes`. El editor anterior y su material de prueba se retiran sin migración de contenido. Los documentos de Studio y Fontex Agent describen la implementación histórica conservada en el repositorio.
 
 | Documento | Qué resuelve |
 |---|---|
 | [README principal](../README.md) | Instalación, capacidades, rutas y despliegue del frontend |
+| [Lienzo general](general-canvas-prototype.md) | Expresiones, escenas privadas, sincronización, formato y límites actuales |
+| [Corrección del 13 de noviembre](AUDITORIA-2026-11-13.md) | Regresiones de sincronización y matemáticas, dependencias y retiro de datos de prueba |
 | [Arquitectura](architecture/overview.md) | Componentes, flujos y separación entre datos locales y remotos |
 | [Fontex Studio](architecture/studio.md) | Objetos matemáticos, JSON versión 1, guardado y límites del editor |
 | [Fontex Agent](architecture/fontex-agent.md) | Tres fases, acciones, backend, pedagogía, pruebas y límites reales |
@@ -14,6 +16,6 @@ Actualizada el **11 de noviembre de 2026**: Fontex Agent integrado en `main`; ba
 | [Auditoría actual](AUDITORIA.md) | Estado de las diez correcciones, pruebas y requisitos de despliegue |
 | [Reportes](REPORTES.md) | Historial de intervenciones; sus resultados corresponden a cada fecha |
 
-La implementación actual convive con tres experiencias: Studio, el aula de práctica de Matemática y el espacio académico con biblioteca/tutor documental. Sus almacenes y endpoints son distintos. La arquitectura y el README describen el presente; los reportes conservan el contexto histórico.
+La implementación actual convive con tres experiencias: el lienzo general, el aula de práctica de Matemática y el espacio académico con biblioteca/tutor documental. Sus almacenes y endpoints son distintos. Los reportes y documentos de Studio conservan el contexto histórico.
 
 Para mantener esta documentación, comprueba primero `src/app/App.tsx`, `package.json`, las migraciones y los workflows. Registra resultados ejecutados y distingue pruebas omitidas, revisión estática y comprobaciones remotas. Una compilación correcta no demuestra que una migración esté aplicada en un proyecto desplegado.

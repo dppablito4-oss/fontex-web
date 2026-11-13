@@ -1,8 +1,10 @@
 # Supabase de Fontex
 
-**Revisión:** 11 de noviembre de 2026 · CLI del repositorio: `2.120.0`.
+**Revisión:** 13 de noviembre de 2026 · CLI del repositorio: `2.120.0`.
 
-Este backend cubre identidad, aulas/grupos, PDF privados, indexación RAG, tutor documental y cuotas del tutor de práctica. Los materiales de Studio y los PDF del aula de práctica siguen siendo locales al navegador.
+Este backend cubre identidad, aulas/grupos, PDF privados, indexación RAG, tutor documental, cuotas del tutor de práctica y escenas del lienzo general. Las cuentas guardan sus escenas directamente en `visual_scenes`; los invitados y los PDF del aula de práctica permanecen locales.
+
+La migración `retire_studio_test_materials` elimina los materiales de prueba de `studio_workspaces` y las escenas importadas del editor anterior. Revoca el acceso del cliente al almacén retirado e impide insertar escenas `import-*` o elementos `legacy`. No se trasladan materiales anteriores al formato nuevo. Las migraciones previas se conservan como historial; no deben reaplicarse manualmente para restaurar su contenido.
 
 ## Modelo versionado
 
@@ -15,6 +17,7 @@ Este backend cubre identidad, aulas/grupos, PDF privados, indexación RAG, tutor
 | RAG | `rag_limits`, `document_processing_jobs`, `document_chunks`, `rag_search_events` |
 | Tutor documental | `tutor_limits`, `tutor_conversations`, `tutor_messages`, `tutor_message_citations`, `tutor_usage_events` |
 | Tutor de práctica | `practice_tutor_quota` |
+| Lienzo general | `visual_scenes`, privado por usuario y con revisiones incrementales |
 | Administración interna | Esquema `private`, incluidas autorizaciones de creación de workspace |
 
 Las tablas públicas creadas por estas migraciones habilitan RLS. La lectura del tutor se limita al propietario; las funciones internas de recuperación vuelven a aplicar acceso documental. La migración `20261113000212_harden_tutor_exchange_persistence.sql` elimina privilegios heredados y reserva la escritura de mensajes/citas al servidor, con guardado transaccional mediante `internal_store_tutor_exchange`. El navegador conserva la gestión de conversaciones y la lectura de su propio historial.
@@ -30,6 +33,7 @@ Las tablas públicas creadas por estas migraciones habilitan RLS. La lectura del
 | `tutor-chat` | Tutor documental, modos estricto/comparativo, conversaciones, citas y cuotas |
 | `practice-tutor` | Chat/estudio/web del aula de Matemática con cuota por cuenta |
 | `studio-agent` | Propuestas validadas para Studio y práctica exacta; no escribe materiales remotos |
+| `scene-agent` | Genera escenas nativas de expresiones y texto, validadas antes de responder |
 
 Todos los endpoints se diseñan para usuario autenticado. `withSupabase({ auth: 'user' })` valida al llamante. El cliente administrativo solo debe usarse después de validar identidad y alcance; sus consultas no quedan protegidas por RLS del usuario.
 

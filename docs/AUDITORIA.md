@@ -1,5 +1,7 @@
 # Auditoría de código y correcciones
 
+La revisión y corrección más reciente está en [Auditoría del 13 de noviembre de 2026](AUDITORIA-2026-11-13.md). Este documento conserva la revisión histórica del editor anterior y del tutor documental.
+
 **Fecha:** 11 de noviembre de 2026.
 
 **Base:** `main` en `3a26911`, más las correcciones locales descritas aquí. `package.json` mantiene la versión `0.6.0`.

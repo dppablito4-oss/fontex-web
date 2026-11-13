@@ -1,10 +1,10 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select extensions.plan(9);
+select extensions.plan(15);
 insert into auth.users(id,email) values ('cdb70000-0000-4000-8000-000000000001','scene-a@example.invalid'),('cdb70000-0000-4000-8000-000000000002','scene-b@example.invalid');
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"cdb70000-0000-4000-8000-000000000001","role":"authenticated"}',true);
-select extensions.lives_ok($$insert into public.visual_scenes(user_id,id,scene) values ('cdb70000-0000-4000-8000-000000000001','scene-1','{"id":"scene-1"}')$$,'owner creates scene');
+select extensions.lives_ok($$insert into public.visual_scenes(user_id,id,scene) values ('cdb70000-0000-4000-8000-000000000001','scene-1','{"version":1,"id":"scene-1","title":"Nueva escena","updatedAt":"2026-11-13T00:00:00Z","expressions":[{"id":"f","source":"x^2"}],"elements":[{"id":"formula","kind":"formula","expressionId":"f"}]}')$$,'owner creates native scene');
 select extensions.is((select count(*)::integer from public.visual_scenes),1,'owner reads own scene');
 select extensions.lives_ok($$update public.visual_scenes set revision=2 where revision=1$$,'owner advances revision');
 with changed as(update public.visual_scenes set revision=3 where revision=1 returning id) select extensions.is((select count(*)::integer from changed),0,'stale save cannot overwrite');
@@ -12,9 +12,15 @@ select extensions.throws_ok($$update public.visual_scenes set revision=9$$,'2351
 select set_config('request.jwt.claims','{"sub":"cdb70000-0000-4000-8000-000000000002","role":"authenticated"}',true);
 select extensions.is((select count(*)::integer from public.visual_scenes),0,'other user cannot read');
 with removed as(delete from public.visual_scenes returning id) select extensions.is((select count(*)::integer from removed),0,'other user cannot delete');
+select extensions.throws_ok($$insert into public.visual_scenes(user_id,id,scene) values ('cdb70000-0000-4000-8000-000000000001','foreign','{"id":"foreign"}')$$,'42501',null,'other user cannot write into the owner account');
+with changed as(update public.visual_scenes set revision=3 returning id) select extensions.is((select count(*)::integer from changed),0,'other user cannot update');
 select set_config('request.jwt.claims','{"sub":"cdb70000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+select extensions.throws_ok($$insert into public.visual_scenes(user_id,id,scene) values ('cdb70000-0000-4000-8000-000000000001','import-old','{"id":"import-old"}')$$,'23514',null,'retired imported identities cannot return');
+select extensions.throws_ok($$insert into public.visual_scenes(user_id,id,scene) values ('cdb70000-0000-4000-8000-000000000001','old-module','{"id":"old-module","elements":[{"kind":"legacy","object":{}}]}')$$,'23514',null,'legacy modules cannot return under a new identity');
 with removed as(delete from public.visual_scenes returning id) select extensions.is((select count(*)::integer from removed),1,'owner can remove own scene');
 reset role;
 select extensions.ok(not has_table_privilege('anon','public.visual_scenes','select'),'anonymous access forbidden');
+select extensions.ok(not has_column_privilege('authenticated','public.visual_scenes','user_id','update'),'ownership cannot be reassigned');
+select extensions.ok(not has_column_privilege('authenticated','public.visual_scenes','id','update'),'scene identity cannot be reassigned');
 select * from extensions.finish();
 rollback;

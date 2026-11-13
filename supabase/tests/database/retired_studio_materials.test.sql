@@ -1,0 +1,10 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+select extensions.plan(5);
+select extensions.ok(not has_table_privilege('authenticated','public.studio_workspaces','select'),'retired workspaces are not exposed to clients');
+select extensions.ok(not has_table_privilege('authenticated','public.studio_workspaces','insert'),'old clients cannot restore retired materials');
+select extensions.ok(not has_table_privilege('authenticated','public.studio_workspaces','update'),'old clients cannot update retired materials');
+select extensions.ok(not has_table_privilege('anon','public.studio_workspaces','select'),'retired materials remain private');
+select extensions.is((select count(*)::integer from public.studio_workspaces),0,'retired test workspaces were deleted');
+select * from extensions.finish();
+rollback;

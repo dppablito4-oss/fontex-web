@@ -11,9 +11,6 @@
 .gc-library { display:flex; flex-wrap:wrap; align-items:end; gap:12px; padding:16px 24px; border-bottom:1px solid var(--gc-line); }
 .gc-library label { display:grid; gap:6px; font-size:13px; flex:1 1 220px; }
 .gc-library :is(input,select) { width:100%; min-width:0; }
-.gc-legacy.st-app { height:auto; min-height:0; display:block; background:transparent; color:inherit; }
-.gc-legacy .st-guided { min-height:0; }
-@media(max-width:700px) { .gc-library { padding:16px; } .gc-legacy .st-guided { grid-template-columns:minmax(0,1fr); } }
 @media print { .gc-library { display:none; } }
 
 .gc-presenting { position:fixed; inset:0; z-index:100; height:100dvh; overflow:auto; }
@@ -21,11 +18,10 @@
 .gc-presenting .gc-controls { display:none; }
 .gc-presenting .gc-workspace { display:block; }
 .gc-presentation-bar { position:sticky; top:0; z-index:1; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 20px; background:var(--ui-background); border-bottom:1px solid var(--gc-line); }
-.gc-lesson.st-app { height:auto; min-height:0; }
 @media print { .gc-presenting { position:static; height:auto; overflow:visible; } .gc-presentation-bar { display:none; } }
 
 .gc-library { max-width:1440px; margin:auto; }
 .gc-without-expressions { display:block; }
 .gc-without-expressions :is(.gc-controls,.gc-expressions) { display:none; }
-/* Inline measurements keep their compact editable text styling inside imported scenes. */
-.gc-app .gc-legacy input.st-inline-input { min-width:3ch; padding:.08em .18em; border:0; border-bottom:1px dashed var(--st-muted); border-radius:0; background:transparent; color:inherit; font:inherit; line-height:1.35; }
+
+@media(max-width:700px) { .gc-library { padding:16px; } }

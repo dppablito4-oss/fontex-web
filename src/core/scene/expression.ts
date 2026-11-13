@@ -159,7 +159,19 @@ export function simplify(e: Expr): Expr {
   if (e.op === "^" && is(r, 0)) return num(1);
   return bin(e.op, l, r);
 }
-export function derivative(e: Expr): Expr {
+function dependsOnX(e: Expr): boolean {
+  if (e.kind === "variable") return e.name === "x";
+  if (e.kind === "number") return false;
+  if (e.kind === "call") return dependsOnX(e.argument);
+  return dependsOnX(e.left) || dependsOnX(e.right);
+}
+export function derivative(e: Expr, variables?: Variables): Expr {
+  function parameters(n: Expr): Expr {
+    if (n.kind === "variable" && n.name !== "x" && variables) return num(variables[n.name as keyof Variables]);
+    if (n.kind === "binary") return bin(n.op, parameters(n.left), parameters(n.right));
+    if (n.kind === "call") return call(n.name, parameters(n.argument));
+    return n;
+  }
   function d(n: Expr): Expr {
     if (n.kind === "number") return num(0);
     if (n.kind === "variable") return num(n.name === "x" ? 1 : 0);
@@ -188,8 +200,8 @@ export function derivative(e: Expr): Expr {
         bin("^", v, num(2)),
       );
     }
-    if (v.kind === "number") {
-      return bin("*", bin("*", v, bin("^", u, num(v.value - 1))), du);
+    if (!dependsOnX(v)) {
+      return bin("*", bin("*", v, bin("^", u, bin("-", v, num(1)))), du);
     }
     return bin(
       "*",
@@ -197,7 +209,7 @@ export function derivative(e: Expr): Expr {
       bin("+", bin("*", dv, call("ln", u)), bin("*", v, bin("/", du, u))),
     );
   }
-  return simplify(d(e));
+  return simplify(d(simplify(parameters(e))));
 }
 export function expressionText(e: Expr): string {
   if (e.kind === "number") {
@@ -211,7 +223,7 @@ export function expressionText(e: Expr): string {
 }
 export function polynomial(e: Expr, vars: Variables): number[] | null {
   const trim = (p: number[]) => {
-    while (p.length > 1 && Math.abs(p.at(-1)!) < 1e-12) p.pop();
+    while (p.length > 1 && p.at(-1) === 0) p.pop();
     return p;
   };
   function p(n: Expr): number[] | null {
@@ -259,8 +271,11 @@ export function polynomial(e: Expr, vars: Variables): number[] | null {
     : null;
 }
 export function realRoots(coefficients: number[]): number[] {
-  const p = [...coefficients];
-  while (p.length > 1 && Math.abs(p.at(-1)!) < 1e-12) p.pop();
+  if (!coefficients.every(Number.isFinite)) throw new Error("Los coeficientes deben ser finitos.");
+  const scale = Math.max(...coefficients.map(Math.abs));
+  if (!scale) return [];
+  const p = coefficients.map(c => c / scale);
+  while (p.length > 1 && p.at(-1) === 0) p.pop();
   if (p.length <= 1) return [];
   if (p.length === 2) return [-p[0]! / p[1]!];
   const value = (x: number) => p.reduceRight((s, c) => s * x + c, 0);
@@ -275,19 +290,22 @@ export function realRoots(coefficients: number[]): number[] {
     (x) => x > -bound && x < bound,
   );
   const points = [-bound, ...critical, bound], roots: number[] = [];
-  const tolerance = 1e-10 * Math.max(1, ...p.map(Math.abs));
-  for (const x of critical) if (Math.abs(value(x)) < tolerance) roots.push(x);
+  // Bound floating point evaluation error at x, independently of coefficient scale.
+  const isRoot = (x: number) => Math.abs(value(x)) <= 64 * Number.EPSILON *
+    p.reduceRight((s, c) => s * Math.abs(x) + Math.abs(c), 0);
+  for (const x of critical) if (isRoot(x)) roots.push(x);
   for (let i = 1; i < points.length; i++) {
     let a = points[i - 1]!, b = points[i]!;
-    if (value(a) * value(b) >= 0) continue;
+    if (isRoot(a) || isRoot(b) || Math.sign(value(a)) === Math.sign(value(b))) continue;
     for (let k = 0; k < 100; k++) {
       const m = (a + b) / 2;
-      if (value(a) * value(m) <= 0) b = m;
+      if (value(m) === 0) { a = b = m; break; }
+      if (Math.sign(value(a)) !== Math.sign(value(m))) b = m;
       else a = m;
     }
     roots.push((a + b) / 2);
   }
   return roots.sort((a, b) => a - b).filter((x, i, xs) =>
-    i === 0 || Math.abs(x - xs[i - 1]!) > 1e-6
+    i === 0 || Math.abs(x - xs[i - 1]!) > 64 * Number.EPSILON * Math.max(1, Math.abs(x), Math.abs(xs[i - 1]!))
   );
 }

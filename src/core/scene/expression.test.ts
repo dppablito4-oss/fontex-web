@@ -78,3 +78,30 @@ it("links generic elements to valid expressions and rejects dangling references"
     })
   ).toThrow();
 });
+
+it.each([1e-100, 1e-13, 1e-11, 1, 1e100])("keeps real roots invariant under nonzero scale %s", scale => {
+  expect(realRoots(polynomial(parseExpression(`${scale}*(x^2+1)`), vars)!)).toEqual([]);
+  const roots = realRoots(polynomial(parseExpression(`${scale}*(x^2-1)`), vars)!);
+  expect(roots).toHaveLength(2);
+  expect(roots[0]).toBeCloseTo(-1, 10);
+  expect(roots[1]).toBeCloseTo(1, 10);
+  expect(realRoots(polynomial(parseExpression(`${scale}*(x-1)^4`), vars)!)).toEqual([1]);
+});
+
+it("retains small leading coefficients and distinct nearby roots", () => {
+  expect(realRoots(polynomial(parseExpression("1e-13*x-1"), vars)!)[0]).toBeCloseTo(1e13);
+  expect(realRoots([1e-20, 0, 1])).toEqual([]);
+  const roots = realRoots([-1e-16, 0, 1]);
+  expect(roots).toHaveLength(2);
+  expect(roots[0]).toBeCloseTo(-1e-8, 14);
+  expect(roots[1]).toBeCloseTo(1e-8, 14);
+});
+
+it.each(["x^a", "x^(1+1)"])("uses the constant exponent rule at zero for %s", source => {
+  expect(evaluate(derivative(parseExpression(source)), 0, { a: 2, b: 0, c: 0 })).toBe(0);
+});
+
+it.each([[0, 0], [1, 1], [2, 0], [3, 0]])("specializes exponent a=%s before differentiating at zero", (a, expected) => {
+  const variables = { a, b: 0, c: 0 };
+  expect(evaluate(derivative(parseExpression("x^a"), variables), 0, variables)).toBe(expected);
+});
