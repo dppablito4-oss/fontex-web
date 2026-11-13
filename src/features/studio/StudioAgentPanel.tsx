@@ -1,3 +1,4 @@
+import { agentTask, type ConversationTurn } from "../../core/agent/conversation";
 import { lessonSteps } from "./lesson-steps";
 import { isExerciseIntent } from "./agent-intents";
 import { ArrowUp, Check, Sparkles } from "lucide-react";
@@ -31,6 +32,8 @@ export function StudioAgentPanel(
     onLevelChange?: (level: AgentLevel) => void;
   },
 ) {
+  const [messages, setMessages] = useState<ConversationTurn[]>([]);
+  const transcriptEnd = useRef<HTMLDivElement>(null);
   const [autonomous, setAutonomous] = useState(true);
   const currentDocument = useRef(document);
   useEffect(() => { currentDocument.current = document; }, [document]);
@@ -58,6 +61,7 @@ export function StudioAgentPanel(
   useEffect(() => () => {
     generation.current++;
   }, []);
+  useEffect(() => { transcriptEnd.current?.scrollIntoView?.({ block: "nearest" }); }, [messages, reply, busy, error]);
   function resetResponse() {
     generation.current++;
     setProposal(null);
@@ -73,6 +77,12 @@ export function StudioAgentPanel(
       if (!selectedObject || selectedObject.type === "text") { setError("Selecciona un módulo matemático para practicar."); return; }
       setMode("practice"); onModeChange?.("practice"); resetResponse(); return;
     }
+    const prompt = command ?? (question.trim() || "Ayúdame con el objeto seleccionado.");
+    const history: ConversationTurn[] = [...messages, ...(reply && mode !== "practice" ? [{ role: "assistant" as const, content: reply.message }] : [])];
+    if (mode !== "practice") {
+      setMessages([...history, { role: "user", content: prompt }].slice(-40) as ConversationTurn[]);
+      setQuestion("");
+    }
     pending.current = true;
     const version = ++generation.current;
     const snapshot = structuredClone(document);
@@ -87,7 +97,8 @@ export function StudioAgentPanel(
         selectedId,
         mode,
         level,
-        question: command ?? (question.trim() || "Ayúdame con el objeto seleccionado."),
+        question: prompt,
+        history: history.slice(-6).map(turn => ({ ...turn, content: turn.content.slice(0, 1200) })),
         attempt,
         hintLevel: nextHint,
       });
@@ -118,7 +129,7 @@ export function StudioAgentPanel(
   }
   return (
     <section className="st-agent" aria-label="Fontex Agent">
-      <header className="st-agent-heading"><span className="st-agent-avatar"><Sparkles size={22} aria-hidden="true" /></span><h2>Fontex Agent</h2></header>
+      <header className="st-agent-heading"><span className="st-agent-avatar"><Sparkles size={22} aria-hidden="true" /></span><div><h2>Fontex Agent</h2><small>Conversemos y construyamos.</small></div><button type="button" className="st-chat-clear" aria-label="Nueva conversación" disabled={busy} onClick={() => { setMessages([]); resetResponse(); }}>Nuevo</button></header>
       {mode !== "practice" && selectedObject && <div className="st-agent-shortcuts" aria-label="Acciones sobre el módulo seleccionado">
         <button type="button" disabled={busy || !authenticated || !selectedObject} onClick={() => void consult(undefined, 0, "Haz más sencillo el módulo seleccionado para el nivel actual; conserva su tipo y explica la adaptación.")}>Más sencillo</button>
         <button type="button" disabled={busy || !authenticated || !selectedObject} onClick={() => void consult(undefined, 0, "Crea otro ejemplo del mismo tipo que el módulo seleccionado, con datos diferentes y sin modificar el original.")}>Otro ejemplo</button>
@@ -127,88 +138,11 @@ export function StudioAgentPanel(
         <button type="button" disabled={busy || !stepCount} onClick={() => void consult(undefined, 0, `Explica solo el paso ${Math.min(explainStep,stepCount)}`)}>Explicar paso</button>
       </div>}
 
-      <form onSubmit={(event) => void consult(event)}>
-        <div className="st-agent-settings">
-        {!teachingMode && <label>
-          Modo<select
-            value={mode}
-            disabled={busy}
-            onChange={(event) => {
-              setMode(event.target.value as AgentMode);
-              onModeChange?.(event.target.value as AgentMode);
-              resetResponse();
-            }}
-          >
-            {Object.entries(agentModes).map(([value, label]) => (
-              <option key={value} value={value}>{label}</option>
-            ))}
-          </select>
-        </label>}
-        {!teachingLevel && <label>
-          Nivel<select
-            value={level}
-            disabled={busy}
-            onChange={(event) => {
-              setLevel(event.target.value as AgentLevel);
-              onLevelChange?.(event.target.value as AgentLevel);
-              resetResponse();
-            }}
-          >
-            {Object.entries(agentLevels).map(([value, label]) => (
-              <option key={value} value={value}>{label}</option>
-            ))}
-          </select>
-        </label>}
-        </div>
-        {mode !== "practice" && (
-          <label className="st-agent-prompt">
-            Consulta<textarea
-              placeholder="¿Qué quieres crear o explicar?"
-              rows={4}
-              maxLength={1200}
-              value={question}
-              disabled={busy}
-              onChange={(event) => {
-                setQuestion(event.target.value);
-                resetResponse();
-              }}
-            />
-          </label>
-        )}
-        {mode === "practice" && onSelect && <label>Ejercicio del lienzo<select value={selectedId ?? ""} onChange={e => { onSelect(e.target.value || null); resetResponse(); }}><option value="">Selecciona un módulo</option>{document.objects.filter(o => o.type !== "text").map(o => <option key={o.id} value={o.id}>{o.label}</option>)}</select></label>}
-        {mode === "practice" && (
-          <label>
-            Tu respuesta<input
-              placeholder="Escribe tu respuesta"
-              value={attempt}
-              maxLength={1200}
-              disabled={busy}
-              onChange={(event) => {
-                setAttempt(event.target.value);
-                resetResponse();
-              }}
-            />
-          </label>
-        )}
-        {mode !== "practice" && !authenticated && (
-          <p>
-            <a href="#/ingresar">Inicia sesión</a> para consultar la IA.
-          </p>
-        )}
-        <label className="st-autonomous"><input type="checkbox" role="switch" checked={autonomous} disabled={busy} onChange={e => setAutonomous(e.target.checked)} /><span>Aplicar cambios automáticamente</span></label>
-        <button
-          className="st-primary st-agent-submit"
-          type="submit"
-          disabled={busy || (mode !== "practice" && !authenticated)}
-        >
-          {busy
-            ? "Preparando…"
-            : mode === "practice"
-            ? "Comprobar y orientar"
-            : "Consultar"}<ArrowUp size={18} aria-hidden="true" />
-        </button>
-      </form>
-      {reply && (applied || replyContext === contextKey) && (
+
+      <div className="st-chat-transcript" role="log" aria-label="Conversación" aria-live="polite">
+        {!messages.length && !reply && <div className="st-chat-intro"><strong>¿Qué exploramos hoy?</strong><p>Pregunta, compara ideas o escribe «crea un módulo» para llevarlo al lienzo.</p><small>Luna conversa · Sol construye</small></div>}
+        {messages.map((turn, i) => <article className={`st-chat-turn st-chat-${turn.role}`} key={i}><small>{turn.role === "user" ? "Tú" : "Fontex"}</small><p>{turn.content}</p></article>)}
+      {reply && (mode !== "practice" || applied || replyContext === contextKey) && (
         <section aria-label="Orientación del agente" aria-live="polite">
           {applied && <p role="status" className="st-agent-applied"><Check size={16} aria-hidden="true" />Cambios aplicados</p>}
           <p className="st-agent-message">{reply.message}</p>
@@ -267,6 +201,90 @@ export function StudioAgentPanel(
           </button>
         </section>
       )}
+        {busy && <p className="st-chat-busy" role="status">{agentTask(messages.at(-1)?.content ?? "") === "build" ? "Sol está preparando el lienzo…" : "Luna está respondiendo…"}</p>}
+        <div ref={transcriptEnd} />
+      </div>
+      <form onSubmit={(event) => void consult(event)}>
+        <div className="st-agent-settings">
+        {!teachingMode && <label>
+          Modo<select
+            value={mode}
+            disabled={busy}
+            onChange={(event) => {
+              setMode(event.target.value as AgentMode);
+              onModeChange?.(event.target.value as AgentMode);
+              resetResponse();
+            }}
+          >
+            {Object.entries(agentModes).map(([value, label]) => (
+              <option key={value} value={value}>{label}</option>
+            ))}
+          </select>
+        </label>}
+        {!teachingLevel && <label>
+          Nivel<select
+            value={level}
+            disabled={busy}
+            onChange={(event) => {
+              setLevel(event.target.value as AgentLevel);
+              onLevelChange?.(event.target.value as AgentLevel);
+              resetResponse();
+            }}
+          >
+            {Object.entries(agentLevels).map(([value, label]) => (
+              <option key={value} value={value}>{label}</option>
+            ))}
+          </select>
+        </label>}
+        </div>
+        {mode !== "practice" && (
+          <label className="st-agent-prompt">
+            Consulta<textarea
+              placeholder="Pregunta algo o pide crear módulos…"
+              rows={3}
+              maxLength={1200}
+              value={question}
+              disabled={busy}
+              onKeyDown={event => { if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); if (authenticated && question.trim()) void consult(); } }}
+              onChange={(event) => {
+                setQuestion(event.target.value);
+              }}
+            />
+          </label>
+        )}
+        {mode === "practice" && onSelect && <label>Ejercicio del lienzo<select value={selectedId ?? ""} onChange={e => { onSelect(e.target.value || null); resetResponse(); }}><option value="">Selecciona un módulo</option>{document.objects.filter(o => o.type !== "text").map(o => <option key={o.id} value={o.id}>{o.label}</option>)}</select></label>}
+        {mode === "practice" && (
+          <label>
+            Tu respuesta<input
+              placeholder="Escribe tu respuesta"
+              value={attempt}
+              maxLength={1200}
+              disabled={busy}
+              onChange={(event) => {
+                setAttempt(event.target.value);
+                resetResponse();
+              }}
+            />
+          </label>
+        )}
+        {mode !== "practice" && !authenticated && (
+          <p>
+            <a href="#/ingresar">Inicia sesión</a> para consultar la IA.
+          </p>
+        )}
+        <label className="st-autonomous"><input type="checkbox" role="switch" checked={autonomous} disabled={busy} onChange={e => setAutonomous(e.target.checked)} /><span>Aplicar cambios automáticamente</span></label>
+        <button
+          className="st-primary st-agent-submit"
+          type="submit"
+          disabled={busy || (mode !== "practice" && !authenticated)}
+        >
+          {busy
+            ? "Preparando…"
+            : mode === "practice"
+            ? "Comprobar y orientar"
+            : "Consultar"}<ArrowUp size={18} aria-hidden="true" />
+        </button>
+      </form>      <small className="st-chat-routing">{mode === "practice" ? "Práctica local · sin consumo de IA" : agentTask(question) === "build" ? "Crear o editar · GPT-6.1 Sol" : "Conversar · GPT-6 Luna"}</small>
     </section>
   );
 }

@@ -146,3 +146,26 @@ it("convierte el módulo seleccionado a práctica sin IA ni cambios de datos", (
   fireEvent.click(screen.getByRole("button",{name:"Practicar esto"}));
   expect(mode).toHaveBeenCalledWith("practice");expect(apply).not.toHaveBeenCalled();
 });
+
+it("conserva conversación y contexto al pasar de explicar a crear, y permite empezar otra", async () => {
+  const doc = createDocument();
+  const call = vi.spyOn(service, "requestAgent")
+    .mockResolvedValueOnce({ message: "Un hexágono tiene seis lados.", batch: { documentId: doc.id, actions: [] }, verification: [] })
+    .mockResolvedValueOnce({ message: "Aquí está el hexágono.", batch: { documentId: doc.id, actions: [{ kind: "create", object: createObject("regular-polygon") }] }, verification: [] });
+  const apply = vi.fn(() => true);
+  render(<StudioAgentPanel document={doc} selectedId={null} authenticated onApply={apply} />);
+  fireEvent.change(screen.getByLabelText("Consulta"), { target: { value: "Qué es un hexágono" } });
+  fireEvent.click(screen.getByRole("button", { name: "Consultar" }));
+  await screen.findByText("Un hexágono tiene seis lados.");
+  expect(apply).not.toHaveBeenCalled();
+  fireEvent.change(screen.getByLabelText("Consulta"), { target: { value: "Sí, créalo" } });
+  expect(screen.getByText("Un hexágono tiene seis lados.")).toBeVisible();
+  fireEvent.click(screen.getByRole("button", { name: "Consultar" }));
+  await screen.findByText("Aquí está el hexágono.");
+  expect(call).toHaveBeenLastCalledWith(expect.objectContaining({ history: [{ role: "user", content: "Qué es un hexágono" }, { role: "assistant", content: "Un hexágono tiene seis lados." }] }));
+  expect(screen.getByText("Qué es un hexágono")).toBeVisible();
+  expect(apply).toHaveBeenCalledOnce();
+  fireEvent.click(screen.getByRole("button", { name: "Nueva conversación" }));
+  expect(screen.queryByText("Aquí está el hexágono.")).not.toBeInTheDocument();
+  expect(screen.queryByText("Qué es un hexágono")).not.toBeInTheDocument();
+});

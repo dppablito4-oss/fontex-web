@@ -67,7 +67,7 @@ function StudioEditor({ owner }: { owner: string }) {
   const [moduleFilter, setModuleFilter] = useState("");
   const [modulesOpen, setModulesOpen] = useState(false);
   const [moduleGroup, setModuleGroup] = useState<ModuleGroup>("all");
-  const [assistantOpen, setAssistantOpen] = useState(false);
+  const [assistantOpen, setAssistantOpen] = useState(() => window.innerWidth > 1100);
   const assistantToggle = useRef<HTMLButtonElement>(null);
   const assistantPanel = useRef<HTMLElement>(null);
   const matchingModules = (Object.keys(objectRegistry) as ObjectType[]).filter(type => (moduleGroup === "all" || moduleCatalog[type].group === moduleGroup) && normalizeModule(`${objectRegistry[type].name} ${moduleCatalog[type].keywords}`).includes(normalizeModule(moduleFilter)));
@@ -448,9 +448,8 @@ function StudioEditor({ owner }: { owner: string }) {
           </div>
         </main>
         <aside ref={assistantPanel} id="st-assistant-panel" hidden={!assistantOpen} tabIndex={-1} className="st-inspector" aria-label="Asistente del material" onKeyDown={event => { if (event.key === "Escape") { setAssistantOpen(false); assistantToggle.current?.focus(); } }}>
-          <div className="st-assistant-heading"><span>Ayuda para tu material</span><button aria-label="Cerrar asistente" onClick={() => { setAssistantOpen(false); assistantToggle.current?.focus(); }}><X size={18} /></button></div>
-          <p className="st-inline-help">Edita los valores subrayados directamente en el lienzo. El dibujo se actualiza al escribir. Enter confirma y Escape cancela.</p>
-          <StudioAgentPanel key={`${doc.id}:${mode}`} document={doc} selectedId={selectedId} onSelect={setSelectedId} authenticated={!!user} teachingLevel={level} onLevelChange={setLevel} teachingMode={mode} onModeChange={setMode} onApply={(batch, expected) => {
+          <div className="st-assistant-heading"><span>Tu copiloto de matemáticas</span><button aria-label="Cerrar asistente" onClick={() => { setAssistantOpen(false); assistantToggle.current?.focus(); }}><X size={18} /></button></div>
+          <StudioAgentPanel key={doc.id} document={doc} selectedId={selectedId} onSelect={setSelectedId} authenticated={!!user} teachingLevel={level} onLevelChange={setLevel} teachingMode={mode} onModeChange={setMode} onApply={(batch, expected) => {
             const formatted = readableBatch(batch, expected);
             const applied = store.execute(formatted, expected);
             const first = formatted.actions.find(action => action.kind === "create");

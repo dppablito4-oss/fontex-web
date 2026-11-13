@@ -1,0 +1,4 @@
+import { expect, it } from "vitest";
+import { agentTask } from "./conversation";
+it.each(["Crea un lienzo de áreas y perímetros", "¿Puedes crear un hexágono?", "Sí, créalo en el lienzo", "Haz más sencillo el módulo seleccionado", "Elimina ese módulo", "Quiero agregar dos círculos", "Puedes hacer un módulo de fracciones", "Crea otro ejemplo sin modificar el original", "Crea un hexágono sin cambiar los demás"]) ("enruta órdenes a Sol: %s", question => { expect(agentTask(question)).toBe("build"); });
+it.each(["¿Qué es un hexágono?", "Cómo puedo crear un módulo", "No crees nada todavía", "Explícame áreas sin modificar el lienzo", "Si digo crea un módulo, qué pasaría", "¿Puedes explicar las fracciones?", "¿Cómo puedo crear un módulo?", "Explícame cómo crear un módulo", "¿Me puedes explicar cómo hacer un hexágono?", "Solo quiero saber cómo crear un módulo"]) ("conversa con Luna: %s", question => { expect(agentTask(question)).toBe("chat"); });

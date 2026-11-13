@@ -1,3 +1,4 @@
+import type { ConversationTurn } from "./conversation.ts";
 import {
   type ActionBatch,
   exactKeys,
@@ -41,6 +42,7 @@ export type AgentRequest = {
   mode: AgentMode;
   level: AgentLevel;
   hintLevel: number;
+  history?: ConversationTurn[];
 };
 export type AgentReply = {
   message: string;
@@ -58,6 +60,7 @@ export function parseAgentRequest(value: unknown): AgentRequest {
       "mode",
       "level",
       "hintLevel",
+      ...(Object.hasOwn(value, "history") ? ["history"] : []),
     ]) ||
     typeof value.mode !== "string" || !Object.hasOwn(agentModes, value.mode) ||
     typeof value.level !== "string" ||
@@ -69,6 +72,10 @@ export function parseAgentRequest(value: unknown): AgentRequest {
     (value.hintLevel as number) > 2 ||
     (value.selectedId !== null && typeof value.selectedId !== "string")
   ) throw new Error("Consulta del agente inválida.");
+  if (value.history !== undefined && (!Array.isArray(value.history) || value.history.length > 6 ||
+    !value.history.every(turn => record(turn) && exactKeys(turn, ["role", "content"]) &&
+      (turn.role === "user" || turn.role === "assistant") && typeof turn.content === "string" &&
+      turn.content.length > 0 && turn.content.length <= 1200))) throw new Error("Historial del agente inválido.");
   const document = parseDocument(value.document);
   if (
     value.selectedId !== null &&
