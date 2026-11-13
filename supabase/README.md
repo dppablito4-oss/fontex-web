@@ -17,7 +17,7 @@ Este backend cubre identidad, aulas/grupos, PDF privados, indexación RAG, tutor
 | Tutor de práctica | `practice_tutor_quota` |
 | Administración interna | Esquema `private`, incluidas autorizaciones de creación de workspace |
 
-Las tablas públicas creadas por estas migraciones habilitan RLS. La lectura del tutor se limita al propietario; las funciones internas de recuperación vuelven a aplicar acceso documental. La migración `20261111223857_harden_tutor_exchange_persistence.sql` elimina privilegios heredados y reserva la escritura de mensajes/citas al servidor, con guardado transaccional mediante `internal_store_tutor_exchange`. El navegador conserva la gestión de conversaciones y la lectura de su propio historial.
+Las tablas públicas creadas por estas migraciones habilitan RLS. La lectura del tutor se limita al propietario; las funciones internas de recuperación vuelven a aplicar acceso documental. La migración `20261113000212_harden_tutor_exchange_persistence.sql` elimina privilegios heredados y reserva la escritura de mensajes/citas al servidor, con guardado transaccional mediante `internal_store_tutor_exchange`. El navegador conserva la gestión de conversaciones y la lectura de su propio historial.
 
 ## Edge Functions
 

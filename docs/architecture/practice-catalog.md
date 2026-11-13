@@ -37,7 +37,7 @@ No se interpreta HTML del mensaje ni se habilitan comandos confiables de KaTeX. 
 
 El catálogo también se carga en `practice-tutor`. Publica esa función con el JSON actualizado **antes** de publicar el frontend, para que reconozca los nuevos temas. Las cuatro guías previas siguen siendo compatibles. No hace falta cambiar modelo ni aumentar cuotas.
 
-Para actualizar `tutor-chat`, aplica primero `20261111223857_harden_tutor_exchange_persistence.sql`, verifica sus permisos y despliega la función junto con `handler.ts`, `protocol.ts`, `deno.json` y sus dependencias relativas. Esta actualización guarda pregunta, respuesta y citas en una transacción. Conserva `verify_jwt = true`, los secretos existentes y las cuotas configuradas. No modifica SMTP.
+Para actualizar `tutor-chat`, aplica primero `20261113000212_harden_tutor_exchange_persistence.sql`, verifica sus permisos y despliega la función junto con `handler.ts`, `protocol.ts`, `deno.json` y sus dependencias relativas. Esta actualización guarda pregunta, respuesta y citas en una transacción. Conserva `verify_jwt = true`, los secretos existentes y las cuotas configuradas. No modifica SMTP.
 
 ## Verificación
 
@@ -48,3 +48,11 @@ Para actualizar `tutor-chat`, aplica primero `20261111223857_harden_tutor_exchan
 - La migración y las cinco suites SQL se ejecutaron en PostgreSQL 17 local con pgvector y pgTAP, usando esquemas de Auth y Storage de prueba. Esto no sustituye una prueba contra los servicios hospedados completos.
 
 El despliegue remoto y su prueba posterior deben registrarse por separado: las pruebas locales no acreditan que producción se haya actualizado.
+
+## Despliegue verificado el 12 de noviembre de 2026
+
+En el proyecto `fintex.back` (`goegjuglstapjwcckawp`), `practice-tutor` está activo en la versión 2 y `tutor-chat` en la versión 7. Ambas funciones conservan `verify_jwt = true`. La migración de persistencia se registró con la versión `20261113000212` (fecha UTC del servidor); el archivo local usa esa misma versión para evitar diferencias en el historial. El contenido SQL es el mismo que pasó las pruebas locales.
+
+Se verificó que el cliente puede leer su historial pero no insertar mensajes ni ejecutar la RPC interna; el servidor sí puede guardar el intercambio. Los mensajes anteriores se conservaron. Las pruebas de práctica publicadas incluyeron inicial y la derivada de x² en 3, cuya respuesta fue 6.
+
+El tutor documental respondió correctamente que 6/8 = 3/4 y citó la página 2 del PDF de prueba. La conversación pasó de dos a cuatro mensajes; al recargar siguieron los cuatro. También se comprobó en PostgreSQL el par pregunta/respuesta, la cita guardada y la ausencia de reservas activas pendientes.

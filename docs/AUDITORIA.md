@@ -31,7 +31,7 @@ El endpoint se divide en [index.ts](../supabase/functions/tutor-chat/index.ts), 
 
 Una reserva obtenida pasa siempre por su finalización después de procesar éxito o fallo. La confirmación se reintenta una vez; si ambos intentos fallan, la función devuelve `QUOTA_COMPLETION_FAILED` en lugar de comunicar éxito. Una caída persistente de la base puede impedir confirmar la liberación; la ventana de concurrencia sigue siendo la definida por el esquema.
 
-La migración [20261111223857_harden_tutor_exchange_persistence.sql](../supabase/migrations/20261111223857_harden_tutor_exchange_persistence.sql):
+La migración [20261113000212_harden_tutor_exchange_persistence.sql](../supabase/migrations/20261113000212_harden_tutor_exchange_persistence.sql):
 
 - Revoca privilegios sobrantes y elimina las políticas de escritura de mensajes/citas desde el navegador.
 - Mantiene creación, actualización y eliminación de conversaciones propias y lectura del historial bajo RLS.

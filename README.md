@@ -119,7 +119,7 @@ Variables del repositorio utilizadas al compilar:
 
 El workflow actual usa valores públicos del proyecto piloto como respaldo si faltan las variables de Supabase. No debe asumirse que omitirlas desconecta el backend publicado. Pages despliega el frontend; las migraciones y Edge Functions tienen su propio proceso.
 
-Para publicar las correcciones del tutor, aplica primero la migración `20261111223857_harden_tutor_exchange_persistence.sql` y después despliega `tutor-chat`. La [guía de Supabase](supabase/README.md) describe la revisión previa. El guardado de preguntas, respuestas y citas ahora depende de una RPC transaccional del servidor.
+Para publicar las correcciones del tutor, aplica primero la migración `20261113000212_harden_tutor_exchange_persistence.sql` y después despliega `tutor-chat`. La [guía de Supabase](supabase/README.md) describe la revisión previa. El guardado de preguntas, respuestas y citas ahora depende de una RPC transaccional del servidor.
 
 Para comprobar una compilación con la base del repositorio desde PowerShell:
 
