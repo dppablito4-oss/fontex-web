@@ -1,7 +1,7 @@
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { createDocument, createObject } from "../../core/object-registry/registry";
-import { lastMaterial, saveMaterial } from "./document-store";
+import { lastMaterial, saveMaterial } from "./native-document-store";
 import { useStudioDocument } from "./useStudioDocument";
 
 describe("Cambio de material con almacenamiento limitado", () => {

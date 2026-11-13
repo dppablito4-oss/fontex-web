@@ -1,5 +1,6 @@
 import type { ConversationTurn } from "../agent/conversation.ts";
 import { parseExpression, type Variables } from "./expression.ts";
+import { CANVAS_WORKSPACE_ID } from "./formats.ts";
 export const MAX_SCENE_TITLE = 160;
 export const MAX_SCENE_FILE_BYTES = 1024 * 1024;
 export type SceneElement = {
@@ -28,7 +29,7 @@ export function parseScene(value: unknown): Scene {
   ) throw new Error("Revisa el título y los elementos de la escena.");
   const id = v.id === undefined ? crypto.randomUUID() : v.id;
   const updatedAt = v.updatedAt === undefined ? new Date().toISOString() : v.updatedAt;
-  if (typeof id !== "string" || !id || id.startsWith("import-") || id.length > 140 || typeof updatedAt !== "string" || !Number.isFinite(Date.parse(updatedAt))) throw new Error("Identidad de escena inválida.");
+  if (typeof id !== "string" || !id || id === CANVAS_WORKSPACE_ID || id.startsWith("import-") || id.length > 140 || typeof updatedAt !== "string" || !Number.isFinite(Date.parse(updatedAt))) throw new Error("Identidad de escena inválida.");
   const chat = v.conversation ?? [];
   if (!Array.isArray(chat) || chat.length > 80 || !chat.every((t: unknown) => t && typeof t === "object" && "role" in t && (t.role === "user" || t.role === "assistant") && "content" in t && typeof t.content === "string" && t.content.length <= 4000)) throw new Error("Conversación inválida.");
   const conversation: ConversationTurn[] = (chat as ConversationTurn[]).map(t => ({ role: t.role, content: t.content }));

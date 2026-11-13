@@ -6,7 +6,7 @@ import { InlineEditingContext } from "./inline-editing-context";
 import { ObjectVisual } from "./MathObjectRenderer";
 import { CanvasViewport } from "./CanvasViewport";
 import { useStudioDocument } from "./useStudioDocument";
-import { lastMaterial, saveMaterial } from "./document-store";
+import { lastMaterial, saveMaterial } from "./native-document-store";
 import { fieldSpec, editField, inlineFields } from "./inline-fields";
 import { TeachingMode } from "./teaching-mode";
 import { printableMaterial } from "./export-pdf";

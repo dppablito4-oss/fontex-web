@@ -2,7 +2,7 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { StudioShell } from "./StudioShell";
 import { ThemeProvider } from "../theme/ThemeProvider";
-import { lastMaterial, saveMaterial } from "./document-store";
+import { canvasCacheKey, lastMaterial, saveMaterial } from "./native-document-store";
 import { createDocument } from "../../core/object-registry/registry";
 
 beforeAll(() => {
@@ -224,13 +224,10 @@ describe("Fontex Studio · lienzo libre", () => {
       screen.queryByRole("button", { name: /Salir de presentación/ }),
     ).not.toBeInTheDocument();
   });
-  it.each(["v1", "v2"])("no destruye materiales %s cuando falla la recuperación", (version) => {
+  it("no destruye materiales nuevos cuando falla la recuperación", () => {
     const document = createDocument();
-    const storageKey = version === "v1" ? `fontex-studio-v1:guest:document:${document.id}` : "fontex-studio-v2:guest";
-    if (version === "v1") {
-      localStorage.setItem("fontex-studio-v1:guest:index", JSON.stringify([document]));
-      localStorage.setItem("fontex-studio-v1:guest:active", document.id);
-    } else saveMaterial(localStorage, "guest", document);
+    const storageKey = canvasCacheKey("guest");
+    saveMaterial(localStorage, "guest", document);
     localStorage.setItem(storageKey, "{");
     render(<ThemeProvider><StudioShell /></ThemeProvider>);
     expect(screen.getByRole("alert")).toHaveTextContent("No se pudo recuperar");
@@ -273,8 +270,8 @@ describe("Fontex Studio · lienzo libre", () => {
   });
 });
 
-it("abre en vista ajustada y permite editar sin cambiar las posiciones al alternar vistas", () => {
-  localStorage.removeItem("fontex-studio-view");
+it("permite elegir vista ajustada sin cambiar las posiciones al alternar vistas", () => {
+  localStorage.setItem("fontex-studio-view", "flow");
   render(<ThemeProvider><StudioShell /></ThemeProvider>);
   expect(document.querySelector(".st-viewport")).toHaveClass("st-canvas-flow");
   expect(screen.queryByRole("button", { name: "Mover Operación guiada" })).not.toBeInTheDocument();

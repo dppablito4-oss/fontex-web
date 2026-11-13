@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "../../lib/supabase/client";
 import type { Json } from "../../lib/supabase/database.types";
 import type { ConversationTurn } from "../../core/agent/conversation";
-import { chatKey, mergeWorkspaces, parseConversations, parseWorkspace, readWorkspace, revisionKey, sameWorkspace, workspaceEvent, workspaceHash, writeWorkspace, type Workspace } from "./workspace-sync";
+import { chatKey, mergeWorkspaces, parseConversations, parseWorkspaceScene, readWorkspace, revisionKey, sameWorkspace, workspaceEvent, workspaceHash, workspaceScene, writeWorkspace, type Workspace } from "./workspace-sync";
+import { CANVAS_WORKSPACE_ID } from "../../core/scene/formats";
 
 type SyncStatus = "local" | "loading" | "saving" | "saved" | "offline" | "error";
 export function useStudioCloud(owner: string, onHydrate: () => void) {
@@ -29,7 +30,7 @@ export function useStudioCloud(owner: string, onHydrate: () => void) {
           requested = false;
           if (!navigator.onLine) { setStatus("offline"); break; }
           setStatus("saving");
-          const result = await client.from("studio_workspaces").select("state,revision").eq("user_id", owner).maybeSingle();
+          const result = await client.from("visual_scenes").select("scene,revision").eq("user_id", owner).eq("id", CANVAS_WORKSPACE_ID).maybeSingle();
           if (!alive) return;
           if (result.error) throw result.error;
           let local = readWorkspace(owner);
@@ -39,7 +40,7 @@ export function useStudioCloud(owner: string, onHydrate: () => void) {
           }
           local = readWorkspace(owner);
           if (result.data) {
-            const remote = parseWorkspace(result.data.state);
+            const remote = parseWorkspaceScene(result.data.scene);
             revision = result.data.revision;
             const merged = mergeWorkspaces(base, local, remote);
             if (!sameWorkspace(merged.state, local)) {
@@ -54,10 +55,10 @@ export function useStudioCloud(owner: string, onHydrate: () => void) {
               continue;
             }
           } else revision = 0;
-          const payload = { user_id: owner, state: local as unknown as Json, revision: revision + 1 };
+          const payload = { user_id: owner, id: CANVAS_WORKSPACE_ID, scene: workspaceScene(local) as unknown as Json, revision: revision + 1 };
           const saved = revision === 0
-            ? await client.from("studio_workspaces").insert(payload).select("revision").single()
-            : await client.from("studio_workspaces").update({ state: payload.state, revision: payload.revision }).eq("user_id", owner).eq("revision", revision).select("revision").maybeSingle();
+            ? await client.from("visual_scenes").insert(payload).select("revision").single()
+            : await client.from("visual_scenes").update({ scene: payload.scene, revision: payload.revision }).eq("user_id", owner).eq("id", CANVAS_WORKSPACE_ID).eq("revision", revision).select("revision").maybeSingle();
           if (!alive) return;
           if (saved.error?.code === "23505" || (!saved.error && !saved.data)) { requested = true; continue; }
           if (saved.error) throw saved.error;

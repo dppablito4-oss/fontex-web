@@ -1,6 +1,6 @@
 # Documentación de Fontex
 
-Actualizada el **13 de noviembre de 2026**: el lienzo general es el editor principal y usa `visual_scenes`. El editor anterior y su material de prueba se retiran sin migración de contenido. Los documentos de Studio y Fontex Agent describen la implementación histórica conservada en el repositorio.
+Actualizada el **13 de noviembre de 2026**: el lienzo libre con IA lateral vuelve a ser el editor principal. Usa `visual_scenes` con cachés nuevas y conserva retirado el material de prueba. El laboratorio de expresiones permanece en su ruta propia.
 
 | Documento | Qué resuelve |
 |---|---|
@@ -16,6 +16,6 @@ Actualizada el **13 de noviembre de 2026**: el lienzo general es el editor princ
 | [Auditoría actual](AUDITORIA.md) | Estado de las diez correcciones, pruebas y requisitos de despliegue |
 | [Reportes](REPORTES.md) | Historial de intervenciones; sus resultados corresponden a cada fecha |
 
-La implementación actual convive con tres experiencias: el lienzo general, el aula de práctica de Matemática y el espacio académico con biblioteca/tutor documental. Sus almacenes y endpoints son distintos. Los reportes y documentos de Studio conservan el contexto histórico.
+La implementación actual incluye el lienzo libre con IA lateral, el laboratorio de expresiones, el aula de práctica y el espacio académico con biblioteca/tutor documental. Los reportes distinguen el retiro de datos de la conservación de las herramientas de Studio.
 
 Para mantener esta documentación, comprueba primero `src/app/App.tsx`, `package.json`, las migraciones y los workflows. Registra resultados ejecutados y distingue pruebas omitidas, revisión estática y comprobaciones remotas. Una compilación correcta no demuestra que una migración esté aplicada en un proyecto desplegado.

@@ -1,0 +1,18 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+select extensions.plan(8);
+insert into auth.users(id,email) values ('ddd70000-0000-4000-8000-000000000001','canvas-a@example.invalid'),('ddd70000-0000-4000-8000-000000000002','canvas-b@example.invalid');
+set local role authenticated;
+select set_config('request.jwt.claims','{"sub":"ddd70000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+select extensions.lives_ok($$insert into public.visual_scenes(user_id,id,scene) values ('ddd70000-0000-4000-8000-000000000001','canvas-workspace-v1','{"id":"canvas-workspace-v1","version":1,"format":"canvas-workspace","state":{"documents":[],"conversations":{},"activeId":null}}')$$,'owner saves new free-canvas workspace');
+select extensions.is((select scene->>'format' from public.visual_scenes where id='canvas-workspace-v1'),'canvas-workspace','free canvas uses the current scene table');
+select extensions.lives_ok($$update public.visual_scenes set revision=2 where id='canvas-workspace-v1' and revision=1$$,'owner saves the next canvas revision');
+select extensions.throws_ok($$update public.visual_scenes set scene='{"id":"canvas-workspace-v1","version":1,"format":"canvas-workspace","state":{}}',revision=3 where id='canvas-workspace-v1'$$,'23514',null,'incomplete canvas workspace rejected');
+select extensions.throws_ok($$insert into public.visual_scenes(user_id,id,scene) values ('ddd70000-0000-4000-8000-000000000001','other-id','{"id":"other-id","format":"canvas-workspace","state":{}}')$$,'23514',null,'workspace envelope cannot masquerade as an expression scene');
+select set_config('request.jwt.claims','{"sub":"ddd70000-0000-4000-8000-000000000002","role":"authenticated"}',true);
+select extensions.is((select count(*)::integer from public.visual_scenes where id='canvas-workspace-v1'),0,'other user cannot read the workspace or its chat');
+with changed as(update public.visual_scenes set revision=3 where id='canvas-workspace-v1' returning id) select extensions.is((select count(*)::integer from changed),0,'other user cannot change the canvas');
+reset role;
+select extensions.ok(not has_table_privilege('authenticated','public.studio_workspaces','insert'),'retired test table stays inaccessible');
+select * from extensions.finish();
+rollback;

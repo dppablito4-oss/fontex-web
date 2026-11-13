@@ -94,7 +94,7 @@ function StudioEditor({ owner }: { owner: string }) {
     window.innerWidth < 760 ? 0.85 : 1,
   );
   const [canvasLayout, setCanvasLayout] = useState<"flow" | "free">(() => {
-    try { return localStorage.getItem("fontex-studio-view") === "free" ? "free" : "flow"; } catch { return "flow"; }
+    try { return localStorage.getItem("fontex-studio-view") === "flow" ? "flow" : "free"; } catch { return "free"; }
   });
   function changeLayout() {
     const next = canvasLayout === "flow" ? "free" : "flow";

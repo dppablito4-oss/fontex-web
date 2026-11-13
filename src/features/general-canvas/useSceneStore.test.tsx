@@ -2,6 +2,7 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { expressionScene, type Scene } from "../../core/scene/document";
 import { useSceneStore } from "./useSceneStore";
+import { CANVAS_WORKSPACE_ID, CANVAS_WORKSPACE_FORMAT } from "../../core/scene/formats";
 
 const cloud = vi.hoisted(() => ({ rows: new Map<string, { scene: Scene; revision: number }>() }));
 vi.mock("../../lib/supabase/client", () => ({ supabase: {
@@ -30,6 +31,17 @@ vi.mock("../../lib/supabase/client", () => ({ supabase: {
 
 beforeEach(() => { cloud.rows.clear(); localStorage.clear(); });
 afterEach(() => { vi.restoreAllMocks(); });
+
+it("keeps expression scenes independent from the free-canvas workspace", async () => {
+  const scene = expressionScene("sin(x)");
+  cloud.rows.set(scene.id, { scene, revision: 1 });
+  cloud.rows.set(CANVAS_WORKSPACE_ID, { scene: { id: CANVAS_WORKSPACE_ID, format: CANVAS_WORKSPACE_FORMAT } as unknown as Scene, revision: 1 });
+  const { result } = renderHook(() => useSceneStore("account"));
+  await waitFor(() => expect(result.current.status).toBe("saved"));
+  expect(result.current.scene).toEqual(scene);
+  expect(result.current.notice).toBe("");
+  expect(cloud.rows.size).toBe(2);
+});
 
 it("loads the cloud library on a new device without uploading an empty default", async () => {
   const scene = expressionScene("sin(x)"); cloud.rows.set(scene.id, { scene, revision: 1 });

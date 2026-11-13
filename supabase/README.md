@@ -6,6 +6,8 @@ Este backend cubre identidad, aulas/grupos, PDF privados, indexación RAG, tutor
 
 La migración `retire_studio_test_materials` elimina los materiales de prueba de `studio_workspaces` y las escenas importadas del editor anterior. Revoca el acceso del cliente al almacén retirado e impide insertar escenas `import-*` o elementos `legacy`. No se trasladan materiales anteriores al formato nuevo. Las migraciones previas se conservan como historial; no deben reaplicarse manualmente para restaurar su contenido.
 
+La interfaz del lienzo libre y su IA lateral se conservan. La migración `restore_free_canvas_storage` habilita un sobre `canvas-workspace` en `visual_scenes` para materiales y conversaciones nuevos, con ID reservado y hasta 2 MiB. No inserta ni copia documentos anteriores; mantiene las políticas de propietario, revisiones y la revocación de `studio_workspaces`. Las escenas del laboratorio siguen limitadas a 1 MiB y se consultan separadas de ese sobre.
+
 ## Modelo versionado
 
 | Área | Tablas o recursos |

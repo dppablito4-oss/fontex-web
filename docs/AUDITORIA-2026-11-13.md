@@ -2,6 +2,14 @@
 
 Fecha: 13 de noviembre de 2026. Base: `main` en `5b802f3`, más los cambios locales descritos aquí.
 
+## Rectificación de interfaz
+
+La petición de retirar material de prueba no autorizaba retirar el lienzo ni su IA lateral. La ruta principal vuelve a mostrar el lienzo libre de Studio; el editor de expresiones permanece en `/#/laboratorio`. Se conserva la eliminación de los datos antiguos.
+
+Los materiales y conversaciones nuevos del lienzo usan un registro `canvas-workspace-v1` en `visual_scenes`, separado de las escenas del laboratorio, con ID y formato reservados, límite de 2 MiB y las políticas de propietario y revisión existentes. La migración [restore_free_canvas_storage](../supabase/migrations/20261113223828_restore_free_canvas_storage.sql) no copia ni inserta material anterior. La caché nueva `fontex-canvas-*` permanece intacta al limpiar `fontex-studio-*`.
+
+Validación de esta rectificación: 475 pruebas frontend aprobadas y 7 omitidas; lint, TypeScript y compilación correctos. Se verificaron 28 pruebas SQL con reversión en el proyecto conectado: 5 de retiro, 15 de escenas y 8 del nuevo sobre de lienzo. Las tres escenas nativas ya creadas permanecen intactas. La captura de navegador no estuvo disponible; la presencia del lienzo libre y la IA lateral se comprueba con pruebas de interfaz automatizadas. Los resultados de las secciones siguientes corresponden a la auditoría previa a esta rectificación.
+
 ## Correcciones
 
 | Problema reproducido | Resultado |

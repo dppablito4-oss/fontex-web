@@ -5,14 +5,15 @@ import {
   type StudioDocument,
 } from "../../core/document-schema/document";
 import { createDocument } from "../../core/object-registry/registry";
+import { clearRetiredMaterials } from "../general-canvas/scene-storage";
 import {
   lastMaterial,
   listMaterials,
   loadMaterial,
   removeMaterial,
   saveMaterial,
-  type MaterialSummary,
-} from "./document-store";
+} from "./native-document-store";
+import type { MaterialSummary } from "./document-store";
 
 type History = {
   past: StudioDocument[];
@@ -21,6 +22,7 @@ type History = {
 };
 function initialState(owner: string) {
   try {
+    clearRetiredMaterials(localStorage);
     const recovered = lastMaterial(localStorage, owner);
     return {
       document: recovered ?? createDocument(),

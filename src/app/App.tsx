@@ -16,6 +16,7 @@ import { LibraryPage } from "../features/library/LibraryPage";
 import { WorkspaceProvider } from "../features/workspace/WorkspaceProvider";
 
 const GeneralCanvas = lazy(() => import("../features/general-canvas/GeneralCanvas").then(m => ({ default: m.GeneralCanvas })));
+const StudioShell = lazy(() => import("../features/studio/StudioShell").then(m => ({ default: m.StudioShell })));
 
 const TutorPage = lazy(() =>
   import("../features/tutor/TutorPage").then((module) => ({
@@ -49,9 +50,9 @@ export function App() {
     return <PasswordRecoveryPage key={passwordRoute ? "update" : "request"} updating={!!passwordRoute} />;
   }
 
-  if (generalRoute || canvasAlias) return <Suspense fallback={<div>Preparando el lienzo general…</div>}><GeneralCanvas /></Suspense>;
+  if (generalRoute) return <Suspense fallback={<div>Preparando el laboratorio…</div>}><GeneralCanvas /></Suspense>;
+  if (canvasAlias || classicRoute) return <Suspense fallback={<div>Preparando tu lienzo…</div>}><StudioShell /></Suspense>;
   if (landingRoute) return <LandingPage />;
-  if (classicRoute) return <Navigate to="/lienzo" replace />;
   if (fractionsRoute) return <FractionCanvas />;
 
   if (authRoute) {

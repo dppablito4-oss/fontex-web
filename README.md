@@ -2,7 +2,7 @@
 
 **Exploración matemática y acompañamiento académico con fuentes documentales.**
 
-El lienzo general es el editor principal en `/#/lienzo`. Trabaja con expresiones compartidas y elementos de fórmula, gráfico, tabla y texto. Una misma expresión alimenta la evaluación, la derivada simbólica, las tangentes y las raíces reales de polinomios hasta grado cuatro.
+El lienzo libre es el editor principal en `/#/lienzo`, con módulos editables, movimiento y tamaño de objetos, presentación y la IA en un panel lateral. El laboratorio de expresiones permanece en `/#/laboratorio`: una misma expresión alimenta la evaluación, la derivada simbólica, las tangentes y las raíces reales de polinomios hasta grado cuatro.
 
 El aula de práctica mantiene 19 guías introductorias, 38 páginas y 54 ejercicios. La biblioteca académica permite consultar PDF privados con un tutor documental y citas por página. Estas experiencias tienen almacenes y endpoints distintos.
 
@@ -10,7 +10,7 @@ El aula de práctica mantiene 19 guías introductorias, 38 páginas y 54 ejercic
 
 Se corrigieron los conflictos de sincronización que podían sobrescribir la versión de otro dispositivo, las raíces dependientes de la escala numérica, los exponentes paramétricos en cero y el límite incompatible de importación/exportación. Los títulos admiten 160 caracteres y cada escena, incluido su JSON exportado, tiene un límite de 1 MiB.
 
-Los materiales del editor anterior eran de prueba y se retiran sin migrarlos. El lienzo elimina sus cachés antiguas al abrirse. La migración SQL `retire_studio_test_materials` elimina los espacios antiguos y sus escenas importadas, revoca el acceso del cliente a `studio_workspaces` y bloquea su restauración como escenas antiguas. `/#/lienzo-clasico` redirige al lienzo general.
+Los materiales anteriores eran de prueba y se retiran sin migrarlos. La eliminación de datos conserva las herramientas del lienzo y su IA lateral. Los materiales nuevos y el chat usan `visual_scenes` con un formato de espacio de lienzo y cachés nuevas `fontex-canvas-*`. `studio_workspaces` sigue vacío y sin acceso del cliente. `/#/lienzo-clasico` abre también el lienzo libre.
 
 La versión del paquete sigue siendo `0.6.0`. La [corrección de auditoría](docs/AUDITORIA-2026-11-13.md) registra las pruebas y el estado real de aplicación del SQL. Publicar el frontend, desplegar funciones y aplicar migraciones son pasos independientes.
 
@@ -18,7 +18,8 @@ La versión del paquete sigue siendo `0.6.0`. La [corrección de auditoría](doc
 
 | Área | Capacidades | Datos |
 |---|---|---|
-| Lienzo general | Expresiones, parámetros a/b/c, gráficas, derivadas, tablas, presentación y PDF | Copia local por cuenta; escenas autenticadas en `visual_scenes` |
+| Lienzo libre | Módulos editables, arrastre, tamaño, historial, presentación, PDF e IA lateral | Caché nueva por cuenta; materiales y chat en `visual_scenes` |
+| Laboratorio de expresiones | Parámetros a/b/c, gráficas, derivadas, tablas y raíces reales | Copia local por cuenta; escenas autenticadas en `visual_scenes` |
 | Generación de escenas | Descripciones con IA y validación del JSON propuesto | `scene-agent`, con sesión; el motor calcula localmente |
 | Escenas portátiles | Abrir y exportar JSON de hasta 1 MiB | Archivo descargado por el usuario |
 | Aula de práctica | Guías, teoría, ejercicios, PDF y consultas | Progreso local y PDF añadidos en IndexedDB |
@@ -60,7 +61,7 @@ Supabase Auth debe permitir las URLs de retorno del entorno. El registro puede r
 
 ### IA opcional
 
-El lienzo usa `scene-agent` con sesión y `OPENAI_API_KEY` en el servidor. El modelo se configura con `FONTEX_AGENT_MODEL`; debe admitir Responses y Structured Outputs. La IA propone datos y el motor valida las expresiones y realiza los cálculos. Las explicaciones libres pueden contener errores.
+La IA lateral del lienzo usa `studio-agent` con sesión; conserva conversación, selección de objetos, modos de aprender/resolver/practicar y aplicación de acciones validadas. El laboratorio usa `scene-agent` para generar escenas de expresiones. Ambos mantienen `OPENAI_API_KEY` en el servidor. El modelo se configura con `FONTEX_AGENT_MODEL`; debe admitir Responses y Structured Outputs. Las explicaciones libres pueden contener errores.
 
 El tutor de práctica local admite `OPENAI_API_KEY` en `.env.local` y habilita `/api/fontex-tutor` desde localhost al reiniciar Vite. Esa clave carece de prefijo `VITE_`. GitHub Pages sirve archivos estáticos, por lo que la versión publicada usa `practice-tutor`. El tutor documental utiliza `tutor-chat` y requiere aulas y documentos indexados.
 
@@ -71,8 +72,8 @@ Las rutas van después de `#` para admitir recargas en GitHub Pages.
 | Ruta | Vista |
 |---|---|
 | `/#/` | Presentación pública |
-| `/#/lienzo`, `/#/laboratorio` | Lienzo general, invitado o cuenta |
-| `/#/lienzo-clasico` | Redirección al lienzo general |
+| `/#/lienzo`, `/#/lienzo-clasico` | Lienzo libre con IA lateral, invitado o cuenta |
+| `/#/laboratorio` | Laboratorio de expresiones, gráficos y derivadas |
 | `/#/fracciones` | Laboratorio original de fracciones |
 | `/#/demo` | Aula de práctica; acepta `?nivel=inicial`, `primaria`, `secundaria` o `universidad` |
 | `/#/ingresar`, `/#/crear-cuenta`, `/#/ingresar-tutor` | Acceso y registro |
@@ -104,7 +105,9 @@ Aplica las migraciones revisadas antes de publicar un frontend que dependa de el
 
 ## Límites y documentación
 
-El motor admite números, x/a/b/c, pi/e, aritmética, potencias, multiplicación implícita, una igualdad, sin/cos/tan/ln/exp/sqrt. La trigonometría usa radianes. Las gráficas y raíces son aproximaciones numéricas; los casos de escala extrema pueden rechazarse. No incluye raíces complejas, integrales, funciones multivariables generales ni 3D.
+El lienzo libre conserva hasta 80 objetos y 40 pasos de historial. El espacio SQL nuevo reúne materiales y conversación en un registro privado de hasta 2 MiB, con revisiones y conservación de copias ante conflictos. Usa la misma tabla actual, sin recuperar el almacén de pruebas retirado.
+
+El motor del laboratorio admite números, x/a/b/c, pi/e, aritmética, potencias, multiplicación implícita, una igualdad, sin/cos/tan/ln/exp/sqrt. La trigonometría usa radianes. Las gráficas y raíces son aproximaciones numéricas; los casos de escala extrema pueden rechazarse. No incluye raíces complejas, integrales, funciones multivariables generales ni 3D.
 
 Cada escena admite hasta ocho expresiones y 256 elementos en el formato, con límites adicionales de composición en la interfaz. No hay colaboración simultánea ni reapertura offline garantizada desde cero. Las escenas guardadas por una cuenta tienen una copia local y sincronización al recuperar conexión.
 
@@ -117,4 +120,4 @@ La biblioteca remota acepta PDF de hasta 5 MiB y 100 páginas con texto seleccio
 - [Catálogo de práctica](docs/architecture/practice-catalog.md)
 - [Historial de auditoría](docs/AUDITORIA.md)
 
-Los documentos de arquitectura de Studio y Fontex Agent conservan la implementación histórica del editor retirado. Su código y pruebas siguen en el repositorio, pero ya no se sirve mediante la ruta del editor.
+Los documentos de arquitectura de Studio y Fontex Agent describen las herramientas del lienzo libre. Su persistencia actual es la indicada aquí: cachés nuevas y `visual_scenes`, sin migración automática de datos retirados.

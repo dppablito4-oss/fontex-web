@@ -27,13 +27,19 @@ describe("Fontex shell", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Activar tema claro" }));
     expect(document.documentElement).toHaveAttribute("data-theme", "light");
   });
-  it("presenta Fontex en la raíz y redirige el editor anterior al lienzo general", async () => {
+  it("presenta Fontex en la raíz y conserva el lienzo libre y la IA lateral", async () => {
     const view = renderRoute("/");
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Entender cambia");
     view.unmount();
-    renderRoute("/lienzo-clasico");
-    expect(await screen.findByLabelText("Nombre de la escena")).toBeInTheDocument();
+    const previousWidth = window.innerWidth;
+    Object.defineProperty(window, "innerWidth", { configurable: true, writable: true, value: 1366 });
+    renderRoute("/lienzo");
+    expect(await screen.findByLabelText("Título del material")).toBeInTheDocument();
+    expect(screen.getByRole("main", { name: "Editor del material" })).toBeInTheDocument();
+    expect(screen.getByRole("complementary", { name: "Asistente del material" })).toBeVisible();
+    expect(screen.getByRole("region", { name: "Fontex Agente" })).toBeInTheDocument();
     expect(window.location.hash).toBe("#/lienzo");
+    Object.defineProperty(window, "innerWidth", { configurable: true, writable: true, value: previousWidth });
   });
   it.each([
     ["/inicio", /tus fuentes/i],

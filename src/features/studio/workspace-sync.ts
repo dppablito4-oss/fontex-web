@@ -1,10 +1,21 @@
-import { lastMaterial, listMaterials, loadMaterial } from "./document-store";
+import { canvasCacheKey, lastMaterial, listMaterials, loadMaterial } from "./native-document-store";
+import { CANVAS_WORKSPACE_ID, CANVAS_WORKSPACE_FORMAT, MAX_CANVAS_WORKSPACE_BYTES, isCanvasWorkspace } from "../../core/scene/formats";
 import { parseDocument, uid, type StudioDocument } from "../../core/document-schema/document";
 import type { ConversationTurn } from "../../core/agent/conversation";
 export type Workspace = { activeId: string | null; documents: StudioDocument[]; conversations: Record<string, ConversationTurn[]> };
-export const workspaceEvent = "fontex-studio-change";
-export const chatKey = (owner: string) => `fontex-studio-chat-v1:${owner}`;
-export const revisionKey = (owner: string) => `fontex-studio-sync-v1:${owner}`;
+export const workspaceEvent = "fontex-canvas-change";
+export const chatKey = (owner: string) => `fontex-canvas-chat-v1:${owner}`;
+export const revisionKey = (owner: string) => `fontex-canvas-sync-v1:${owner}`;
+export function workspaceScene(state: Workspace) {
+  const scene = { id: CANVAS_WORKSPACE_ID, version: 1, format: CANVAS_WORKSPACE_FORMAT, state: parseWorkspace(state) };
+  // Pretty JSON is a conservative upper bound for the jsonb text stored by Postgres.
+  if (new TextEncoder().encode(JSON.stringify(scene, null, 2)).byteLength > MAX_CANVAS_WORKSPACE_BYTES) throw new Error("Tu espacio supera los 2 MiB. Exporta o elimina materiales para sincronizar.");
+  return scene;
+}
+export function parseWorkspaceScene(value: unknown): Workspace {
+  if (!isCanvasWorkspace(value) || !value || typeof value !== "object" || !("version" in value) || value.version !== 1 || !("state" in value)) throw new Error("Espacio remoto del lienzo inválido.");
+  return parseWorkspace(value.state);
+}
 export function parseConversations(value: unknown): Record<string, ConversationTurn[]> {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Historial inválido.");
   const entries = Object.entries(value);
@@ -21,7 +32,7 @@ export function parseWorkspace(value: unknown): Workspace {
   return { activeId: value.activeId as string | null, documents, conversations: Object.fromEntries(documents.map(d => [d.id, conversations[d.id] ?? []])) };
 }
 export function readWorkspace(owner: string): Workspace {
-  const saved = localStorage.getItem(`fontex-studio-v2:${owner}`);
+  const saved = localStorage.getItem(canvasCacheKey(owner));
   if (saved === null) {
     const documents = listMaterials(localStorage, owner).map(item => loadMaterial(localStorage, owner, item.id));
     const active = lastMaterial(localStorage, owner);
@@ -35,7 +46,7 @@ export function readWorkspace(owner: string): Workspace {
 export function writeWorkspace(owner: string, state: Workspace) {
   const oldChat = localStorage.getItem(chatKey(owner));
   localStorage.setItem(chatKey(owner), JSON.stringify(state.conversations));
-  try { localStorage.setItem(`fontex-studio-v2:${owner}`, JSON.stringify({ version: 2, activeId: state.activeId, documents: state.documents })); }
+  try { localStorage.setItem(canvasCacheKey(owner), JSON.stringify({ version: 1, activeId: state.activeId, documents: state.documents })); }
   catch (error) { if (oldChat === null) localStorage.removeItem(chatKey(owner)); else localStorage.setItem(chatKey(owner), oldChat); throw error; }
 }
 export const sameWorkspace = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
