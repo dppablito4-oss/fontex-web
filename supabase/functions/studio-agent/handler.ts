@@ -128,7 +128,6 @@ export function createAgentHandler(
                       tutorModels.study.id),
                   store: false,
                   ...(emit ? { stream: true } : {}),
-                  max_output_tokens: chat ? 1200 : 4500,
                   ...(!chat ? { reasoning: { effort: "low" } } : {}),
                   instructions: chat
                     ? [

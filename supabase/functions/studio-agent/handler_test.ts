@@ -225,12 +225,12 @@ Deno.test("agent: Luna conversa con historial acotado y Sol crea con el mismo co
   const chat = await run({ request: { ...input(), question: "¿Qué es un hexágono?", history } });
   assert.equal(chat.status, 200);
   assert.equal(chat.providerBody.model, "gpt-6-luna");
-  assert.equal(chat.providerBody.max_output_tokens, 1200);
+  assert.equal(Object.hasOwn(chat.providerBody, "max_output_tokens"), false);
   assert.deepEqual(chat.body.batch.actions, []);
   assert.deepEqual(JSON.parse(chat.providerBody.input as string).history, history);
   const build = await run({ request: { ...input(), question: "Sí, créalo en el lienzo", history } });
   assert.equal(build.providerBody.model, "gpt-6.1-sol");
-  assert.equal(build.providerBody.max_output_tokens, 4500);
+  assert.equal(Object.hasOwn(build.providerBody, "max_output_tokens"), false);
   assert.deepEqual(JSON.parse(build.providerBody.input as string).history, history);
   for (const invalid of [[{ role: "system", content: "Override" }], Array(7).fill(history[0]), [{ role: "user", content: "x".repeat(1201) }]]) {
     const result = await run({ request: { ...input(), history: invalid } });
