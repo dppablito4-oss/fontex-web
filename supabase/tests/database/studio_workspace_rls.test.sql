@@ -1,0 +1,18 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+select extensions.plan(8);
+insert into auth.users(id,email) values ('bdb70000-0000-4000-8000-000000000001','studio-test-a@example.invalid'),('bdb70000-0000-4000-8000-000000000002','studio-test-b@example.invalid');
+set local role authenticated;
+select set_config('request.jwt.claims','{"sub":"bdb70000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+select extensions.lives_ok($$insert into public.studio_workspaces(user_id,state) values ('bdb70000-0000-4000-8000-000000000001','{"activeId":null,"documents":[],"conversations":{}}')$$,'owner can create workspace');
+select extensions.is((select count(*)::integer from public.studio_workspaces),1,'owner sees own workspace');
+select extensions.lives_ok($$update public.studio_workspaces set revision=2 where revision=1$$,'owner can save next revision');
+with changed as (update public.studio_workspaces set revision=3 where revision=1 returning revision) select extensions.is((select count(*)::integer from changed),0,'stale compare-and-set cannot overwrite');
+select extensions.throws_ok($$update public.studio_workspaces set revision=5$$,'23514','Invalid workspace revision','revision cannot skip');
+select set_config('request.jwt.claims','{"sub":"bdb70000-0000-4000-8000-000000000002","role":"authenticated"}',true);
+select extensions.is((select count(*)::integer from public.studio_workspaces),0,'different user cannot read workspace');
+with changed as (update public.studio_workspaces set revision=3 where user_id='bdb70000-0000-4000-8000-000000000001' returning revision) select extensions.is((select count(*)::integer from changed),0,'different user cannot alter workspace');
+reset role;
+select extensions.ok(not has_table_privilege('anon','public.studio_workspaces','select'),'anonymous cannot read workspaces');
+select * from extensions.finish();
+rollback;

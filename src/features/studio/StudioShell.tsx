@@ -1,3 +1,4 @@
+import { useStudioCloud } from "./useStudioCloud";
 import { SiteHeader } from "../../components/ProductNavigation";
 import { moduleCatalog, moduleGroups, normalizeModule, type ModuleGroup } from "./module-catalog";
 import { learningIcons } from "../../core/object-registry/learning-registry";
@@ -64,6 +65,7 @@ function StudioEditor({ owner }: { owner: string }) {
   const { user, signOut, error: accountError } = useAuth();
   const store = useStudioDocument(owner);
   const doc = store.document;
+  const cloud = useStudioCloud(owner, store.reload);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [moduleFilter, setModuleFilter] = useState("");
   const [modulesOpen, setModulesOpen] = useState(false);
@@ -460,7 +462,9 @@ function StudioEditor({ owner }: { owner: string }) {
         </main>
         <aside ref={assistantPanel} id="st-assistant-panel" hidden={!assistantOpen} tabIndex={-1} className="st-inspector" aria-label="Asistente del material" onKeyDown={event => { if (event.key === "Escape") { closeAssistant(); } }}>
           <div className="st-assistant-heading"><span>Chat</span><button aria-label="Cerrar asistente" onClick={() => { closeAssistant(); }}><X size={18} /></button></div>
-          <StudioAgentPanel key={doc.id} document={doc} selectedId={selectedId} onSelect={setSelectedId} authenticated={!!user} teachingLevel={level} onLevelChange={setLevel} teachingMode={mode} onModeChange={setMode} onApply={(batch, expected) => {
+          <p className="st-sync-status" role="status">{cloud.status === "saved" ? "Guardado en tu cuenta" : cloud.status === "saving" || cloud.status === "loading" ? "Sincronizando…" : cloud.status === "offline" ? "Sin conexión · guardado en este dispositivo" : cloud.status === "error" ? "Sincronización pendiente" : "Guardado en este dispositivo"}</p>
+          {cloud.notice && <p className="st-sync-notice">{cloud.notice}</p>}
+          <StudioAgentPanel key={doc.id} conversation={cloud.conversations[doc.id] ?? []} onConversationChange={turns => { cloud.setConversation(doc.id, turns, store.persist()); }} document={doc} selectedId={selectedId} onSelect={setSelectedId} authenticated={!!user} teachingLevel={level} onLevelChange={setLevel} teachingMode={mode} onModeChange={setMode} onApply={(batch, expected) => {
             const formatted = readableBatch(batch, expected);
             const applied = store.execute(formatted, expected);
             const first = formatted.actions.find(action => action.kind === "create");

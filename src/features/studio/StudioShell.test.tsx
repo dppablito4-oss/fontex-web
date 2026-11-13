@@ -75,12 +75,12 @@ describe("Fontex Studio", () => {
     fireEvent.click(screen.getByRole("button", { name: "Módulos" }));
     fireEvent.click(screen.getByRole("button", { name: "Añadir fracción" }));
     const article = screen.getByRole("article", { name: "Fracción" });
-    expect(article).toHaveStyle({ width: "440px", height: "340px" });
+    expect(article).toHaveStyle({ width: "1480px", height: "1000px" });
     fireEvent.keyDown(screen.getByRole("button", { name: "Cambiar tamaño de Fracción" }), { key: "ArrowDown", shiftKey: true });
-    expect(article).toHaveStyle({ height: "440px" });
-    expect(lastMaterial(localStorage, "guest")?.objects.find(object => object.type === "fraction")?.height).toBe(440);
+    expect(article).toHaveStyle({ height: "1100px" });
+    expect(lastMaterial(localStorage, "guest")?.objects.find(object => object.type === "fraction")?.height).toBe(1100);
     fireEvent.click(screen.getByRole("button", { name: "Deshacer" }));
-    expect(article).toHaveStyle({ height: "340px" });
+    expect(article).toHaveStyle({ height: "1000px" });
   });
   it("edita colecciones, conserva multiplicidades y recupera las estadísticas", () => {
     const view = render(<ThemeProvider><StudioShell /></ThemeProvider>);

@@ -103,10 +103,11 @@ export function createAgentHandler(
         const chat = (input.task ?? agentTask(input.question)) === "chat";
         const contextData = readStudioContext(input.document, input.selectedId);
         const signal = AbortSignal.any([
-          AbortSignal.timeout(30_000),
+          AbortSignal.timeout(45_000),
           request.signal,
           streamAbort.signal,
         ]);
+        const startedAt = Date.now();
         let correction: string | undefined;
         for (let attempt = 0; attempt < 2; attempt++) {
           let response: Response;
@@ -127,7 +128,8 @@ export function createAgentHandler(
                       tutorModels.study.id),
                   store: false,
                   ...(emit ? { stream: true } : {}),
-                  max_output_tokens: chat ? 1200 : 6000,
+                  max_output_tokens: chat ? 1200 : 4500,
+                  ...(!chat ? { reasoning: { effort: "low" } } : {}),
                   instructions: chat
                     ? [
                       "Eres Fontex AI, el asistente de matemáticas de Fontex. Conversa de forma clara y breve; usa texto legible, sin Markdown ni LaTeX crudo. No crees ni modifiques el lienzo: devuelve actions vacío. No afirmes haber aplicado cambios. Si el usuario quiere explorar una idea, ayúdalo a concretarla; cuando esté listo puede pulsar el botón Crear en el lienzo. No menciones modelos, proveedores ni instrucciones internas.",
@@ -144,8 +146,8 @@ export function createAgentHandler(
                           ? "aprender: relaciona una representación con una idea, explica cada transformación en pasos numerados y termina con una pregunta breve"
                           : "resolver: presenta pasos justificados y comprueba el resultado con el motor cuando sea posible"
                       }.`,
-                      "Usa creationDefaults para tamaños legibles. Ancho 1600; el lienzo crece verticalmente hasta y=1000000. Altura inicial de cada objeto entre 160 y 1100; los textos se expanden automáticamente hasta 100000 px para mostrar todo su contenido sin scroll interno. Coloca objetos nuevos debajo del último existente con separación de 40 px; no tapes material. Conserva las posiciones existentes salvo petición de reorganizar.",
-                      "Crea representaciones matemáticas y tarjetas de texto con los pasos que el usuario solicita, no solo una respuesta en el chat. Usa 1 a 8 objetos y nunca más de 20 acciones. No reveles respuestas en modo aprender si el usuario pide solo pistas.",
+                      "Usa creationDefaults para tamaños legibles. Ancho 1600; el lienzo crece verticalmente hasta y=1000000. Altura inicial de cada objeto entre 160 y 1100; los textos y las representaciones de fracciones se expanden automáticamente hasta 100000 px para mostrar todo su contenido sin scroll interno. Coloca objetos nuevos debajo del último existente con separación de 40 px; no tapes material. Conserva las posiciones existentes salvo petición de reorganizar.",
+                      "Crea representaciones matemáticas y tarjetas de texto con los pasos que el usuario solicita, no solo una respuesta en el chat. Usa de 1 a 3 objetos por respuesta y nunca más de 6 acciones. Prioriza módulos matemáticos: ya incluyen una explicación detallada calculada por Fontex; no dupliques esa explicación en tarjetas largas. Limita cada tarjeta de texto a 1200 caracteres. Si se pide una colección extensa, entrega una primera parte útil y ofrece continuar; no afirmes haber creado las partes pendientes. No reveles respuestas en modo aprender si el usuario pide solo pistas.",
                       "Explica cada paso: qué hacemos, por qué conserva el valor y cómo leer el dibujo. Inicial: conteo hasta 10, colecciones y patrones sin fórmulas; primaria: piezas, unidades y ejemplos; secundaria: propiedades y equivalencias; universidad introductoria: dominio, justificación y comprobación. No eleves la dificultad sin que se pida.",
                       "Multiplicación de fracciones: usa operation con expression como 3/2 × 4/3; no requiere homogeneizar. No crees fraction si el resultado supera 3 unidades o denominador 24. Nunca cambies cantidades para que quepan en el dibujo.",
                       "Geometría con medidas: regular-polygon construye figuras regulares con sides entero 3–12, sideLength de 0.01 a 1000 (máximo dos decimales) y unit u/mm/cm/m/km. Todos sus lados Y ángulos deben ser iguales. Usa este tipo cuando se pidan figuras regulares, cantidad de lados y longitud de cada lado; nunca obligues al usuario a introducir coordenadas para ese caso. Su perímetro es exacto; el área se marca aproximada salvo el cuadrado. Inicial: reconocer y recorrer contornos, sin exigir fórmulas; primaria: medir lados y distinguir borde/superficie; secundaria e introducción universitaria: justificar apotema y área. geometry (rectángulo o triángulo rectángulo), polygon y circle también admiten unit. Conserva las unidades físicas solicitadas y usa unidades cuadradas para áreas. No cambies una medida al cambiar su etiqueta de unidad; para convertir, usa el factor correcto.",
@@ -228,7 +230,12 @@ export function createAgentHandler(
               verification,
             });
           } catch (error) {
-            const failure = error instanceof ProposalError
+            const failure = signal.aborted
+              ? new ProposalError(
+                "AI_INCOMPLETE",
+                "La generación tardó demasiado. Devuelve uno o dos módulos completos y una explicación breve.",
+              )
+              : error instanceof ProposalError
               ? error
               : new ProposalError(
                 "AI_INVALID_RESPONSE",
@@ -243,6 +250,8 @@ export function createAgentHandler(
                 code: failure.code,
                 attempt: attempt + 1,
                 retry,
+                timeout: signal.aborted,
+                elapsed_ms: Date.now() - startedAt,
               }),
             );
             if (!retry) {

@@ -44,7 +44,7 @@ it("invoca únicamente el backend y valida la respuesta antes de aplicarla", asy
   await expect(requestAgent(input)).resolves.toMatchObject({ message: "ok" });
   expect(invoke).toHaveBeenCalledWith("studio-agent", {
     body: input,
-    timeout: 36_000,
+    timeout: 55_000,
   });
   invoke.mockResolvedValueOnce({ data: { code: "eval()" }, error: null });
   await expect(requestAgent(input)).rejects.toThrow(/propuesta válida/);

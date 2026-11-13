@@ -62,3 +62,5 @@ html, body { margin: 0; background: #fff !important; color: #24272b !important; 
 .st-print-document :is(.st-geometry,.st-polygon) svg { width: 100%; max-height: 95mm !important; }
 .st-print-document .st-print-text p { break-inside: auto; }
 .st-print-document :is(.st-regular-controls,.st-inline-caption) { display: none !important; }
+
+.st-print-document .st-circle svg { width: 42mm; height: auto; aspect-ratio: 1; max-width: 100%; }

@@ -203,3 +203,17 @@ it("descarta un lote generado si cambió el nivel mientras respondía", async ()
   expect(apply).not.toHaveBeenCalled();
   expect(screen.queryByText("Creado.")).not.toBeInTheDocument();
 });
+
+it("reintenta una generación fallida sin duplicar la pregunta en el chat", async () => {
+  const doc = createDocument(), apply = vi.fn(() => true);
+  const request = vi.spyOn(service, "requestAgent").mockRejectedValueOnce(new Error("La conexión se interrumpió.")).mockResolvedValueOnce({ message: "Ejemplo completo.", batch: { documentId: doc.id, actions: [] }, verification: [] });
+  render(<StudioAgentPanel document={doc} selectedId={null} authenticated onApply={apply} />);
+  fireEvent.change(screen.getByLabelText("Consulta"), { target: { value: "Agrega sumas de fracciones" } });
+  fireEvent.click(screen.getByRole("button", { name: "Consultar" }));
+  await screen.findByRole("alert");
+  fireEvent.click(screen.getByRole("button", { name: "Consultar" }));
+  await screen.findByText("Ejemplo completo.");
+  expect(screen.getAllByText("Agrega sumas de fracciones")).toHaveLength(1);
+  expect(request).toHaveBeenCalledTimes(2);
+  expect(apply).not.toHaveBeenCalled();
+});

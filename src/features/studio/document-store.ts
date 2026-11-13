@@ -51,6 +51,7 @@ function commit(storage: StorageLike, owner: string, snapshot: Snapshot) {
     : readSnapshot(storage, owner).documents.map((document) => document.id);
   // localStorage replaces one key atomically; failure preserves the old snapshot.
   storage.setItem(key(owner), JSON.stringify(snapshot));
+  if (typeof window !== "undefined" && storage === window.localStorage) window.dispatchEvent(new CustomEvent("fontex-studio-change", { detail: owner }));
   // Cleanup is optional: the committed v2 snapshot always takes precedence.
   try {
     const prefix = legacyPrefix(owner);

@@ -69,6 +69,7 @@ function strictObject(value: unknown): value is MathObject {
       "y",
       "width",
       "height",
+      ...(value.visualScale === undefined ? [] : ["visualScale"]),
       "data",
     ]) &&
     strictDataKeys(value);

@@ -88,7 +88,7 @@ export function CanvasViewport({
   }, [selectedId, objects, zoom]);
   useLayoutEffect(() => {
     if (!onTextGrow || presenting) return;
-    const nodes = viewport.current?.querySelectorAll<HTMLElement>(".st-object-text,.st-object-number-line,.st-object-geometry,.st-object-polygon,.st-object-regular-polygon,.st-object-circle,.st-object-angle");
+    const nodes = viewport.current?.querySelectorAll<HTMLElement>(".st-object-text,.st-object-fraction,.st-object-operation,.st-object-number-line,.st-object-geometry,.st-object-polygon,.st-object-regular-polygon,.st-object-circle,.st-object-angle");
     const measure = () => {
       for (const node of nodes ?? []) {
         const object = objects.find(item => item.id === node.dataset.objectId);
@@ -227,7 +227,8 @@ export function CanvasViewport({
                   top: shown.y,
                   width: shown.width,
                   height: shown.height,
-                }}
+                  "--st-fraction-scale": shown.visualScale ?? 1,
+                } as React.CSSProperties}
                 data-object-id={object.id}
                 aria-label={object.label || "Objeto matemático"}
                 onClick={(event) => {
@@ -262,6 +263,7 @@ export function CanvasViewport({
                   <Maximize2 size={16} />
                 </button>
                 <div className="st-object-content">
+                  {editable && selectedId === object.id && <DrawingSize object={object} onChange={onInlineChange ?? onChange} onBegin={onBeginEdit} onEnd={onEndEdit} />}
                   <GuidedObject key={`${object.id}:${mode}`} object={object} />
                   {!presenting && mode === "practice" && <small>Para editar los datos, cambia a Aprender o Resolver.</small>}
                 </div>
@@ -308,7 +310,8 @@ export function CanvasViewport({
                 <X size={20} />
               </button>
             </div>
-            <div className="st-expanded-content">
+            <div className="st-expanded-content" style={{ "--st-fraction-scale": expanded.visualScale ?? 1 } as React.CSSProperties}>
+              {editable && <DrawingSize object={expanded} onChange={onInlineChange ?? onChange} onBegin={onBeginEdit} onEnd={onEndEdit} />}
               <InlineEditingContext.Provider value={editing(expanded)}><GuidedObject key={`${expanded.id}:${mode}`} object={expanded} /></InlineEditingContext.Provider>
             </div>
           </>
@@ -317,4 +320,9 @@ export function CanvasViewport({
       {children}
     </div>
   );
+}
+
+function DrawingSize({ object, onChange, onBegin, onEnd }: { object: MathObject; onChange: (object: MathObject) => void; onBegin?: () => void; onEnd?: () => void }) {
+  if (object.type !== "fraction" && object.type !== "operation") return null;
+  return <label className="st-drawing-size" onClick={event => event.stopPropagation()}>Tamaño del dibujo<input type="range" min="0.75" max="2" step="0.05" aria-label="Tamaño del dibujo" value={object.visualScale ?? 1} onFocus={onBegin} onPointerDown={onBegin} onChange={event => onChange({ ...object, visualScale: Number(event.target.value) })} onBlur={onEnd} onPointerUp={onEnd} /><output>{Math.round((object.visualScale ?? 1) * 100)} %</output></label>;
 }

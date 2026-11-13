@@ -3,7 +3,7 @@ import { lessonSteps } from "./lesson-steps";
 import { isExerciseIntent } from "./agent-intents";
 import { ArrowUp, Check, Sparkles } from "lucide-react";
 import { objectRegistry } from "../../core/object-registry/registry";
-import { type FormEvent, useEffect, useRef, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import {
   type ActionBatch,
   executeActions,
@@ -20,7 +20,9 @@ import { requestAgent } from "./agentService";
 
 type Proposal = { batch: ActionBatch; snapshot: StudioDocument };
 export function StudioAgentPanel(
-  { document, selectedId, onApply, authenticated = false, teachingLevel, onLevelChange, teachingMode, onModeChange, onSelect }: {
+  { document, selectedId, onApply, authenticated = false, teachingLevel, onLevelChange, teachingMode, onModeChange, onSelect, conversation, onConversationChange }: {
+    conversation?: ConversationTurn[];
+    onConversationChange?: (turns: ConversationTurn[]) => void;
     document: StudioDocument;
     selectedId: string | null;
     onApply: (batch: ActionBatch, expected: StudioDocument) => boolean;
@@ -34,7 +36,9 @@ export function StudioAgentPanel(
 ) {
   const [streamingText, setStreamingText] = useState("");
   const activeRequest = useRef<AbortController | null>(null);
-  const [messages, setMessages] = useState<ConversationTurn[]>([]);
+  const [localMessages, setLocalMessages] = useState<ConversationTurn[]>([]);
+  const messages = conversation ?? localMessages;
+  function setMessages(turns: ConversationTurn[]) { if (onConversationChange) onConversationChange(turns); else setLocalMessages(turns); }
   const transcriptEnd = useRef<HTMLDivElement>(null);
   const [autonomous, setAutonomous] = useState(true);
   const currentDocument = useRef(document);
@@ -52,7 +56,10 @@ export function StudioAgentPanel(
   const [question, setQuestion] = useState("");
   const [attempt, setAttempt] = useState("");
   const [hintLevel, setHintLevel] = useState(0);
-  const [reply, setReply] = useState<AgentReply | null>(null);
+  const [liveReply, setReply] = useState<AgentReply | null>(null);
+  const [replyTurn, setReplyTurn] = useState<ConversationTurn | null>(null);
+  const lastTurn = messages.at(-1);
+  const reply: AgentReply | null = useMemo(() => liveReply && (mode === "practice" || (replyTurn === lastTurn)) ? liveReply : mode !== "practice" && lastTurn?.role === "assistant" ? { message: lastTurn.content, batch: { documentId: document.id, actions: [] }, verification: [] } : null, [liveReply, mode, replyTurn, lastTurn, document.id]);
   const [replyContext, setReplyContext] = useState("");
   const contextKey = JSON.stringify([document, selectedId]);
   const requestContext = useRef({ mode, level, selectedId });
@@ -84,9 +91,11 @@ export function StudioAgentPanel(
       setMode("practice"); onModeChange?.("practice"); resetResponse(); return;
     }
     const prompt = command ?? (question.trim() || "Ayúdame con el objeto seleccionado.");
-    const history: ConversationTurn[] = [...messages, ...(reply && mode !== "practice" ? [{ role: "assistant" as const, content: reply.message }] : [])];
+    const retry = messages.at(-1)?.role === "user" && messages.at(-1)?.content === prompt;
+    const history = retry ? messages.slice(0, -1) : messages;
+    const pendingMessages: ConversationTurn[] = [...history, { role: "user", content: prompt }].slice(-79) as ConversationTurn[];
     if (mode !== "practice") {
-      setMessages([...history, { role: "user", content: prompt }].slice(-40) as ConversationTurn[]);
+      setMessages(pendingMessages);
       setQuestion("");
     }
     pending.current = true;
@@ -125,6 +134,10 @@ export function StudioAgentPanel(
           setApplied(true);
         } else setProposal({ batch: response.batch, snapshot });
       }
+      if (mode !== "practice") {
+        const turn: ConversationTurn = { role: "assistant", content: response.message };
+        setMessages([...pendingMessages, turn]); setReplyTurn(turn);
+      }
       setReply(response);
       setReplyContext(contextKey);
       setHintLevel(nextHint);
@@ -154,8 +167,8 @@ export function StudioAgentPanel(
 
       <div className="st-chat-transcript" role="log" aria-label="Conversación" aria-live="polite">
         {!messages.length && !reply && <div className="st-chat-intro"><strong>¿Qué exploramos hoy?</strong><p>¿Qué quieres aprender o preparar?</p></div>}
-        {messages.map((turn, i) => <article className={`st-chat-turn st-chat-${turn.role}`} key={i}><small>{turn.role === "user" ? "Tú" : "Fontex AI"}</small><p>{turn.content}</p></article>)}
-      {reply && (mode !== "practice" || applied || replyContext === contextKey) && (
+        {messages.filter((turn, i) => !(i === messages.length - 1 && turn.role === "assistant" && reply && mode !== "practice")).map((turn, i) => <article className={`st-chat-turn st-chat-${turn.role}`} key={i}><small>{turn.role === "user" ? "Tú" : "Fontex AI"}</small><p>{turn.content}</p></article>)}
+      {!busy && reply && (mode !== "practice" || applied || replyContext === contextKey) && (
         <section aria-label="Orientación del agente" aria-live="polite">
           {applied && <p role="status" className="st-agent-applied"><Check size={16} aria-hidden="true" />Cambios aplicados</p>}
           <small className="st-chat-author">Fontex AI</small>

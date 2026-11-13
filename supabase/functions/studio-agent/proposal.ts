@@ -77,6 +77,13 @@ export function readProposal(payload: unknown, document: StudioDocument) {
       documentId: document.id,
       actions: value.actions,
     });
+    // Visual size is a user preference; updating mathematics must preserve it.
+    for (const action of batch.actions) {
+      if (action.kind === "update") {
+        const existing = document.objects.find(item => item.id === action.object.id);
+        if (existing?.visualScale !== undefined) action.object.visualScale = existing.visualScale;
+      }
+    }
     // Stack newly generated modules below existing content instead of covering it.
     let bottom = Math.max(20, ...document.objects.map(o => o.y + o.height));
     for (const action of batch.actions) {

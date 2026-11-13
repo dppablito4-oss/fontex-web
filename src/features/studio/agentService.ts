@@ -29,7 +29,7 @@ export async function requestAgent(value: AgentRequest, options?: { onText: (tex
   const result = await supabase.functions.invoke<unknown>("studio-agent", {
     body: options ? { ...input, stream: true } : input,
     ...(options?.signal ? { signal: options.signal } : {}),
-    timeout: 36_000,
+    timeout: 55_000,
   });
   if (result.error) {
     const response: unknown = result.error instanceof FunctionsHttpError

@@ -60,7 +60,7 @@ export const agentOutputSchema = object({
   message: string,
   actions: {
     type: "array",
-    maxItems: 20,
+    maxItems: 6,
     items: {
       anyOf: [
         object({
@@ -74,7 +74,7 @@ export const agentOutputSchema = object({
                 x: { type: "number", minimum: 0, maximum: 1600 },
                 y: { type: "number", minimum: 0, maximum: 1000000 },
                 width: { type: "number", minimum: 240, maximum: 1600 },
-                height: { type: "number", minimum: 160, maximum: type === "text" ? MAX_TEXT_HEIGHT : 1100 },
+                height: { type: "number", minimum: 160, maximum: ["text", "fraction", "operation"].includes(type) ? MAX_TEXT_HEIGHT : 1100 },
                 data: object(properties),
               })
             ),

@@ -230,7 +230,7 @@ Deno.test("agent: Luna conversa con historial acotado y Sol crea con el mismo co
   assert.deepEqual(JSON.parse(chat.providerBody.input as string).history, history);
   const build = await run({ request: { ...input(), question: "Sí, créalo en el lienzo", history } });
   assert.equal(build.providerBody.model, "gpt-6.1-sol");
-  assert.equal(build.providerBody.max_output_tokens, 6000);
+  assert.equal(build.providerBody.max_output_tokens, 4500);
   assert.deepEqual(JSON.parse(build.providerBody.input as string).history, history);
   for (const invalid of [[{ role: "system", content: "Override" }], Array(7).fill(history[0]), [{ role: "user", content: "x".repeat(1201) }]]) {
     const result = await run({ request: { ...input(), history: invalid } });
@@ -272,4 +272,13 @@ Deno.test("agent: si se corta la transmisión no autoriza acciones parciales", a
   const events = []; for await (const event of eventData(response.body!)) events.push(event);
   assert.ok(events.some(event => (event as { type: string }).type === "error"));
   assert.ok(!events.some(event => (event as { type: string }).type === "done"));
+});
+
+Deno.test("agent: un corte de transporte no se presenta como JSON inválido", async () => {
+  const { eventData } = await import("../../../src/core/agent/event-stream.ts");
+  const handler = createAgentHandler(() => "test-key", () => Promise.resolve(new Response(new ReadableStream({ start(controller) { controller.error(new DOMException("aborted", "AbortError")); } }), { headers: { "Content-Type": "text/event-stream" } })));
+  const response = await handler(new Request("http://localhost", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...input(), question: "Explica", stream: true }) }), { userClaims: { id: "user" }, takeQuota: () => Promise.resolve(true) });
+  const events = []; for await (const event of eventData(response.body!)) events.push(event);
+  const error = events.find(event => (event as { type: string }).type === "error") as { error: { code: string } };
+  assert.equal(error.error.code, "AI_INCOMPLETE");
 });

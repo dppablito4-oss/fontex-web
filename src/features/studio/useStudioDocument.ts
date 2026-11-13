@@ -157,6 +157,11 @@ export function useStudioDocument(owner: string) {
     persist(next);
   }
   return {
+    reload: () => {
+      const next = initialState(owner);
+      if (JSON.stringify(next.document) !== JSON.stringify(historyRef.current.present)) { endEdit(); commit({ past: [], present: next.document, future: [] }); }
+      setMaterials(next.materials); setSaved(next.recovered); setError(next.error);
+    },
     document: history.present,
     materials,
     error,

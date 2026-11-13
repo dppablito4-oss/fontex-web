@@ -36,7 +36,7 @@ export function organizeObjects(objects: MathObject[]): MathObject[] {
 
 /** Give diagrams room for legible measurements and a full-width number line. */
 export function wideObject(object: MathObject): MathObject {
-  return ["number-line", "geometry", "regular-polygon", "polygon", "circle", "angle"].includes(object.type)
+  return ["fraction", "operation", "number-line", "geometry", "regular-polygon", "polygon", "circle", "angle"].includes(object.type)
     ? { ...object, width: BOARD.width - 120, height: object.type === "number-line" ? 700 : 1000 }
     : object;
 }

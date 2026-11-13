@@ -26,6 +26,7 @@ type ObjectBase = {
   y: number;
   width: number;
   height: number;
+  visualScale?: number;
 };
 export type MathObject = ObjectBase &
   (
@@ -53,7 +54,7 @@ export const BOARD = { width: 1600, height: 1100 };
 // Objects retain bounded sizes; the document grows downwards as content is added.
 export const MAX_Y = 1_000_000;
 export const MAX_TEXT_HEIGHT = 100_000;
-export const maxObjectHeight = (object: { type: string }) => object.type === "text" ? MAX_TEXT_HEIGHT : BOARD.height;
+export const maxObjectHeight = (object: { type: string }) => ["text", "fraction", "operation"].includes(object.type) ? MAX_TEXT_HEIGHT : BOARD.height;
 export function boardHeight(objects: MathObject[]) {
   return Math.max(BOARD.height, ...objects.map(o => o.y + o.height + 300));
 }
@@ -81,6 +82,7 @@ export function validateObject(value: unknown): value is MathObject {
     !number(value.height, 160, typeof value.type === "string" ? maxObjectHeight({ type: value.type }) : BOARD.height) ||
     !number(value.x, 0, BOARD.width - value.width) ||
     !number(value.y, 0, MAX_Y - value.height) ||
+    (value.visualScale !== undefined && !number(value.visualScale, 0.75, 2)) ||
     !record(value.data)
   )
     return false;
@@ -181,6 +183,7 @@ export function parseDocument(value: unknown): StudioDocument {
           y: item.y,
           width: item.width,
           height: item.height,
+          ...(item.visualScale === undefined ? {} : { visualScale: item.visualScale }),
           data: structuredClone(item.data),
         }) as MathObject,
     ),
