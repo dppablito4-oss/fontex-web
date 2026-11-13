@@ -46,7 +46,7 @@ it("saves edits with revisions and refreshes another device's changes", async ()
   await waitFor(() => expect(cloud.rows.get(scene.id)?.revision).toBe(2));
   const row = cloud.rows.get(scene.id)!;
   cloud.rows.set(scene.id, { scene: { ...row.scene, title: "Edited remotely" }, revision: 3 });
-  await act(() => { window.dispatchEvent(new Event("focus")); });
+  await act(async () => { window.dispatchEvent(new Event("focus")); await Promise.resolve(); });
   await waitFor(() => expect(result.current.scene.title).toBe("Edited remotely"));
 });
 
@@ -56,7 +56,7 @@ it("preserves both versions after simultaneous device edits", async () => {
   await waitFor(() => expect(result.current.status).toBe("saved"));
   act(() => result.current.setScene(s => ({ ...s, title: "Local work" })));
   cloud.rows.set(scene.id, { scene: { ...scene, title: "Remote work" }, revision: 2 });
-  await act(() => { window.dispatchEvent(new Event("focus")); });
+  await act(async () => { window.dispatchEvent(new Event("focus")); await Promise.resolve(); });
   await waitFor(() => expect(result.current.scenes).toHaveLength(2));
   await waitFor(() => expect(result.current.status).toBe("saved"));
   expect(result.current.scene.title).toBe("Local work (copia local)");
