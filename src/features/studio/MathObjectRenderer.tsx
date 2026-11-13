@@ -1,3 +1,4 @@
+import { InlineValue, InlineOnly } from "./InlineValue";
 import { isLearningObject } from "../../core/math-engine/learning-types";
 import { LearningMathObject } from "./LearningMathObjects";
 import { PolygonObject, FactorizationObject } from "./AdaptedMathObjects";
@@ -16,11 +17,11 @@ import { sequenceTerms } from "../../core/math-engine/sequences";
 import { parseStudioOperation, type FractionProduct } from "../../core/math-engine/studio-operations";
 import { CollectionObject, LinearEquationObject, NumberLineObject } from "./ExtendedMathObjects";
 
-function FractionLabel({ n, d }: { n: number; d: number }) {
+function FractionLabel({ n, d, editable = false }: { n: number; d: number; editable?: boolean }) {
   return (
     <span className="st-fraction" aria-label={`${n} sobre ${d}`}>
-      <span>{n}</span>
-      <span>{d}</span>
+      <span>{editable ? <InlineValue field="numerator" value={n} /> : n}</span>
+      <span>{editable ? <InlineValue field="denominator" value={d} /> : d}</span>
     </span>
   );
 }
@@ -107,7 +108,8 @@ function FractionDrawing({
 function FractionObject({ data }: { data: FractionData }) {
   return (
     <div className="st-single-fraction">
-      <FractionLabel n={data.numerator} d={data.denominator} />
+      <FractionLabel n={data.numerator} d={data.denominator} editable />
+      <InlineOnly><div className="st-inline-caption"><InlineValue field="shape" value={data.shape} /></div></InlineOnly>
       <FractionDrawing
         n={data.numerator}
         d={data.denominator}
@@ -120,7 +122,7 @@ function FractionObject({ data }: { data: FractionData }) {
 function MultiplicationObject({ data, operation, onChange }: { data: OperationData; operation: FractionProduct; onChange: (data: OperationData) => void }) {
   const { a, b, total, denominator, simplified } = operation;
   return <div className="st-operation">
-    <div className="st-operation-title"><strong>{data.expression}</strong><span>{["Representar", "Multiplicar", "Simplificar"][data.stage]} · {data.stage + 1}/3</span></div>
+    <div className="st-operation-title"><strong><InlineValue field="expression" value={data.expression} /></strong><InlineOnly><InlineValue field="shape" value={data.shape} /></InlineOnly><span className="st-operation-stage">{["Representar", "Multiplicar", "Simplificar"][data.stage]} · {data.stage + 1}/3</span></div>
     <div className="st-operands">
       <div><FractionLabel n={a.n} d={a.d} /><FractionDrawing n={a.n} d={a.d} shape={data.shape} /></div>
       <span className="st-operator">×</span>
@@ -159,8 +161,8 @@ function OperationObject({
   return (
     <div className="st-operation">
       <div className="st-operation-title">
-        <strong>{data.expression}</strong>
-        <span>
+        <strong><InlineValue field="expression" value={data.expression} /></strong><InlineOnly><InlineValue field="shape" value={data.shape} /></InlineOnly>
+        <span className="st-operation-stage">
           {["Representar", "Homogeneizar", "Resolver"][data.stage]} ·{" "}
           {data.stage + 1}/3
         </span>
@@ -279,7 +281,7 @@ export function ObjectVisual({
           className="st-text-content"
           style={{ fontSize: object.data.fontSize }}
         >
-          {object.data.content}
+          <InlineValue field="content" value={object.data.content} /><InlineOnly><small className="st-inline-caption">Tamaño: <InlineValue field="fontSize" value={object.data.fontSize} /> px</small></InlineOnly>
         </div>
       );
     case "sequence": {
@@ -305,10 +307,10 @@ export function ObjectVisual({
               </div>
             ))}
           </div>
-          <p className="st-math-explanation">
-            Empezamos en <strong>{object.data.start}</strong>.{" "}
-            {object.data.difference >= 0 ? "Sumamos" : "Restamos"}{" "}
-            <strong>{Math.abs(object.data.difference)}</strong> en cada paso.
+          <p className="st-math-explanation st-inline-parameters">
+            Empezamos en <strong><InlineValue field="start" value={object.data.start} /></strong>.{" "}
+            Cambio por paso: <strong><InlineValue field="difference" value={object.data.difference} /></strong>.
+            <InlineOnly> Términos: <InlineValue field="count" value={object.data.count} />.</InlineOnly>
           </p>
           {level !== "initial" && level !== "primary" && <p className="st-sequence-rule">
             aₙ = {object.data.start} + (n − 1) × ({object.data.difference})

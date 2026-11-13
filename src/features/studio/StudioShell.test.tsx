@@ -13,8 +13,7 @@ beforeAll(() => {
     this.removeAttribute("open");
   };
 });
-const inspector = () =>
-  within(screen.getByRole("complementary", { name: "Propiedades del objeto" }));
+const canvasObject = () => within(document.querySelector<HTMLElement>(".st-object.selected")!);
 afterEach(() => vi.restoreAllMocks());
 
 describe("Fontex Studio", () => {
@@ -63,8 +62,7 @@ describe("Fontex Studio", () => {
     const view = render(<ThemeProvider><StudioShell /></ThemeProvider>);
     fireEvent.click(screen.getByRole("button", { name: "Módulos" }));
     fireEvent.click(screen.getByRole("button", { name: "Añadir colección numérica" }));
-    fireEvent.change(inspector().getByLabelText("Enteros de la colección"), { target: { value: "1, 2, 2" } });
-    fireEvent.click(inspector().getByRole("button", { name: "Aplicar cambios" }));
+    fireEvent.change(canvasObject().getByLabelText("Enteros de la colección"), { target: { value: "1, 2, 2" } });
     const article = within(screen.getByRole("article", { name: "Colección numérica" }));
     expect(article.getByText("Suma").nextElementSibling).toHaveTextContent("5");
     expect(article.getByText("Media exacta").nextElementSibling).toHaveTextContent("5/3");
@@ -76,48 +74,43 @@ describe("Fontex Studio", () => {
     render(<ThemeProvider><StudioShell /></ThemeProvider>);
     fireEvent.click(screen.getByRole("button", { name: "Módulos" }));
     fireEvent.click(screen.getByRole("button", { name: "Añadir recta numérica" }));
-    for (const [name, value] of [["Mínimo de la recta", "-4"], ["Máximo de la recta", "4"], ["Tamaño del paso", "2"], ["Puntos enteros", "-2, 2"]]) fireEvent.change(inspector().getByLabelText(name!), { target: { value } });
-    fireEvent.click(inspector().getByRole("button", { name: "Aplicar cambios" }));
+    for (const [name, value] of [["Mínimo de la recta", "-4"], ["Máximo de la recta", "4"], ["Tamaño del paso", "2"], ["Puntos enteros", "-2, 2"]]) fireEvent.change(canvasObject().getByLabelText(name!), { target: { value } });
     expect(screen.getByRole("img", { name: /Recta de -4 a 4, paso 2/ })).toBeInTheDocument();
-    fireEvent.change(inspector().getByLabelText("Tamaño del paso"), { target: { value: "3" } });
-    fireEvent.click(inspector().getByRole("button", { name: "Aplicar cambios" }));
-    expect(inspector().getByRole("alert")).toHaveTextContent("Revisa los valores");
+    fireEvent.change(canvasObject().getByLabelText("Tamaño del paso"), { target: { value: "3" } });
+    expect(canvasObject().getByRole("alert")).toHaveTextContent("Revisa los valores");
     expect(screen.getByRole("img", { name: /Recta de -4 a 4, paso 2/ })).toBeInTheDocument();
   });
   it("resuelve una ecuación racional por etapas y conserva el resultado al reabrir", () => {
     const view = render(<ThemeProvider><StudioShell /></ThemeProvider>);
     fireEvent.click(screen.getByRole("button", { name: "Módulos" }));
     fireEvent.click(screen.getByRole("button", { name: "Añadir ecuación lineal" }));
-    fireEvent.change(inspector().getByLabelText("Coeficiente d"), { target: { value: "4" } });
-    fireEvent.click(inspector().getByRole("button", { name: "Aplicar cambios" }));
-    fireEvent.change(inspector().getByLabelText("Etapa de la ecuación"), { target: { value: "2" } });
-    fireEvent.click(inspector().getByRole("button", { name: "Aplicar cambios" }));
+    fireEvent.change(canvasObject().getByLabelText("Coeficiente d"), { target: { value: "4" } });
+    fireEvent.click(screen.getByRole("button", { name: "Resolver" }));
     expect(screen.getByText("x = 1/2")).toBeInTheDocument();
     view.unmount();
     render(<ThemeProvider><StudioShell /></ThemeProvider>);
+    fireEvent.click(screen.getByRole("button", { name: "Resolver" }));
     expect(screen.getByText("x = 1/2")).toBeInTheDocument();
   });
   it("crea, edita, duplica y elimina; deshacer recupera el objeto con sus valores", () => {
     render(<ThemeProvider><StudioShell /></ThemeProvider>);
     fireEvent.click(screen.getByRole("button", { name: "Módulos" }));
     fireEvent.click(screen.getByRole("button", { name: "Añadir fracción" }));
-    fireEvent.change(inspector().getByLabelText("Numerador"), {
+    fireEvent.change(canvasObject().getByLabelText("Numerador"), {
       target: { value: "3" },
     });
-    fireEvent.change(inspector().getByLabelText("Denominador"), {
+    fireEvent.change(canvasObject().getByLabelText("Denominador"), {
       target: { value: "4" },
     });
-    fireEvent.click(
-      inspector().getByRole("button", { name: "Aplicar cambios" }),
-    );
     expect(
       screen.getByRole("img", { name: "3 de 4 partes por unidad" }),
     ).toBeInTheDocument();
-    fireEvent.click(inspector().getByRole("button", { name: "Duplicar" }));
+    fireEvent.click(canvasObject().getByRole("button", { name: /^Duplicar / }));
+    expect(document.querySelector(".st-object.selected")).toHaveAttribute("aria-label", "Fracción (copia)");
     expect(
       screen.getAllByRole("img", { name: "3 de 4 partes por unidad" }),
     ).toHaveLength(2);
-    fireEvent.click(inspector().getByRole("button", { name: "Eliminar" }));
+    fireEvent.click(canvasObject().getByRole("button", { name: /^Eliminar / }));
     expect(
       screen.getAllByRole("img", { name: "3 de 4 partes por unidad" }),
     ).toHaveLength(1);
@@ -138,12 +131,9 @@ describe("Fontex Studio", () => {
   it("recupera textos y posiciones al volver a abrir el editor", () => {
     const view = render(<ThemeProvider><StudioShell /></ThemeProvider>);
     fireEvent.click(screen.getByRole("button", { name: "Mover Texto" }));
-    fireEvent.change(inspector().getByLabelText("Contenido"), {
+    fireEvent.change(canvasObject().getByLabelText("Contenido"), {
       target: { value: "La cantidad se conserva." },
     });
-    fireEvent.click(
-      inspector().getByRole("button", { name: "Aplicar cambios" }),
-    );
     fireEvent.keyDown(screen.getByRole("button", { name: "Mover Texto" }), {
       key: "ArrowDown",
     });
@@ -177,12 +167,9 @@ describe("Fontex Studio", () => {
       }),
     );
     fireEvent.click(screen.getByRole("button", { name: "Mover Sucesión" }));
-    fireEvent.change(inspector().getByLabelText("Diferencia entre términos"), {
+    fireEvent.change(canvasObject().getByLabelText("Diferencia entre términos"), {
       target: { value: "3" },
     });
-    fireEvent.click(
-      inspector().getByRole("button", { name: "Aplicar cambios" }),
-    );
     expect(screen.getByRole("img", { name: "14 puntos" })).toBeInTheDocument();
     expect(lastMaterial(localStorage, "guest")?.objects[0]?.data).toMatchObject(
       { start: 2, difference: 3, count: 5 },
@@ -193,16 +180,13 @@ describe("Fontex Studio", () => {
     fireEvent.click(
       screen.getByRole("button", { name: "Mover Operación guiada" }),
     );
-    fireEvent.change(inspector().getByLabelText("Operación", { exact: true }), {
+    fireEvent.change(canvasObject().getByLabelText("Operación", { exact: true }), {
       target: { value: "1/0 + 1/2" },
     });
-    fireEvent.click(
-      inspector().getByRole("button", { name: "Aplicar cambios" }),
-    );
     expect(screen.getByRole("alert")).toHaveTextContent(
       "denominador no puede ser cero",
     );
-    expect(screen.getByText("2/3 + 3/6")).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "2 de 3 partes por unidad" })).toBeInTheDocument();
   });
   it("mantiene una salida de presentación cuando fullscreen no está disponible", () => {
     render(<ThemeProvider><StudioShell /></ThemeProvider>);
@@ -239,7 +223,7 @@ describe("Fontex Studio", () => {
     fireEvent.click(screen.getByRole("button", { name: "Módulos" }));
     fireEvent.click(screen.getByRole("button", { name: "Añadir texto" }));
     expect(screen.getByRole("alert")).toHaveTextContent("No se pudo guardar");
-    expect(inspector().getByLabelText("Contenido")).toBeInTheDocument();
+    expect(canvasObject().getByLabelText("Contenido")).toBeInTheDocument();
     spy.mockRestore();
   });
   it("importa como copia y rechaza un JSON inválido sin sustituir el material", async () => {

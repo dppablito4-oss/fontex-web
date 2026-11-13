@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { executeActions } from "../../core/agent/actions";
 import {
   parseDocument,
@@ -47,6 +47,7 @@ export function useStudioDocument(owner: string) {
     future: [],
   });
   const historyRef = useRef(history);
+  const edit = useRef<History | null>(null);
   function commit(next: History) {
     historyRef.current = next;
     setHistory(next);
@@ -69,15 +70,18 @@ export function useStudioDocument(owner: string) {
       return false;
     }
   }
-  function update(change: (document: StudioDocument) => StudioDocument) {
+  function update(change: (document: StudioDocument) => StudioDocument, inlineEdit = false) {
+    if (inlineEdit) beginEdit(); else endEdit();
     try {
       const current = historyRef.current;
+      const changed = change(structuredClone(current.present));
+      if (JSON.stringify(changed) === JSON.stringify(current.present)) return true;
       const next = parseDocument({
-        ...change(structuredClone(current.present)),
+        ...changed,
         updatedAt: new Date().toISOString(),
       });
       commit({
-        past: [...current.past.slice(-39), current.present],
+        past: [...(edit.current ?? current).past.slice(-39), (edit.current ?? current).present],
         present: next,
         future: [],
       });
@@ -88,7 +92,15 @@ export function useStudioDocument(owner: string) {
       return false;
     }
   }
+  const beginEdit = useCallback(() => { edit.current ??= historyRef.current; }, []);
+  const endEdit = useCallback(() => { edit.current = null; }, []);
+  function cancelEdit() {
+    const previous = edit.current;
+    edit.current = null;
+    if (previous) { commit(previous); persist(previous.present); }
+  }
   function replace(document: StudioDocument): boolean {
+    endEdit();
     if (!persist()) return false;
     try {
       const next = parseDocument(document);
@@ -121,6 +133,7 @@ export function useStudioDocument(owner: string) {
     }
   }
   function undo() {
+    endEdit();
     const current = historyRef.current;
     const previous = current.past.at(-1);
     if (!previous) return;
@@ -132,6 +145,7 @@ export function useStudioDocument(owner: string) {
     persist(previous);
   }
   function redo() {
+    endEdit();
     const current = historyRef.current;
     const next = current.future[0];
     if (!next) return;
@@ -149,6 +163,9 @@ export function useStudioDocument(owner: string) {
     saved,
     persist,
     update,
+    beginEdit,
+    endEdit,
+    cancelEdit,
     execute: (batch: unknown, expected?: StudioDocument) => update(current => executeActions(current, batch, expected)),
     replace,
     open,

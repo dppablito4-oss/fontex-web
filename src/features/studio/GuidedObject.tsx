@@ -15,6 +15,11 @@ export function GuidedObject({ object }: { object: MathObject }) {
   const [answer, setAnswer] = useState("");
   const [hint, setHint] = useState(0);
   const [feedback, setFeedback] = useState("");
+  const dataKey = JSON.stringify(object.data);
+  const [previousData, setPreviousData] = useState(dataKey);
+  if (dataKey !== previousData) {
+    setPreviousData(dataKey); setStep(0); setAnswer(""); setHint(0); setFeedback("");
+  }
   const current = Math.min(step, Math.max(0, steps.length - 1));
   const practice = mode === "practice";
   let visual = object;

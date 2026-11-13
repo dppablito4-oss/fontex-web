@@ -155,7 +155,7 @@
 .st-bar svg { width: 180px; height: 45px; }
 .st-circle svg { width: 84px; height: 84px; }
 .st-operation-title { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 18px; font-size: 18px; }
-.st-operation-title > span { color: var(--st-primary); background: var(--ui-info-surface); padding: 6px 10px; border-radius: 6px; font-size: 12px; white-space: nowrap; }
+.st-operation-stage { color: var(--st-primary); background: var(--ui-info-surface); padding: 6px 10px; border-radius: 6px; font-size: 12px; white-space: nowrap; }
 .st-operands { display: flex; align-items: center; gap: 16px; justify-content: center; }
 .st-operands > div { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 12px; }
 .st-operands small { font-size: 12px; line-height: 1.5; text-align: center; color: var(--st-muted); }
@@ -315,7 +315,7 @@
 .st-object-content { container-type:inline-size; }
 .st-guided { display:grid; grid-template-columns: minmax(0, 1.15fr) minmax(280px, 1fr); gap:24px; align-items:start; min-height:100%; }
 .st-visual-panel { min-width:0; padding:22px 16px; border:1px solid var(--st-line); border-radius:18px; background:var(--st-background); display:flex; flex-direction:column; justify-content:center; min-height:320px; }
-.st-visual-panel :is(.st-step-buttons,.st-math-explanation,.st-single-fraction > p,.st-operation-title > span,.st-sequence > small) { display:none; }
+.st-visual-panel :is(.st-step-buttons,.st-math-explanation,.st-single-fraction > p,.st-operation-stage,.st-sequence > small) { display:none; }
 .st-visual-panel .st-operands { flex-wrap:wrap; gap:16px; }
 .st-visual-panel .st-operands > div { min-width:135px; }
 .st-visual-panel .st-bar svg { width: min(100%, 360px); height:auto; min-height:60px; }
@@ -513,3 +513,33 @@
 :root[data-theme="dark"] .st-app :is(.st-type-statistics,.st-type-probability,.st-type-algebra-tiles) { color:#c8b2ff; background:#241b34; }
 .st-module-search { display:block; width:100%; border:1px solid var(--st-control); border-radius:9px; padding:10px; margin:10px 0 14px; background:var(--st-background); color:var(--st-ink); font-size:12px; }
 .st-learning-statistics svg { max-height:none; }
+
+/* Inputs live where the mathematical values are displayed. */
+.st-inline-value { display: inline-flex; position: relative; vertical-align: baseline; max-width: 100%; font: inherit; color: inherit; }
+.st-inline-input { min-width: 2ch; max-width: 100%; padding: .08em .18em; border: 0; border-bottom: 1px dashed var(--st-muted); border-radius: 3px; background: transparent; color: inherit; font: inherit; line-height: 1.35; text-align: center; box-shadow: none; }
+.st-inline-input:hover { background: var(--st-piece-empty); }
+.st-inline-input:focus { outline: 2px solid var(--st-piece-primary); outline-offset: 2px; background: var(--st-surface); }
+.st-inline-input[aria-invalid="true"] { outline: 2px solid #dc4545; }
+.st-inline-value select { cursor: pointer; text-align: start; }
+.st-inline-multiline { display: block; width: 100%; }
+.st-inline-multiline textarea { width: 100%; text-align: start; resize: vertical; white-space: pre-wrap; }
+.st-inline-error { position: absolute; top: 100%; left: 0; min-width: 180px; max-width: 320px; padding: 8px; border: 1px solid #dc4545; border-radius: 5px; background: var(--st-surface); color: var(--st-ink); font-size: 13px; line-height: 1.4; z-index: 12; text-align: start; }
+.st-inline-caption { display: block; margin: 8px 0; font-size: 14px; line-height: 1.7; color: var(--st-ink); }
+.st-fraction .st-inline-input { width: 3ch; }
+.st-inline-help { font-size: 13px; color: var(--st-muted); padding: 14px; line-height: 1.6; }
+.st-canvas-object-actions { display: flex; gap: 2px; align-items: center; flex: none; }
+.st-app .st-canvas-object-actions button { width: 28px; height: 28px; min-height: 28px; padding: 4px; border: 0; background: transparent; }
+.st-object-handle > span { min-width: 0; flex: 1; }
+.st-object-handle .st-inline-input { text-align: start; font-size: inherit; }
+@media print { .st-inline-help, .st-canvas-object-actions { display: none !important; } }
+.st-inline-svg-caption { font-size: 16px; line-height: 1.7; text-align: center; color: var(--st-ink); }
+.st-visual-panel .st-inline-parameters:has(.st-inline-input) { display: block; }
+.st-object-fraction .st-object-content { padding: 12px; }
+.st-object-fraction .st-visual-panel { min-height: 0; padding: 12px; }
+.st-object-fraction .st-single-fraction { gap: 8px; }
+.st-object-fraction .st-inline-caption { margin: 4px 0; }
+.st-operation-title { flex-wrap: wrap; gap: 10px; }
+.st-object-handle .st-inline-value { overflow: visible; }
+.st-object-handle .st-inline-input { user-select: text; touch-action: manipulation; }
+.st-app .st-object-drag { width: 28px; height: 28px; min-height: 28px; flex: none; padding: 4px; border: 0; background: transparent; cursor: grab; touch-action: none; }
+.st-app .st-object-drag:active { cursor: grabbing; }

@@ -10,7 +10,6 @@ import {
   ChevronDown,
   MoreHorizontal,
   Search,
-  Copy,
   Check,
   Download,
   Expand,
@@ -44,7 +43,6 @@ import {
 import { useAuth } from "../auth/AuthProvider";
 import { ThemeToggle } from "../theme/ThemeToggle";
 import { CanvasViewport } from "./CanvasViewport";
-import { PropertiesInspector } from "./PropertiesInspector";
 import { useStudioDocument } from "./useStudioDocument";
 import { StudioAgentPanel } from "./StudioAgentPanel";
 import "./studio.css";
@@ -83,7 +81,6 @@ function StudioEditor({ owner }: { owner: string }) {
   const modulesToggle = useRef<HTMLButtonElement>(null);
   const dialog = useRef<HTMLDialogElement>(null);
   const importBusy = useRef(false);
-  const selected = doc.objects.find((object) => object.id === selectedId);
   useEffect(() => {
     function escape(event: KeyboardEvent) {
       if (event.key === "Escape") setPresenting(false);
@@ -105,13 +102,13 @@ function StudioEditor({ owner }: { owner: string }) {
     else if (!materialsOpen && modal.open) modal.close();
   }, [materialsOpen]);
 
-  function changeObject(object: MathObject) {
+  function changeObject(object: MathObject, inlineEdit = false) {
     store.update((current) => ({
       ...current,
       objects: current.objects.map((item) =>
         item.id === object.id ? object : item,
       ),
-    }));
+    }), inlineEdit);
   }
   function add(type: ObjectType) {
     if (doc.objects.length >= MAX_OBJECTS) {
@@ -144,8 +141,8 @@ function StudioEditor({ owner }: { owner: string }) {
     }));
     setSelectedId(null);
   }
-  function duplicate() {
-    if (!selected || doc.objects.length >= MAX_OBJECTS) return;
+  function duplicate(selected: MathObject) {
+    if (doc.objects.length >= MAX_OBJECTS) return;
     const next = fitObject({
       ...selected,
       id: uid(),
@@ -412,7 +409,12 @@ function StudioEditor({ owner }: { owner: string }) {
             presenting={presenting}
             onSelect={setSelectedId}
             onChange={changeObject}
+            onInlineChange={object => changeObject(object, true)}
             onDelete={remove}
+            onDuplicate={duplicate}
+            onBeginEdit={store.beginEdit}
+            onEndEdit={store.endEdit}
+            onCancelEdit={store.cancelEdit}
           />
           <div className="st-canvas-footer">
             <span>{presenting ? doc.title : null}</span>
@@ -441,40 +443,8 @@ function StudioEditor({ owner }: { owner: string }) {
             </div>
           </div>
         </main>
-        <aside className="st-inspector" aria-label="Propiedades del objeto">
-          {selected && <div className="st-inspector-heading">
-            <h2>
-              {selected ? objectRegistry[selected.type].name : "Propiedades"}
-            </h2>
-            {selected && (
-              <button
-                aria-label="Cerrar propiedades"
-                onClick={() => setSelectedId(null)}
-              >
-                <X size={17} />
-              </button>
-            )}
-          </div>}
-          {selected && (
-            <>
-              <div className="st-object-actions">
-                <button
-                  onClick={duplicate}
-                  disabled={doc.objects.length >= MAX_OBJECTS}
-                >
-                  <Copy size={16} /> Duplicar
-                </button>
-                <button onClick={() => remove(selected.id)}>
-                  <Trash2 size={16} /> Eliminar
-                </button>
-              </div>
-              <PropertiesInspector
-                key={JSON.stringify(selected)}
-                object={selected}
-                onApply={changeObject}
-              />
-            </>
-          )}
+        <aside className="st-inspector" aria-label="Asistente del material">
+          <p className="st-inline-help">Edita los valores subrayados directamente en el lienzo. El dibujo se actualiza al escribir. Enter confirma y Escape cancela.</p>
           <StudioAgentPanel key={`${doc.id}:${mode}`} document={doc} selectedId={selectedId} onSelect={setSelectedId} authenticated={!!user} teachingLevel={level} onLevelChange={setLevel} teachingMode={mode} onModeChange={setMode} onApply={(batch, expected) => {
             const formatted = readableBatch(batch, expected);
             const applied = store.execute(formatted, expected);

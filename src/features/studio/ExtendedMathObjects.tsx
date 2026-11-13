@@ -1,3 +1,4 @@
+import { InlineValue, InlineOnly, InlineEquation } from "./InlineValue";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import type {
   CollectionData,
@@ -18,8 +19,9 @@ export function CollectionObject({ data }: { data: CollectionData }) {
   const stats = analyzeCollection(data.values);
   return (
     <div className="st-collection">
+      <InlineOnly><p className="st-inline-caption">Datos: <InlineValue field="values" value={data.values.join(", ")} /></p></InlineOnly>
       <ol aria-label="Números de la colección">
-        {data.values.map((value, index) => <li key={index}>{value}{value >= 0 && value <= 20 && <div className="st-dots" role="img" aria-label={`${value} puntos`}>{Array.from({ length: value }, (_, i) => <span key={i} />)}</div>}</li>)}
+        {data.values.map((value, index) => <li key={index}><InlineValue field="values" index={index} value={value} />{value >= 0 && value <= 20 && <div className="st-dots" role="img" aria-label={`${value} puntos`}>{Array.from({ length: value }, (_, i) => <span key={i} />)}</div>}</li>)}
       </ol>
       <dl className="st-number-stats">
         <div>
@@ -124,9 +126,10 @@ export function NumberLineObject({ data }: { data: NumberLineData }) {
         ))}
       </svg>
       {!separatedLabels && <p>Puntos: {data.points.join(", ")}</p>}
-      <p className="st-math-explanation">
+      <InlineOnly><p className="st-inline-caption">De <InlineValue field="min" value={data.min} /> a <InlineValue field="max" value={data.max} /> · Puntos: <InlineValue field="points" value={data.points.join(", ")} /></p></InlineOnly>
+      <p className="st-math-explanation st-inline-parameters">
         Cada intervalo representa{" "}
-        {data.step}. Los números aumentan hacia la derecha.
+        <InlineValue field="step" value={data.step} />. Los números aumentan hacia la derecha.
       </p>
     </div>
   );
@@ -141,7 +144,7 @@ export function LinearEquationObject(
   return (
     <div className="st-equation">
       <p className="st-equation-expression">
-        {linearSide(data.a, data.b)} = {linearSide(data.c, data.d)}
+        <InlineEquation {...data}>{linearSide(data.a, data.b)} = {linearSide(data.c, data.d)}</InlineEquation>
       </p>
       {data.stage >= 1 && (
         <p className="st-equation-expression">

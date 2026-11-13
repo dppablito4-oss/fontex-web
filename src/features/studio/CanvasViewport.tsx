@@ -7,13 +7,15 @@ import {
   useRef,
   useState,
 } from "react";
-import { GripHorizontal, Maximize2, MoveDiagonal2, X } from "lucide-react";
+import { Copy, Trash2, GripHorizontal, Maximize2, MoveDiagonal2, X } from "lucide-react";
 import {
   BOARD,
   boardHeight,
   fitObject,
   type MathObject,
 } from "../../core/document-schema/document";
+import { InlineEditingContext, type InlineEditing } from "./inline-editing-context";
+import { InlineValue } from "./InlineValue";
 import { GuidedObject } from "./GuidedObject";
 import { useContext } from "react";
 import { TeachingMode } from "./teaching-mode";
@@ -26,7 +28,12 @@ export function CanvasViewport({
   presenting,
   onSelect,
   onChange,
+  onInlineChange,
   onDelete,
+  onDuplicate,
+  onBeginEdit,
+  onEndEdit,
+  onCancelEdit,
   children,
   onZoom,
 }: {
@@ -36,13 +43,20 @@ export function CanvasViewport({
   presenting: boolean;
   onSelect: (id: string | null) => void;
   onChange: (object: MathObject) => void;
+  onInlineChange?: (object: MathObject) => void;
   onDelete: (id: string) => void;
+  onDuplicate?: (object: MathObject) => void;
+  onBeginEdit?: () => void;
+  onEndEdit?: () => void;
+  onCancelEdit?: () => void;
   children?: ReactNode;
   onZoom?: (zoom: number) => void;
 }) {
   const viewport = useRef<HTMLDivElement>(null);
   useCanvasGestures(viewport, zoom, onZoom);
   const mode = useContext(TeachingMode);
+  const editable = !presenting && mode !== "practice";
+  const editing = (object: MathObject): InlineEditing | null => editable ? { object, onChange: onInlineChange ?? onChange, onBegin: onBeginEdit, onEnd: onEndEdit, onCancel: onCancelEdit } : null;
   const drag = useRef<
     { object: MathObject; x: number; y: number; resizing: boolean } | null
   >(
@@ -66,7 +80,7 @@ export function CanvasViewport({
     else if (!expanded && modal?.open) modal.close();
   }, [expanded]);
   function start(event: PointerEvent, object: MathObject, resizing = false) {
-    if (presenting || event.button !== 0) return;
+    if (presenting || event.button !== 0 || (event.target as HTMLElement).closest("input, textarea, select")) return;
     event.currentTarget.setPointerCapture(event.pointerId);
     drag.current = { object, x: event.clientX, y: event.clientY, resizing };
     onSelect(object.id);
@@ -125,7 +139,7 @@ export function CanvasViewport({
     }
   }
   function keyboard(event: KeyboardEvent, object: MathObject) {
-    if (presenting) return;
+    if (presenting || (event.target as HTMLElement).closest("input, textarea, select")) return;
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
       onSelect(object.id);
@@ -174,8 +188,8 @@ export function CanvasViewport({
           {objects.map((object) => {
             const shown = preview?.id === object.id ? preview : object;
             return (
+              <InlineEditingContext.Provider key={object.id} value={editing(object)}>
               <article
-                key={object.id}
                 className={`st-object st-object-${object.type} ${
                   !presenting && selectedId === object.id ? "selected" : ""
                 }`}
@@ -191,26 +205,23 @@ export function CanvasViewport({
                   if (!presenting) onSelect(object.id);
                 }}
               >
-                <div
-                  className="st-object-handle"
-                  role={presenting ? undefined : "button"}
-                  tabIndex={presenting ? undefined : 0}
-                  aria-label={presenting ? undefined : `Mover ${object.label}`}
-                  onDoubleClick={() => setExpandedId(object.id)}
-                  onFocus={() => {
-                    if (!presenting) onSelect(object.id);
-                  }}
-                  onPointerDown={(event) => start(event, object)}
-                  onPointerMove={move}
-                  onPointerUp={finish}
-                  onPointerCancel={() => {
-                    drag.current = null;
-                    setPreview(null);
-                  }}
-                  onKeyDown={(event) => keyboard(event, object)}
-                >
-                  <span>{object.label}</span>
-                  {!presenting && <GripHorizontal size={18} />}
+                <div className="st-object-handle" onDoubleClick={() => setExpandedId(object.id)}>
+                  <span><InlineValue field="label" value={object.label} /></span>
+                  {!presenting && <div className="st-canvas-object-actions">
+                    {onDuplicate && <button aria-label={`Duplicar ${object.label}`} title="Duplicar" onClick={event => { event.stopPropagation(); onDuplicate(object); }}><Copy size={14} /></button>}
+                    <button aria-label={`Eliminar ${object.label}`} title="Eliminar" onClick={event => { event.stopPropagation(); onDelete(object.id); }}><Trash2 size={14} /></button>
+                  </div>}
+                  {!presenting && <button
+                    className="st-object-drag"
+                    aria-label={`Mover ${object.label}`}
+                    title="Arrastra para mover; también puedes usar las flechas del teclado"
+                    onFocus={() => onSelect(object.id)}
+                    onPointerDown={event => start(event, object)}
+                    onPointerMove={move}
+                    onPointerUp={finish}
+                    onPointerCancel={() => { drag.current = null; setPreview(null); }}
+                    onKeyDown={event => keyboard(event, object)}
+                  ><GripHorizontal size={18} /></button>}
                 </div>
                 <button
                   className="st-object-expand"
@@ -221,7 +232,8 @@ export function CanvasViewport({
                   <Maximize2 size={16} />
                 </button>
                 <div className="st-object-content">
-                  <GuidedObject key={`${object.id}:${mode}:${JSON.stringify(object.data)}`} object={object} />
+                  <GuidedObject key={`${object.id}:${mode}`} object={object} />
+                  {!presenting && mode === "practice" && <small>Para editar los datos, cambia a Aprender o Resolver.</small>}
                 </div>
                 {!presenting && (
                   <button
@@ -241,6 +253,7 @@ export function CanvasViewport({
                   </button>
                 )}
               </article>
+              </InlineEditingContext.Provider>
             );
           })}
         </div>
@@ -266,7 +279,7 @@ export function CanvasViewport({
               </button>
             </div>
             <div className="st-expanded-content">
-              <GuidedObject key={`${expanded.id}:${mode}:${JSON.stringify(expanded.data)}`} object={expanded} />
+              <InlineEditingContext.Provider value={editing(expanded)}><GuidedObject key={`${expanded.id}:${mode}`} object={expanded} /></InlineEditingContext.Provider>
             </div>
           </>
         )}
