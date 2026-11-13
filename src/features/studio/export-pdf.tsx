@@ -20,7 +20,7 @@ export function printableMaterial(doc: StudioDocument, level: AgentLevel) {
             <h2>{object.label}</h2>
             {object.type === "text"
               ? <div className="st-print-text">{object.data.content.split(/\r?\n/).filter(line => line.trim()).map((line, index) => <p key={index}>{line}</p>)}</div>
-              : <div className="st-print-visual"><ObjectVisual object={object} onChange={() => {}} /></div>}
+              : <div className="st-print-visual"><ObjectVisual object={object.type === "operation" ? { ...object, data: { ...object.data, stage: 2 } } : object.type === "linear-equation" ? { ...object, data: { ...object.data, stage: 2 } } : object} onChange={() => {}} lessonStep={Infinity} /></div>}
             {steps.length > 0 && <ol className="st-print-steps">{steps.map(([title, text], index) => <li key={index}><strong>{title}</strong><p>{text}</p></li>)}</ol>}
           </section>;
         })}</main>

@@ -20,7 +20,7 @@ it("reinicia las pistas visibles al cambiar de objeto sin perder el modo", async
       onApply={apply}
     />,
   );
-  fireEvent.click(screen.getByText("Fontex Agent"));
+  fireEvent.click(screen.getByText("Fontex Agente"));
   fireEvent.change(screen.getByLabelText("Modo"), {
     target: { value: "practice" },
   });
@@ -78,7 +78,7 @@ it("practica sin sesión con pistas graduadas y sin cambios automáticos", async
       onApply={apply}
     />,
   );
-  fireEvent.click(screen.getByText("Fontex Agent"));
+  fireEvent.click(screen.getByText("Fontex Agente"));
   expect(screen.getByRole("button", { name: "Consultar" })).toBeDisabled();
   fireEvent.change(screen.getByLabelText("Modo"), {
     target: { value: "practice" },
@@ -112,7 +112,7 @@ it.each(["learn", "solve"] as const)(
         onApply={apply}
       />,
     );
-    fireEvent.click(screen.getByText("Fontex Agent"));
+    fireEvent.click(screen.getByText("Fontex Agente"));
     fireEvent.change(screen.getByLabelText("Modo"), {
       target: { value: mode },
     });
@@ -131,6 +131,7 @@ it.each(["learn", "solve"] as const)(
         level: "introductory",
         question: "Crea un ejemplo",
       }),
+      expect.objectContaining({ onText: expect.any(Function) as unknown, signal: expect.any(AbortSignal) as unknown }),
     );
     expect(apply).toHaveBeenCalledTimes(1);
     expect(screen.getByRole("status")).toHaveTextContent("Cambios aplicados");
@@ -162,10 +163,43 @@ it("conserva conversación y contexto al pasar de explicar a crear, y permite em
   expect(screen.getByText("Un hexágono tiene seis lados.")).toBeVisible();
   fireEvent.click(screen.getByRole("button", { name: "Consultar" }));
   await screen.findByText("Aquí está el hexágono.");
-  expect(call).toHaveBeenLastCalledWith(expect.objectContaining({ history: [{ role: "user", content: "Qué es un hexágono" }, { role: "assistant", content: "Un hexágono tiene seis lados." }] }));
+  expect(call).toHaveBeenLastCalledWith(expect.objectContaining({ history: [{ role: "user", content: "Qué es un hexágono" }, { role: "assistant", content: "Un hexágono tiene seis lados." }] }), expect.objectContaining({ onText: expect.any(Function) as unknown }));
   expect(screen.getByText("Qué es un hexágono")).toBeVisible();
   expect(apply).toHaveBeenCalledOnce();
   fireEvent.click(screen.getByRole("button", { name: "Nueva conversación" }));
   expect(screen.queryByText("Aquí está el hexágono.")).not.toBeInTheDocument();
   expect(screen.queryByText("Qué es un hexágono")).not.toBeInTheDocument();
+});
+
+it("muestra la escritura real y ofrece crear desde la conversación con un clic", async () => {
+  const doc = createDocument();
+  let finish!: (value: Awaited<ReturnType<typeof service.requestAgent>>) => void;
+  const call = vi.spyOn(service, "requestAgent").mockImplementationOnce((_request, options) => {
+    options?.onText("Podemos representar un hexágono");
+    return new Promise(resolve => { finish = resolve; });
+  }).mockResolvedValueOnce({ message: "Creado.", batch: { documentId: doc.id, actions: [] }, verification: [] });
+  render(<StudioAgentPanel document={doc} selectedId={null} authenticated onApply={() => true} />);
+  fireEvent.change(screen.getByLabelText("Consulta"), { target: { value: "Muéstrame cómo se hace" } });
+  fireEvent.click(screen.getByRole("button", { name: "Consultar" }));
+  expect(await screen.findByText("Podemos representar un hexágono")).toBeVisible();
+  expect(screen.getByRole("status")).toHaveTextContent("Escribiendo");
+  finish({ message: "Un hexágono tiene seis lados.", batch: { documentId: doc.id, actions: [] }, verification: [] });
+  fireEvent.click(await screen.findByRole("button", { name: "Crear en el lienzo" }));
+  await screen.findByText("Creado.");
+  expect(call).toHaveBeenLastCalledWith(expect.objectContaining({ task: "build", history: expect.arrayContaining([{ role: "assistant", content: "Un hexágono tiene seis lados." }]) as unknown }), expect.any(Object));
+  expect(screen.queryByText(/Luna|Sol|GPT-/)).not.toBeInTheDocument();
+});
+
+it("descarta un lote generado si cambió el nivel mientras respondía", async () => {
+  const doc = createDocument(), apply = vi.fn(() => true);
+  let finish!: (value: Awaited<ReturnType<typeof service.requestAgent>>) => void;
+  vi.spyOn(service, "requestAgent").mockImplementation(() => new Promise(resolve => { finish = resolve; }));
+  const view = render(<StudioAgentPanel document={doc} selectedId={null} teachingLevel="primary" authenticated onApply={apply} />);
+  fireEvent.change(screen.getByLabelText("Consulta"), { target: { value: "Crea un círculo" } });
+  fireEvent.click(screen.getByRole("button", { name: "Consultar" }));
+  view.rerender(<StudioAgentPanel document={doc} selectedId={null} teachingLevel="secondary" authenticated onApply={apply} />);
+  finish({ message: "Creado.", batch: { documentId: doc.id, actions: [{ kind: "create", object: createObject("circle") }] }, verification: [] });
+  expect(await screen.findByRole("alert")).toHaveTextContent("Cambió el nivel");
+  expect(apply).not.toHaveBeenCalled();
+  expect(screen.queryByText("Creado.")).not.toBeInTheDocument();
 });

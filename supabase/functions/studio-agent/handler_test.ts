@@ -241,3 +241,35 @@ Deno.test("agent: ninguna conversación puede modificar el material, incluso si 
   const result = await run({ request: { ...input(), question: "Explícame los polígonos" }, model: { status: "completed", output: [{ type: "message", content: [{ type: "output_text", text: JSON.stringify({ message: "Cambio", actions: [{ kind: "create", object: createObject("fraction") }] }) }] }] } });
   assert.equal(result.status, 422); assert.equal(result.calls, 1);
 });
+
+Deno.test("agent: entrega texto incremental antes del lote completo y valida antes de autorizar acciones", async () => {
+  const { eventData } = await import("../../../src/core/agent/event-stream.ts");
+  let provider!: ReadableStreamDefaultController<Uint8Array>;
+  let providerRequest: Record<string, unknown> = {};
+  const handler = createAgentHandler(() => "test-key", (_url, init) => {
+    providerRequest = JSON.parse(String(init?.body));
+    return Promise.resolve(new Response(new ReadableStream<Uint8Array>({ start(c) { provider = c; } }), { headers: { "Content-Type": "text/event-stream" } }));
+  });
+  const data = { ...input(), stream: true, task: "build", question: "Sí, adelante" };
+  const response = await handler(new Request("http://localhost", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) }), { userClaims: { id: "user" }, takeQuota: () => Promise.resolve(true) });
+  const events = eventData(response.body!);
+  assert.deepEqual((await events.next()).value, { type: "start" });
+  const send = (event: unknown) => provider.enqueue(new TextEncoder().encode(`data: ${JSON.stringify(event)}\n\n`));
+  send({ type: "response.output_text.delta", delta: '{"message":"Preparando un hexágono' });
+  assert.deepEqual((await events.next()).value, { type: "text", text: "Preparando un hexágono" });
+  assert.equal(providerRequest.stream, true);
+  assert.equal(providerRequest.model, "test-key"); // Configured builder override.
+  const object = createObject("regular-polygon");
+  send({ type: "response.completed", response: { status: "completed", output: [{ type: "message", content: [{ type: "output_text", text: JSON.stringify({ message: "Hexágono listo.", actions: [{ kind: "create", object }] }) }] }] } });
+  const done = (await events.next()).value as { type: string; reply: { batch: { actions: unknown[] } } };
+  assert.equal(done.type, "done"); assert.equal(done.reply.batch.actions.length, 1);
+  assert.equal((await events.next()).done, true);
+});
+Deno.test("agent: si se corta la transmisión no autoriza acciones parciales", async () => {
+  const { eventData } = await import("../../../src/core/agent/event-stream.ts");
+  const handler = createAgentHandler(() => "test-key", () => Promise.resolve(new Response('data: {"type":"response.output_text.delta","delta":"{\\\"message\\\":\\\"Parcial"}\n\n', { headers: { "Content-Type": "text/event-stream" } })));
+  const response = await handler(new Request("http://localhost", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...input(), question: "Explica", stream: true }) }), { userClaims: { id: "user" }, takeQuota: () => Promise.resolve(true) });
+  const events = []; for await (const event of eventData(response.body!)) events.push(event);
+  assert.ok(events.some(event => (event as { type: string }).type === "error"));
+  assert.ok(!events.some(event => (event as { type: string }).type === "done"));
+});

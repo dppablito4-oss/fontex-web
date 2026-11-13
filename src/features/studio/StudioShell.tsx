@@ -4,7 +4,7 @@ import { learningIcons } from "../../core/object-registry/learning-registry";
 import { TeachingMode } from "./teaching-mode";
 import { LessonPlayer } from "./LessonPlayer";
 import { agentLevels, agentModes, type AgentMode } from "../../core/agent/protocol";
-import { readableBatch, organizeObjects } from "./object-layout";
+import { readableBatch, organizeObjects, wideObject } from "./object-layout";
 import { TeachingLevel } from "./teaching-level";
 import type { AgentLevel } from "../../core/agent/protocol";
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
@@ -77,6 +77,8 @@ function StudioEditor({ owner }: { owner: string }) {
   const [zoom, setZoom] = useState(() =>
     window.innerWidth < 760 ? 0.85 : 1,
   );
+  const [autoFit, setAutoFit] = useState(() => window.innerWidth >= 760);
+  const zoomBeforePresentation = useRef(1);
   const [presenting, setPresenting] = useState(false);
   const [materialsOpen, setMaterialsOpen] = useState(false);
   const [notice, setNotice] = useState("");
@@ -89,10 +91,13 @@ function StudioEditor({ owner }: { owner: string }) {
   const importBusy = useRef(false);
   useEffect(() => {
     function escape(event: KeyboardEvent) {
-      if (event.key === "Escape") setPresenting(false);
+      if (event.key === "Escape" && root.current?.classList.contains("st-presenting")) {
+        setPresenting(false); setZoom(zoomBeforePresentation.current);
+        if (document.fullscreenElement) void document.exitFullscreen().catch(() => {});
+      }
     }
     function fullscreen() {
-      if (!document.fullscreenElement) setPresenting(false);
+      if (!document.fullscreenElement && root.current?.classList.contains("st-presenting")) { setPresenting(false); setZoom(zoomBeforePresentation.current); }
     }
     window.addEventListener("keydown", escape);
     document.addEventListener("fullscreenchange", fullscreen);
@@ -121,14 +126,14 @@ function StudioEditor({ owner }: { owner: string }) {
       setNotice(`Este material admite hasta ${MAX_OBJECTS} objetos.`);
       return;
     }
-    const object = createObject(type, doc.objects.length);
+    const object = wideObject(createObject(type, doc.objects.length));
     const bottom = Math.max(
       0,
       ...doc.objects.map((item) => item.y + item.height),
     );
     const next = fitObject({
       ...object,
-      x: 60 + (doc.objects.length % 3) * 60,
+      x: 60,
       y: bottom + 30,
     });
     store.update((current) => ({
@@ -211,17 +216,19 @@ function StudioEditor({ owner }: { owner: string }) {
       importBusy.current = false;
     }
   }
-  function fit() {
-    const width = work.current?.clientWidth ?? 1000;
-    const height = (work.current?.clientHeight ?? 700) - 55;
-    setZoom(
-      Math.max(
-        0.2,
-        Math.min(1, (width - 48) / BOARD.width, (height - 40) / BOARD.height),
-      ),
-    );
-  }
+  useEffect(() => {
+    if (!autoFit || presenting) return;
+    const element = work.current?.querySelector<HTMLElement>(".st-viewport");
+    if (!element) return;
+    const resize = () => { if (element.clientWidth) setZoom(Math.max(.2, Math.min(1, (element.clientWidth - 48) / BOARD.width))); };
+    resize();
+    const observer = new ResizeObserver(resize);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [autoFit, presenting, assistantOpen]);
+  function fit() { setAutoFit(true); const width = work.current?.clientWidth; if (width) setZoom(Math.max(.2, Math.min(1, (width - 48) / BOARD.width))); }
   async function present() {
+    zoomBeforePresentation.current = zoom;
     setSelectedId(null);
     setPresenting(true);
     try {
@@ -229,16 +236,6 @@ function StudioEditor({ owner }: { owner: string }) {
     } catch {
       /* The distraction-free view also works without the fullscreen API. */
     }
-    setZoom(
-      Math.max(
-        0.2,
-        Math.min(
-          1,
-          (window.innerWidth - 48) / BOARD.width,
-          (window.innerHeight - 110) / BOARD.height,
-        ),
-      ),
-    );
   }
   async function leavePresentation() {
     setPresenting(false);
@@ -249,7 +246,7 @@ function StudioEditor({ owner }: { owner: string }) {
         /* Keep the visible exit available. */
       }
     }
-    setZoom(window.innerWidth < 760 ? 0.85 : 1);
+    setZoom(zoomBeforePresentation.current);
   }
   async function leaveAccount() {
     if (!store.persist()) return;
@@ -308,7 +305,7 @@ function StudioEditor({ owner }: { owner: string }) {
           <button className="st-icon-button" aria-label="Guardar" title="Guardar" onClick={() => store.persist()}>
             {store.saved ? <Check size={18} /> : <Save size={18} />}
           </button>
-          <button className="st-icon-button" aria-label="Presentar" title="Presentar" onClick={() => void present()}>
+          <button className="st-icon-button" aria-label="Presentar" title="Presentar" disabled={!doc.objects.length} onClick={() => void present()}>
             <Expand size={17} />
             <span className="st-action-label">Presentar</span>
           </button>
@@ -401,7 +398,7 @@ function StudioEditor({ owner }: { owner: string }) {
             objects={doc.objects}
             selectedId={selectedId}
             zoom={zoom}
-            onZoom={setZoom}
+            onZoom={value => { setAutoFit(false); setZoom(value); }}
             presenting={presenting}
             onSelect={setSelectedId}
             onChange={changeObject}
@@ -409,7 +406,7 @@ function StudioEditor({ owner }: { owner: string }) {
             onDelete={remove}
             onTextGrow={(id, height) => store.relayout(current => {
               const object = current.objects.find(item => item.id === id);
-              if (!object || object.type !== "text" || height <= object.height) return current;
+              if (!object || height <= object.height) return current;
               const delta = height - object.height, bottom = object.y + object.height;
               return { ...current, objects: current.objects.map(item => item.id === id ? fitObject({ ...item, height }) : item.y >= bottom && item.x < object.x + object.width && item.x + item.width > object.x ? fitObject({ ...item, y: item.y + delta }) : item) };
             })}
@@ -426,7 +423,7 @@ function StudioEditor({ owner }: { owner: string }) {
               <button
                 aria-label="Alejar"
                 disabled={zoom <= 0.2}
-                onClick={() => setZoom((value) => Math.max(0.2, value - 0.1))}
+                onClick={() => { setAutoFit(false); setZoom((value) => Math.max(0.2, value - 0.1)); }}
               >
                 <Minus size={16} />
               </button>
@@ -436,19 +433,19 @@ function StudioEditor({ owner }: { owner: string }) {
               <button
                 aria-label="Acercar"
                 disabled={zoom >= 2.5}
-                onClick={() => setZoom((value) => Math.min(2.5, value + 0.1))}
+                onClick={() => { setAutoFit(false); setZoom((value) => Math.min(2.5, value + 0.1)); }}
               >
                 <Plus size={16} />
               </button>
               <button aria-label="Ajustar lienzo" onClick={fit}>
                 <Expand size={16} />
               </button>
-              <button className="st-actual-size" aria-label="Ver al 100 %" title="Ver al 100 %" onClick={() => setZoom(1)}>100 %</button>
+              <button className="st-actual-size" aria-label="Ver al 100 %" title="Ver al 100 %" onClick={() => { setAutoFit(false); setZoom(1); }}>100 %</button>
             </div>
           </div>
         </main>
         <aside ref={assistantPanel} id="st-assistant-panel" hidden={!assistantOpen} tabIndex={-1} className="st-inspector" aria-label="Asistente del material" onKeyDown={event => { if (event.key === "Escape") { setAssistantOpen(false); assistantToggle.current?.focus(); } }}>
-          <div className="st-assistant-heading"><span>Tu copiloto de matemáticas</span><button aria-label="Cerrar asistente" onClick={() => { setAssistantOpen(false); assistantToggle.current?.focus(); }}><X size={18} /></button></div>
+          <div className="st-assistant-heading"><span>Chat</span><button aria-label="Cerrar asistente" onClick={() => { setAssistantOpen(false); assistantToggle.current?.focus(); }}><X size={18} /></button></div>
           <StudioAgentPanel key={doc.id} document={doc} selectedId={selectedId} onSelect={setSelectedId} authenticated={!!user} teachingLevel={level} onLevelChange={setLevel} teachingMode={mode} onModeChange={setMode} onApply={(batch, expected) => {
             const formatted = readableBatch(batch, expected);
             const applied = store.execute(formatted, expected);

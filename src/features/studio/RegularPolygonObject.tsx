@@ -15,10 +15,10 @@ export function RegularPolygonObject({ data, step, hidden }: { data: RegularPoly
       {vertices.map((p, i) => {
         const q = vertices[(i + 1) % vertices.length]!, mx = (p.x + q.x) / 2, my = (p.y + q.y) / 2;
         const vx = mx - 210, vy = my - 151, length = Math.hypot(vx, vy);
-        return <g key={i}><circle cx={p.x} cy={p.y} r="3" fill="currentColor" /><text x={mx + vx / length * 24} y={my + vy / length * 24 + 4} textAnchor="middle" fill="currentColor" fontSize={data.sides > 8 ? 11 : 13}>{measureText(data.sideLength)} {data.unit}</text></g>;
+        return <g key={i}><circle cx={p.x} cy={p.y} r="3" fill="currentColor" /><text x={mx + vx / length * 24} y={my + vy / length * 24 + 4} textAnchor="middle" fill="currentColor" fontSize={data.sides > 8 ? 15 : 18}>{measureText(data.sideLength)} {data.unit}</text></g>;
       })}
       {level !== "initial" && level !== "primary" && !hidden && step >= 3 && <><line x1="210" y1="151" x2={(vertices[0]!.x + vertices[1]!.x) / 2} y2={(vertices[0]!.y + vertices[1]!.y) / 2} stroke="currentColor" strokeDasharray="5 4" /><circle cx="210" cy="151" r="3" fill="currentColor" /></>}
-      <text x="210" y="311" textAnchor="middle" fill="currentColor" fontSize="14">{a.name}</text>
+      <text x="210" y="311" textAnchor="middle" fill="currentColor" fontSize="18">{a.name}</text>
     </svg>
     <p className="st-regular-note">Todos sus lados y ángulos son iguales. Las medidas indicadas definen la figura.</p>
     {!hidden && step >= 1 && <dl className="st-number-stats"><div><dt>Perímetro</dt><dd>{measureText(a.perimeter)} {data.unit}</dd></div>{step >= 3 && level !== "initial" && <div><dt>Área{a.areaExact ? "" : " aproximada"}</dt><dd>{a.areaExact ? "" : "≈ "}{measureText(a.area, a.areaExact)} {data.unit}²</dd></div>}</dl>}

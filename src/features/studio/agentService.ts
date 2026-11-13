@@ -1,3 +1,5 @@
+import { eventData } from "../../core/agent/event-stream";
+import { record } from "../../core/agent/actions";
 import { explainStepReply } from "./agent-intents";
 import { FunctionsFetchError, FunctionsHttpError } from "@supabase/supabase-js";
 import { supabase } from "../../lib/supabase/client";
@@ -9,7 +11,7 @@ import {
 } from "../../core/agent/protocol";
 import { practiceReply } from "../../core/agent/pedagogy";
 
-export async function requestAgent(value: AgentRequest) {
+export async function requestAgent(value: AgentRequest, options?: { onText: (text: string) => void; signal?: AbortSignal }) {
   const input = parseAgentRequest(value);
   if (input.mode === "practice") return practiceReply(input);
   const explanation = explainStepReply(input);
@@ -25,7 +27,8 @@ export async function requestAgent(value: AgentRequest) {
     );
   }
   const result = await supabase.functions.invoke<unknown>("studio-agent", {
-    body: input,
+    body: options ? { ...input, stream: true } : input,
+    ...(options?.signal ? { signal: options.signal } : {}),
     timeout: 36_000,
   });
   if (result.error) {
@@ -89,6 +92,18 @@ export async function requestAgent(value: AgentRequest) {
     throw new Error(
       "No se pudo obtener una propuesta del agente. El material no cambió.",
     );
+  }
+  if (result.data instanceof Response && result.data.body) {
+    for await (const event of eventData(result.data.body)) {
+      if (!record(event)) continue;
+      if (event.type === "text" && typeof event.text === "string") options?.onText(event.text.slice(0, 4000));
+      if (event.type === "done") return parseAgentReply(event.reply, input.document);
+      if (event.type === "error") {
+        const code = record(event.error) && typeof event.error.code === "string" ? event.error.code : "";
+        throw new Error(Object.hasOwn(agentFailureMessages, code) ? agentFailureMessages[code as keyof typeof agentFailureMessages] : "La respuesta se interrumpió. Intenta de nuevo; no se aplicaron cambios.");
+      }
+    }
+    throw new Error("La conexión se interrumpió. Intenta de nuevo; no se aplicaron cambios.");
   }
   return parseAgentReply(result.data, input.document);
 }

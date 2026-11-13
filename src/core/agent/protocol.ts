@@ -43,6 +43,8 @@ export type AgentRequest = {
   level: AgentLevel;
   hintLevel: number;
   history?: ConversationTurn[];
+  stream?: boolean;
+  task?: "chat" | "build";
 };
 export type AgentReply = {
   message: string;
@@ -61,6 +63,8 @@ export function parseAgentRequest(value: unknown): AgentRequest {
       "level",
       "hintLevel",
       ...(Object.hasOwn(value, "history") ? ["history"] : []),
+      ...(Object.hasOwn(value, "stream") ? ["stream"] : []),
+      ...(Object.hasOwn(value, "task") ? ["task"] : []),
     ]) ||
     typeof value.mode !== "string" || !Object.hasOwn(agentModes, value.mode) ||
     typeof value.level !== "string" ||
@@ -72,6 +76,7 @@ export function parseAgentRequest(value: unknown): AgentRequest {
     (value.hintLevel as number) > 2 ||
     (value.selectedId !== null && typeof value.selectedId !== "string")
   ) throw new Error("Consulta del agente inválida.");
+  if ((value.stream !== undefined && typeof value.stream !== "boolean") || (value.task !== undefined && value.task !== "chat" && value.task !== "build")) throw new Error("Consulta del agente inválida.");
   if (value.history !== undefined && (!Array.isArray(value.history) || value.history.length > 6 ||
     !value.history.every(turn => record(turn) && exactKeys(turn, ["role", "content"]) &&
       (turn.role === "user" || turn.role === "assistant") && typeof turn.content === "string" &&

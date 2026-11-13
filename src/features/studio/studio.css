@@ -696,3 +696,40 @@
 }
 .st-presenting .st-layout.st-with-assistant { grid-template-columns: 1fr; }
 .st-presenting .st-with-assistant .st-workspace { grid-column: 1; grid-row: 1; }
+
+/* Diagrams span the material; explanation follows below instead of shrinking the drawing. */
+.st-guided.st-guided-wide { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+.st-guided-wide .st-visual-panel { width: 100%; }
+.st-guided-wide .st-story-panel { padding: 4px 12px 12px; }
+.st-guided-wide .st-story-panel h3 { font-size: 28px; margin-bottom: 12px; }
+.st-guided-wide .st-story-copy { margin-bottom: 12px; }
+.st-guided-wide .st-progress { margin-top: 16px; }
+.st-guided-wide .st-story-navigation { margin-top: 16px; }
+.st-guided-wide :is(.st-geometry,.st-polygon,.st-regular-polygon) > svg { width: 100%; max-height: 480px; }
+.st-guided-wide .st-number-line svg { width: 100%; min-width: 0; }
+.st-chat-author { color: var(--st-muted); font-size: 11px; font-weight: 700; }
+.st-app .st-chat-create { margin-block: 8px; border-color: var(--st-primary); color: var(--st-primary); background: transparent; }
+.st-agent .st-chat-stream .st-agent-message { white-space: pre-wrap; }
+.st-typing-caret { display: inline-block; width: 2px; height: 1em; margin-left: 3px; background: currentColor; vertical-align: -.1em; animation: st-caret 1s steps(2) infinite; }
+@keyframes st-caret { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .st-typing-caret { animation: none; } }
+/* Presentation is a responsive reading surface, independent of editor zoom and card bounds. */
+.st-app.st-presenting { min-height: 0; height: 100dvh; }
+.st-app.st-presenting > .fx-site-header,
+.st-app.st-presenting :is(.st-header,.st-palette,.st-inspector,.st-learning-toolbar,.st-canvas-footer,.st-object-expand,.st-resize-handle,.st-canvas-object-actions,.st-object-drag) { display: none !important; }
+.st-app.st-presenting .st-layout { display: flex; min-height: 0; }
+.st-app.st-presenting .st-workspace { height: 100%; min-height: 0; flex: 1; }
+.st-app.st-presenting .st-viewport { padding: 64px clamp(16px, 4vw, 80px) 32px; width: 100%; }
+.st-app.st-presenting .st-board-space { width: 100% !important; height: auto !important; }
+.st-app.st-presenting .st-board { position: relative; width: 100% !important; height: auto !important; transform: none !important; }
+.st-app.st-presenting .st-object { position: relative; inset: auto !important; width: 100% !important; height: auto !important; min-height: 0; margin: 0 0 48px; border: 0; overflow: visible; }
+.st-app.st-presenting .st-object-content { overflow: visible; height: auto; }
+.st-app.st-presenting .st-object-handle { opacity: 1; font-size: 18px; padding: 0 12px; }
+.st-app.st-presenting .st-guided { min-height: 0; }
+.st-app.st-presenting .st-exit-presentation { position: fixed; z-index: 10; top: 12px; right: 16px; bottom: auto; }
+@media (max-width: 760px) {
+  .st-app.st-presenting .st-guided { grid-template-columns: minmax(0, 1fr); }
+  .st-app.st-presenting .st-story-panel { font-size: 17px; }
+  .st-app.st-presenting .st-story-panel h3 { font-size: 24px; }
+  .st-app.st-presenting .st-story-copy { font-size: 18px; }
+}

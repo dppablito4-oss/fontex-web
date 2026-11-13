@@ -21,7 +21,7 @@ export function PolygonObject({ data, lessonStep = Infinity, concealAnswers = fa
         {Array.from({ length: maxX - minX + 1 }, (_, i) => <line key={`x${i}`} x1={x(minX + i)} x2={x(minX + i)} y1={y(maxY)} y2={y(minY)} />)}
         {Array.from({ length: maxY - minY + 1 }, (_, i) => <line key={`y${i}`} x1={x(minX)} x2={x(maxX)} y1={y(minY + i)} y2={y(minY + i)} />)}
       </g>
-      {data.vertices.map((p, i) => <g key={i}><circle cx={x(p.x)} cy={y(p.y)} r="4" fill="var(--st-ink)" /><text x={x(p.x)} y={y(p.y) - 10} textAnchor="middle" fontSize="13" fill="var(--st-ink)">{String.fromCharCode(65 + i)}</text></g>)}
+      {data.vertices.map((p, i) => <g key={i}><circle cx={x(p.x)} cy={y(p.y)} r="4" fill="var(--st-ink)" /><text x={x(p.x)} y={y(p.y) - 10} textAnchor="middle" fontSize="17" fill="var(--st-ink)">{String.fromCharCode(65 + i)}</text></g>)}
     </svg>
     <InlineOnly><p className="st-inline-caption">Unidad: <InlineValue field="unit" value={unit} /></p><details className="st-polygon-advanced"><summary>Editar vértices (avanzado)</summary><p>Vértices: <InlineValue field="vertices" value={data.vertices.map(p => `${p.x},${p.y}`).join("; ")} /></p><small>Las longitudes por sí solas no determinan un polígono irregular. Los vértices definen sus lados y ángulos.</small></details></InlineOnly>
     <p className="st-polygon-sides">{data.vertices.map((p, i) => { const q = data.vertices[(i + 1) % data.vertices.length]!, length = Math.hypot(q.x - p.x, q.y - p.y); return <span key={i}>{String.fromCharCode(65 + i)}{String.fromCharCode(65 + (i + 1) % data.vertices.length)}: {Number.isInteger(length) ? "" : "≈ "}{measureText(length)} {unit}</span>; })}</p>

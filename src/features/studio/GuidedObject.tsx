@@ -34,7 +34,7 @@ export function GuidedObject({ object }: { object: MathObject }) {
     setHint(nextHint);
     setFeedback(practiceReply({ document: { schemaVersion: 1, id: "practice-preview", title: "Práctica", updatedAt: new Date().toISOString(), objects: [object] }, selectedId: object.id, mode: "practice", level, question: "Practicar", attempt: answer, hintLevel: nextHint }).message);
   }
-  return <div className={`st-guided st-guided-${mode}`}>
+  return <div className={`st-guided st-guided-${mode} ${["number-line", "geometry", "regular-polygon", "polygon", "circle", "angle"].includes(object.type) ? "st-guided-wide" : ""}`}>
     <div className="st-visual-panel" aria-label="Representación visual"><ObjectVisual object={visual} onChange={() => {}} lessonStep={mode === "solve" ? Infinity : current} concealAnswers={practice} /></div>
     <section className="st-story-panel" aria-label={practice ? "Práctica del módulo" : "Pasos del módulo"}>
       {practice ? <>

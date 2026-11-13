@@ -89,3 +89,19 @@ it("explica un paso local sin sesión ni red y sin llamar a la IA", async () => 
     expect(reply.message).toContain("Paso 2:");expect(reply.batch.actions).toEqual([]);expect(invoke).not.toHaveBeenCalled();
   } finally { online.mockRestore(); }
 });
+
+it("entrega texto antes de la respuesta final y no acepta una transmisión incompleta", async () => {
+  const input = request(), onText = vi.fn();
+  let streamController!: ReadableStreamDefaultController<Uint8Array>;
+  const body = new ReadableStream<Uint8Array>({ start(controller) { streamController = controller; } });
+  const send = (value: unknown) => streamController.enqueue(new TextEncoder().encode(`data: ${JSON.stringify(value)}\n\n`));
+  invoke.mockResolvedValueOnce({ data: new Response(body, { headers: { "Content-Type": "text/event-stream" } }), error: null });
+  const result = requestAgent(input, { onText });
+  send({ type: "text", text: "La recta" });
+  await vi.waitFor(() => expect(onText).toHaveBeenCalledWith("La recta"));
+  send({ type: "done", reply: { message: "La recta numérica.", batch: { documentId: input.document.id, actions: [] }, verification: [] } });
+  streamController.close();
+  await expect(result).resolves.toMatchObject({ message: "La recta numérica." });
+  invoke.mockResolvedValueOnce({ data: new Response('data: {"type":"text","text":"Parcial"}\n\n', { headers: { "Content-Type": "text/event-stream" } }), error: null });
+  await expect(requestAgent(input, { onText })).rejects.toThrow(/interrumpió/);
+});

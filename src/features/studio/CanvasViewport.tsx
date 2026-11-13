@@ -15,7 +15,7 @@ import {
   fitObject,
   type MathObject,
   type ObjectType,
-  MAX_TEXT_HEIGHT,
+  maxObjectHeight,
 } from "../../core/document-schema/document";
 import { InlineEditingContext, type InlineEditing } from "./inline-editing-context";
 import { InlineValue } from "./InlineValue";
@@ -66,6 +66,7 @@ export function CanvasViewport({
   useCanvasGestures(viewport, zoom, onZoom);
   const mode = useContext(TeachingMode);
   const empty = !objects.length && !presenting;
+  const displayedObjects = presenting ? [...objects].sort((a, b) => a.y - b.y || a.x - b.x) : objects;
   const editable = !presenting && mode !== "practice";
   const editing = (object: MathObject): InlineEditing | null => editable ? { object, onChange: onInlineChange ?? onChange, onBegin: onBeginEdit, onEnd: onEndEdit, onCancel: onCancelEdit } : null;
   const drag = useRef<
@@ -87,15 +88,21 @@ export function CanvasViewport({
   }, [selectedId, objects, zoom]);
   useLayoutEffect(() => {
     if (!onTextGrow || presenting) return;
-    const nodes = viewport.current?.querySelectorAll<HTMLElement>(".st-object-text");
-    for (const node of nodes ?? []) {
-      const object = objects.find(item => item.id === node.dataset.objectId);
-      const content = node.querySelector<HTMLElement>(".st-object-content");
-      const header = node.querySelector<HTMLElement>(".st-object-handle");
-      if (!object || !content || !header) continue;
-      const height = Math.min(MAX_TEXT_HEIGHT, Math.ceil(content.scrollHeight + header.offsetHeight + 2));
-      if (height > object.height + 1) onTextGrow(object.id, height);
-    }
+    const nodes = viewport.current?.querySelectorAll<HTMLElement>(".st-object-text,.st-object-number-line,.st-object-geometry,.st-object-polygon,.st-object-regular-polygon,.st-object-circle,.st-object-angle");
+    const measure = () => {
+      for (const node of nodes ?? []) {
+        const object = objects.find(item => item.id === node.dataset.objectId);
+        const content = node.querySelector<HTMLElement>(".st-object-content");
+        const header = node.querySelector<HTMLElement>(".st-object-handle");
+        if (!object || !content || !header) continue;
+        const height = Math.min(maxObjectHeight(object), Math.ceil(content.scrollHeight + header.offsetHeight + 2));
+        if (height > object.height + 1) onTextGrow(object.id, height);
+      }
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    for (const node of nodes ?? []) { const content = node.querySelector(".st-guided,.st-story-text"); if (content) observer.observe(content); }
+    return () => observer.disconnect();
   }, [objects, onTextGrow, presenting]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
@@ -207,7 +214,7 @@ export function CanvasViewport({
             transform: `scale(${zoom})`,
           }}
         >
-          {objects.map((object) => {
+          {displayedObjects.map((object) => {
             const shown = preview?.id === object.id ? preview : object;
             return (
               <InlineEditingContext.Provider key={object.id} value={editing(object)}>

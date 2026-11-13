@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { InlineValue, InlineOnly, InlineEquation } from "./InlineValue";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import type {
@@ -49,18 +50,31 @@ export function CollectionObject({ data }: { data: CollectionData }) {
   );
 }
 export function NumberLineObject({ data }: { data: NumberLineData }) {
+  const svgRef = useRef<SVGSVGElement>(null);
+  const [renderWidth, setRenderWidth] = useState(800);
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!svg) return;
+    const resize = () => { const width = svg.getBoundingClientRect().width; if (width > 0) setRenderWidth(width); };
+    resize(); const observer = new ResizeObserver(resize); observer.observe(svg);
+    return () => observer.disconnect();
+  }, []);
+  const fontSize = Math.max(22, Math.min(54, 16 * 800 / renderWidth));
+  const inset = Math.max(40, fontSize * 2);
   const ticks = numberLineTicks(data.min, data.max, data.step);
   const x = (value: number) =>
-    30 + (value - data.min) / (data.max - data.min) * 740;
+    inset + (value - data.min) / (data.max - data.min) * (800 - inset * 2);
+  const labelStride = Math.max(1, Math.ceil(ticks.length / Math.max(2, Math.floor(renderWidth / 52))));
   const separatedLabels = data.points.every((point, index) =>
     data.points.every((other, otherIndex) =>
-      index === otherIndex || Math.abs(x(point) - x(other)) >= 28
+      index === otherIndex || Math.abs(x(point) - x(other)) >= fontSize * 2.5
     )
   );
   return (
     <div className="st-number-line">
       <svg
-        viewBox="0 0 800 140"
+        ref={svgRef}
+        viewBox="0 0 800 185"
         role="img"
         aria-label={`Recta de ${data.min} a ${data.max}, paso ${data.step}. Puntos: ${
           data.points.join(", ") || "ninguno"
@@ -68,31 +82,31 @@ export function NumberLineObject({ data }: { data: NumberLineData }) {
       >
         <line
           x1={20}
-          y1={80}
+          y1={100}
           x2={780}
-          y2={80}
+          y2={100}
           stroke="currentColor"
           strokeWidth={2}
         />
-        {ticks.map((value) => (
+        {ticks.map((value, index) => (
           <g key={value}>
             <line
               x1={x(value)}
               x2={x(value)}
-              y1={73}
-              y2={87}
+              y1={93}
+              y2={107}
               stroke="currentColor"
               strokeWidth={1.5}
             />
-            <text
+            {(index % labelStride === 0 || (index === ticks.length - 1 && index % labelStride >= labelStride / 2)) && <text
               x={x(value)}
-              y={110}
+              y={150}
               textAnchor="middle"
               fill="currentColor"
-              fontSize={ticks.length > 20 ? 10 : 15}
+              fontSize={fontSize}
             >
               {value}
-            </text>
+            </text>}
           </g>
         ))}
         {data.points.map((value) => (
@@ -100,24 +114,24 @@ export function NumberLineObject({ data }: { data: NumberLineData }) {
             <line
               x1={x(value)}
               x2={x(value)}
-              y1={45}
-              y2={80}
+              y1={60}
+              y2={100}
               stroke="var(--st-piece-primary)"
               strokeDasharray="3 3"
             />
             <circle
               cx={x(value)}
-              cy={45}
+              cy={60}
               r={6}
               fill="var(--st-piece-primary)"
             />
             {separatedLabels && (
               <text
                 x={x(value)}
-                y={27}
+                y={38}
                 textAnchor="middle"
                 fill="currentColor"
-                fontSize={16}
+                fontSize={fontSize + 2}
               >
                 {value}
               </text>

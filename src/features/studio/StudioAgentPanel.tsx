@@ -1,4 +1,4 @@
-import { agentTask, type ConversationTurn } from "../../core/agent/conversation";
+import { type ConversationTurn } from "../../core/agent/conversation";
 import { lessonSteps } from "./lesson-steps";
 import { isExerciseIntent } from "./agent-intents";
 import { ArrowUp, Check, Sparkles } from "lucide-react";
@@ -32,6 +32,8 @@ export function StudioAgentPanel(
     onLevelChange?: (level: AgentLevel) => void;
   },
 ) {
+  const [streamingText, setStreamingText] = useState("");
+  const activeRequest = useRef<AbortController | null>(null);
   const [messages, setMessages] = useState<ConversationTurn[]>([]);
   const transcriptEnd = useRef<HTMLDivElement>(null);
   const [autonomous, setAutonomous] = useState(true);
@@ -53,6 +55,8 @@ export function StudioAgentPanel(
   const [reply, setReply] = useState<AgentReply | null>(null);
   const [replyContext, setReplyContext] = useState("");
   const contextKey = JSON.stringify([document, selectedId]);
+  const requestContext = useRef({ mode, level, selectedId });
+  useEffect(() => { requestContext.current = { mode, level, selectedId }; }, [mode, level, selectedId]);
   const proposalIsCurrent = !!proposal &&
     JSON.stringify(document) === JSON.stringify(proposal.snapshot);
   const [busy, setBusy] = useState(false);
@@ -60,17 +64,19 @@ export function StudioAgentPanel(
   const generation = useRef(0);
   useEffect(() => () => {
     generation.current++;
+    activeRequest.current?.abort();
   }, []);
-  useEffect(() => { transcriptEnd.current?.scrollIntoView?.({ block: "nearest" }); }, [messages, reply, busy, error]);
+  useEffect(() => { transcriptEnd.current?.scrollIntoView?.({ block: "nearest" }); }, [messages, reply, busy, error, streamingText]);
   function resetResponse() {
     generation.current++;
+    setStreamingText("");
     setProposal(null);
     setReply(null);
     setApplied(false);
     setError("");
     setHintLevel(0);
   }
-  async function consult(event?: FormEvent, nextHint = 0, command?: string) {
+  async function consult(event?: FormEvent, nextHint = 0, command?: string, task?: "build") {
     event?.preventDefault();
     if (pending.current) return;
     if (isExerciseIntent(command ?? question)) {
@@ -86,9 +92,12 @@ export function StudioAgentPanel(
     pending.current = true;
     const version = ++generation.current;
     const snapshot = structuredClone(document);
+    const controller = new AbortController();
+    activeRequest.current = controller;
     setApplied(false);
     setBusy(true);
     setError("");
+    setStreamingText("");
     setProposal(null);
     setReply(null);
     try {
@@ -98,15 +107,15 @@ export function StudioAgentPanel(
         mode,
         level,
         question: prompt,
+        ...(task ? { task } : {}),
         history: history.slice(-6).map(turn => ({ ...turn, content: turn.content.slice(0, 1200) })),
         attempt,
         hintLevel: nextHint,
-      });
+      }, { onText: text => { if (version === generation.current) setStreamingText(text); }, signal: controller.signal });
       if (version !== generation.current) return;
-      setReply(response);
-      setReplyContext(contextKey);
-      setHintLevel(nextHint);
+      setStreamingText("");
       if (response.batch.actions.length) {
+        if (JSON.stringify(requestContext.current) !== JSON.stringify({ mode, level, selectedId })) throw new Error("Cambió el nivel, el modo o la selección. Repite la consulta para usar el contexto actual.");
         executeActions(snapshot, response.batch);
         if (JSON.stringify(currentDocument.current) !== JSON.stringify(snapshot)) {
           throw new Error("El material cambió mientras trabajaba. Repite la consulta para usar el contexto actual.");
@@ -116,8 +125,12 @@ export function StudioAgentPanel(
           setApplied(true);
         } else setProposal({ batch: response.batch, snapshot });
       }
+      setReply(response);
+      setReplyContext(contextKey);
+      setHintLevel(nextHint);
     } catch (e) {
       if (version === generation.current) {
+        setQuestion(prompt);
         setError(
           e instanceof Error ? e.message : "El agente no está disponible.",
         );
@@ -128,8 +141,8 @@ export function StudioAgentPanel(
     }
   }
   return (
-    <section className="st-agent" aria-label="Fontex Agent">
-      <header className="st-agent-heading"><span className="st-agent-avatar"><Sparkles size={22} aria-hidden="true" /></span><div><h2>Fontex Agent</h2><small>Conversemos y construyamos.</small></div><button type="button" className="st-chat-clear" aria-label="Nueva conversación" disabled={busy} onClick={() => { setMessages([]); resetResponse(); }}>Nuevo</button></header>
+    <section className="st-agent" aria-label="Fontex Agente">
+      <header className="st-agent-heading"><span className="st-agent-avatar"><Sparkles size={22} aria-hidden="true" /></span><div><h2>Fontex Agente</h2></div><button type="button" className="st-chat-clear" aria-label="Nueva conversación" disabled={busy} onClick={() => { setMessages([]); resetResponse(); }}>Nuevo</button></header>
       {mode !== "practice" && selectedObject && <div className="st-agent-shortcuts" aria-label="Acciones sobre el módulo seleccionado">
         <button type="button" disabled={busy || !authenticated || !selectedObject} onClick={() => void consult(undefined, 0, "Haz más sencillo el módulo seleccionado para el nivel actual; conserva su tipo y explica la adaptación.")}>Más sencillo</button>
         <button type="button" disabled={busy || !authenticated || !selectedObject} onClick={() => void consult(undefined, 0, "Crea otro ejemplo del mismo tipo que el módulo seleccionado, con datos diferentes y sin modificar el original.")}>Otro ejemplo</button>
@@ -140,12 +153,14 @@ export function StudioAgentPanel(
 
 
       <div className="st-chat-transcript" role="log" aria-label="Conversación" aria-live="polite">
-        {!messages.length && !reply && <div className="st-chat-intro"><strong>¿Qué exploramos hoy?</strong><p>Pregunta, compara ideas o escribe «crea un módulo» para llevarlo al lienzo.</p><small>Luna conversa · Sol construye</small></div>}
-        {messages.map((turn, i) => <article className={`st-chat-turn st-chat-${turn.role}`} key={i}><small>{turn.role === "user" ? "Tú" : "Fontex"}</small><p>{turn.content}</p></article>)}
+        {!messages.length && !reply && <div className="st-chat-intro"><strong>¿Qué exploramos hoy?</strong><p>¿Qué quieres aprender o preparar?</p></div>}
+        {messages.map((turn, i) => <article className={`st-chat-turn st-chat-${turn.role}`} key={i}><small>{turn.role === "user" ? "Tú" : "Fontex AI"}</small><p>{turn.content}</p></article>)}
       {reply && (mode !== "practice" || applied || replyContext === contextKey) && (
         <section aria-label="Orientación del agente" aria-live="polite">
           {applied && <p role="status" className="st-agent-applied"><Check size={16} aria-hidden="true" />Cambios aplicados</p>}
+          <small className="st-chat-author">Fontex AI</small>
           <p className="st-agent-message">{reply.message}</p>
+          {mode !== "practice" && !reply.batch.actions.length && <button className="st-chat-create" type="button" disabled={busy || !authenticated} onClick={() => void consult(undefined, 0, "Crea en el lienzo los módulos matemáticos y la explicación que acabamos de acordar. Usa el tema, las medidas y las unidades de la conversación. Si faltan datos indispensables, pregunta antes de crear.", "build")}>Crear en el lienzo<ArrowUp size={15} /></button>}
           {reply.verification.length > 0 && (
             <details>
               <summary>Ver comprobación</summary>
@@ -201,7 +216,7 @@ export function StudioAgentPanel(
           </button>
         </section>
       )}
-        {busy && <p className="st-chat-busy" role="status">{agentTask(messages.at(-1)?.content ?? "") === "build" ? "Sol está preparando el lienzo…" : "Luna está respondiendo…"}</p>}
+        {busy && <section className="st-chat-stream" aria-label="Respuesta en curso"><small className="st-chat-author">Fontex AI</small>{streamingText && <p className="st-agent-message">{streamingText}<span className="st-typing-caret" aria-hidden="true" /></p>}<p className="st-chat-busy" role="status">Escribiendo…</p></section>}
         <div ref={transcriptEnd} />
       </div>
       <form onSubmit={(event) => void consult(event)}>
@@ -284,7 +299,6 @@ export function StudioAgentPanel(
             ? "Comprobar y orientar"
             : "Consultar"}<ArrowUp size={18} aria-hidden="true" />
         </button>
-      </form>      <small className="st-chat-routing">{mode === "practice" ? "Práctica local · sin consumo de IA" : agentTask(question) === "build" ? "Crear o editar · GPT-6.1 Sol" : "Conversar · GPT-6 Luna"}</small>
-    </section>
+      </form>    </section>
   );
 }
