@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
-import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { StudioShell } from "./StudioShell";
 import { ThemeProvider } from "../theme/ThemeProvider";
 import { lastMaterial, saveMaterial } from "./document-store";
@@ -16,7 +16,8 @@ beforeAll(() => {
 const canvasObject = () => within(document.querySelector<HTMLElement>(".st-object.selected")!);
 afterEach(() => vi.restoreAllMocks());
 
-describe("Fontex Studio", () => {
+describe("Fontex Studio · lienzo libre", () => {
+  beforeEach(() => localStorage.setItem("fontex-studio-view", "free"));
   it("mantiene el catálogo cerrado y permite desplegarlo sin cambiar el lienzo", () => {
     render(<ThemeProvider><StudioShell /></ThemeProvider>);
     const toggle = screen.getByRole("button", { name: "Módulos" });
@@ -270,4 +271,18 @@ describe("Fontex Studio", () => {
     await screen.findByText(/no es un documento válido/);
     expect(lastMaterial(localStorage, "guest")).toEqual(before);
   });
+});
+
+it("abre en vista ajustada y permite editar sin cambiar las posiciones al alternar vistas", () => {
+  localStorage.removeItem("fontex-studio-view");
+  render(<ThemeProvider><StudioShell /></ThemeProvider>);
+  expect(document.querySelector(".st-viewport")).toHaveClass("st-canvas-flow");
+  expect(screen.queryByRole("button", { name: "Mover Operación guiada" })).not.toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText("Operación"), { target: { value: "1/2 + 1/4" } });
+  const saved = lastMaterial(localStorage, "guest");
+  fireEvent.click(screen.getByRole("button", { name: "Cambiar a lienzo libre" }));
+  expect(screen.getByRole("button", { name: "Mover Operación guiada" })).toBeVisible();
+  fireEvent.click(screen.getByRole("button", { name: "Cambiar a vista ajustada" }));
+  expect(lastMaterial(localStorage, "guest")).toEqual(saved);
+  expect(screen.getByLabelText("Operación")).toHaveValue("1/2 + 1/4");
 });

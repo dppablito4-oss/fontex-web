@@ -93,6 +93,14 @@ function StudioEditor({ owner }: { owner: string }) {
   const [zoom, setZoom] = useState(() =>
     window.innerWidth < 760 ? 0.85 : 1,
   );
+  const [canvasLayout, setCanvasLayout] = useState<"flow" | "free">(() => {
+    try { return localStorage.getItem("fontex-studio-view") === "free" ? "free" : "flow"; } catch { return "flow"; }
+  });
+  function changeLayout() {
+    const next = canvasLayout === "flow" ? "free" : "flow";
+    setCanvasLayout(next); setAutoFit(true);
+    try { localStorage.setItem("fontex-studio-view", next); } catch { /* The current view remains usable. */ }
+  }
   const [autoFit, setAutoFit] = useState(() => window.innerWidth >= 760);
   const zoomBeforePresentation = useRef(1);
   const [presenting, setPresenting] = useState(false);
@@ -233,7 +241,7 @@ function StudioEditor({ owner }: { owner: string }) {
     }
   }
   useEffect(() => {
-    if (!autoFit || presenting) return;
+    if (canvasLayout === "flow" || !autoFit || presenting) return;
     const element = work.current?.querySelector<HTMLElement>(".st-viewport");
     if (!element) return;
     const resize = () => { if (element.clientWidth) setZoom(Math.max(.2, Math.min(1, (element.clientWidth - 48) / BOARD.width))); };
@@ -241,7 +249,7 @@ function StudioEditor({ owner }: { owner: string }) {
     const observer = new ResizeObserver(resize);
     observer.observe(element);
     return () => observer.disconnect();
-  }, [autoFit, presenting, assistantOpen]);
+  }, [autoFit, presenting, assistantOpen, canvasLayout]);
   function fit() { setAutoFit(true); const width = work.current?.clientWidth; if (width) setZoom(Math.max(.2, Math.min(1, (width - 48) / BOARD.width))); }
   async function present() {
     zoomBeforePresentation.current = zoom;
@@ -416,6 +424,7 @@ function StudioEditor({ owner }: { owner: string }) {
             zoom={zoom}
             onZoom={value => { setAutoFit(false); setZoom(value); }}
             presenting={presenting}
+            layout={canvasLayout}
             onSelect={setSelectedId}
             onChange={changeObject}
             onInlineChange={object => changeObject(object, true)}
@@ -434,8 +443,9 @@ function StudioEditor({ owner }: { owner: string }) {
             onCancelEdit={store.cancelEdit}
           />
           <div className="st-canvas-footer">
-            <div className="st-canvas-summary"><span>{presenting ? doc.title : `${doc.objects.length} módulos`}</span><button className="st-organize" disabled={!doc.objects.length} onClick={() => store.update(current => ({ ...current, objects: organizeObjects(current.objects) }))}>Organizar lienzo</button></div>
-            <div className="st-zoom">
+            <div className="st-canvas-summary"><span>{presenting ? doc.title : `${doc.objects.length} módulos`}</span>{canvasLayout === "free" && <button className="st-organize" disabled={!doc.objects.length} onClick={() => store.update(current => ({ ...current, objects: organizeObjects(current.objects) }))}>Organizar lienzo</button>}</div>
+            <button className="st-layout-toggle" aria-label={canvasLayout === "flow" ? "Cambiar a lienzo libre" : "Cambiar a vista ajustada"} onClick={changeLayout}>{canvasLayout === "flow" ? "Lienzo libre" : "Vista ajustada"}</button>
+            {canvasLayout === "free" && <div className="st-zoom">
               <button
                 aria-label="Alejar"
                 disabled={zoom <= 0.2}
@@ -457,7 +467,7 @@ function StudioEditor({ owner }: { owner: string }) {
                 <Expand size={16} />
               </button>
               <button className="st-actual-size" aria-label="Ver al 100 %" title="Ver al 100 %" onClick={() => { setAutoFit(false); setZoom(1); }}>100 %</button>
-            </div>
+            </div>}
           </div>
         </main>
         <aside ref={assistantPanel} id="st-assistant-panel" hidden={!assistantOpen} tabIndex={-1} className="st-inspector" aria-label="Asistente del material" onKeyDown={event => { if (event.key === "Escape") { closeAssistant(); } }}>

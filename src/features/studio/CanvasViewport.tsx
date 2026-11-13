@@ -30,6 +30,7 @@ export function CanvasViewport({
   selectedId,
   zoom,
   presenting,
+  layout = "free",
   onSelect,
   onChange,
   onInlineChange,
@@ -48,6 +49,7 @@ export function CanvasViewport({
   selectedId: string | null;
   zoom: number;
   presenting: boolean;
+  layout?: "flow" | "free";
   onSelect: (id: string | null) => void;
   onChange: (object: MathObject) => void;
   onInlineChange?: (object: MathObject) => void;
@@ -63,10 +65,11 @@ export function CanvasViewport({
   onZoom?: (zoom: number) => void;
 }) {
   const viewport = useRef<HTMLDivElement>(null);
-  useCanvasGestures(viewport, zoom, onZoom);
+  const flow = layout === "flow" && !presenting;
+  useCanvasGestures(viewport, zoom, flow ? undefined : onZoom);
   const mode = useContext(TeachingMode);
   const empty = !objects.length && !presenting;
-  const displayedObjects = presenting ? [...objects].sort((a, b) => a.y - b.y || a.x - b.x) : objects;
+  const displayedObjects = presenting || flow ? [...objects].sort((a, b) => a.y - b.y || a.x - b.x) : objects;
   const editable = !presenting && mode !== "practice";
   const editing = (object: MathObject): InlineEditing | null => editable ? { object, onChange: onInlineChange ?? onChange, onBegin: onBeginEdit, onEnd: onEndEdit, onCancel: onCancelEdit } : null;
   const drag = useRef<
@@ -75,19 +78,24 @@ export function CanvasViewport({
     null,
   );
   const [preview, setPreview] = useState<MathObject | null>(null);
-  const selectedScroll = useRef<{ id: string | null; zoom: number }>({ id: null, zoom: NaN });
+  const selectedScroll = useRef<{ id: string | null; zoom: number; flow: boolean }>({ id: null, zoom: NaN, flow: false });
   const height = boardHeight(preview ? objects.map(o => o.id === preview.id ? preview : o) : objects);
   useEffect(() => {
     const element = viewport.current, object = objects.find(o => o.id === selectedId);
     if (!element?.clientWidth || !object) return;
-    if (selectedScroll.current.id === selectedId && selectedScroll.current.zoom === zoom) return;
-    selectedScroll.current = { id: selectedId, zoom };
+    if (selectedScroll.current.id === selectedId && selectedScroll.current.zoom === zoom && selectedScroll.current.flow === flow) return;
+    selectedScroll.current = { id: selectedId, zoom, flow };
+    if (flow) {
+      const node = [...element.querySelectorAll<HTMLElement>(".st-object")].find(item => item.dataset.objectId === object.id);
+      if (node) { const top = node.getBoundingClientRect().top - element.getBoundingClientRect().top; if (top < 0 || top > element.clientHeight - 80) element.scrollTop += top - 12; }
+      return;
+    }
     const top = object.y * zoom, left = object.x * zoom;
     if (top < element.scrollTop || top > element.scrollTop + element.clientHeight - 80) element.scrollTop = Math.max(0, top - 24);
     if (left < element.scrollLeft || left > element.scrollLeft + element.clientWidth - 80) element.scrollLeft = Math.max(0, left - 24);
-  }, [selectedId, objects, zoom]);
+  }, [selectedId, objects, zoom, flow]);
   useLayoutEffect(() => {
-    if (!onTextGrow || presenting) return;
+    if (!onTextGrow || presenting || flow) return;
     const nodes = viewport.current?.querySelectorAll<HTMLElement>(".st-object-text,.st-object-fraction,.st-object-operation,.st-object-number-line,.st-object-geometry,.st-object-polygon,.st-object-regular-polygon,.st-object-circle,.st-object-angle");
     const measure = () => {
       for (const node of nodes ?? []) {
@@ -103,7 +111,7 @@ export function CanvasViewport({
     const observer = new ResizeObserver(measure);
     for (const node of nodes ?? []) { const content = node.querySelector(".st-guided,.st-story-text"); if (content) observer.observe(content); }
     return () => observer.disconnect();
-  }, [objects, onTextGrow, presenting]);
+  }, [objects, onTextGrow, presenting, flow]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
   const expanded = objects.find((object) => object.id === expandedId);
@@ -199,16 +207,16 @@ export function CanvasViewport({
     }
   }
   return (
-    <div ref={viewport} className={`st-viewport ${empty ? "st-viewport-empty" : ""}`} onClick={() => onSelect(null)}>
+    <div ref={viewport} className={`st-viewport ${flow ? "st-canvas-flow" : ""} ${empty ? "st-viewport-empty" : ""}`} onClick={() => onSelect(null)}>
       {empty && <CanvasWelcome onAdd={onAdd} onBrowse={onBrowse} />}
       <div
         className="st-board-space"
         hidden={empty}
-        style={{ width: BOARD.width * zoom, height: height * zoom }}
+        style={flow ? { width: "100%" } : { width: BOARD.width * zoom, height: height * zoom }}
       >
         <div
           className="st-board"
-          style={{
+          style={flow ? { width: "100%" } : {
             width: BOARD.width,
             height,
             transform: `scale(${zoom})`,
@@ -223,12 +231,9 @@ export function CanvasViewport({
                   !presenting && selectedId === object.id ? "selected" : ""
                 }`}
                 style={{
-                  left: shown.x,
-                  top: shown.y,
-                  width: shown.width,
-                  height: shown.height,
+                  ...(flow ? { position: "relative", width: "100%", height: "auto" } : { left: shown.x, top: shown.y, width: shown.width, height: shown.height }),
                   "--st-fraction-scale": shown.visualScale ?? 1,
-                } as React.CSSProperties}
+                } as React.CSSProperties & { "--st-fraction-scale": number }}
                 data-object-id={object.id}
                 aria-label={object.label || "Objeto matemático"}
                 onClick={(event) => {
@@ -242,7 +247,7 @@ export function CanvasViewport({
                     {onDuplicate && <button aria-label={`Duplicar ${object.label}`} title="Duplicar" onClick={event => { event.stopPropagation(); onDuplicate(object); }}><Copy size={14} /></button>}
                     <button aria-label={`Eliminar ${object.label}`} title="Eliminar" onClick={event => { event.stopPropagation(); onDelete(object.id); }}><Trash2 size={14} /></button>
                   </div>}
-                  {!presenting && <button
+                  {!presenting && !flow && <button
                     className="st-object-drag"
                     aria-label={`Mover ${object.label}`}
                     title="Arrastra para mover; también puedes usar las flechas del teclado"
@@ -267,7 +272,7 @@ export function CanvasViewport({
                   <GuidedObject key={`${object.id}:${mode}`} object={object} />
                   {!presenting && mode === "practice" && <small>Para editar los datos, cambia a Aprender o Resolver.</small>}
                 </div>
-                {!presenting && (
+                {!presenting && !flow && (
                   <button
                     className="st-resize-handle"
                     aria-label={`Cambiar tamaño de ${object.label}`}

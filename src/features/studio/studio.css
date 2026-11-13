@@ -755,3 +755,28 @@
 .st-sync-status { flex: none; color: var(--st-muted); font-size: 11px; margin: 0 0 8px; }
 .st-sync-notice { flex: none; max-height: 80px; overflow: auto; color: var(--st-muted); font-size: 12px; line-height: 1.5; }
 @media print { .st-drawing-size, .st-sync-status, .st-sync-notice { display: none !important; } }
+
+/* The editing preview flows at the device width, independent of saved board coordinates. */
+.st-app .st-canvas-flow { padding: 20px clamp(12px, 2vw, 28px) 88px; }
+.st-canvas-flow .st-board-space { height: auto; }
+.st-app .st-canvas-flow .st-board { position: relative; height: auto; transform: none; display: flex; flex-direction: column; gap: 24px; }
+.st-app .st-canvas-flow .st-object { flex: none; min-height: 0; max-width: 100%; overflow: visible; }
+.st-app .st-canvas-flow .st-object .st-object-content { flex: none; height: auto; overflow: visible; padding: 8px; }
+.st-canvas-flow .st-guided { min-height: 0; align-content: start; }
+.st-canvas-flow .st-guided-wide { gap: 16px; }
+.st-app .st-canvas-flow .st-object .st-visual-panel { min-height: 0; padding: 8px; }
+.st-app .st-canvas-flow .st-object-handle { min-height: 44px; height: auto; padding: 4px 44px 4px 8px; cursor: default; touch-action: auto; }
+.st-app .st-canvas-flow .st-object-expand { width: 36px; height: 36px; min-height: 36px; top: 4px; right: 4px; }
+.st-canvas-flow .st-operands { gap: 12px 8px; }
+.st-canvas-flow .st-operands > div { min-width: min(100%, calc(130px * var(--st-fraction-scale, 1))); }
+.st-canvas-flow .st-drawing-size { justify-content: flex-start; flex-wrap: wrap; font-size: 13px; margin-inline: 8px; gap: 8px; }
+.st-canvas-flow .st-drawing-size input[type="range"] { width: clamp(100px, 28vw, 180px); }
+.st-app .st-layout-toggle { min-height: 30px; padding: 4px 10px; font-size: 12px; margin-left: auto; white-space: nowrap; }
+@media (max-width: 760px) {
+  .st-canvas-flow .st-story-panel { font-size: 17px; }
+  .st-canvas-flow .st-story-panel h3 { font-size: 24px; }
+  .st-canvas-flow .st-story-copy { font-size: 18px; }
+  .st-canvas-flow .st-regular-controls { gap: 10px; font-size: 16px; }
+}
+.st-app .st-canvas-flow .st-visual-panel .st-circle svg { height: auto; aspect-ratio: 1; }
+.st-app .st-canvas-flow :is(.st-object-handle,.st-object-expand) { opacity: 1; }
