@@ -25,11 +25,6 @@
 .lp-window-bar > button { margin-left: auto; padding: 5px; border-radius: 4px; cursor: pointer; }
 .lp-window-dots { display: flex; gap: 4px; }
 .lp-window-dots i { width: 6px; height: 6px; background: var(--lp-line); border-radius: 50%; }
-.st-app.lp-live-demo { height: auto; min-height: 0; padding: 30px 30px 25px; background: var(--ui-surface); display: block; }
-.lp-live-demo .st-single-fraction { gap: 14px; }
-.lp-live-demo .st-fraction { font-size: 40px; }
-.lp-live-demo .st-figures svg { width: 100%; height: auto; max-height: 160px; }
-.lp-live-demo .st-single-fraction > p { display: none; }
 .lp-demo-note { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 16px 20px; border-top: 1px solid var(--lp-line); color: var(--lp-muted); font-size: 11px; line-height: 1.7; }
 .lp-demo-note svg { color: var(--lp-green); }
 .lp-demo-note strong { font-weight: 600; color: var(--lp-ink); }
@@ -73,9 +68,40 @@
 .lp-footer { max-width: 1320px; margin: auto; padding: 34px 48px; display: flex; flex-wrap: wrap; align-items: center; gap: 24px; }.lp-footer > p { font-size: 10px; color: var(--lp-muted); }.lp-footer nav { display: flex; gap: 19px; margin-left: auto; }.lp-footer nav a { display: flex; align-items: center; gap: 4px; font-size: 10px; color: var(--lp-muted); }.lp-footer > small { width: 100%; padding-top: 20px; border-top: 1px solid var(--lp-line); font-size: 10px; color: var(--lp-muted); }
 :root[data-theme="dark"] .lp-page { --lp-paper: #141915; --lp-ink: #ecf0e6; --lp-muted: #b2c0b3; --lp-line: #354338; --lp-green: #a3d2ae; --lp-tint: #212f24; }
 :root[data-theme="dark"] .lp-path-create { background: #233226; }:root[data-theme="dark"] .lp-path-learn { background: #332f24; }:root[data-theme="dark"] .lp-path-sources { background: #2b2936; }
-:root[data-theme="dark"] .lp-demo-window { background: #171e19; }:root[data-theme="dark"] .st-app.lp-live-demo { background: #171e19; }:root[data-theme="dark"] .lp-final { background: #0b100d; color: #ecf0e6; }
+:root[data-theme="dark"] .lp-demo-window { background: #171e19; }:root[data-theme="dark"] .lp-final { background: #0b100d; color: #ecf0e6; }
 @media (max-width: 1050px) { .lp-hero { gap: 35px; padding: 60px 35px; }.lp-hero h1 { font-size: 63px; }.lp-facts { margin-inline: 30px; }.lp-facts > div { flex-direction: column; align-items: start; gap: 8px; }.lp-paths { padding: 75px 30px; }.lp-process { margin-inline: 30px; padding: 40px; gap: 40px; }.lp-path { padding: 22px; }.lp-path h3 { font-size: 25px; } }
 @media (max-width: 760px) { .lp-hero { grid-template-columns: 1fr; padding: 45px 24px 35px; gap: 20px; }.lp-hero h1 { font-size: clamp(51px, 12vw, 70px); }.lp-title-break { display: none; }.lp-demo-wrap { max-width: 470px; width: 100%; margin: auto; padding: 25px 10px; }.lp-demo-wrap:before { inset: 0; }.lp-lead { font-size: 14px; }.lp-actions { gap: 18px; }.lp-demo-tag { font-size: 9px; }.lp-facts { margin: 0 24px; grid-template-columns: 1fr; padding: 6px 0; }.lp-facts > div { flex-direction: row; justify-content: space-between; align-items: center; padding: 20px 6px; border: 0; border-bottom: 1px solid var(--lp-line); }.lp-facts strong { font-size: 25px; }.lp-facts span { font-size: 11px; }.lp-paths { padding: 60px 24px; }.lp-path-grid { grid-template-columns: 1fr; gap: 14px; margin-top: 30px; }.lp-path-top { margin-bottom: 25px; }.lp-path h3 { font-size: 30px; }.lp-path p { font-size: 13px; }.lp-section-heading h2 { font-size: 37px; }.lp-process { grid-template-columns: 1fr; gap: 35px; margin-inline: 16px; padding: 35px 25px; }.lp-levels { padding: 65px 24px; }.lp-levels > div { flex-direction: column; }.lp-levels a { justify-content: space-between; }.lp-footer { padding: 30px 24px; gap: 20px; }.lp-footer > p { width: 100%; }.lp-footer nav { flex-wrap: wrap; margin: 0; gap: 22px; } }
 @media (prefers-reduced-motion: reduce) { .lp-page * { transition: none !important; } }
 .lp-path p, .lp-process li p { font-size: 13px; }
 .lp-path-action { font-size: 12px; }
+/* A live mathematical illustration, with an optional moving point. */
+.lp-parabola-actions { display: flex; align-items: center; gap: 5px; margin-left: auto; }
+.lp-parabola-actions button { display: grid; place-items: center; padding: 5px; border-radius: 4px; cursor: pointer; }
+.lp-parabola-actions button:disabled { opacity: .4; cursor: default; }
+.lp-parabola-formula { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 24px 26px 0; }
+.lp-parabola-formula > span:first-child { font: italic 22px var(--font-display); color: var(--lp-green); }
+.lp-parabola-formula > strong { font: 500 30px var(--font-display); color: var(--lp-ink); }
+.lp-parabola-badge { margin-left: auto; padding: 6px 8px; border: 1px solid var(--lp-line); border-radius: 5px; color: var(--lp-muted); font: 8px var(--font-mono); letter-spacing: .06em; }
+.lp-parabola-graph { display: block; width: 100%; height: auto; max-height: 320px; color: var(--lp-green); padding: 0 12px; overflow: visible; }
+.lp-graph-grid { stroke: var(--lp-line); stroke-width: .7; }
+.lp-graph-axis { fill: none; stroke: var(--lp-muted); stroke-width: 1; opacity: .6; }
+.lp-graph-labels { font: 10px var(--font-mono); fill: var(--lp-muted); }
+.lp-parabola-curve { fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 0; animation: lp-curve-reveal 1.4s ease-out both; }
+.lp-parabola-vertex, .lp-parabola-point { fill: currentColor; }
+.lp-parabola-point { animation: lp-point-travel 6s linear infinite; filter: drop-shadow(0 0 5px color-mix(in srgb, var(--lp-green) 45%, transparent)); }
+.lp-parabola-halo { opacity: .12; }
+.lp-graph-origin { font: 10px var(--font-sans); }
+.lp-graph-origin path { fill: none; stroke: var(--lp-green); stroke-width: 1; opacity: .4; }
+.lp-graph-origin rect { fill: var(--ui-surface); stroke: var(--lp-line); }.lp-graph-origin text { fill: var(--lp-green); }
+.lp-parabola-control { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; padding: 8px 27px 23px; color: var(--lp-muted); font-size: 10px; }
+.lp-parabola-control input { accent-color: var(--lp-green); flex: 1; min-width: 80px; cursor: ew-resize; height: 24px; }
+.lp-parabola-coefficient { min-width: 47px; font: 10px var(--font-mono); }
+.lp-parabola[data-playing="false"] :is(.lp-parabola-curve, .lp-parabola-point) { animation-play-state: paused; }
+.lp-footer-meta { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 15px; }
+.lp-creator-credit { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; line-height: 1.8; }
+.lp-creator-credit strong { font-weight: 600; color: var(--lp-ink); }.lp-creator-credit > svg { color: #b77b2e; }
+.lp-creator-credit a { color: var(--lp-muted); }.lp-creator-credit a:hover { color: var(--lp-green); text-decoration: underline; text-underline-offset: 3px; }
+@keyframes lp-point-travel { from { offset-distance: 0%; } to { offset-distance: 100%; } }
+@keyframes lp-curve-reveal { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@media (max-width: 760px) { .lp-parabola-formula { padding: 20px 18px 0; gap: 8px; }.lp-parabola-formula > strong { font-size: 27px; }.lp-parabola-badge { font-size: 7px; }.lp-parabola-control { padding-inline: 18px; gap: 9px; }.lp-footer-meta { gap: 12px; }.lp-creator-credit { font-size: 10px; } }
+@media (prefers-reduced-motion: reduce) { .lp-parabola-curve { animation: none; }.lp-parabola-point { display: none; animation: none; } }

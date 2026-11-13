@@ -11,13 +11,13 @@ describe("Presentación de Fontex", () => {
     const saved = createDocument(); saveMaterial(localStorage, "guest", saved);
     landing();
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Entender cambia");
-    fireEvent.change(screen.getByLabelText("Numerador"), { target: { value: "2" } });
-    expect(screen.getByRole("img", { name: "2 de 4 partes por unidad" })).toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText("Denominador"), { target: { value: "0" } });
-    expect(screen.getByRole("alert")).toBeInTheDocument();
-    expect(screen.getByRole("img", { name: "2 de 4 partes por unidad" })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: /Parábola y = 0.5 x/ })).toBeInTheDocument();
+    fireEvent.change(screen.getByRole("slider", { name: "Apertura de la parábola" }), { target: { value: "1" } });
+    expect(screen.getByRole("img", { name: /Parábola y = 1 x/ })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Pausar animación" }));
+    expect(screen.getByRole("button", { name: "Reanudar animación" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Restablecer ejemplo" }));
-    expect(screen.getByRole("img", { name: "3 de 4 partes por unidad" })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: /Parábola y = 0.5 x/ })).toBeInTheDocument();
     expect(lastMaterial(localStorage, "guest")).toEqual(saved);
   });
   it("ofrece accesos reales a las herramientas y al nivel elegido", () => {
@@ -27,5 +27,7 @@ describe("Presentación de Fontex", () => {
     expect(screen.getByRole("link", { name: "Inicial · 3 a 5 años" })).toHaveAttribute("href", "#/demo?nivel=inicial");
     expect(screen.getByRole("link", { name: "Universidad introductoria" })).toHaveAttribute("href", "#/demo?nivel=universidad");
     expect(screen.getByRole("navigation", { name: "Áreas de Fontex" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "space.sypablitodp.site" })).toHaveAttribute("href", "https://space.sypablitodp.site");
+    expect(screen.getByRole("link", { name: "WhatsApp: 918 165 428" })).toHaveAttribute("href", "https://wa.me/51918165428");
   });
 });
