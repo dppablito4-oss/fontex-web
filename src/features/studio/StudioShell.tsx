@@ -84,6 +84,7 @@ function StudioEditor({ owner }: { owner: string }) {
   const work = useRef<HTMLElement>(null);
   const file = useRef<HTMLInputElement>(null);
   const modulesToggle = useRef<HTMLButtonElement>(null);
+  const moduleSearch = useRef<HTMLInputElement>(null);
   const dialog = useRef<HTMLDialogElement>(null);
   const importBusy = useRef(false);
   useEffect(() => {
@@ -353,7 +354,7 @@ function StudioEditor({ owner }: { owner: string }) {
             </div>
           </div>
           <div id="st-module-catalog" className="st-module-catalog" hidden={!modulesOpen}>
-          <label className="st-module-search-field"><Search size={19} aria-hidden="true" /><input className="st-module-search" aria-label="Buscar objeto" placeholder="Buscar módulo…" value={moduleFilter} onChange={e => setModuleFilter(e.target.value)} /></label>
+          <label className="st-module-search-field"><Search size={19} aria-hidden="true" /><input ref={moduleSearch} className="st-module-search" aria-label="Buscar objeto" placeholder="Buscar módulo…" value={moduleFilter} onChange={e => setModuleFilter(e.target.value)} /></label>
           <nav className="st-module-groups" aria-label="Categorías de módulos">{Object.entries(moduleGroups).map(([key, label]) => <button key={key} aria-pressed={moduleGroup === key} onClick={() => setModuleGroup(key as ModuleGroup)}>{label}</button>)}</nav>
           <p className="st-catalog-caption">Elige un módulo. Después edita sus valores directamente en el lienzo.</p>
           <div className="st-add-buttons">
@@ -406,6 +407,8 @@ function StudioEditor({ owner }: { owner: string }) {
             onChange={changeObject}
             onInlineChange={object => changeObject(object, true)}
             onDelete={remove}
+            onAdd={add}
+            onBrowse={() => { setModuleFilter(""); setModuleGroup("all"); setModulesOpen(true); requestAnimationFrame(() => moduleSearch.current?.focus()); }}
             onDuplicate={duplicate}
             onBeginEdit={store.beginEdit}
             onEndEdit={store.endEdit}

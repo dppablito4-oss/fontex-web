@@ -13,9 +13,11 @@ import {
   boardHeight,
   fitObject,
   type MathObject,
+  type ObjectType,
 } from "../../core/document-schema/document";
 import { InlineEditingContext, type InlineEditing } from "./inline-editing-context";
 import { InlineValue } from "./InlineValue";
+import { CanvasWelcome } from "./CanvasWelcome";
 import { GuidedObject } from "./GuidedObject";
 import { useContext } from "react";
 import { TeachingMode } from "./teaching-mode";
@@ -30,6 +32,8 @@ export function CanvasViewport({
   onChange,
   onInlineChange,
   onDelete,
+  onAdd,
+  onBrowse,
   onDuplicate,
   onBeginEdit,
   onEndEdit,
@@ -45,6 +49,8 @@ export function CanvasViewport({
   onChange: (object: MathObject) => void;
   onInlineChange?: (object: MathObject) => void;
   onDelete: (id: string) => void;
+  onAdd?: (type: ObjectType) => void;
+  onBrowse?: () => void;
   onDuplicate?: (object: MathObject) => void;
   onBeginEdit?: () => void;
   onEndEdit?: () => void;
@@ -55,6 +61,7 @@ export function CanvasViewport({
   const viewport = useRef<HTMLDivElement>(null);
   useCanvasGestures(viewport, zoom, onZoom);
   const mode = useContext(TeachingMode);
+  const empty = !objects.length && !presenting;
   const editable = !presenting && mode !== "practice";
   const editing = (object: MathObject): InlineEditing | null => editable ? { object, onChange: onInlineChange ?? onChange, onBegin: onBeginEdit, onEnd: onEndEdit, onCancel: onCancelEdit } : null;
   const drag = useRef<
@@ -166,9 +173,11 @@ export function CanvasViewport({
     }
   }
   return (
-    <div ref={viewport} className="st-viewport" onClick={() => onSelect(null)}>
+    <div ref={viewport} className={`st-viewport ${empty ? "st-viewport-empty" : ""}`} onClick={() => onSelect(null)}>
+      {empty && <CanvasWelcome onAdd={onAdd} onBrowse={onBrowse} />}
       <div
         className="st-board-space"
+        hidden={empty}
         style={{ width: BOARD.width * zoom, height: height * zoom }}
       >
         <div
@@ -179,12 +188,6 @@ export function CanvasViewport({
             transform: `scale(${zoom})`,
           }}
         >
-          {objects.length === 0 && (
-            <div className="st-empty-board">
-              <h2>Nuevo material</h2>
-              <p>Añade un objeto para comenzar.</p>
-            </div>
-          )}
           {objects.map((object) => {
             const shown = preview?.id === object.id ? preview : object;
             return (

@@ -362,31 +362,18 @@
 .st-type-operation { color:#96620b; background:#fff0cf; }
 .st-type-text,.st-type-number-line { color:#376ab2; background:#e3efff; }
 .st-type-sequence,.st-type-linear-equation { color:#7655bb; background:#eee5ff; }
-/* Keep the AMOLED canvas black; separate chrome and controls with neutral surfaces. */
+/* Studio's dark palette uses separated blue-grey surfaces and soft mint accents. */
 :root[data-theme="dark"] .st-app {
-  --st-background: #000;
-  --st-surface: #111113;
-  --st-soft: #1c1c20;
-  --st-line: #34343a;
-  --st-control: #55555f;
-  --st-ink: #f4f4f5;
-  --st-muted: #b7b7c0;
-  --st-primary: #e4e4e7;
-  --st-on-primary: #18181b;
-  --st-piece-empty: #25252b;
-  --st-piece-stroke: #000;
-  --st-button-surface: #242427;
-  --st-button-hover: #323237;
-  --st-button-border: #484850;
+  --ui-background: #101a25; --ui-surface: #172330; --ui-sidebar: #101a25; --ui-border: #33495b; --ui-subtle: #203140; --ui-hover: #283d4d; --ui-focus: #99e2c8;
+  --st-background: #142330; --st-surface: #1b2b39; --st-soft: #233847; --st-line: #354d60; --st-control: #5b778a; --st-ink: #edf5fa; --st-muted: #b0c4d3;
+  --st-primary: #99e2c8; --st-on-primary: #102b23; --st-button-surface: #233646; --st-button-hover: #2e475a; --st-button-border: #435f74; --st-piece-empty: #304657; --st-piece-stroke: #142330;
 }
-:root[data-theme="dark"] .st-board { background:#000; box-shadow:none; }
-:root[data-theme="dark"] .st-viewport { background-color:#000; background-image:radial-gradient(#27272d .7px,transparent .7px); }
 :root[data-theme="dark"] .st-type-fraction,:root[data-theme="dark"] .st-type-collection,:root[data-theme="dark"] .st-type-geometry { color:#8be6c4; background:#10271f; }
 :root[data-theme="dark"] .st-type-operation { color:#ffce8b; background:#2a2111; }
 :root[data-theme="dark"] .st-type-text,:root[data-theme="dark"] .st-type-number-line { color:#a4caff; background:#142238; }
 :root[data-theme="dark"] .st-type-sequence,:root[data-theme="dark"] .st-type-linear-equation { color:#c8b2ff; background:#241b34; }
 :root[data-theme="dark"] .st-app .st-add-buttons button { border-color:var(--st-button-border); background:var(--st-button-surface); }
-:root[data-theme="dark"] .st-agent option { background:#17171a; color:var(--st-ink); }
+:root[data-theme="dark"] .st-agent option { background:var(--st-surface); color:var(--st-ink); }
 @container (max-width: 680px) {
  .st-guided { grid-template-columns:minmax(0, 1fr); gap:18px; }
  .st-visual-panel { min-height:210px; padding:18px 12px; }
@@ -429,43 +416,16 @@
   color: var(--st-on-primary);
   box-shadow: none;
 }
-:root[data-theme="dark"] .st-app button.st-primary:hover:not(:disabled) {
-  background: #fafafa;
-  border-color: #fafafa;
-  filter: none;
-}
-:root[data-theme="dark"] .st-app .st-learning-toolbar nav button {
-  background: #1c1c20;
-  border-color: #484850;
-  color: #c8c8cf;
-}
-:root[data-theme="dark"] .st-app .st-learning-toolbar nav button[aria-pressed="true"] {
-  background: #3a3a40;
-  color: #fff;
-  border-color: #9696a2;
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / .08);
-}
-:root[data-theme="dark"] .st-app :is(input,textarea,select):not([type="checkbox"]):not([type="file"]) {
-  background: #17171a;
-  border-color: var(--st-control);
-  color: var(--st-ink);
-}
-:root[data-theme="dark"] .st-app :is(input,textarea)::placeholder { color: #9999a5; }
+
+:root[data-theme="dark"] .st-app :is(input,textarea)::placeholder { color: #9fb6c7; }
 :root[data-theme="dark"] .st-app :is(input,textarea,select):focus-visible {
   border-color: #c6c6d0;
   outline-color: var(--ui-focus);
 }
-:root[data-theme="dark"] .st-app .st-object-handle { background: #19191d; color: #c8c8d0; }
-:root[data-theme="dark"] .st-app .st-visual-panel { border-color: #34343b; }
-:root[data-theme="dark"] .st-app .st-story-eyebrow { color: #c4b5fd; }
 :root[data-theme="dark"] .st-app .st-shortcuts a { background: #18181b; color: #c7c7d0; }
 :root[data-theme="dark"] .st-app .st-shortcuts a:hover { background: #29292f; color: #fff; }
 @media (prefers-reduced-motion: reduce) { .st-app :is(button,a) { transition: none; } }
-:root[data-theme="dark"] .st-app button.st-primary:active:not(:disabled) {
-  background: #c4c4cc;
-  border-color: #c4c4cc;
-  color: var(--st-on-primary);
-}
+
 .st-polygon svg { display:block; width:100%; max-height:400px; }
 .st-polygon > p { font-size:14px; line-height:1.6; color:var(--st-muted); }
 .st-factorization { display:grid; justify-items:center; gap:18px; }
@@ -597,3 +557,57 @@
   .st-app .st-assistant-toggle { width: 40px; }
 }
 .st-app .st-module-groups button[aria-pressed="true"]:hover:not(:disabled) { background: var(--st-primary); color: var(--st-on-primary); }
+
+/* A welcoming starting point stays readable without zooming the empty canvas. */
+.st-board-space[hidden] { display: none; }
+.st-viewport-empty { display: flex; align-items: center; justify-content: center; padding: 40px 24px; }
+.st-canvas-welcome { width: min(780px, 100%); margin: auto; text-align: center; color: var(--st-ink); }
+.st-welcome-art { position: relative; width: 330px; max-width: 100%; height: 155px; margin: 0 auto 22px; }
+.st-welcome-orbit { position: absolute; inset: 0 38px; border: 1px dashed var(--st-line); border-radius: 50%; transform: rotate(-12deg); background: radial-gradient(ellipse, color-mix(in srgb, var(--st-piece-primary) 8%, transparent), transparent 70%); }
+.st-welcome-spark { position: absolute; top: 0; right: 61px; color: var(--st-piece-primary); }
+.st-welcome-fraction, .st-welcome-shape, .st-welcome-pattern { position: absolute; border: 1px solid var(--st-line); background: var(--st-surface); border-radius: 12px; box-shadow: 0 8px 25px rgb(var(--ui-shadow) / .12); }
+.st-welcome-fraction { top: 26px; left: 20px; width: 124px; padding: 14px; transform: rotate(-8deg); }
+.st-welcome-fraction > span { display: inline-flex; flex-direction: column; font-size: 19px; font-weight: 700; line-height: 1.2; min-width: 22px; }
+.st-welcome-fraction > span > span { height: 1px; background: currentColor; margin-block: 3px; }
+.st-welcome-fraction > div { display: flex; gap: 3px; margin-top: 11px; height: 22px; }
+.st-welcome-fraction i { flex: 1; border-radius: 3px; background: var(--st-piece-empty); }.st-welcome-fraction i.filled { background: var(--st-piece-primary); }
+.st-welcome-shape { top: 27px; right: 24px; width: 135px; padding: 10px; transform: rotate(9deg); }.st-welcome-shape svg { height: 67px; margin: auto; }.st-welcome-shape path:first-child { fill: color-mix(in srgb, #9ac9ff 22%, transparent); stroke: #5e9edb; stroke-width: 2; }.st-welcome-shape path:last-child { fill: none; stroke: #5e9edb; stroke-dasharray: 4 4; }.st-welcome-shape > span { font-size: 8px; color: var(--st-muted); }
+.st-welcome-pattern { bottom: 0; left: 119px; padding: 10px 13px; display: flex; align-items: center; gap: 5px; transform: rotate(-2deg); }.st-welcome-pattern i { width: 6px; height: 6px; border-radius: 50%; background: #b19ce9; }.st-welcome-pattern > span { font-size: 11px; font-weight: 600; margin-left: 5px; }
+.st-welcome-eyebrow { font-size: 10px; font-weight: 700; letter-spacing: .13em; color: var(--st-piece-primary); }
+.st-canvas-welcome h2 { margin: 12px 0; font: 500 clamp(32px, 3vw, 43px)/1.15 var(--font-display); letter-spacing: -.025em; }
+.st-welcome-copy { color: var(--st-muted); font-size: 14px; line-height: 1.8; }
+.st-welcome-starters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 27px; text-align: left; }
+.st-app .st-welcome-starters button { min-height: 100px; padding: 16px; flex-wrap: wrap; justify-content: flex-start; align-content: center; gap: 10px; border-radius: 11px; background: var(--st-surface); border-color: var(--st-line); box-shadow: none; transition: border-color .16s, transform .16s, background .16s; }
+.st-app .st-welcome-starters button:hover:not(:disabled) { transform: translateY(-3px); border-color: var(--st-piece-primary); background: var(--st-soft); }.st-welcome-starters button > svg { margin-left: auto; color: var(--st-muted); width: 13px; }.st-welcome-starters strong, .st-welcome-starters small { display: block; }.st-welcome-starters strong { font-size: 12px; font-weight: 700; }.st-welcome-starters small { margin-top: 5px; font-size: 10px; color: var(--st-muted); font-weight: 400; }
+.st-welcome-icon { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 8px; flex: none; }.st-welcome-icon.mint { background: #163e32; color: #9de5c8; }.st-welcome-icon.blue { background: #1d3550; color: #a8d2ff; }.st-welcome-icon.lilac { background: #352d4b; color: #d5c3ff; }
+.st-app .st-welcome-browse { margin-top: 19px; min-height: 35px; background: transparent; border-color: transparent; color: var(--st-muted); font-size: 12px; box-shadow: none; }.st-welcome-tip { font-size: 10px; color: var(--st-muted); margin-top: 10px; }
+:root[data-theme="dark"] .st-app > .fx-site-header { background: #15212e; border-color: #33495b; }
+:root[data-theme="dark"] .st-app .st-header { background: #182735; }
+:root[data-theme="dark"] .st-app .st-palette, :root[data-theme="dark"] .st-app .st-canvas-footer { background: #192936; }
+:root[data-theme="dark"] .st-app .st-workspace { background: #101c27; }
+:root[data-theme="dark"] .st-app .st-viewport { background-color: #101c27; background-image: radial-gradient(#33495b .8px, transparent .8px); }
+:root[data-theme="dark"] .st-app .st-board { background: #142330; border-color: #354d60; box-shadow: 0 16px 60px rgb(0 0 0 / .12); }
+:root[data-theme="dark"] .st-app .st-viewport-empty { background-image: radial-gradient(ellipse at 50% 25%, #1a3440 0%, transparent 65%), radial-gradient(#33495b .8px, transparent .8px); background-size: auto, 22px 22px; }
+:root[data-theme="dark"] .st-app .st-learning-toolbar { background: #172633; }
+:root[data-theme="dark"] .st-app .st-learning-toolbar nav button { background: #203342; border-color: #3f596e; color: #b8cedd; }
+:root[data-theme="dark"] .st-app .st-learning-toolbar nav button[aria-pressed="true"] { background: #214b40; color: #bbf2db; border-color: #64b99b; box-shadow: none; }
+:root[data-theme="dark"] .st-app button.st-primary:hover:not(:disabled) { background: #b8efd9; border-color: #b8efd9; }
+:root[data-theme="dark"] .st-app button.st-primary:active:not(:disabled) { background: #79c9ad; border-color: #79c9ad; }
+:root[data-theme="dark"] .st-app :is(input,textarea,select):not([type="checkbox"]):not([type="file"]) { background: #142330; border-color: var(--st-control); }
+:root[data-theme="dark"] .st-app .st-document-heading input { background: transparent; border-color: transparent; }:root[data-theme="dark"] .st-app .st-document-heading input:hover { background: #203342; }
+:root[data-theme="dark"] .st-app .st-object-handle { background: #223746; color: #c5d9e6; }
+:root[data-theme="dark"] .st-app .st-visual-panel { background: #152632; border-color: #3d586b; }
+:root[data-theme="dark"] .st-app .st-story-eyebrow { color: #a8dfcc; }
+:root[data-theme="dark"] .st-app .st-welcome-starters button { background: #1d3342; border-color: #3d586c; }:root[data-theme="dark"] .st-app .st-welcome-starters button:hover:not(:disabled) { background: #294757; border-color: #99e2c8; }
+:root[data-theme="dark"] .st-app .st-welcome-browse { background: transparent; border-color: transparent; color: #b4cedd; box-shadow: none; }:root[data-theme="dark"] .st-app .st-welcome-browse:hover:not(:disabled) { background: #203a49; }
+@media (max-width: 760px) { .st-viewport-empty { padding: 28px 18px; align-items: flex-start; }.st-welcome-art { transform: scale(.85); margin-bottom: 0; height: 145px; }.st-welcome-eyebrow { font-size: 8px; }.st-welcome-starters { grid-template-columns: 1fr; margin-top: 20px; }.st-app .st-welcome-starters button { min-height: 70px; flex-wrap: nowrap; padding: 12px; }.st-welcome-starters strong { font-size: 12px; }.st-welcome-break { display: none; }.st-welcome-copy { font-size: 12px; } }
+@media (prefers-reduced-motion: reduce) { .st-app .st-welcome-starters button { transition: none; } }
+
+@media (max-width: 760px) { .st-app > .fx-site-header .fx-product-links a { font-size: 11px; padding: 8px 10px; gap: 6px; } }
+@media (max-width: 380px) {
+  .st-app .st-modules-toggle { font-size: 12px; padding-inline: 10px; gap: 6px; }
+  .st-app .st-file-buttons > button { padding-inline: 6px; }
+  .st-level-picker > span { display: none; }.st-level-picker select { max-width: 135px; padding: 6px; }
+  .st-app .st-canvas-summary .st-organize { font-size: 10px; padding-inline: 6px; white-space: nowrap; }
+  .st-app .st-zoom button { width: 26px; min-height: 28px; height: 28px; padding: 4px; }.st-zoom output { font-size: 11px; }
+}
