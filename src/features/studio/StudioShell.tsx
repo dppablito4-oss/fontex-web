@@ -11,6 +11,7 @@ import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import {
   ChevronDown,
   MoreHorizontal,
+  MessageCircle,
   Search,
   Check,
   Download,
@@ -69,6 +70,19 @@ function StudioEditor({ owner }: { owner: string }) {
   const [moduleGroup, setModuleGroup] = useState<ModuleGroup>("all");
   const [assistantOpen, setAssistantOpen] = useState(() => window.innerWidth > 1100);
   const assistantToggle = useRef<HTMLButtonElement>(null);
+  const chatLauncher = useRef<HTMLButtonElement>(null);
+  const assistantOpener = useRef<HTMLButtonElement | null>(null);
+  function openAssistant(opener: HTMLButtonElement) {
+    assistantOpener.current = opener;
+    setAssistantOpen(true);
+    requestAnimationFrame(() => assistantPanel.current?.focus({ preventScroll: true }));
+  }
+  function closeAssistant() {
+    setAssistantOpen(false);
+    const opener = assistantOpener.current ?? assistantToggle.current;
+    if (opener === chatLauncher.current) requestAnimationFrame(() => opener?.focus({ preventScroll: true }));
+    else opener?.focus({ preventScroll: true });
+  }
   const assistantPanel = useRef<HTMLElement>(null);
   const matchingModules = (Object.keys(objectRegistry) as ObjectType[]).filter(type => (moduleGroup === "all" || moduleCatalog[type].group === moduleGroup) && normalizeModule(`${objectRegistry[type].name} ${moduleCatalog[type].keywords}`).includes(normalizeModule(moduleFilter)));
   const [mode, setMode] = useState<AgentMode>("learn");
@@ -334,7 +348,7 @@ function StudioEditor({ owner }: { owner: string }) {
               <Plus size={19} /><span>Módulos</span><ChevronDown size={17} />
             </button>
             <div className="st-file-buttons">
-              <button ref={assistantToggle} className="st-assistant-toggle" aria-label="Asistente" aria-expanded={assistantOpen} aria-controls="st-assistant-panel" onClick={() => { setAssistantOpen(open => !open); if (!assistantOpen) requestAnimationFrame(() => assistantPanel.current?.focus()); }}><Sparkles size={17} /><span>Asistente</span></button>
+              <button ref={assistantToggle} className="st-assistant-toggle" aria-label="Asistente" aria-expanded={assistantOpen} aria-controls="st-assistant-panel" onClick={event => { if (assistantOpen) closeAssistant(); else openAssistant(event.currentTarget); }}><Sparkles size={17} /><span>Asistente</span></button>
               <button aria-label="Exportar PDF" onClick={() => { void import("./export-pdf").then(({ exportPDF }) => exportPDF(doc, level)).catch(e => setNotice(e instanceof Error ? e.message : "No se pudo exportar el PDF.")); }}><Download size={17} /><span className="st-export-label">Exportar PDF</span><span className="st-export-compact">PDF</span></button>
               <details className="st-more-options">
                 <summary aria-label="Más opciones de archivo" title="Más opciones"><MoreHorizontal size={21} /></summary>
@@ -444,8 +458,8 @@ function StudioEditor({ owner }: { owner: string }) {
             </div>
           </div>
         </main>
-        <aside ref={assistantPanel} id="st-assistant-panel" hidden={!assistantOpen} tabIndex={-1} className="st-inspector" aria-label="Asistente del material" onKeyDown={event => { if (event.key === "Escape") { setAssistantOpen(false); assistantToggle.current?.focus(); } }}>
-          <div className="st-assistant-heading"><span>Chat</span><button aria-label="Cerrar asistente" onClick={() => { setAssistantOpen(false); assistantToggle.current?.focus(); }}><X size={18} /></button></div>
+        <aside ref={assistantPanel} id="st-assistant-panel" hidden={!assistantOpen} tabIndex={-1} className="st-inspector" aria-label="Asistente del material" onKeyDown={event => { if (event.key === "Escape") { closeAssistant(); } }}>
+          <div className="st-assistant-heading"><span>Chat</span><button aria-label="Cerrar asistente" onClick={() => { closeAssistant(); }}><X size={18} /></button></div>
           <StudioAgentPanel key={doc.id} document={doc} selectedId={selectedId} onSelect={setSelectedId} authenticated={!!user} teachingLevel={level} onLevelChange={setLevel} teachingMode={mode} onModeChange={setMode} onApply={(batch, expected) => {
             const formatted = readableBatch(batch, expected);
             const applied = store.execute(formatted, expected);
@@ -455,6 +469,7 @@ function StudioEditor({ owner }: { owner: string }) {
           }} />
         </aside>
       </div>
+      {!presenting && <button ref={chatLauncher} type="button" className="st-chat-launcher" hidden={assistantOpen} aria-label="Abrir chat" aria-expanded={assistantOpen} aria-controls="st-assistant-panel" onClick={event => openAssistant(event.currentTarget)}><MessageCircle size={22} aria-hidden="true" /><span>Chat</span></button>}
       {playerOpen && <LessonPlayer document={doc} onClose={() => setPlayerOpen(false)} />}
       {presenting && (
         <button
