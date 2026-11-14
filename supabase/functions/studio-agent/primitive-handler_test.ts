@@ -53,7 +53,17 @@ Deno.test("primitives: stream safe text then validate a complete atomic patch", 
     primitive = createPrimitive("math_block", scene);
   let model = "";
   const provider: typeof fetch = (_url, options) => {
-    model = JSON.parse(String(options?.body)).model;
+    const sent = JSON.parse(String(options?.body));
+    model = sent.model;
+    const contract = JSON.stringify(sent.text.format.schema);
+    assert(
+      !contract.includes('"oneOf"'),
+      "provider schema must use anyOf, not oneOf",
+    );
+    assert(
+      !contract.includes('"additionalItems"'),
+      "provider schema must normalize tuples",
+    );
     const reply = {
       message: "Una explicación vinculada al lienzo.",
       actions: [{ kind: "add_primitive", primitive }],

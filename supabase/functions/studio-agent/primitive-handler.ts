@@ -34,6 +34,10 @@ function normalizeProviderSchema(value: unknown): void {
   }
   if (!value || typeof value !== "object") return;
   const object = value as Record<string, unknown>;
+  if (Array.isArray(object.oneOf)) {
+    object.anyOf = object.oneOf;
+    delete object.oneOf;
+  }
   if (Array.isArray(object.items)) {
     const unique = [
       ...new Map(object.items.map((item) => [JSON.stringify(item), item]))
@@ -146,8 +150,25 @@ export function createPrimitiveHandler(
             encoder.encode(`data: ${JSON.stringify(value)}\n\n`),
           );
         try {
-          const schema = z.toJSONSchema(replySchema, { target: "draft-7" });
-          delete schema.$schema;
+          const schema = input.task === "chat"
+            ? {
+              type: "object",
+              additionalProperties: false,
+              required: ["message", "actions"],
+              properties: {
+                message: { type: "string" },
+                actions: {
+                  type: "array",
+                  maxItems: 0,
+                  items: { type: "string" },
+                },
+              },
+            }
+            : z.toJSONSchema(replySchema, {
+              target: "draft-7",
+              reused: "inline",
+            });
+          if ("$schema" in schema) delete schema.$schema;
           normalizeProviderSchema(schema);
           const contextScene = {
             ...scene,
