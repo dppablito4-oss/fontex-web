@@ -1,11 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title description">
   <title id="title">Símbolo de Fontex</title>
-  <desc id="description">Una efe cian enlazada con un documento índigo.</desc>
-  <path fill="#06F0FC" d="M34 65 67 23h94v40H66v138H34Z" />
-  <path fill="#06F0FC" d="M99 94h63v49H99z" />
-  <path fill="#06F0FC" d="M99 174h60v31H99z" />
+  <desc id="description">Una efe verde enlazada con un documento naranja.</desc>
+  <path fill="#22C55E" d="M34 65 67 23h94v40H66v138H34Z" />
+  <path fill="#22C55E" d="M99 94h63v49H99z" />
+  <path fill="#22C55E" d="M99 174h60v31H99z" />
   <path
-    fill="#1800AD"
+    fill="#F97316"
     stroke="#FFFFFF"
     stroke-linejoin="round"
     stroke-width="8"

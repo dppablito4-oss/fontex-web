@@ -141,7 +141,7 @@ export function ConversationList({
                 <button
                   type="button"
                   onClick={(e) => startRename(conv, e)}
-                  className={`p-1 rounded hover:bg-black/10 dark:hover:bg-white/10 ${
+                  className={`p-1 rounded hover:bg-current/10 ${
                     isActive ? "text-primary-foreground" : "text-muted-foreground"
                   }`}
                   title="Renombrar"
@@ -151,7 +151,7 @@ export function ConversationList({
                 <button
                   type="button"
                   onClick={(e) => handleDelete(conv.id, e)}
-                  className={`p-1 rounded hover:bg-black/10 dark:hover:bg-white/10 ${
+                  className={`p-1 rounded hover:bg-current/10 ${
                     isActive ? "text-primary-foreground" : "text-error"
                   }`}
                   title="Eliminar"

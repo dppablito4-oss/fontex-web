@@ -1,6 +1,7 @@
 import { Component, type CSSProperties, useEffect, useId, useRef, useState } from "react";
 import { Hand, Maximize, Minus, Plus } from "lucide-react";
 import { VariableValueField } from "./VariableValueField";
+import { diagramColor } from "./visual-colors";
 import {
   authoredBounds, equalPlotBounds, fitPlotBounds, panPlotBounds,
   shapeVertices, zoomPlotBounds, type PlotBounds,
@@ -260,7 +261,7 @@ function Coordinate(
         )}
         <g clipPath={`url(#${clip})`}>
           {children.map((child) => {
-            const stroke = child.style.strokeColor;
+            const stroke = diagramColor(child.style.strokeColor);
             if (child.kind === "function_region") {
               if (
                 child.data.curveMode && child.data.curveMode !== "cartesian"
@@ -367,7 +368,7 @@ function Coordinate(
                     <path
                       key={i}
                       d={d}
-                      fill={child.style.fillColor}
+                      fill={diagramColor(child.style.fillColor)}
                       fillOpacity=".4"
                     />
                   ))}
@@ -388,7 +389,7 @@ function Coordinate(
                     <path
                       d={path(sample(graph.slope, x0, x1, y0, y1))}
                       fill="none"
-                      stroke="#bd81e7"
+                      stroke="var(--ui-math-primary)"
                       strokeWidth="2.5"
                       strokeDasharray="7 5"
                     />
@@ -399,7 +400,7 @@ function Coordinate(
                       d={`M${px(x0)},${py(height + slope * (x0 - at))}L${
                         px(x1)
                       },${py(height + slope * (x1 - at))}`}
-                      stroke="#e5aa4f"
+                      stroke="var(--ui-math-secondary)"
                       strokeWidth="2"
                     />
                   )}
@@ -475,7 +476,7 @@ function Coordinate(
                     points={vertices.map(([x, y]) => `${px(x)},${py(y)}`).join(
                       " ",
                     )}
-                    fill={child.style.fillColor}
+                    fill={diagramColor(child.style.fillColor)}
                     fillOpacity=".4"
                     stroke={stroke}
                     strokeWidth="2"
@@ -533,7 +534,7 @@ function Coordinate(
             metrics = polygonMetrics(points);
           } catch { /* A singular forward transform can collapse a valid polygon. */ }
           return <button key={child.id} className="pc-shape-summary" onClick={(e) => { e.stopPropagation(); onSelect(child.id); }}>
-            <span style={{ background: child.style.strokeColor }} />
+            <span style={{ background: diagramColor(child.style.strokeColor) }} />
             <strong>{child.label}</strong>
             <span>{metrics
               ? `Área ${num(Number(metrics.area.toFixed(2)))} ${child.data.unit}² · Perímetro ${num(Number(metrics.perimeter.toFixed(2)))} ${child.data.unit}`
@@ -543,7 +544,7 @@ function Coordinate(
         {children.map((child) =>
           child.kind === "function_region"
             ? (
-              <span key={child.id} style={{ color: child.style.strokeColor }}>
+              <span key={child.id} style={{ color: diagramColor(child.style.strokeColor) }}>
                 <strong>
                   {child.data.curveMode === "parametric"
                     ? `${child.data.name}(t) = (${child.data.xExpr}, ${child.data.yExpr})`
@@ -655,8 +656,8 @@ function Vector({
   const displacement = c - a;
   return (
     <g
-      stroke={p.style.strokeColor}
-      fill={p.style.strokeColor}
+      stroke={diagramColor(p.style.strokeColor)}
+      fill={diagramColor(p.style.strokeColor)}
       onPointerDown={(e) => e.stopPropagation()}
       onClick={(e) => {
         e.stopPropagation();
@@ -736,7 +737,7 @@ function Shape(
     p: Extract<Primitive, { kind: "geometric_shape" }>;
   },
 ) {
-  const stroke = p.style.strokeColor, fill = p.style.fillColor;
+  const stroke = diagramColor(p.style.strokeColor), fill = diagramColor(p.style.fillColor);
   if (["circle_fraction", "sector"].includes(p.data.shape)) {
     const count = safe(p.data.shadedExpr, scope),
       units = Math.max(1, Math.ceil(count / p.data.divisions)),
@@ -1089,11 +1090,11 @@ function Chart(
                     key={i}
                     d={d}
                     fill={[
-                      p.style.fillColor,
-                      p.style.strokeColor,
-                      "#ba97e4",
-                      "#eeb16c",
-                      "#82b6e9",
+                      diagramColor(p.style.fillColor),
+                      diagramColor(p.style.strokeColor),
+                      "var(--ui-math-secondary)",
+                      "var(--ui-muted-foreground)",
+                      "var(--ui-foreground)",
                     ][i % 5]}
                     stroke="var(--pc-bg)"
                   />
@@ -1120,7 +1121,7 @@ function Chart(
                         cx={px(r.x)}
                         cy={py(r.y)}
                         r="7"
-                        fill={p.style.strokeColor}
+                        fill={diagramColor(p.style.strokeColor)}
                       />
                     )
                     : (
@@ -1130,8 +1131,8 @@ function Chart(
                           y={Math.min(py(r.y), py(0))}
                           width={Math.max(1, 660 / data.length - 8)}
                           height={Math.max(1, Math.abs(py(r.y) - py(0)))}
-                          fill={p.style.fillColor}
-                          stroke={p.style.strokeColor}
+                          fill={diagramColor(p.style.fillColor)}
+                          stroke={diagramColor(p.style.strokeColor)}
                         />
                         <text
                           x={65 + (i + .5) * 660 / data.length}
@@ -1160,7 +1161,7 @@ function Chart(
                     d={`M${px(xmin)},${py(slope * xmin + intercept)}L${
                       px(xmax)
                     },${py(slope * xmax + intercept)}`}
-                    stroke="#be89e4"
+                    stroke="var(--ui-math-secondary)"
                     strokeWidth="2"
                   />
                 )}
@@ -1260,7 +1261,7 @@ function Annotation(
       <polyline
         points={(draft ?? p.data.points).map((q) => q.join(",")).join(" ")}
         fill="none"
-        stroke={p.style.strokeColor}
+        stroke={diagramColor(p.style.strokeColor)}
         strokeWidth={p.data.mode === "highlighter"
           ? 22
           : Math.max(2, p.style.strokeWidth)}
@@ -1361,8 +1362,8 @@ function PrimitiveBody(props: Props) {
                   width={cell - 5}
                   height={cell - 5}
                   rx="4"
-                  fill={i < active ? p.style.fillColor : "var(--pc-empty)"}
-                  stroke={p.style.strokeColor}
+                  fill={i < active ? diagramColor(p.style.fillColor) : "var(--pc-empty)"}
+                  stroke={diagramColor(p.style.strokeColor)}
                 />
                 <text
                   x={40 + (i % cols + .5) * cell - 2}

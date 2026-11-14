@@ -34,8 +34,8 @@ function Graph({ expression, derived, variables, span, tangent, showDerivative }
     <defs><clipPath id={clipId}><rect x={margin} y={margin} width={width - margin * 2} height={height - margin * 2} /></clipPath></defs>
     {ticks.map(t => <g key={t}><path d={`M${px(t)},${margin}V${height - margin}M${margin},${py(t)}H${width - margin}`} stroke="var(--gc-line)" strokeWidth="1" /><text x={px(t)} y={height - 12} textAnchor="middle" fill="currentColor" fontSize={fontSize}>{number(t)}</text><text x={margin - 10} y={py(t) + 5} textAnchor="end" fill="currentColor" fontSize={fontSize}>{number(t)}</text></g>)}
     <path d={`M${margin},${py(0)}H${width - margin}M${px(0)},${margin}V${height - margin}`} stroke="currentColor" strokeWidth="1.5" />
-    <g clipPath={`url(#${clipId})`}><path d={path(expression)} fill="none" stroke="var(--gc-accent)" strokeWidth="3" />{showDerivative && <path d={path(derived)} fill="none" stroke="#edaf65" strokeWidth="2.5" strokeDasharray="7 4" />}
-    {Number.isFinite(y) && Number.isFinite(slope) && <><path d={`M${px(-span)},${py(y + slope * (-span - tangent))}L${px(span)},${py(y + slope * (span - tangent))}`} stroke="#c69cff" strokeWidth="2" /><circle cx={px(tangent)} cy={py(y)} r="5" fill="currentColor" /></>}</g>
+    <g clipPath={`url(#${clipId})`}><path d={path(expression)} fill="none" stroke="var(--gc-accent)" strokeWidth="3" />{showDerivative && <path d={path(derived)} fill="none" stroke="var(--ui-math-primary)" strokeWidth="2.5" strokeDasharray="7 4" />}
+    {Number.isFinite(y) && Number.isFinite(slope) && <><path d={`M${px(-span)},${py(y + slope * (-span - tangent))}L${px(span)},${py(y + slope * (span - tangent))}`} stroke="var(--ui-math-secondary)" strokeWidth="2" /><circle cx={px(tangent)} cy={py(y)} r="5" fill="currentColor" /></>}</g>
   </svg>;
 }
 function ExpressionView({ source, kind, variables, span, tangent, showDerivative }: { source: string; kind: "plot" | "formula" | "table"; variables: Variables; span: number; tangent: number; showDerivative: boolean }) {

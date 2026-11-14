@@ -765,7 +765,7 @@ function Editor(
             <Download size={17} />PDF
           </button>
           <button
-            className="pc-primary"
+            className="pc-present-action"
             disabled={!scene.primitives.length}
             onClick={() => {
               setSelected(null);
@@ -1071,6 +1071,7 @@ function Editor(
                         ).map((t) => (
                           <button
                             key={t.id}
+                            data-module={t.id === "fractions" ? "orange" : "green"}
                             onClick={() => load(t.id)}
                           >
                             <small>{t.group}</small>
@@ -1242,6 +1243,7 @@ function Editor(
                   {["calculus", "fractions", "geometry"].map((id) => (
                     <button
                       key={id}
+                      data-module={id === "fractions" ? "orange" : "green"}
                       onClick={(e) => {
                         e.stopPropagation();
                         load(id);

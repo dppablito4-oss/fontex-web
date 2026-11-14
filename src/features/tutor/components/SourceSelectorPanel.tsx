@@ -96,7 +96,7 @@ export function SourceSelectorPanel({
         </div>}
 
         {missingSelectedCount > 0 && (
-          <div className="mt-2 rounded-lg bg-amber-500/10 p-2 text-[11px] text-amber-500 dark:text-amber-400">
+          <div className="mt-2 rounded-lg bg-warning-surface p-2 text-[11px] text-warning">
             {missingSelectedCount} de los archivos seleccionados ya no están disponibles.
           </div>
         )}
@@ -153,19 +153,19 @@ export function SourceSelectorPanel({
 
                     {/* Status Badge */}
                     {isIndexed ? (
-                      <span className="inline-flex items-center rounded bg-emerald-500/10 px-1.5 py-0.5 font-medium text-emerald-600 dark:text-emerald-400">
+                      <span className="inline-flex items-center rounded bg-success-surface px-1.5 py-0.5 font-medium text-success">
                         Listo
                       </span>
                     ) : (doc.processing?.status === "processing" || doc.status === "uploading") ? (
-                      <span className="inline-flex items-center rounded bg-amber-500/10 px-1.5 py-0.5 font-medium text-amber-600 dark:text-amber-400">
+                      <span className="inline-flex items-center rounded bg-warning-surface px-1.5 py-0.5 font-medium text-warning">
                         Preparando…
                       </span>
                     ) : doc.status === "failed" ? (
-                      <span className="inline-flex items-center rounded bg-rose-500/10 px-1.5 py-0.5 font-medium text-rose-600 dark:text-rose-400">
+                      <span className="inline-flex items-center rounded bg-error-surface px-1.5 py-0.5 font-medium text-error">
                         No disponible
                       </span>
                     ) : (
-                      <span className="inline-flex items-center rounded bg-stone-500/10 px-1.5 py-0.5 font-medium text-stone-500">
+                      <span className="inline-flex items-center rounded bg-subtle px-1.5 py-0.5 font-medium text-muted-foreground">
                         Pendiente
                       </span>
                     )}

@@ -1,14 +1,14 @@
 # Sistema de diseño de Fontex
 
-**Revisión documental:** 11 de noviembre de 2026; aplicación `0.6.0` con Studio incorporado.
+**Revisión documental:** 14 de noviembre de 2026; paleta verde/naranja y oscuro AMOLED, aplicación `0.8.1`.
 
 **Estado:** Temas claro/oscuro compartidos por Studio, Fracciones, Práctica y las vistas académicas.
 
 ## Principios
 
-La interfaz expresa la idea de *fuentes puestas en contexto* con superficies sobrias, jerarquía legible y acentos geométricos. Los colores de marca identifican acciones y contexto, pero los estados de éxito, advertencia y error conservan colores semánticos independientes.
+La interfaz expresa la idea de *fuentes puestas en contexto* con superficies sobrias, jerarquía legible y acentos geométricos. El verde identifica acciones y estados positivos, el naranja destaca presentación y fracciones, y los errores conservan su rojo semántico.
 
-Los componentes nuevos deben consumir tokens. Studio, Fracciones y Práctica usan alias `--st-*`, `--fc-*` y `--fd-*` que referencian las variables globales; las superficies y los controles cambian de tema sin paletas independientes.
+Los componentes nuevos deben consumir tokens. La portada, el lienzo, el laboratorio, Fracciones y Práctica usan alias `--lp-*`, `--pc-*`, `--gc-*`, `--fc-*` y `--fd-*` que referencian las variables globales; las superficies y los controles cambian de tema sin paletas independientes.
 
 ## Superficies actuales
 
@@ -29,14 +29,17 @@ Los módulos se editan al 100 % por defecto en escritorio, con tamaños iniciale
 
 ## Paleta oficial
 
-| Color | HEX | Uso |
-|---|---:|---|
-| Cian Fontex | `#06F0FC` | Acentos y elementos destacados sobre fondos controlados |
-| Azul cielo | `#81C5FE` | Información y acción principal del tema oscuro |
-| Índigo Fontex | `#1800AD` | Acción principal del tema claro e identidad |
-| Negro | `#000000` | Recurso de marca; no se usa como gran superficie oscura |
+| Elemento | Claro | Oscuro |
+|---|---:|---:|
+| Fondo principal y lienzo | `#FAFAFA` | `#000000` |
+| Paneles y navegación | `#FFFFFF` | `#0D0E12` |
+| Bordes y separadores | `#E4E4E7` | `#1C1E26` |
+| Texto principal | `#0F172A` | `#F3F4F6` |
+| Texto secundario | `#475569` | `#9CA3AF` |
+| Verde: chat, envío, derivadas y áreas | `#15803D` | `#22C55E` |
+| Naranja: presentar, fracciones y destacados | `#EA580C` | `#F97316` |
 
-El hero utiliza `brand-deep` (`#14008C`) con texto blanco y acentos cian. Es una variación del índigo oficial pensada para conservar contraste estable en ambos temas.
+Los fondos tenues y los estados de interacción se derivan de esta paleta. Los errores conservan un rojo semántico. Los botones verdes usan texto blanco en claro y negro en oscuro; los botones naranjas usan `#0F172A` para mantener la lectura. La marca y el favicon utilizan verde/naranja sobre su soporte negro.
 
 ## Tokens semánticos
 
@@ -44,22 +47,24 @@ Los valores viven en `src/styles/globals.css`. Tailwind CSS v4 los expone median
 
 | Token | Claro | Oscuro | Propósito |
 |---|---:|---:|---|
-| `background` | `#F7F9FC` | `#0B1020` | Fondo global |
-| `surface` | `#FFFFFF` | `#141C30` | Tarjetas, formularios y mensajes |
-| `sidebar` | `#EEF3F9` | `#11182A` | Navegación y panel contextual |
-| `foreground` | `#101722` | `#EEF6FF` | Texto principal |
-| `muted-foreground` | `#536579` | `#A8B6D1` | Texto secundario |
-| `border` | `#DCE4F0` | `#2B3550` | Separadores y contenedores |
-| `control-border` | `#718096` | `#73809D` | Límites de campos y controles |
-| `primary` | `#1800AD` | `#81C5FE` | Acción principal y selección |
-| `primary-foreground` | `#FFFFFF` | `#081226` | Contenido sobre acción principal |
-| `accent` | `#06F0FC` | `#06F0FC` | Acento de marca |
-| `accent-foreground` | `#081226` | `#081226` | Contenido sobre cian |
-| `info` | `#81C5FE` | `#81C5FE` | Identificación informativa |
+| `background` | `#FAFAFA` | `#000000` | Fondo global |
+| `surface` | `#FFFFFF` | `#0D0E12` | Tarjetas, formularios y mensajes |
+| `sidebar` | `#FFFFFF` | `#0D0E12` | Navegación y panel contextual |
+| `foreground` | `#0F172A` | `#F3F4F6` | Texto principal |
+| `muted-foreground` | `#475569` | `#9CA3AF` | Texto secundario |
+| `border` | `#E4E4E7` | `#1C1E26` | Separadores y contenedores |
+| `control-border` | `#71717A` | `#60646F` | Límites de campos y controles |
+| `primary` | `#15803D` | `#22C55E` | Acción principal y selección |
+| `primary-foreground` | `#FFFFFF` | `#000000` | Contenido sobre acción principal |
+| `accent` | `#EA580C` | `#F97316` | Presentar y fracciones |
+| `accent-foreground` | `#0F172A` | `#0F172A` | Contenido sobre naranja |
+| `info` | `#15803D` | `#22C55E` | Identificación informativa |
 
 `control-border` es deliberadamente más oscuro que el borde base propuesto. La variación permite superar una relación 3:1 frente al fondo y distinguir campos sin depender únicamente del foco.
 
-Los grupos `success`, `warning`, `error` e `info` disponen de tokens separados para primer plano, superficie y borde. No deben reemplazarse por azul de marca.
+Los grupos `success`, `warning`, `error` e `info` disponen de tokens separados para primer plano, superficie y borde. Las etiquetas del tutor consumen estos tokens y responden al selector `data-theme`, sin depender de una clase `dark` diferente.
+
+Los colores predeterminados de los diagramas se resuelven al renderizar mediante `visual-colors.ts`; el documento guardado y los colores personalizados permanecen intactos. Los PDF conservan sus propios colores. La impresión utiliza papel blanco y tinta legible, independientemente del tema de pantalla.
 
 ## Comportamiento de los temas
 
@@ -79,7 +84,7 @@ Los grupos `success`, `warning`, `error` e `info` disponen de tokens separados p
 4. Aplicar `control-border` a campos interactivos y `border` a divisores decorativos.
 5. Mantener foco visible mediante `--ui-focus` y un contorno que no dependa solo del cambio de color.
 6. Conservar estados `disabled`, `hover`, `selected`, error y éxito distinguibles por forma, texto o icono además del color.
-7. Evitar negro absoluto en grandes superficies del tema oscuro.
+7. Usar negro absoluto en el plano principal AMOLED y `surface` para distinguir paneles.
 8. Respetar `prefers-reduced-motion`; no añadir animaciones que ignoren su regla global.
 
 ## Tutor académico
@@ -96,11 +101,11 @@ Los estados de índice se expresan además con texto: `Sin indexar`, `Indexando`
 
 Las pruebas de `src/features/theme/contrast.test.ts` leen los valores reales de la hoja de estilos. Verifican un mínimo de 4.5:1 para texto normal y 3:1 para bordes de controles e indicadores de foco. Las pruebas del proveedor cubren preferencia del sistema, persistencia, alternancia, errores de almacenamiento y actualización de `data-theme`.
 
-Al crear o modificar un token se deben ejecutar las pruebas relevantes y revisar las vistas afectadas en ambos temas y en móvil, tablet y escritorio. Las pruebas actuales cubren selección y persistencia del tema desde las tres experiencias, además del contraste. La herramienta de navegador bloqueó la revisión visual del 11 de noviembre porque no pudo verificar la URL de Windows; no se completó revisión visual, E2E ni de lector de pantalla.
+Al crear o modificar un token se deben ejecutar las pruebas relevantes y revisar las vistas afectadas en ambos temas y en móvil, tablet y escritorio. Las pruebas actuales cubren selección y persistencia del tema desde las distintas experiencias, además del contraste. En la actualización del 14 de noviembre pasaron las 363 pruebas del frontend (7 integraciones remotas omitidas), lint y tipos. Las 32 pruebas de tema/contraste pasan con los colores reales de la hoja de estilos. La revisión visual se interrumpió con la tecla física Escape; no se presenta como completada una prueba visual, móvil o de lector de pantalla.
 
 ## Identidad gráfica
 
-`BrandMark.tsx` combina el identificador tipográfico con `public/brand/fontex-mark.svg`, una versión vectorial determinista del símbolo cian, blanco e índigo entregado por el propietario. El contenedor negro preserva el contraste del trazo blanco en temas claro y oscuro.
+`BrandMark.tsx` combina el identificador tipográfico con `public/brand/fontex-mark.svg`. El símbolo conserva su geometría y aplica la paleta verde, blanco y naranja solicitada. El contenedor negro preserva el contraste del trazo blanco en temas claro y oscuro.
 
 Cuando estén disponibles los vectores aprobados, la ruta prevista es:
 

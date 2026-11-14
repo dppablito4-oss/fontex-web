@@ -79,7 +79,7 @@ export function HomePage() {
           <h1 className="mt-7 max-w-2xl font-display text-[clamp(2.7rem,6vw,5.4rem)] leading-[0.92] tracking-[-0.055em]">
             Tus fuentes.
             <br />
-            <span className="text-brand-cyan">Ahora con sentido.</span>
+            <span className="text-on-brand">Ahora con sentido.</span>
           </h1>
           <p className="mt-7 max-w-xl text-sm leading-6 text-on-brand-muted sm:text-base">
             Pregunta, contrasta y aprende a partir de materiales autorizados. Cada respuesta conserva el camino de vuelta a su fuente.

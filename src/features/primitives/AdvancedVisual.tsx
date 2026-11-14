@@ -1,4 +1,5 @@
 import { useId } from "react";
+import { diagramColor } from "./visual-colors";
 import type { PrimitiveVisualProps } from "./PrimitiveVisual";
 import type { Primitive } from "../../core/primitives/schema";
 import { displayNumber as num, scopeMatrix } from "../../core/primitives/math";
@@ -191,7 +192,7 @@ export function Venn(
               y="15"
               width="770"
               height="520"
-              fill={p.style.fillColor}
+              fill={diagramColor(p.style.fillColor)}
               fillOpacity=".6"
               mask={`url(#${prefix}-mask-${i})`}
             />
@@ -210,7 +211,7 @@ export function Venn(
               cy={c.y}
               r={c.r}
               fill="none"
-              stroke={p.style.strokeColor}
+              stroke={diagramColor(p.style.strokeColor)}
               strokeWidth="3"
             />
             <text
@@ -351,7 +352,7 @@ export function NodeGraph(
                 height="60"
                 rx={node.type === "output" ? 28 : 8}
                 fill={active ? "var(--pc-accent)" : "var(--pc-surface)"}
-                stroke={p.style.strokeColor}
+                stroke={diagramColor(p.style.strokeColor)}
                 strokeWidth="2"
               />
               <text

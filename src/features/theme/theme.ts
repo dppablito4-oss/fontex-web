@@ -35,5 +35,5 @@ export function applyTheme(theme: Theme, root = document.documentElement) {
   root.style.colorScheme = theme;
 
   const themeColor = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
-  themeColor?.setAttribute("content", theme === "dark" ? "#0B1020" : "#F7F9FC");
+  themeColor?.setAttribute("content", theme === "dark" ? "#000000" : "#FAFAFA");
 }

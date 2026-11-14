@@ -43,7 +43,7 @@
   color: var(--ui-foreground);
 }
 .ai-account-row[aria-pressed=true] {
-  outline: 2px solid var(--ui-primary,#7c6ae8);
+  outline: 2px solid var(--ui-primary);
   outline-offset: -2px;
 }
 .ai-credit-section small {
@@ -77,11 +77,11 @@
   white-space: nowrap;
 }
 .ai-credit-error {
-  color: var(--ui-error,#c24152);
+  color: var(--ui-error);
   margin: 12px 0;
 }
 .ai-credit-success {
-  color: var(--ui-success,#248165);
+  color: var(--ui-success);
   margin: 12px 0;
 }
 @media (max-width:600px) {
