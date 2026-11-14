@@ -35,9 +35,7 @@ export function GuidedObject({ object }: { object: MathObject }) {
     setHint(nextHint);
     setFeedback(practiceReply({ document: { schemaVersion: 1, id: "practice-preview", title: "Práctica", updatedAt: new Date().toISOString(), objects: [object] }, selectedId: object.id, mode: "practice", level, question: "Practicar", attempt: answer, hintLevel: nextHint }).message);
   }
-  return <div className={`st-guided st-guided-${mode} ${["function-graph", "fraction", "operation", "number-line", "geometry", "regular-polygon", "polygon", "circle", "angle"].includes(object.type) ? "st-guided-wide" : ""}`}>
-    <div className="st-visual-panel" aria-label="Representación visual"><ObjectVisual object={visual} onChange={() => {}} lessonStep={mode === "solve" ? Infinity : current} concealAnswers={practice} /></div>
-    <section className="st-story-panel" aria-label={practice ? "Práctica del módulo" : "Pasos del módulo"}>
+  const story = <section className="st-story-panel" aria-label={practice ? "Práctica del módulo" : "Pasos del módulo"}>
       {practice && !target ? <><span className="st-story-eyebrow">EXPLORA LA FUNCIÓN</span><h3>Predice antes de comprobar</h3><p>Anticipa las alturas y el cambio de la curva. Edita sus parámetros y abre la tabla para comprobar tus conjeturas. Esta exploración numérica no califica respuestas exactas automáticamente.</p></> : practice ? <>
         <span className="st-story-eyebrow">TU TURNO</span><h3><MathText>{target?.prompt ?? ""}</MathText></h3>
         <p>Observa la representación. Puedes pedir una pista cuando la necesites.</p>
@@ -54,6 +52,9 @@ export function GuidedObject({ object }: { object: MathObject }) {
         <nav className="st-story-navigation" aria-label="Recorrer explicación"><button disabled={current === 0} onClick={() => setStep(current - 1)}><ArrowLeft size={16} />Anterior paso</button><button className="st-primary" disabled={current === steps.length - 1} onClick={() => setStep(current + 1)}>Siguiente paso<ArrowRight size={16} /></button></nav>
         {current === steps.length - 1 && <p className="st-story-feedback">Ya recorriste la explicación. Cuenta con tus palabras qué cambió y qué se conservó.</p>}
       </>}
-    </section>
+    </section>;
+  return <div className={`st-guided st-guided-${mode} st-guided-${object.type}${object.type === "function-graph" ? " st-guided-function" : ""}`}>
+    <div className="st-visual-panel" aria-label="Representación visual"><ObjectVisual object={visual} onChange={() => {}} lessonStep={mode === "solve" ? Infinity : current} concealAnswers={practice} asideContent={object.type === "function-graph" ? story : undefined} /></div>
+    {object.type !== "function-graph" && story}
   </div>;
 }

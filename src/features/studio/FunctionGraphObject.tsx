@@ -1,4 +1,4 @@
-import { useId, useMemo } from "react";
+import { useId, useMemo, type ReactNode } from "react";
 import { compileFunctionGraph, functionGraphFacts, graphNumber, sampleFunctionGraph, type FunctionGraphData, type GraphPoint } from "../../core/math-engine/function-graphs";
 import { InlineOnly, InlineValue } from "./InlineValue";
 import { PolynomialControls, PolynomialExpression } from "./PolynomialControls";
@@ -6,7 +6,7 @@ import { isPolynomialEquation, polynomialCoefficients } from "../../core/math-en
 import { ExpressionMath } from "./ExpressionMath";
 import { superscriptPowers } from "../../core/math-engine/math-notation";
 
-export function FunctionGraphObject({ data, concealAnswers = false }: { data: FunctionGraphData; concealAnswers?: boolean }) {
+export function FunctionGraphObject({ data, concealAnswers = false, asideContent }: { data: FunctionGraphData; concealAnswers?: boolean; asideContent?: ReactNode }) {
   const clipId = useId();
   const polynomial = polynomialCoefficients(data.source, data), equation = isPolynomialEquation(data.source);
   const analysis = useMemo(() => ({
@@ -22,17 +22,12 @@ export function FunctionGraphObject({ data, concealAnswers = false }: { data: Fu
   const angular = analysis.graph.trigonometric ? data.angleUnit === "degrees" ? "°" : "rad" : "";
   const table = <table className="st-function-table"><caption>Puntos calculados de la función</caption><thead><tr><th>x{angular && ` (${angular})`}</th><th>f(x)</th>{data.showDerivative && <th>f′(x)</th>}</tr></thead><tbody>{analysis.facts.samples.map(p => <tr key={p.x}><td>{graphNumber(p.x)}</td><td>{p.y === null ? "No definido" : graphNumber(p.y)}</td>{data.showDerivative && <td>{p.slope === null ? "No definido" : graphNumber(p.slope)}</td>}</tr>)}</tbody></table>;
   return <div className="st-function-graph">
+    <header className="st-function-heading">
     <p className="st-function-expression">{polynomial ? <PolynomialExpression coefficients={polynomial} equation={equation} /> : equation ? <><ExpressionMath source={data.source.split("=")[0]!} /> = <ExpressionMath source={data.source.split("=")[1]!} /></> : <>f(x) = <ExpressionMath source={data.source} /></>}</p>
-    <PolynomialControls data={data} concealAnswers={concealAnswers} />
-    <InlineOnly>{polynomial ? <details className="st-function-source"><summary>Editar expresión libre</summary><InlineValue field="source" value={data.source} /></details> : <p className="st-function-source"><InlineValue field="source" value={data.source} /><small>Puedes escribir potencias como x² o x³.</small></p>}</InlineOnly>
-    {!polynomial && <p className="st-function-parameters">{(["a", "b", "c"] as const).map(name => <span key={name}>{name} = <InlineValue field={name} value={data[name]} /></span>)}</p>}
-    <InlineOnly><div className="st-function-settings">
-      <label>Ángulos: <InlineValue field="angleUnit" value={data.angleUnit} /></label>
-      <label>x desde <InlineValue field="xMin" value={data.xMin} /> hasta <InlineValue field="xMax" value={data.xMax} /></label>
-      <label>y desde <InlineValue field="yMin" value={data.yMin} /> hasta <InlineValue field="yMax" value={data.yMax} /></label>
-      <label>Puntos: <InlineValue field="pointXs" value={data.pointXs} /></label>
-      <InlineValue field="showDerivative" value={data.showDerivative} />
-    </div></InlineOnly>
+    <div className="st-function-legend"><span>Función</span>{data.showDerivative && <span className="st-function-derivative-key">Derivada</span>}</div>
+    </header>
+    <div className="st-function-grid">
+    <div className="st-function-plot" aria-label="Área de la gráfica">
     <svg className="st-function-svg" viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`Gráfica de ${superscriptPowers(data.source)}${angular ? ` en ${data.angleUnit === "degrees" ? "grados" : "radianes"}` : ""}, de x ${data.xMin} a ${data.xMax}`}>
       <defs><clipPath id={clipId}><rect x={left} y={top} width={width - left - right} height={height - top - bottom} /></clipPath></defs>
       {xTicks.map(x => <g key={x}><line x1={px(x)} x2={px(x)} y1={top} y2={height - bottom} stroke="currentColor" opacity="0.12" /><text x={px(x)} y={height - bottom + 29} textAnchor="middle" fill="currentColor" fontSize="21">{graphNumber(x)}</text></g>)}
@@ -50,6 +45,23 @@ export function FunctionGraphObject({ data, concealAnswers = false }: { data: Fu
     </svg>
     {!analysis.curve.length && <p role="status">No hay un tramo real visible en esta ventana. Revisa el dominio y la escala.</p>}
     <p className="st-function-caption">Curva muestreada numéricamente.{analysis.graph.trigonometric && ` Ángulos en ${data.angleUnit === "degrees" ? "grados" : "radianes"}.`}{data.showDerivative && " Trazo discontinuo: derivada respecto a x."} Los valores no definidos y las asíntotas separan los trazos.</p>
-    {analysis.facts.samples.length > 0 && (concealAnswers ? <details><summary>Comprobar los valores de los puntos</summary>{table}</details> : table)}
+    </div>
+    <aside className="st-function-sidebar" aria-label="Datos y explicación de la función">
+      <PolynomialControls data={data} concealAnswers={concealAnswers} />
+      {analysis.facts.samples.length > 0 && <div className="st-function-table-wrap">{concealAnswers ? <details><summary>Comprobar los valores de los puntos</summary>{table}</details> : table}</div>}
+      {asideContent}
+      <InlineOnly><details className="st-function-config"><summary>Ajustes de la gráfica</summary>
+        <div className="st-function-source"><span>Expresión libre</span><InlineValue field="source" value={data.source} /><small>Puedes escribir potencias como x² o x³.</small></div>
+        {!polynomial && <p className="st-function-parameters">{(["a", "b", "c"] as const).map(name => <span key={name}>{name} = <InlineValue field={name} value={data[name]} /></span>)}</p>}
+        <div className="st-function-settings">
+          <label>Ángulos: <InlineValue field="angleUnit" value={data.angleUnit} /></label>
+          <label>x desde <InlineValue field="xMin" value={data.xMin} /> hasta <InlineValue field="xMax" value={data.xMax} /></label>
+          <label>y desde <InlineValue field="yMin" value={data.yMin} /> hasta <InlineValue field="yMax" value={data.yMax} /></label>
+          <label>Puntos: <InlineValue field="pointXs" value={data.pointXs} /></label>
+          <InlineValue field="showDerivative" value={data.showDerivative} />
+        </div>
+      </details></InlineOnly>
+    </aside>
+    </div>
   </div>;
 }

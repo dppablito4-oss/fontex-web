@@ -2,7 +2,7 @@ import { InlineValue, InlineOnly } from "./InlineValue";
 import { isLearningObject } from "../../core/math-engine/learning-types";
 import { LearningMathObject } from "./LearningMathObjects";
 import { PolygonObject, FactorizationObject } from "./AdaptedMathObjects";
-import { useContext } from "react";
+import { useContext, type ReactNode } from "react";
 import { LessonSteps } from "./LessonSteps";
 import { TeachingLevel } from "./teaching-level";
 import { GeometryObject } from "./GeometryObject";
@@ -252,16 +252,18 @@ export function ObjectVisual({
   onChange,
   lessonStep,
   concealAnswers,
+  asideContent,
 }: {
   object: MathObject;
   onChange: (object: MathObject) => void;
   lessonStep?: number;
   concealAnswers?: boolean;
+  asideContent?: ReactNode;
 }) {
   const level = useContext(TeachingLevel);
   if (isLearningObject(object)) return <LearningMathObject object={object} lessonStep={lessonStep} concealAnswers={concealAnswers} />;
   switch (object.type) {
-    case "function-graph": return <FunctionGraphObject data={object.data} concealAnswers={concealAnswers} />;
+    case "function-graph": return <FunctionGraphObject data={object.data} concealAnswers={concealAnswers} asideContent={asideContent} />;
     case "polygon": return <PolygonObject data={object.data} lessonStep={lessonStep} concealAnswers={concealAnswers} />;
     case "factorization": return <FactorizationObject data={object.data} lessonStep={lessonStep} concealAnswers={concealAnswers} />;
     case "geometry": return <GeometryObject data={object.data} lessonStep={lessonStep} concealAnswers={concealAnswers} />;

@@ -1,0 +1,242 @@
+/* One mathematical idea per landscape block; narrow containers keep a reading flow. */
+.st-app {
+  --st-action: #5145cd;
+  --st-action-ink: #fff;
+  --st-action-soft: #eeedff;
+  --st-stage: #f7f9fd;
+}
+:root[data-theme="dark"] .st-app {
+  --st-action: #a5a6ff;
+  --st-action-ink: #171733;
+  --st-action-soft: #2c2d4c;
+  --st-stage: #142230;
+  --st-surface: #1c2836;
+  --st-background: #111b27;
+  --st-soft: #253448;
+  --st-line: #3b4e65;
+  --st-control: #8295b0;
+  --st-muted: #bdcadd;
+}
+.st-app button.st-primary,
+:root[data-theme="dark"] .st-app button.st-primary {
+  background: var(--st-action);
+  border-color: var(--st-action);
+  color: var(--st-action-ink);
+  box-shadow: 0 3px 10px color-mix(in srgb, var(--st-action) 18%, transparent);
+}
+.st-app button.st-primary:hover:not(:disabled),
+:root[data-theme="dark"] .st-app button.st-primary:hover:not(:disabled) {
+  background: var(--st-action);
+  border-color: var(--st-action);
+  filter: brightness(1.08);
+}
+.st-app .st-modules-toggle,
+:root[data-theme="dark"] .st-app .st-modules-toggle {
+  background: var(--st-action-soft);
+  color: var(--st-action);
+  border-color: color-mix(in srgb, var(--st-action) 45%, var(--st-line));
+}
+.st-app .st-assistant-toggle {
+  border-color: var(--st-control);
+  color: var(--st-ink);
+}
+.st-app .st-learning-toolbar nav {
+  background: var(--st-soft);
+  padding: 4px;
+  border: 1px solid var(--st-line);
+  border-radius: 12px;
+  gap: 4px;
+}
+.st-app .st-learning-toolbar nav button {
+  border-color: transparent;
+  background: transparent;
+}
+.st-app .st-learning-toolbar nav button[aria-pressed="true"],
+:root[data-theme="dark"] .st-app .st-learning-toolbar nav button[aria-pressed="true"] {
+  background: var(--st-action);
+  color: var(--st-action-ink);
+  border-color: var(--st-action);
+  box-shadow: 0 2px 5px rgb(0 0 0 / .12);
+}
+.st-app .st-object {
+  background: var(--st-surface);
+  border: 1px solid var(--st-line);
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgb(0 0 0 / .06);
+}
+.st-app .st-object.selected {
+  border-color: var(--st-action);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--st-action) 25%, transparent);
+}
+.st-app .st-object .st-object-handle {
+  opacity: 1;
+  background: var(--st-soft);
+  border-bottom: 1px solid var(--st-line);
+  min-height: 40px;
+  height: 40px;
+  font-size: 16px;
+  color: var(--st-ink);
+}
+.st-app .st-object .st-object-content { padding: 20px; }
+.st-app .st-object .st-object-expand { opacity: 1; background: var(--st-soft); }
+:root[data-theme="dark"] .st-app .st-object .st-visual-panel { background: var(--st-stage); border: 1px solid var(--st-line); }
+:root[data-theme="dark"] .st-app .st-object .st-object-handle { background: var(--st-soft); border-bottom: 1px solid var(--st-line); }
+.st-app .st-guided {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+.st-app .st-guided.st-guided-function { display: block; }
+.st-app .st-visual-panel,
+.st-app .st-object .st-visual-panel {
+  min-height: 0;
+  padding: 16px;
+  border: 1px solid var(--st-line);
+  border-radius: 14px;
+  background: var(--st-stage);
+}
+.st-app .st-visual-panel > *, .st-app .st-visual-panel svg { min-width: 0; max-width: 100%; }
+.st-app .st-story-panel {
+  padding: 18px;
+  border: 1px solid var(--st-line);
+  border-top: 3px solid var(--st-action);
+  border-radius: 12px;
+  background: var(--st-surface);
+  font-size: 18px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.st-app .st-story-panel h3 { font-size: 24px; line-height: 1.3; margin-bottom: 12px; }
+.st-app .st-story-copy { font-size: 20px; line-height: 1.5; margin-bottom: 16px; }
+.st-app .st-story-eyebrow { color: var(--st-action); margin-bottom: 8px; }
+.st-app .st-story-navigation { margin-top: 14px; gap: 8px; }
+.st-app .st-progress { margin-top: 14px; }
+.st-statistics-results { display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 12px; }
+.st-statistics-results .st-learning-amount { border-top: 2px solid var(--st-action); background: var(--st-surface); }
+.st-app .st-function-graph { font-size: clamp(18px, 1.5cqi, 24px); }
+.st-function-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.st-function-expression { margin: 0; font-size: 1.4em; font-weight: 650; line-height: 1.3; }
+.st-function-legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: 14px; }
+.st-function-legend > span { display: inline-flex; align-items: center; gap: 7px; }
+.st-function-legend > span::before { content: ""; width: 22px; border-top: 3px solid var(--st-piece-primary); }
+.st-function-legend > .st-function-derivative-key::before { border-color: var(--st-piece-secondary); border-top-style: dashed; }
+.st-function-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; align-items: start; }
+.st-function-plot { min-width: 0; }
+.st-function-svg { min-height: 0; width: 100%; height: auto; }
+.st-function-caption { font-size: 13px; line-height: 1.5; margin: 10px 0 0; }
+.st-function-sidebar { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.st-function-sidebar .st-polynomial { margin: 0; padding: 14px; background: var(--st-surface); }
+.st-function-sidebar .st-polynomial-heading { font-size: 16px; gap: 8px; }
+.st-function-sidebar .st-polynomial-heading label { font-size: 13px; }
+.st-function-sidebar .st-polynomial-form { font-size: 18px; margin: 10px 0; }
+.st-function-sidebar .st-polynomial-coefficients { display: grid; grid-template-columns: repeat(auto-fit, minmax(70px, 1fr)); gap: 8px; margin: 10px 0; }
+.st-function-sidebar .st-polynomial-coefficients > label { min-width: 0; padding: 8px; font-size: 18px; background: var(--st-stage); }
+.st-function-sidebar .st-polynomial-coefficients small { font-size: 11px; }
+.st-app .st-polynomial .st-inline-input { background: var(--st-surface) !important; border: 1px solid var(--st-control); border-radius: 6px; min-height: 34px; }
+.st-function-sidebar .st-polynomial-actions { gap: 8px; margin-bottom: 8px; }
+.st-app .st-add-coefficient, :root[data-theme="dark"] .st-app .st-add-coefficient { color: var(--st-action); border-color: var(--st-action); background: var(--st-action-soft); }
+.st-function-sidebar .st-polynomial > small { font-size: 11px; line-height: 1.4; }
+.st-function-sidebar .st-polynomial-solutions { font-size: 14px; line-height: 1.45; }
+.st-polynomial[data-editable="false"] .st-polynomial-form,
+.st-polynomial[data-editable="false"] > small { display: none; }
+.st-polynomial[data-editable="false"] .st-polynomial-coefficients { margin-bottom: 0; }
+.st-polynomial[data-editable="false"] .st-polynomial-coefficients > label { flex-direction: row; align-items: baseline; gap: 8px; padding: 6px 8px; }
+.st-polynomial[data-editable="false"] .st-polynomial-coefficients small { display: none; }
+.st-function-table-wrap { max-height: 240px; overflow: auto; border: 1px solid var(--st-line); border-radius: 10px; background: var(--st-surface); }
+.st-function-table { font-size: 14px; line-height: 1.35; }
+.st-function-table caption { padding: 10px 12px; margin: 0; font-size: 14px; }
+.st-function-table :is(th, td) { padding: 7px 10px; }
+.st-function-table thead { background: var(--st-soft); }
+.st-function-sidebar .st-story-panel { padding: 14px; font-size: 15px; }
+.st-function-sidebar .st-story-panel h3 { font-size: 20px; }
+.st-function-sidebar .st-story-copy { font-size: 16px; }
+.st-function-sidebar .st-story-navigation button { padding: 8px; font-size: 12px; min-height: 36px; }
+.st-function-config { padding: 12px 14px; border: 1px solid var(--st-line); border-radius: 10px; background: var(--st-surface); font-size: 15px; }
+.st-function-config > summary { cursor: pointer; font-weight: 650; color: var(--st-action); }
+.st-function-source { margin: 12px 0; font-size: 15px; }
+.st-function-source > span:first-child { display: block; margin-bottom: 6px; color: var(--st-muted); }
+.st-function-settings { margin: 0; font-size: 14px; gap: 12px; }
+.st-function-settings label { width: 100%; }
+@container (min-width: 900px) {
+  .st-app .st-guided { grid-template-columns: minmax(0, 2fr) minmax(290px, 1fr); }
+  .st-function-grid { grid-template-columns: minmax(0, 2fr) minmax(290px, 1fr); }
+}
+
+/* Explicit centering is needed because the global reset removes native dialog margins. */
+.st-lesson-player, .st-object-dialog {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  width: min(calc(100vw - 32px), calc((100dvh - 32px) * 16 / 9), 1800px);
+  max-width: calc(100vw - 32px);
+  height: auto;
+  max-height: calc(100dvh - 32px);
+  min-height: 0;
+  aspect-ratio: 16 / 9;
+  padding: 0;
+  border: 1px solid var(--st-control);
+  border-radius: 18px;
+  background: var(--st-background);
+  color: var(--st-ink);
+  overflow: hidden;
+  box-shadow: 0 24px 90px rgb(0 0 0 / .35);
+}
+.st-object-dialog[open] { display: flex; flex-direction: column; }
+.st-lesson-player > header, .st-lesson-player > footer,
+.st-object-dialog .st-dialog-heading { flex: none; position: static; padding: 14px 20px; gap: 16px; background: var(--st-surface); }
+.st-lesson-player > header { border-bottom: 1px solid var(--st-line); }
+.st-lesson-player h2, .st-object-dialog h2 { margin: 2px 0 0; font-size: 22px; line-height: 1.3; overflow-wrap: anywhere; }
+.st-lesson-player > main, .st-object-dialog .st-expanded-content { flex: 1; min-height: 0; overflow: auto; padding: 20px; container-type: size; overscroll-behavior: contain; }
+.st-lesson-player > footer { border-top: 1px solid var(--st-line); }
+.st-lesson-player .st-visual-panel { min-height: 0; }
+.st-lesson-player .st-function-graph { font-size: 18px; }
+.st-lesson-player .st-function-heading { margin-bottom: 12px; }
+.st-lesson-player .st-story-copy { font-size: 20px; }
+.st-lesson-player .st-function-sidebar .st-story-copy { font-size: 16px; }
+.st-lesson-player .st-function-table :is(th, td) { padding-block: 4px; }
+.st-lesson-player .st-function-sidebar .st-progress { display: none; }
+.st-lesson-player .st-function-sidebar .st-story-navigation { margin-top: 8px; }
+.st-lesson-player .st-function-sidebar .st-story-panel { max-height: clamp(140px, calc(100cqh - 350px), 260px); overflow: auto; }
+.st-lesson-player .st-guided-solve > .st-story-panel { max-height: 100cqh; overflow: auto; }
+.st-lesson-player .st-visual-panel svg:not(.st-function-svg) { max-height: min(48dvh, calc(100cqh - 220px)); }
+.st-lesson-player :is(.st-guided-statistics,.st-guided-probability) .st-visual-panel svg { max-height: max(160px, calc(100cqh - 360px)); }
+.st-lesson-player .st-guided-powers-roots .st-visual-panel svg { max-height: min(48dvh, calc(100cqh - 240px)); }
+.st-lesson-player .st-factorization { gap: 10px; }
+.st-lesson-player .st-factor-divisions li { padding-block: 8px; }
+@container (900px <= width <= 1400px) {
+  .st-lesson-player .st-polynomial[data-editable="false"] { padding: 10px; }
+  .st-lesson-player .st-polynomial[data-editable="false"] .st-polynomial-heading { display: none; }
+  .st-lesson-player .st-polynomial[data-editable="false"] .st-polynomial-coefficients { margin: 0; }
+  .st-lesson-player .st-function-table { font-size: 13px; }
+  .st-lesson-player .st-function-table caption { font-size: 13px; padding: 7px 10px; }
+  .st-lesson-player .st-function-table :is(th, td) { padding-block: 3px; }
+  .st-lesson-player .st-function-sidebar { gap: 10px; }
+  .st-lesson-player .st-function-sidebar .st-story-panel { padding: 12px; }
+  .st-lesson-player .st-function-sidebar .st-story-panel h3 { font-size: 18px; margin-bottom: 8px; }
+  .st-lesson-player .st-function-sidebar .st-story-copy { font-size: 15px; margin-bottom: 10px; }
+}
+.st-app.st-presenting .st-viewport { padding: 64px 24px 32px; }
+.st-app.st-presenting .st-object { max-width: 1600px; margin: 0 auto 40px; padding: 16px; border: 1px solid var(--st-line); }
+.st-app.st-presenting .st-object-content { container-type: inline-size; }
+.st-app.st-presenting .st-object .st-object-handle { background: transparent; border: 0; padding-inline: 12px; }
+.st-app.st-presenting .st-visual-panel svg:not(.st-function-svg) { max-height: 54dvh; }
+.st-app.st-presenting .st-function-sidebar .st-story-panel { max-height: 260px; overflow: auto; }
+.st-app.st-presenting .st-guided-solve > .st-story-panel { max-height: calc(100dvh - 220px); overflow: auto; }
+@media (max-width: 850px) {
+  .st-lesson-player, .st-object-dialog { width: calc(100vw - 16px); max-width: calc(100vw - 16px); height: calc(100dvh - 16px); max-height: calc(100dvh - 16px); aspect-ratio: auto; border-radius: 12px; }
+  .st-lesson-player > header, .st-lesson-player > footer, .st-object-dialog .st-dialog-heading { padding: 12px; gap: 8px; }
+  .st-lesson-player > main, .st-object-dialog .st-expanded-content { padding: 12px; }
+  .st-lesson-player h2 { font-size: 18px; }
+  .st-lesson-player > footer > span { display: none; }
+  .st-lesson-player > footer button { font-size: 12px; padding: 8px; }
+  .st-app .st-object .st-object-content { padding: 10px; }
+  .st-app .st-canvas-flow .st-object .st-visual-panel { padding: 10px; }
+  .st-app .st-story-panel h3 { font-size: 22px; }
+  .st-app .st-story-copy { font-size: 18px; }
+  .st-function-grid { gap: 16px; }
+  .st-function-expression { font-size: 1.25em; }
+  .st-lesson-player .st-function-sidebar .st-story-panel,
+  .st-app.st-presenting .st-function-sidebar .st-story-panel,
+  .st-lesson-player .st-guided-solve > .st-story-panel,
+  .st-app.st-presenting .st-guided-solve > .st-story-panel { max-height: none; overflow: visible; }
+}

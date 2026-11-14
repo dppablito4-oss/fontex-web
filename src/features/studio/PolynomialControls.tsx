@@ -20,11 +20,11 @@ export function PolynomialControls({ data, concealAnswers }: { data: FunctionGra
     editor.onEnd?.();
   }
   const solutions = polynomialSolutions(ascending);
-  return <section className="st-polynomial" aria-label="Editor de coeficientes del polinomio">
+  return <section className="st-polynomial" data-editable={!!editor} aria-label="Editor de coeficientes del polinomio">
     <div className="st-polynomial-heading"><strong>{equation ? "Ecuación polinómica" : "Función polinómica"}</strong>{editor && <label>Tipo <select aria-label="Tipo de polinomio" value={equation ? "equation" : "function"} onChange={event => change(coefficients, event.target.value === "equation")}><option value="function">Función</option><option value="equation">Ecuación = 0</option></select></label>}</div>
     <p className="st-polynomial-form" role="math">{!equation && "f(x) = "}{coefficients.map((_, i) => <span key={i}>{i > 0 && " + "}{String.fromCharCode(65 + i)}{degree - i > 0 && <><var>x</var>{degree - i > 1 && <sup>{degree - i}</sup>}</>}</span>)}{equation && " = 0"}</p>
     <div className="st-polynomial-coefficients">{coefficients.map((value, i) => <label key={i}><span>{String.fromCharCode(65 + i)} <small>{degree - i === 0 ? "constante" : <>de x{degree - i > 1 && <sup>{degree - i}</sup>}</>}</small></span><InlineValue field={`coefficient:${i}`} value={value} /></label>)}</div>
-    {editor && <div className="st-polynomial-actions"><button type="button" disabled={degree >= MAX_POLYNOMIAL_DEGREE} onClick={() => change([...coefficients, 0])}>Agregar coeficiente {String.fromCharCode(66 + degree)} (grado {degree + 1})</button>{degree > 2 && <button type="button" onClick={() => change(coefficients.slice(0, -1))}>Quitar último coeficiente</button>}</div>}
+    {editor && <div className="st-polynomial-actions"><button className="st-add-coefficient" type="button" disabled={degree >= MAX_POLYNOMIAL_DEGREE} onClick={() => change([...coefficients, 0])}>Agregar coeficiente {String.fromCharCode(66 + degree)} (grado {degree + 1})</button>{degree > 2 && <button type="button" onClick={() => change(coefficients.slice(0, -1))}>Quitar último coeficiente</button>}</div>}
     <small>El grado efectivo baja si los primeros coeficientes son cero. Grado máximo: 8.</small>
     {equation && !concealAnswers && <div className="st-polynomial-solutions" aria-live="polite">{solutions.kind === "all" ? "Todo número real satisface la igualdad." : solutions.kind === "none" ? "No hay soluciones reales." : solutions.kind === "unsupported" ? "Las soluciones reales se calculan hasta grado 4 y en escalas numéricas admitidas. La gráfica sigue disponible." : `Soluciones reales aproximadas: ${solutions.roots.map(graphNumber).join(", ")}.`}</div>}
   </section>;

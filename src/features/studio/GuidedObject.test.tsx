@@ -16,6 +16,18 @@ it("aprender recorre una idea y cambia el dibujo sin modificar el documento", ()
   expect(screen.getByLabelText("Representación visual")).toHaveTextContent("4/6");
   expect(object).toEqual(snapshot);
 });
+
+it("keeps graph data and its interactive explanation together in the function sidebar", () => {
+  const object = createObject("function-graph"), snapshot = structuredClone(object);
+  render(<GuidedObject object={object} />);
+  const sidebar = screen.getByRole("complementary", { name: "Datos y explicación de la función" });
+  expect(within(sidebar).getByRole("table", { name: "Puntos calculados de la función" })).toBeInTheDocument();
+  expect(within(sidebar).getByRole("region", { name: "Pasos del módulo" })).toBeInTheDocument();
+  fireEvent.click(within(sidebar).getByRole("button", { name: "Siguiente paso" }));
+  expect(within(sidebar).getByRole("heading", { name: "Relaciona los puntos con la curva" })).toBeInTheDocument();
+  expect(screen.getAllByRole("region", { name: "Pasos del módulo" })).toHaveLength(1);
+  expect(object).toEqual(snapshot);
+});
 it("practicar mantiene la respuesta reservada hasta la segunda pista", () => {
   render(<TeachingMode.Provider value="practice"><GuidedObject object={createObject("operation")} /></TeachingMode.Provider>);
   expect(screen.queryByText(/7\/6/)).not.toBeInTheDocument();

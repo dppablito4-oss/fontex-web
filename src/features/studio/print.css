@@ -65,3 +65,7 @@ html, body { margin: 0; background: #fff !important; color: #24272b !important; 
 
 .st-print-document .st-circle svg { width: 42mm; height: auto; aspect-ratio: 1; max-width: 100%; }
 .st-print-document .st-function-svg { width:100%; max-height:100mm !important; }
+.st-print-document .st-function-grid { display: block; }
+.st-print-document .st-function-sidebar { margin-top: 12pt; }
+.st-print-document .st-function-table-wrap { max-height: none; overflow: visible; }
+.st-print-document .st-function-legend { display: none; }

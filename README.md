@@ -8,6 +8,8 @@ La IA lateral y la paleta del lienzo libre también pueden crear **gráficas rea
 
 Los polinomios muestran un recuadro de coeficientes A, B, C… ampliable hasta grado 8, con cambio entre función y ecuación igualada a cero. Las raíces reales se calculan hasta grado 4 en escalas admitidas. El lienzo ajusta la altura al contenido al crecer y al reducirse, conserva los tamaños manuales y muestra potencias con superíndices. Se mantienen tipos de objetos registrados; la IA configura esos tipos y sus expresiones, no genera componentes ejecutables nuevos.
 
+En PC, cada idea se distribuye en horizontal: las funciones dedican dos tercios a la gráfica y el tercio derecho a datos, tabla y explicación. El recorrido y la vista ampliada usan un marco 16:9 centrado; en teléfonos mantienen una lectura vertical. Se revisaron los 21 tipos de módulo en Aprender y Resolver. Consulta [presentación y distribución adaptable](docs/studio-responsive-presentation.md).
+
 El aula de práctica mantiene 19 guías introductorias, 38 páginas y 54 ejercicios. La biblioteca académica permite consultar PDF privados con un tutor documental y citas por página. Estas experiencias tienen almacenes y endpoints distintos.
 
 ## Estado del 13 de noviembre de 2026

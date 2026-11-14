@@ -45,7 +45,7 @@ El trazado usa 720 intervalos de muestreo y separa valores no definidos, saltos 
 
 ## Verificación
 
-- 502 pruebas frontend aprobadas y 7 integraciones remotas omitidas; lint, TypeScript y compilación comprobados.
+- 503 pruebas frontend aprobadas y 7 integraciones remotas omitidas; lint, TypeScript y compilación comprobados.
 - 20 pruebas del handler de Studio, con proveedor simulado, incluidas creación de seno en grados, contexto con una limitación antigua, rechazo de texto como gráfica, cuadráticas con superíndices y rechazo de código ejecutable.
 - Comprobaciones numéricas del seno/coseno en grados y radianes, derivadas comparadas con diferencias finitas, dominio de ln y separación de las ramas de tan.
 - Pruebas de la paleta real, puntos SVG, edición, deshacer, reapertura y SVG exportado a PDF.

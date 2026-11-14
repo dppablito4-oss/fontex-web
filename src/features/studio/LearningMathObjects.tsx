@@ -39,7 +39,7 @@ function FrequencyBars({bars,label}:{bars:{label:string;count:number}[];label:st
 }
 function StatisticsPicture({data,step,hidden}:{data:LearningDataMap["statistics"]}&Display) {
   const a=statisticsInfo(data);
-  return <div><FrequencyBars bars={a.counts.map(c=>({label:String(c.value),count:c.count}))} label="Frecuencias de los valores de la colección"/><InlineOnly><p className="st-inline-caption">Buscar: <InlineValue field="task" value={data.task} /></p></InlineOnly><p>Datos: <InlineValue field="values" value={data.values.join(", ")} />. Cada barra cuenta repeticiones, no suma los valores.</p>{!hidden&&step>=1&&<Amount label="Media exacta">{fractionText(a.mean)}</Amount>}{!hidden&&step>=2&&<Amount label="Mediana">{fractionText(a.median)}</Amount>}{!hidden&&step>=3&&<Amount label="Moda">{a.modes.join(", ")||"sin moda"}</Amount>}</div>;
+  return <div><FrequencyBars bars={a.counts.map(c=>({label:String(c.value),count:c.count}))} label="Frecuencias de los valores de la colección"/><InlineOnly><p className="st-inline-caption">Buscar: <InlineValue field="task" value={data.task} /></p></InlineOnly><p>Datos: <InlineValue field="values" value={data.values.join(", ")} />. Cada barra cuenta repeticiones, no suma los valores.</p><div className="st-statistics-results">{!hidden&&step>=1&&<Amount label="Media exacta">{fractionText(a.mean)}</Amount>}{!hidden&&step>=2&&<Amount label="Mediana">{fractionText(a.median)}</Amount>}{!hidden&&step>=3&&<Amount label="Moda">{a.modes.join(", ")||"sin moda"}</Amount>}</div></div>;
 }
 function ProbabilityPicture({data,step,hidden}:{data:LearningDataMap["probability"]}&Display) {
   const a=probabilityInfo(data),labels=Array.from({length:data.outcomes},(_,i)=>data.experiment==="coin"?(i===0?"Cara":"Sello"):String(i+1));

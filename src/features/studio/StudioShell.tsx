@@ -49,6 +49,7 @@ import { CanvasViewport } from "./CanvasViewport";
 import { useStudioDocument } from "./useStudioDocument";
 import { StudioAgentPanel } from "./StudioAgentPanel";
 import "./studio.css";
+import "./stage-layout.css";
 
 export function StudioShell() {
   const { user, status } = useAuth();
@@ -329,7 +330,7 @@ function StudioEditor({ owner }: { owner: string }) {
           <button className="st-icon-button" aria-label="Guardar" title="Guardar" onClick={() => store.persist()}>
             {store.saved ? <Check size={18} /> : <Save size={18} />}
           </button>
-          <button className="st-icon-button" aria-label="Presentar" title="Presentar" disabled={!doc.objects.length} onClick={() => void present()}>
+          <button className="st-icon-button st-primary" aria-label="Presentar" title="Presentar" disabled={!doc.objects.length} onClick={() => void present()}>
             <Expand size={17} />
             <span className="st-action-label">Presentar</span>
           </button>
