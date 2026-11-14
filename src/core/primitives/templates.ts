@@ -6,6 +6,17 @@ import {
   type PrimitiveScene,
 } from "./schema.ts";
 export const templates = [
+  {
+    id: "number-jumps",
+    name: "Saltos en la recta numérica",
+    group: "Aritmética",
+  },
+  {
+    id: "unit-circle",
+    name: "Círculo unitario interactivo",
+    group: "Trigonometría",
+  },
+  { id: "pythagoras", name: "Pitágoras dinámico", group: "Geometría" },
   { id: "calculus", name: "Derivada e integral", group: "Cálculo" },
   { id: "trig", name: "Seno y coseno", group: "Trigonometría" },
   { id: "polynomial", name: "Ecuación de cuarto grado", group: "Álgebra" },
@@ -67,7 +78,108 @@ export function templateScene(id: string): PrimitiveScene {
     add("math_block", (p) => {
       p.data.markdownContent = content;
     });
-  if (
+  if (id === "number-jumps") {
+    scene.variables = [];
+    variable("a", 3, -4, 4);
+    variable("b", 2, -4, 4);
+    const line = add("coordinate_canvas", (p) => {
+      p.label = "Suma y resta sobre la recta";
+      p.height = 360;
+      p.data.mode = "number_line";
+      p.data.domainX = ["-9", "9"];
+      p.data.showGrid = false;
+      p.data.subdivisions = 20;
+    });
+    for (
+      const [start, end, height, color] of [
+        ["0", "a", 70, "#385fd5"],
+        ["a", "a+b", 115, "#c47725"],
+      ] as const
+    ) {
+      add("vector_segment", (p) => {
+        p.label = start === "0"
+          ? "Primer desplazamiento"
+          : "Segundo desplazamiento";
+        p.data.canvasId = line.id;
+        p.data.start = [start, "0"];
+        p.data.end = [end, "0"];
+        p.data.arcHeight = height;
+        p.data.headStart = "dot";
+        p.data.showAngleArc = false;
+        p.style.strokeColor = color;
+        p.style.strokeWidth = 3;
+      });
+    }
+    for (const name of ["a", "b"]) {
+      add("control_slider", (p) => {
+        p.data.variableName = name;
+      });
+    }
+    text(
+      "## Sumar es desplazarse\n1. Sal de **0** y avanza **{{a}}** unidades.\n2. Desde ahí, desplázate **{{b}}** unidades.\n3. Llegas a **{{a+b}}**: **{{a}} + ({{b}}) = {{a+b}}**.\n\nUn salto positivo va a la derecha y uno negativo a la izquierda. Para restar 2, elige b = −2: sumar su inverso aditivo equivale a restar.",
+    );
+  } else if (id === "unit-circle") {
+    scene.variables = [];
+    variable("theta", 45, 0, 360, 1, "°");
+    const plane = add("coordinate_canvas", (p) => {
+      p.label = "Un radio de longitud 1";
+      p.data.mode = "unit_circle";
+      p.data.domainX = ["-1.4", "1.4"];
+      p.data.rangeY = ["-1.4", "1.4"];
+      p.data.angleUnit = "deg";
+    });
+    add("vector_segment", (p) => {
+      p.label = "Radio y ángulo";
+      p.data.canvasId = plane.id;
+      p.data.start = ["0", "0"];
+      p.data.end = ["cos(rad(theta))", "sin(rad(theta))"];
+      p.data.showMagnitude = false;
+    });
+    add("vector_segment", (p) => {
+      p.label = "Proyección sobre el eje horizontal";
+      p.data.canvasId = plane.id;
+      p.data.start = ["cos(rad(theta))", "0"];
+      p.data.end = ["cos(rad(theta))", "sin(rad(theta))"];
+      p.data.headEnd = "dot";
+      p.data.showMagnitude = false;
+      p.data.showAngleArc = false;
+      p.style.dashed = true;
+      p.style.strokeColor = "#c47725";
+    });
+    add("control_slider", (p) => {
+      p.data.variableName = "theta";
+    });
+    text(
+      "## Un ángulo, tres razones\nÁngulo: **{{theta}}°**. El radio siempre mide **1**.\n\n- cos(θ) = **{{round(cos(rad(theta)),4)}}**: coordenada horizontal.\n- sin(θ) = **{{round(sin(rad(theta)),4)}}**: coordenada vertical.\n- tan(θ) = **{{round(tan(rad(theta)),4)}}**.\n\nEn 90° y 270° la tangente no está definida. La expresión convierte grados a radianes antes de calcular. Gira el radio con el deslizador y compara los cuadrantes.",
+    );
+  } else if (id === "pythagoras") {
+    scene.level = "secundaria";
+    scene.variables = [];
+    variable("a", 3, 1, 8, .5, "cm");
+    variable("b", 4, 1, 8, .5, "cm");
+    const plane = add("coordinate_canvas", (p) => {
+      p.label = "Triángulo rectángulo ABC";
+      p.data.equalScale = true;
+      p.data.domainX = ["-1", "10"];
+      p.data.rangeY = ["-1", "10"];
+    });
+    add("geometric_shape", (p) => {
+      p.label = "Catetos a y b";
+      p.data.canvasId = plane.id;
+      p.data.shape = "triangle";
+      p.data.regular = false;
+      p.data.verticesExpr = [["0", "0"], ["a", "0"], ["0", "b"]];
+      p.data.showAngles = true;
+    });
+    for (const name of ["a", "b"]) {
+      add("control_slider", (p) => {
+        p.data.variableName = name;
+      });
+    }
+    text(
+      "## Comprueba Pitágoras\nLos catetos perpendiculares miden **{{a}} cm** y **{{b}} cm**.\n\n$c^2=a^2+b^2$: **{{a^2}} + {{b^2}} = {{a^2+b^2}}**.\n\nHipotenusa: **{{round(sqrt(a^2+b^2),4)}} cm**.\n\nÁngulos agudos: **{{round(deg(atan2(b,a)),2)}}°** y **{{round(deg(atan2(a,b)),2)}}°**; suman **90°**. El tercer ángulo es recto.\n\nCambia ambos catetos y observa cómo se mantienen estas relaciones.",
+    );
+  } else if (
     [
       "calculus",
       "trig",

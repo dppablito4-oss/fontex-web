@@ -17,11 +17,13 @@ import {
   Pencil,
   Plus,
   Redo2,
+  RotateCw,
   Send,
   Trash2,
   Undo2,
   X,
 } from "lucide-react";
+import { createPortal } from "react-dom";
 import { SiteHeader } from "../../components/ProductNavigation";
 import { useAuth } from "../auth/AuthProvider";
 import { AcademicMarkdown } from "../tutor/components/AcademicMarkdown";
@@ -42,10 +44,14 @@ import {
 import { sceneFunctions, sceneScope } from "../../core/primitives/math";
 import { templates, templateScene } from "../../core/primitives/templates";
 import { requestPrimitiveAgent } from "./agent";
+import { draggedRotation } from "./gestures";
 import "./primitives.css";
 type Tab = "chat" | "elements" | "templates" | "variables";
+type DragKind = "move" | "resize" | "rotate";
 type Drag = {
-  kind: "move" | "resize";
+  kind: DragKind;
+  centerX: number;
+  centerY: number;
   id: string;
   x: number;
   y: number;
@@ -61,17 +67,67 @@ function Frame({
   onDrag,
   onFit,
   narrow,
+  scale,
 }: {
   p: Primitive;
   children: React.ReactNode;
   selected: boolean;
   editing: boolean;
   onSelect: () => void;
-  onDrag: (e: PointerEvent<HTMLButtonElement>, kind: "move" | "resize") => void;
+  onDrag: (
+    e: PointerEvent<HTMLButtonElement>,
+    kind: DragKind,
+    bounds?: DOMRect,
+  ) => void;
   onFit: (id: string, height: number) => void;
   narrow: boolean;
+  scale: number;
 }) {
   const content = useRef<HTMLDivElement>(null);
+  const frame = useRef<HTMLElement>(null);
+  const [rotateHandle, setRotateHandle] = useState<
+    { left: number; top: number; host: HTMLElement } | null
+  >(null);
+  useEffect(() => {
+    const node = frame.current;
+    const host = node?.closest<HTMLElement>(".pc-stage");
+    if (!node || !host || !selected || !editing || narrow) return;
+    const place = () => {
+      const box = node.getBoundingClientRect(),
+        stageBox = host.getBoundingClientRect();
+      setRotateHandle(
+        box.bottom < stageBox.top || box.top > stageBox.bottom ? null : {
+          left: Math.max(
+            stageBox.left + 4,
+            Math.min(stageBox.right - 40, box.x + box.width / 2 - 18),
+          ),
+          top: Math.max(stageBox.top + 4, box.y - 38),
+          host,
+        },
+      );
+    };
+    place();
+    const observer = new ResizeObserver(place);
+    observer.observe(node);
+    observer.observe(host);
+    host.addEventListener("scroll", place);
+    window.addEventListener("resize", place);
+    return () => {
+      observer.disconnect();
+      host.removeEventListener("scroll", place);
+      window.removeEventListener("resize", place);
+    };
+  }, [
+    selected,
+    editing,
+    narrow,
+    scale,
+    p.x,
+    p.y,
+    p.width,
+    p.height,
+    p.rotation,
+  ]);
   useEffect(() => {
     const node = content.current;
     if (!node || narrow || !p.autoHeight) return;
@@ -86,6 +142,7 @@ function Frame({
   }, [p.id, p.height, p.autoHeight, p.width, onFit, narrow]);
   return (
     <article
+      ref={frame}
       className={`pc-object pc-node-${p.kind}${selected ? " pc-selected" : ""}`}
       style={{
         left: p.x,
@@ -128,6 +185,20 @@ function Frame({
         )}
       </header>
       <div className="pc-object-content" ref={content}>{children}</div>
+      {editing && selected && !narrow && rotateHandle && createPortal(
+        <button
+          className="pc-rotate"
+          style={{ left: rotateHandle.left, top: rotateHandle.top }}
+          aria-label="Girar objeto"
+          title="Arrastra para girar. Shift ajusta a 15°"
+          disabled={p.locked}
+          onPointerDown={(e) =>
+            onDrag(e, "rotate", frame.current?.getBoundingClientRect())}
+        >
+          <RotateCw size={18} />
+        </button>,
+        rotateHandle.host,
+      )}
       {editing && selected && (
         <button
           className="pc-resize"
@@ -375,15 +446,20 @@ function Editor(
   }
   function beginDrag(
     e: PointerEvent<HTMLButtonElement>,
-    kind: "move" | "resize",
+    kind: DragKind,
     p: Primitive,
+    frameBounds?: DOMRect,
   ) {
     if (p.locked || narrow) return;
     e.preventDefault();
     e.stopPropagation();
     e.currentTarget.setPointerCapture(e.pointerId);
+    const bounds = frameBounds ??
+      e.currentTarget.closest(".pc-object")!.getBoundingClientRect();
     drag.current = {
       kind,
+      centerX: bounds.x + bounds.width / 2,
+      centerY: bounds.y + bounds.height / 2,
       id: p.id,
       x: e.clientX,
       y: e.clientY,
@@ -396,7 +472,18 @@ function Editor(
     const d = drag.current;
     if (!d) return;
     const dx = (e.clientX - d.x) / zoom, dy = (e.clientY - d.y) / zoom;
-    const p = d.kind === "move"
+    const p = d.kind === "rotate"
+      ? {
+        ...d.old,
+        rotation: draggedRotation(
+          d.old.rotation,
+          [d.centerX, d.centerY],
+          [d.x, d.y],
+          [e.clientX, e.clientY],
+          e.shiftKey,
+        ),
+      }
+      : d.kind === "move"
       ? {
         ...d.old,
         x: Math.max(0, Math.min(1200 - d.old.width, d.old.x + dx)),
@@ -1254,9 +1341,11 @@ function Editor(
                       onSelect={() => {
                         if (!presenting) setSelected(p.id);
                       }}
-                      onDrag={(e, kind) => beginDrag(e, kind, p)}
+                      onDrag={(e, kind, bounds) =>
+                        beginDrag(e, kind, p, bounds)}
                       onFit={fit}
                       narrow={narrow}
+                      scale={zoom}
                     >
                       <PrimitiveVisual
                         p={p}

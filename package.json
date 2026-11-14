@@ -1,7 +1,7 @@
 {
   "name": "fontex-web",
   "private": true,
-  "version": "0.7.0",
+  "version": "0.7.1",
   "type": "module",
   "overrides": {
     "katex": "$katex",
@@ -14,7 +14,9 @@
     "lint": "eslint . --max-warnings 0",
     "typecheck": "tsc -b --pretty false",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:remote": "node scripts/check-remote-env.mjs && vitest run src/test/block1.remote.test.ts src/test/block2.remote.test.ts src/test/block3.remote.test.ts src/test/block4.remote.test.ts",
+    "test:agent:remote": "node --experimental-strip-types scripts/check-primitive-agent.mjs"
   },
   "dependencies": {
     "@assistant-ui/react": "^0.15.25",

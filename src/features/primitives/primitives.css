@@ -1101,3 +1101,21 @@
     display: none!important;
   }
 }
+
+.pc-rotate {
+  position: fixed;
+  left: calc(50% - 18px);
+  top: -38px;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--pc-surface);
+  color: var(--pc-accent);
+  cursor: grab;
+  touch-action: none;
+  z-index: 200;
+}
+.pc-rotate:active { cursor: grabbing; }
+@media (max-width: 760px) { .pc-rotate { display: none; } }
+@media print { .pc-rotate { display: none; } }

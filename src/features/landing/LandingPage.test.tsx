@@ -2,13 +2,13 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { ThemeProvider } from "../theme/ThemeProvider";
 import { LandingPage } from "./LandingPage";
-import { createDocument } from "../../core/object-registry/registry";
-import { lastMaterial, saveMaterial } from "../studio/document-store";
+import { newPrimitiveScene } from "../../core/primitives/schema";
 
 function landing() { return render(<ThemeProvider><LandingPage /></ThemeProvider>); }
 describe("Presentación de Fontex", () => {
   it("permite experimentar sin modificar los materiales guardados", () => {
-    const saved = createDocument(); saveMaterial(localStorage, "guest", saved);
+    const saved = JSON.stringify({ activeId: "saved", scenes: [newPrimitiveScene()] });
+    localStorage.setItem("fontex-primitives-v2:guest", saved);
     landing();
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Entender cambia");
     expect(screen.getByRole("img", { name: /Parábola y = 0.5 x/ })).toBeInTheDocument();
@@ -18,7 +18,7 @@ describe("Presentación de Fontex", () => {
     expect(screen.getByRole("button", { name: "Reanudar animación" })).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Restablecer ejemplo" }));
     expect(screen.getByRole("img", { name: /Parábola y = 0.5 x/ })).toBeInTheDocument();
-    expect(lastMaterial(localStorage, "guest")).toEqual(saved);
+    expect(localStorage.getItem("fontex-primitives-v2:guest")).toBe(saved);
   });
   it("ofrece accesos reales a las herramientas y al nivel elegido", () => {
     landing();

@@ -150,6 +150,11 @@ export function PrimitiveFields(
       <div className="pc-field-row">
         {p.kind === "coordinate_canvas" && (
           <>
+            <Toggle
+              label="Misma escala en ambos ejes"
+              value={p.data.equalScale ?? false}
+              onChange={(equalScale) => patch({ equalScale })}
+            />
             <Select
               label="Tipo de plano"
               value={p.data.mode}
@@ -279,6 +284,18 @@ export function PrimitiveFields(
         )}
         {p.kind === "vector_segment" && (
           <>
+            <label>
+              Altura del salto en la recta
+              <input
+                type="number"
+                min="0"
+                max="120"
+                step="5"
+                value={p.data.arcHeight ?? 0}
+                onChange={(e) => patch({ arcHeight: Number(e.target.value) })}
+              />
+              <small>0 dibuja un segmento recto.</small>
+            </label>
             {(["start", "end"] as const).map((key) => (
               <div className="pc-pair" key={key}>
                 {p.data[key].map((v, i) => (

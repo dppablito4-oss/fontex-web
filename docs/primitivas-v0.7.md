@@ -18,13 +18,13 @@ El editor principal usa un documento declarativo con nueve familias de primitiva
 
 Prismas, cilindros, planos inclinados y bloques se muestran como diagramas esquemáticos. No se anuncian como simulación física ni como cálculo 3D. Dentro de un plano se anclan funciones, vectores y polígonos/triángulos; las otras figuras se crean como elementos independientes. La cuadrícula polar es un escenario radial; las funciones se evalúan como f(x), no como curvas paramétricas ni superficies multivariables.
 
-Hay 22 plantillas iniciales, desde conteo y fracciones hasta trigonometría, ecuaciones, derivadas, integrales y un ejemplo de posición en movimiento rectilíneo uniforme. Sirven para comenzar una escena; no equivalen a cubrir todo un currículo ni a un curso completo de física.
+Hay 25 plantillas iniciales desde v0.7.1, desde conteo y fracciones hasta trigonometría, ecuaciones, derivadas, integrales y un ejemplo de posición en movimiento rectilíneo uniforme. Sirven para comenzar una escena; no equivalen a cubrir todo un currículo ni a un curso completo de física.
 
 ## Edición y presentación
 
 La paleta lateral reúne Chat, Elementos, Plantillas y Variables. Seleccionar un elemento abre sus campos dentro del área del lienzo. Permite modificar expresiones, medidas, colores, posición, tamaño, rotación y paso de presentación. Los textos se escriben sobre el propio lienzo. El alto automático reorganiza los objetos inferiores y el tamaño manual permanece configurable.
 
-En escritorio se puede arrastrar y redimensionar. En móvil se mantiene un flujo vertical legible, sin reducir toda la hoja a una miniatura; la posición, el tamaño y la rotación se conservan en los datos y vuelven a mostrarse al abrir el editor de escritorio. El acceso flotante al chat permanece disponible en móvil.
+En escritorio se puede arrastrar, redimensionar y girar con una manija (Shift ajusta a 15°). En móvil se mantiene un flujo vertical legible, sin reducir toda la hoja a una miniatura; la posición, el tamaño y la rotación se conservan en los datos y vuelven a mostrarse al abrir el editor de escritorio. El acceso flotante al chat permanece disponible en móvil.
 
 Presentar oculta las herramientas y revela los elementos por su paso. Flechas izquierda/derecha recorren los pasos; Escape sale. Los controles de variables siguen siendo interactivos. El PDF utiliza un flujo de bloques, incluye todas las explicaciones y permite dividir textos y tablas largos. Es una composición para lectura; no reproduce exactamente cada posición absoluta de la edición.
 
@@ -34,7 +34,7 @@ Las variables tienen nombre, valor, mínimo, máximo, paso y unidad. Se validan 
 
 Ejemplo: una función `a*x^2`, un deslizador de `a`, una región entre 0 y 2 con resultado `area`, y el texto `Integral aproximada: {{round(area,3)}}`. Al cambiar a, se recalculan la curva, la integral y el texto. Las funciones con nombre también se evalúan en etiquetas, por ejemplo `{{f(2)}}`.
 
-Se reutiliza el parser de AST acotado: aritmética, potencias, pi/e y sin/cos/tan/ln/exp/sqrt. Los contextos añaden variables como `theta` o `x_0`. Los escalares/textos admiten round, abs, min/max, floor/ceil, deg/rad, gcd/lcm; `{{factors(n)}}` muestra factores primos de enteros entre 2 y 1000000. No se ejecutan cadenas JavaScript ni HTML.
+Se reutiliza el parser de AST acotado: aritmética, potencias, pi/e y sin/cos/tan/ln/exp/sqrt. Los contextos añaden variables como `theta` o `x_0`. Los escalares/textos admiten round, abs, min/max, floor/ceil, deg/rad, gcd/lcm y atan2; `{{factors(n)}}` muestra factores primos de enteros entre 2 y 1000000. No se ejecutan cadenas JavaScript ni HTML.
 
 La derivada respeta grados/radianes. Las raíces son reales, aproximadas y hasta grado 4. La integración numérica usa Simpson con refinamientos de 200 a 1600 intervalos y devuelve un estado y error estimado. Distingue integral con signo y área geométrica. Puede rechazar valores no definidos, fuera de escala o sin convergencia. Su detección de discontinuidades es limitada: no constituye una demostración del dominio ni garantiza detectar toda singularidad. Las curvas se muestrean; una frecuencia extrema puede ocultar detalle.
 
@@ -50,9 +50,9 @@ Cada escena es una fila privada de `visual_scenes`, con RLS por propietario y re
 
 ## Reinicio del piloto
 
-La migración `replace_test_canvas_with_primitives` retira lógicamente los formatos anteriores y exige escenas v2 en todas las escrituras nuevas. El conector no ejecutó el borrado físico porque su confirmación caducó; los registros históricos quedan fuera de la biblioteca nueva. No importa documentos v1 al nuevo editor. Los clientes antiguos ya no pueden volver a guardar esos sobres en `visual_scenes`. La restricción se añade con `NOT VALID` para conservar los registros existentes, mientras protege todas las nuevas inserciones y actualizaciones.
+La migración `replace_test_canvas_with_primitives` retira lógicamente los formatos anteriores y exige escenas v2 en todas las escrituras nuevas. En v0.7.1, `consolidate_primitive_scene_v071` retiró las cuatro filas históricas de la tabla activa y conservó una copia privada de recuperación. No importa documentos v1 al nuevo editor. Los clientes antiguos ya no pueden volver a guardar esos sobres en `visual_scenes`. La primera migración añadió la restricción con `NOT VALID`; la consolidación v0.7.1 ejecutó `VALIDATE CONSTRAINT` y verificó que no queden formatos antiguos en la tabla activa.
 
-La aplicación elimina las cachés retiradas del lienzo al iniciar. No modifica sesiones de Auth, cuentas, preferencias de tema, documentos de la biblioteca ni datos académicos. Los lectores y renderers del editor anterior se conservan como código histórico y pruebas, pero no forman parte de la ruta ni del agente activos del lienzo.
+La aplicación elimina las cachés retiradas del lienzo al iniciar. No modifica sesiones de Auth, cuentas, preferencias de tema, documentos de la biblioteca ni datos académicos. En v0.7.1 se retiraron el editor Studio, su esquema y su protocolo v1 del código activo; se recuperan desde la rama de respaldo. Véase [la consolidación](primitivas-v0.7.1.md).
 
 Respaldo del código anterior: `respaldo/pre-primitivas-2026-11-14`, commit `930dcb9`. La propuesta original está en [el plan aportado](plans/v0.7-primitivas-propuesta.md).
 
@@ -64,6 +64,6 @@ Las pruebas de navegador cubren creación de las nueve familias, actualización 
 
 ### Verificación de publicación del 14 de noviembre
 
-La primera publicación pasó CI y Pages con 545 pruebas frontend y 7 integraciones remotas omitidas, 25 pruebas de handlers y las pruebas SQL de aislamiento/formato. Se añadió después una regresión de ejes legibles. En Chrome se comprobó una escena generada con dos consultas reales: conversación y creación mediante el botón, con respuestas SSE. Su plano, función, región integrada, control y texto se guardaron y reabrieron junto con cuatro turnos de conversación. Dos contextos de escritorio/móvil intercambiaron cambios de la variable; el motor calculó una integral de 8 para a=3. La escena temporal de QA se eliminó al finalizar, sin alterar los registros históricos pendientes de limpieza.
+La primera publicación pasó CI y Pages con 545 pruebas frontend y 7 integraciones remotas omitidas, 25 pruebas de handlers y las pruebas SQL de aislamiento/formato. Se añadió después una regresión de ejes legibles. En Chrome se comprobó una escena generada con dos consultas reales: conversación y creación mediante el botón, con respuestas SSE. Su plano, función, región integrada, control y texto se guardaron y reabrieron junto con cuatro turnos de conversación. Dos contextos de escritorio/móvil intercambiaron cambios de la variable; el motor calculó una integral de 8 para a=3. La escena temporal de QA se eliminó al finalizar, sin alterar los registros históricos; esos cuatro registros se archivaron después durante la consolidación v0.7.1.
 
 La revisión visual posterior comprueba etiquetas de ejes sin solapamiento, selección que conserva la posición visible del lienzo y arrastre/redimensionado en escritorio. No se realizaron consultas IA adicionales para estas comprobaciones de interfaz.

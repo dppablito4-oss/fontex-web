@@ -58,8 +58,9 @@ function Coordinate(
       number,
     ],
     [y0, y1] = p.data.rangeY.map((x) => safe(x, scope)) as [number, number];
+  const square = p.data.mode === "unit_circle" || p.data.equalScale === true;
   const W = 800,
-    H = p.data.mode === "number_line" ? 190 : 440,
+    H = p.data.mode === "number_line" ? 310 : square ? 800 : 440,
     M = pixelWidth < 500
       ? Math.max(
         72,
@@ -69,8 +70,17 @@ function Coordinate(
         ),
       )
       : 72,
-    px = (x: number) => M + (x - x0) / (x1 - x0) * (W - 2 * M),
-    py = (y: number) => H - M - (y - y0) / (y1 - y0) * (H - 2 * M);
+    unitScale = Math.min((W - 2 * M) / (x1 - x0), (H - 2 * M) / (y1 - y0)),
+    px = (x: number) =>
+      square
+        ? W / 2 + (x - (x0 + x1) / 2) * unitScale
+        : M + (x - x0) / (x1 - x0) * (W - 2 * M),
+    py = (y: number) =>
+      p.data.mode === "number_line"
+        ? H - 68
+        : square
+        ? H / 2 - (y - (y0 + y1) / 2) * unitScale
+        : H - M - (y - y0) / (y1 - y0) * (H - 2 * M);
   const children = scene.primitives.filter((c) =>
     "canvasId" in c.data && c.data.canvasId === p.id
   );
@@ -78,7 +88,7 @@ function Coordinate(
     segments.map((points) =>
       points.map((v, i) => `${i ? "L" : "M"}${px(v.x)},${py(v.y)}`).join(" ")
     ).join(" ");
-  const lineY = p.data.mode === "number_line" ? H / 2 : py(0);
+  const lineY = py(0);
   const xTicks = niceTicks(
     x0,
     x1,
@@ -102,7 +112,12 @@ function Coordinate(
       >
         <defs>
           <clipPath id={clip}>
-            <rect x={M} y={M} width={W - 2 * M} height={H - 2 * M} />
+            <rect
+              x={M - 8}
+              y={p.data.mode === "number_line" ? 8 : M}
+              width={W - 2 * M + 16}
+              height={p.data.mode === "number_line" ? H - 30 : H - 2 * M}
+            />
           </clipPath>
         </defs>
         {p.data.showGrid && p.data.mode !== "number_line" && (
@@ -117,9 +132,13 @@ function Coordinate(
         )}
         {["polar", "unit_circle"].includes(p.data.mode) && (
           <g fill="none" stroke="var(--pc-grid)">
-            {[1, 2, 3, 4].map((r) => (
+            {(p.data.mode === "unit_circle" ? [1] : [1, 2, 3, 4]).map((r) => (
               <ellipse
                 key={r}
+                stroke={p.data.mode === "unit_circle"
+                  ? "var(--pc-accent)"
+                  : undefined}
+                strokeWidth={p.data.mode === "unit_circle" ? 2 : 1}
                 cx={px(0)}
                 cy={py(0)}
                 rx={Math.abs(px(r) - px(0))}
@@ -130,8 +149,10 @@ function Coordinate(
               i * Math.PI / 6).map((a) => (
                 <path
                   key={a}
-                  d={`M${px(0)},${py(0)}L${px(4 * Math.cos(a))},${
-                    py(4 * Math.sin(a))
+                  d={`M${px(0)},${py(0)}L${
+                    px((p.data.mode === "unit_circle" ? 1 : 4) * Math.cos(a))
+                  },${
+                    py((p.data.mode === "unit_circle" ? 1 : 4) * Math.sin(a))
                   }`}
                 />
               ))}
@@ -278,6 +299,8 @@ function Coordinate(
                 <Vector
                   key={child.id}
                   {...{ p: child, scope, functions, px, py }}
+                  numberLine={p.data.mode === "number_line"}
+                  positiveAngle={p.data.mode === "unit_circle"}
                   onSelect={() => onSelect(child.id)}
                 />
               );
@@ -285,20 +308,52 @@ function Coordinate(
             if (child.kind === "geometric_shape") {
               const vertices = shapeVertices(child, scope);
               return (
-                <polygon
+                <g
                   key={child.id}
-                  points={vertices.map(([x, y]) => `${px(x)},${py(y)}`).join(
-                    " ",
-                  )}
-                  fill={child.style.fillColor}
-                  fillOpacity=".4"
-                  stroke={stroke}
-                  strokeWidth="2"
                   onClick={(e) => {
                     e.stopPropagation();
                     onSelect(child.id);
                   }}
-                />
+                >
+                  <polygon
+                    points={vertices.map(([x, y]) => `${px(x)},${py(y)}`).join(
+                      " ",
+                    )}
+                    fill={child.style.fillColor}
+                    fillOpacity=".4"
+                    stroke={stroke}
+                    strokeWidth="2"
+                  />
+                  {child.data.showSideLengths && vertices.map(([x, y], i) => {
+                    const [ex, ey] = vertices[(i + 1) % vertices.length]!;
+                    return (
+                      <text
+                        key={i}
+                        x={(px(x) + px(ex)) / 2 + 10}
+                        y={(py(y) + py(ey)) / 2 - 10}
+                        fontSize="17"
+                        fill="currentColor"
+                        textAnchor="middle"
+                      >
+                        {num(Number(Math.hypot(ex - x, ey - y).toFixed(2)))}
+                        {" "}
+                        {child.data.unit}
+                      </text>
+                    );
+                  })}
+                  {child.data.showAngles &&
+                    polygonMetrics(vertices).angles.map((angle, i) => (
+                      <text
+                        key={i}
+                        x={px(vertices[i]![0]) + 12}
+                        y={py(vertices[i]![1]) + 22}
+                        fontSize="16"
+                        fill="currentColor"
+                      >
+                        {num(Number(angle.toFixed(1)))}°
+                      </text>
+                    ))}
+                </g>
               );
             }
             return null;
@@ -359,10 +414,12 @@ function Coordinate(
             : null
         )}
       </div>
-      <small>
-        Curvas muestreadas. Las áreas son aproximaciones numéricas; el recorte
-        visual no cambia el cálculo.
-      </small>
+      {children.some((child) => child.kind === "function_region") && (
+        <small>
+          Curvas muestreadas. Las áreas son aproximaciones numéricas; el recorte
+          visual no cambia el cálculo.
+        </small>
+      )}
     </div>
   );
 }
@@ -373,8 +430,12 @@ function Vector({
   px = (x: number) => x,
   py = (y: number) => y,
   onSelect = () => {},
+  numberLine = false,
+  positiveAngle = false,
 }: {
   p: Extract<Primitive, { kind: "vector_segment" }>;
+  numberLine?: boolean;
+  positiveAngle?: boolean;
   scope: Scope;
   functions: Record<string, FunctionDefinition>;
   px?: (n: number) => number;
@@ -390,7 +451,16 @@ function Vector({
       number,
       number,
     ];
-  const angle = Math.atan2(d - b, c - a) * 180 / Math.PI;
+  const rawAngle = Math.atan2(d - b, c - a) * 180 / Math.PI;
+  const angle = positiveAngle && rawAngle < 0 ? rawAngle + 360 : rawAngle;
+  const arc = numberLine && (p.data.arcHeight ?? 0) > 0;
+  const height = p.data.arcHeight ?? 0;
+  const path = arc
+    ? `M${px(a)},${py(0)}Q${(px(a) + px(c)) / 2},${py(0) - 2 * height} ${
+      px(c)
+    },${py(0)}`
+    : `M${px(a)},${py(b)}L${px(c)},${py(d)}`;
+  const displacement = c - a;
   return (
     <g
       stroke={p.style.strokeColor}
@@ -413,11 +483,10 @@ function Vector({
           <path d="M0,0L8,4L0,8Z" />
         </marker>
       </defs>
-      <line
-        x1={px(a)}
-        y1={py(b)}
-        x2={px(c)}
-        y2={py(d)}
+      <path
+        className={arc ? "pc-number-jump" : undefined}
+        d={path}
+        fill="none"
         strokeWidth={p.style.strokeWidth || 2}
         markerStart={p.data.headStart === "arrow"
           ? `url(#${marker})`
@@ -438,28 +507,32 @@ function Vector({
       )}
       {p.data.showMagnitude && (
         <text
+          className={arc ? "pc-jump-label" : undefined}
+          textAnchor="middle"
           x={(px(a) + px(c)) / 2}
-          y={(py(b) + py(d)) / 2 - 12}
+          y={arc ? py(0) - height - 12 : (py(b) + py(d)) / 2 - 12}
           fontSize="18"
           stroke="none"
         >
-          |v| = {num(Math.hypot(c - a, d - b))}
+          {arc
+            ? `${displacement > 0 ? "+" : ""}${num(displacement)}`
+            : `|v| = ${num(Math.hypot(c - a, d - b))}`}
         </text>
       )}
-      {p.data.showAngleArc && (
+      {p.data.showAngleArc && !arc && (
         <path
-          d={`M${px(a) + 25},${py(b)}A25,25 0 0 ${
-            (py(d) - py(b)) >= 0 ? 1 : 0
-          } ${
+          d={`M${px(a) + 25},${py(b)}A25,25 0 ${
+            positiveAngle && angle > 180 ? 1 : 0
+          } ${positiveAngle ? 0 : (py(d) - py(b)) >= 0 ? 1 : 0} ${
             px(a) + 25 * Math.cos(Math.atan2(py(d) - py(b), px(c) - px(a)))
           },${py(b) + 25 * Math.sin(Math.atan2(py(d) - py(b), px(c) - px(a)))}`}
           fill="none"
           strokeWidth="1.5"
         />
       )}
-      {p.data.showAngleArc && (
+      {p.data.showAngleArc && !arc && (
         <text x={px(a) + 12} y={py(b) + 24} fontSize="16" stroke="none">
-          θ = {num(angle)}°
+          θ = {num(Number(angle.toFixed(1)))}°
         </text>
       )}
     </g>

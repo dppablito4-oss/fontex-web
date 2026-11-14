@@ -1,0 +1,11 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+select extensions.plan(6);
+select extensions.ok((select convalidated from pg_constraint where conrelid='public.visual_scenes'::regclass and conname='primitive_scene_shape'),'v2 constraint is validated');
+select extensions.is((select count(*)::integer from public.visual_scenes where scene->>'format' is distinct from 'primitive-scene' or scene->'schemaVersion' is distinct from '2'::jsonb),0,'active table contains only v2 scenes');
+select extensions.ok(not has_schema_privilege('anon','fontex_archive','usage'),'anonymous role cannot use archive');
+select extensions.ok(not has_schema_privilege('authenticated','fontex_archive','usage'),'signed-in role cannot use archive');
+select extensions.ok(not has_table_privilege('authenticated','fontex_archive.visual_scenes_pre_v071','select'),'archive cannot be read through Data API');
+select extensions.ok((select relrowsecurity from pg_class where oid='fontex_archive.visual_scenes_pre_v071'::regclass),'archive also enables RLS');
+select * from extensions.finish();
+rollback;

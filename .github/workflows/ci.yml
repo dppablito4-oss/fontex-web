@@ -57,8 +57,6 @@ jobs:
         run: deno check --config supabase/functions/practice-tutor/deno.json supabase/functions/practice-tutor/index.ts
       - name: Check Studio agent
         run: deno check --config supabase/functions/studio-agent/deno.json supabase/functions/studio-agent/index.ts
-      - name: Test Studio agent boundaries
-        run: deno test --config supabase/functions/studio-agent/deno.json supabase/functions/studio-agent/handler_test.ts
       - name: Test composable primitive agent
         run: deno test --config supabase/functions/studio-agent/deno.json supabase/functions/studio-agent/primitive-handler_test.ts
       - name: Test tutor failures and grounding

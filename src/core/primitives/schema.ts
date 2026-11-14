@@ -60,6 +60,7 @@ export const primitiveSchema = z.discriminatedUnion("kind", [
       domainX: pair,
       rangeY: pair,
       angleUnit: z.enum(["rad", "deg"]),
+      equalScale: z.boolean().nullish(),
       showGrid: z.boolean(),
       showAxisLabels: z.boolean(),
       subdivisions: z.number().int().min(2).max(20),
@@ -96,6 +97,7 @@ export const primitiveSchema = z.discriminatedUnion("kind", [
       headEnd: z.enum(["arrow", "dot", "bar", "none"]),
       showMagnitude: z.boolean(),
       showAngleArc: z.boolean(),
+      arcHeight: finite.min(0).max(120).nullish(),
     }).strict(),
   }).strict(),
   z.object({

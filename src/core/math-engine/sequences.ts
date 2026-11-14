@@ -1,4 +1,4 @@
-import type { SequenceData } from "../document-schema/document.ts";
+type SequenceData = { start: number; difference: number; count: number };
 
 export function sequenceTerms({
   start,

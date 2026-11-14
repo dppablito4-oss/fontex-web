@@ -194,3 +194,49 @@ Deno.test("primitives: forwards streaming deltas without exposing raw actions", 
     ),
   );
 });
+
+Deno.test("primitives: strict provider schema requires nullable optional arcHeight", async () => {
+  let found = false;
+  const provider: typeof fetch = (_url, options) => {
+    const sent = JSON.parse(String(options?.body));
+    function walk(value: unknown) {
+      if (!value || typeof value !== "object") return;
+      const node = value as {
+        properties?: Record<string, unknown>;
+        required?: string[];
+      };
+      if (node.properties?.arcHeight) {
+        found = true;
+        assert(node.required?.includes("arcHeight"));
+        assert(JSON.stringify(node.properties.arcHeight).includes('"null"'));
+      }
+      Object.values(value).forEach(walk);
+    }
+    walk(sent.text.format.schema);
+    assert(JSON.stringify(sent.text.format.schema).includes('"equalScale"'));
+    return Promise.resolve(Response.json({
+      status: "completed",
+      output: [{
+        content: [{
+          type: "output_text",
+          text: JSON.stringify({
+            message: "Abro el ejemplo.",
+            actions: [{ kind: "load_template", templateId: "number-jumps" }],
+          }),
+        }],
+      }],
+    }));
+  };
+  const result = await events(
+    await createPrimitiveHandler(env, provider)(
+      request("Abre la plantilla number-jumps", "build"),
+      { userClaims: { id: "user" } },
+    ),
+  );
+  assert(found);
+  assert(
+    result.some((v) =>
+      v && typeof v === "object" && "type" in v && v.type === "result"
+    ),
+  );
+});

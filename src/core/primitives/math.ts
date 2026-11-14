@@ -26,6 +26,7 @@ export const helperFunctions = new Set([
   "max",
   "gcd",
   "lcm",
+  "atan2",
 ]);
 export const reservedNames = new Set([
   "x",
@@ -119,9 +120,8 @@ export function scalar(
         const values = args.split(",").map((arg) =>
           scalar(arg, scope, functions, depth + 1)
         );
-        const arity = ["round", "min", "max", "gcd", "lcm"].includes(name)
-          ? 2
-          : 1;
+        const arity =
+          ["round", "min", "max", "gcd", "lcm", "atan2"].includes(name) ? 2 : 1;
         if (values.length !== arity) {
           throw new Error(`Revisa los argumentos de ${name}.`);
         }
@@ -150,6 +150,7 @@ export function scalar(
         } else if (name === "abs") result = Math.abs(a);
         else if (name === "deg") result = a * 180 / Math.PI;
         else if (name === "rad") result = a * Math.PI / 180;
+        else if (name === "atan2") result = Math.atan2(a, b);
         else if (name === "floor") result = Math.floor(a);
         else if (name === "ceil") result = Math.ceil(a);
         else if (name === "min") result = Math.min(a, b);

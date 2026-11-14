@@ -192,3 +192,48 @@ it("uses concise responsive axis ticks without repeating decimal labels", () => 
   expect(niceTicks(-22, 22, 5)).toEqual([-20, -10, 0, 10, 20]);
   expect(niceTicks(0, 0)).toEqual([]);
 });
+
+describe("v0.7.1 curriculum compositions", () => {
+  it("has 25 distinct templates built from the existing nine primitive families", () => {
+    expect(templates).toHaveLength(25);
+    expect(new Set(templates.map((t) => t.id)).size).toBe(25);
+  });
+  it("keeps old v2 vectors compatible and validates optional jump heights", () => {
+    const scene = templateScene("number-jumps");
+    const vector = scene.primitives.find((p) => p.kind === "vector_segment")!;
+    expect(vector.data.arcHeight).toBeGreaterThan(0);
+    delete vector.data.arcHeight;
+    expect(() => parsePrimitiveScene(scene)).not.toThrow();
+    vector.data.arcHeight = null;
+    expect(() => parsePrimitiveScene(scene)).not.toThrow();
+    vector.data.arcHeight = 121;
+    expect(() => parsePrimitiveScene(scene)).toThrow();
+  });
+  it("updates signed number-line displacements when the second addend is negative", () => {
+    const scene = templateScene("number-jumps");
+    scene.variables.find((v) => v.name === "b")!.value = -4;
+    const valid = parsePrimitiveScene(scene), scope = sceneScope(valid);
+    const jumps = valid.primitives.filter((p) => p.kind === "vector_segment");
+    expect(scalar(jumps[1]!.data.end[0], scope)).toBe(-1);
+    expect(
+      scalar(jumps[1]!.data.end[0], scope) -
+        scalar(jumps[1]!.data.start[0], scope),
+    ).toBe(-4);
+  });
+  it("keeps the unit radius and handles undefined tangent at a right angle", () => {
+    const scene = templateScene("unit-circle");
+    scene.variables[0]!.value = 90;
+    const valid = parsePrimitiveScene(scene), scope = sceneScope(valid);
+    const radius = valid.primitives.find((p) => p.kind === "vector_segment")!;
+    const [x, y] = radius.data.end.map((expr) => scalar(expr, scope));
+    expect(Math.hypot(x!, y!)).toBeCloseTo(1);
+    expect(interpolate("{{tan(rad(theta))}}", scope)).toBe("No definido");
+  });
+  it("calculates the 3-4-5 triangle and complementary acute angles", () => {
+    const scene = templateScene("pythagoras"), scope = sceneScope(scene);
+    expect(scalar("sqrt(a^2+b^2)", scope)).toBe(5);
+    expect(scalar("deg(atan2(b,a))+deg(atan2(a,b))", scope)).toBeCloseTo(90);
+    scene.variables[0]!.value = 8;
+    expect(() => parsePrimitiveScene(scene)).not.toThrow();
+  });
+});

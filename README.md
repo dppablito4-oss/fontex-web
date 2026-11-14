@@ -1,18 +1,18 @@
-# Fontex 0.7.0
+# Fontex 0.7.1
 
 **Un lienzo matemático componible y acompañamiento académico con fuentes documentales.**
 
-El editor principal en `/#/lienzo` combina nueve familias de elementos: planos, funciones y regiones, vectores, pictogramas, texto matemático, controles, figuras, gráficos de datos y anotaciones. Las 22 plantillas son escenas editables hechas con esas primitivas. La IA propone JSON validado; el motor calcula localmente y no ejecuta código generado.
+El editor principal en `/#/lienzo` combina nueve familias de elementos: planos, funciones y regiones, vectores, pictogramas, texto matemático, controles, figuras, gráficos de datos y anotaciones. Las 25 plantillas son escenas editables hechas con esas primitivas. La IA propone JSON validado; el motor calcula localmente y no ejecuta código generado.
 
-Una variable compartida puede actualizar a la vez una figura, una curva y su explicación. El editor ofrece selección, movimiento y tamaño en escritorio, edición contextual, historial, presentación por pasos y PDF. En móvil conserva una lectura vertical legible y un botón flotante de chat. Fontex AI transmite sus respuestas y permite pasar de conversar a construir mediante el botón **Crear en el lienzo**.
+Una variable compartida puede actualizar a la vez una figura, una curva y su explicación. El editor ofrece selección, movimiento, giro por arrastre y tamaño en escritorio, edición contextual, historial, presentación por pasos y PDF. En móvil conserva una lectura vertical legible y un botón flotante de chat. Fontex AI transmite sus respuestas y permite pasar de conversar a construir mediante el botón **Crear en el lienzo**.
 
-Consulta [el alcance y los límites de las primitivas](docs/primitivas-v0.7.md). La versión anterior del código está en `respaldo/pre-primitivas-2026-11-14` (`930dcb9`). El editor nuevo comienza con escenas v2 independientes; no importa los documentos v1. El borrado físico de los registros anteriores quedó pendiente por la confirmación caducada del conector.
+Consulta [el alcance y los límites de las primitivas](docs/primitivas-v0.7.md) y [las mejoras de v0.7.1](docs/primitivas-v0.7.1.md). La versión anterior del código está en `respaldo/pre-primitivas-2026-11-14` (`930dcb9`). El editor nuevo comienza con escenas v2 independientes; no importa los documentos v1. La consolidación v0.7.1 retiró las cuatro escenas anteriores de la tabla activa, conservó una copia administrativa privada y validó la restricción de formato.
 
 ## Capacidades
 
 | Área | Estado |
 |---|---|
-| Lienzo | Nueve familias componibles, 22 plantillas, variables compartidas, historial y presentación |
+| Lienzo | Nueve familias componibles, 25 plantillas, variables compartidas, historial y presentación |
 | Matemática local | AST acotado, grados/radianes, funciones reales de x, derivadas, tangentes, raíces reales hasta grado 4 e integración numérica aproximada |
 | Geometría y datos | Figuras regulares/irregulares simples, unidades, fracciones circulares, conteo, tablas, gráficos y regresión |
 | Diagramas físicos | Representaciones esquemáticas de cuerpos; no simulación dinámica ni cálculo 3D |
@@ -74,7 +74,7 @@ npm test
 npm run build
 ```
 
-Los workflows comprueban frontend, handlers de Edge Functions y SQL/RLS. Los handlers se prueban con proveedor simulado; la verificación del proveedor real se registra por separado. Las siete integraciones remotas de Vitest requieren configuración y se omiten cuando falta.
+Los workflows comprueban frontend, handlers de Edge Functions y SQL/RLS. Los handlers se prueban con proveedor simulado; la verificación del proveedor real se registra por separado. Las siete integraciones remotas de Vitest requieren configuración y se omiten cuando falta. `npm run test:remote` exige esa configuración explícitamente; `npm run test:agent:remote` verifica el agente real con cuatro consultas pagadas y consentimiento por variable de entorno. El workflow manual y los requisitos se documentan en v0.7.1.
 
 El workflow `deploy-pages.yml` publica `dist/` al subir `main`. Variables de compilación: `VITE_BASE_PATH`, `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY`. Usa `/` para el dominio personalizado o `/fontex-web/` para el dominio estándar. El workflow incluye valores públicos del piloto como respaldo.
 
