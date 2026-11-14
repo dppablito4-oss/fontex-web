@@ -7,5 +7,6 @@ export const primitiveNames = {
   control_slider: "Control de variable",
   geometric_shape: "Figura geométrica",
   data_chart: "Tabla y gráfico",
+  node_graph: "Nodos y circuitos",
   annotation_stroke: "Trazo y anotación",
 } as const;

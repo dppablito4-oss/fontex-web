@@ -1116,6 +1116,123 @@
   touch-action: none;
   z-index: 200;
 }
-.pc-rotate:active { cursor: grabbing; }
-@media (max-width: 760px) { .pc-rotate { display: none; } }
-@media print { .pc-rotate { display: none; } }
+.pc-rotate:active {
+  cursor: grabbing;
+}
+@media (max-width: 760px) {
+  .pc-rotate {
+    display: none;
+  }
+}
+@media print {
+  .pc-rotate {
+    display: none;
+  }
+}
+.pc-present-bar progress {
+  width: min(220px, 20vw);
+  height: 8px;
+  accent-color: var(--pc-accent);
+}
+.pc-matrix {
+  border-left: 2px solid var(--pc-ink);
+  border-right: 2px solid var(--pc-ink);
+  width: auto!important;
+  margin: 12px 0;
+}
+.pc-matrix td {
+  min-width: 65px;
+  text-align: center;
+  font-size: 22px;
+  padding: 10px 18px;
+}
+.pc-matrix-view {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 28px;
+}
+.pc-matrix-view > section {
+  flex-basis: 100%;
+}
+.pc-truth-table {
+  max-height: none;
+}
+.pc-truth-table :is(td,th) {
+  text-align: center;
+}
+.pc-truth-active {
+  background: var(--pc-soft);
+  outline: 2px solid var(--pc-accent);
+  outline-offset: -2px;
+}
+.pc-control [role=switch] {
+  margin: 10px 0;
+  min-width: 150px;
+  justify-content: center;
+}
+.pc-control [role=switch][aria-checked=true] {
+  background: var(--pc-accent);
+  color: var(--pc-on);
+}
+.pc-logic-input {
+  cursor: pointer;
+}
+.pc-logic-input:focus-visible {
+  outline: 3px solid var(--pc-accent);
+}
+.pc-matrix-grid {
+  display: grid;
+  gap: 10px;
+  margin: 12px 0;
+}
+.pc-matrix-grid input {
+  width: 100%;
+  min-width: 0;
+}
+.pc-graph-editor {
+  flex-basis: 100%;
+  display: grid;
+  gap: 12px;
+}
+.pc-graph-editor fieldset {
+  border: 1px solid var(--pc-line);
+  border-radius: 8px;
+  min-width: 0;
+  padding: 10px;
+}
+.pc-graph-editor legend {
+  color: var(--pc-muted);
+  font-size: 12px;
+}
+.pc-graph-editor select {
+  max-width: 180px;
+}
+@media (max-width:760px) {
+  .pc-node-graph svg text,
+  .pc-venn svg text {
+    font-size: 25px;
+  }
+  .pc-present-bar progress {
+    width: 100%;
+    order: 5;
+  }
+  .pc-matrix-view {
+    gap: 8px;
+  }
+  .pc-matrix td {
+    min-width: 45px;
+    padding: 8px;
+  }
+}
+@media print {
+  .pc-truth-active {
+    outline: 1px solid #333;
+    background: #eee;
+  }
+  .pc-node-data_chart,
+  .pc-venn,
+  .pc-node-graph {
+    break-inside: avoid;
+  }
+}

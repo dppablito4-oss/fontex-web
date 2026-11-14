@@ -5,7 +5,49 @@ import {
   parseExpression,
 } from "../scene/expression.ts";
 import type { Primitive, PrimitiveScene } from "./schema.ts";
-export type Scope = Record<string, number>;
+import {
+  checkMatrix,
+  determinant,
+  inverse,
+  type Matrix,
+} from "./linear-algebra.ts";
+const matricesKey = Symbol("fontex.matrices");
+export type Scope = Record<string, number> & {
+  [matricesKey]?: Record<string, Matrix>;
+};
+export function scopeMatrix(scope: Scope, name: string): Matrix {
+  const matrix = scope[matricesKey]?.[name];
+  if (!matrix) throw Error(`Matriz no definida: ${name}`);
+  return matrix;
+}
+function matrixCalls(source: string, scope: Scope) {
+  return source.replace(
+    /\b(det|inv)\(\s*([a-z][a-z0-9_]*)\s*(?:,\s*([1-3])\s*,\s*([1-3])\s*)?\)/g,
+    (
+      _match: string,
+      operation: string,
+      name: string,
+      row?: string,
+      col?: string,
+    ) => {
+      const matrix = scopeMatrix(scope, name);
+      if (operation === "det") {
+        if (row) throw Error("det recibe sólo el nombre de la matriz.");
+        return `(${determinant(matrix)})`;
+      }
+      if (!row || !col) {
+        throw Error(
+          "inv(m) es una matriz; usa inv(m,fila,columna) en una expresión escalar.",
+        );
+      }
+      const value = inverse(matrix)?.[Number(row) - 1]?.[Number(col) - 1];
+      if (value === undefined) {
+        throw Error("Matriz singular o índice fuera de rango.");
+      }
+      return `(${value})`;
+    },
+  );
+}
 export type FunctionDefinition = { source: string; angleUnit: "rad" | "deg" };
 export const baseFunctions = new Set([
   "sin",
@@ -35,6 +77,8 @@ export const reservedNames = new Set([
   ...baseFunctions,
   ...helperFunctions,
   "factors",
+  "det",
+  "inv",
 ]);
 export const displayNumber = (n: number) =>
   Number.isFinite(n)
@@ -86,7 +130,7 @@ export function compile(
     throw new Error("La expresión supera 500 caracteres.");
   }
   const expression = convertAngles(
-    parseExpression(substitute(source, scope)),
+    parseExpression(substitute(matrixCalls(source, scope), scope)),
     unit === "deg",
   );
   const derived = derivative(expression);
@@ -104,86 +148,92 @@ export function scalar(
   depth = 0,
 ): number {
   if (depth > 16 || source.length > 500) {
-    throw new Error("Expresión demasiado compleja.");
+    throw Error("Expresión demasiado compleja.");
   }
-  // Resolve only explicitly registered functions. The residual grammar is the bounded AST parser.
-  let text = source;
-  for (let iteration = 0; iteration < 20; iteration++) {
-    let changed = false;
-    text = text.replace(
-      /\b([a-z_][a-z0-9_]*)\(([^()]*)\)/g,
-      (match: string, name: string, args: string) => {
-        if (
-          !baseFunctions.has(name) && !helperFunctions.has(name) &&
-          !Object.hasOwn(functions, name)
-        ) throw new Error(`Función no admitida: ${name}`);
-        const values = args.split(",").map((arg) =>
-          scalar(arg, scope, functions, depth + 1)
-        );
-        const arity =
-          ["round", "min", "max", "gcd", "lcm", "atan2"].includes(name) ? 2 : 1;
-        if (values.length !== arity) {
-          throw new Error(`Revisa los argumentos de ${name}.`);
-        }
-        const a = values[0]!, b = values[1] ?? 0;
-        let result: number;
-        const gcd = (x: number, y: number) => {
-          let left = Math.abs(x), right = Math.abs(y);
-          for (let i = 0; right && i < 128; i++) {
-            [left, right] = [right, left % right];
-          }
-          return left;
-        };
-        if (baseFunctions.has(name)) {
-          result = compile(`${name}(${a})`, scope).value(0);
-        } else if (Object.hasOwn(functions, name)) {
-          result = compile(
-            functions[name]!.source,
-            scope,
-            functions[name]!.angleUnit,
-          ).value(a);
-        } else if (name === "round") {
-          if (!Number.isInteger(b) || b < 0 || b > 10) {
-            throw new Error("Decimales entre 0 y 10.");
-          }
-          result = Math.round(a * 10 ** b) / 10 ** b;
-        } else if (name === "abs") result = Math.abs(a);
-        else if (name === "deg") result = a * 180 / Math.PI;
-        else if (name === "rad") result = a * Math.PI / 180;
-        else if (name === "atan2") result = Math.atan2(a, b);
-        else if (name === "floor") result = Math.floor(a);
-        else if (name === "ceil") result = Math.ceil(a);
-        else if (name === "min") result = Math.min(a, b);
-        else if (name === "max") result = Math.max(a, b);
-        else {
-          if (
-            ![a, b].every((n) => Number.isSafeInteger(n) && Math.abs(n) <= 1e9)
-          ) throw new Error("MCD y MCM requieren enteros acotados.");
-          result = name === "gcd"
-            ? gcd(a, b)
-            : a === 0 || b === 0
-            ? 0
-            : Math.abs(a / gcd(a, b) * b);
-        }
-        if (!Number.isFinite(result)) {
-          throw new Error("Valor no definido en este punto.");
-        }
-        changed = true;
-        return `(${result})`;
-      },
-    );
-    if (!changed) break;
-    // Parenthesized resolved numbers may sit inside another helper. Strip only these numbers.
-    text = text.replace(
-      /\((-?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?)\)/gi,
-      "$1",
-    );
+  const text = matrixCalls(source, scope),
+    pattern = /\b([a-z_][a-z0-9_]*)\s*\(/g;
+  let output = "", previous = 0, match: RegExpExecArray | null;
+  while ((match = pattern.exec(text))) {
+    const name = match[1]!;
+    if (
+      !baseFunctions.has(name) && !helperFunctions.has(name) &&
+      !Object.hasOwn(functions, name)
+    ) throw Error(`Función no admitida: ${name}`);
+    const begin = pattern.lastIndex;
+    let end = begin, nesting = 1;
+    for (; end < text.length && nesting; end++) {
+      if (text[end] === "(") nesting++;
+      if (text[end] === ")") nesting--;
+      if (nesting > 24) throw Error("Expresión demasiado anidada.");
+    }
+    if (nesting) throw Error("Falta cerrar una función.");
+    const inner = text.slice(begin, end - 1), args: string[] = [];
+    let start = 0, level = 0;
+    for (let i = 0; i < inner.length; i++) {
+      if (inner[i] === "(") level++;
+      if (inner[i] === ")") level--;
+      if (inner[i] === "," && !level) {
+        args.push(inner.slice(start, i));
+        start = i + 1;
+      }
+    }
+    args.push(inner.slice(start));
+    const arity = ["round", "min", "max", "gcd", "lcm", "atan2"].includes(name)
+      ? 2
+      : 1;
+    if (args.length !== arity) throw Error(`Revisa los argumentos de ${name}.`);
+    const values = args.map((arg) => scalar(arg, scope, functions, depth + 1)),
+      a = values[0]!,
+      b = values[1] ?? 0;
+    let result: number;
+    if (baseFunctions.has(name)) {
+      result = compile(`${name}(${a})`, scope).value(0);
+    } else if (Object.hasOwn(functions, name)) {
+      result = compile(
+        functions[name]!.source,
+        scope,
+        functions[name]!.angleUnit,
+      ).value(a);
+    } else if (name === "round") {
+      if (!Number.isInteger(b) || b < 0 || b > 10) {
+        throw Error("Decimales entre 0 y 10.");
+      }
+      result = Math.round(a * 10 ** b) / 10 ** b;
+    } else if (name === "abs") result = Math.abs(a);
+    else if (name === "deg") result = a * 180 / Math.PI;
+    else if (name === "rad") result = a * Math.PI / 180;
+    else if (name === "atan2") result = Math.atan2(a, b);
+    else if (name === "floor") result = Math.floor(a);
+    else if (name === "ceil") result = Math.ceil(a);
+    else if (name === "min") result = Math.min(a, b);
+    else if (name === "max") result = Math.max(a, b);
+    else {
+      if (![a, b].every((n) => Number.isSafeInteger(n) && Math.abs(n) <= 1e9)) {
+        throw Error("MCD y MCM requieren enteros acotados.");
+      }
+      let left = Math.abs(a), right = Math.abs(b);
+      for (let i = 0; right && i < 128; i++) {
+        [left, right] = [right, left % right];
+      }
+      result = name === "gcd"
+        ? left
+        : a === 0 || b === 0
+        ? 0
+        : Math.abs(a / left * b);
+    }
+    if (!Number.isFinite(result)) {
+      throw Error("Valor no definido en este punto.");
+    }
+    output += text.slice(previous, match.index) + `(${result})`;
+    previous = end;
+    pattern.lastIndex = end;
   }
-  if (/\bx\b/.test(text) && !Object.hasOwn(scope, "x")) {
-    throw new Error("Esta medida requiere un valor de x.");
+  output += text.slice(previous);
+  if (/\bx\b/.test(output) && !Object.hasOwn(scope, "x")) {
+    throw Error("Esta medida requiere un valor de x.");
   }
-  const result = compile(text, scope).value(scope.x ?? 0);
-  if (!Number.isFinite(result)) throw new Error("Valor no definido.");
+  const result = compile(output, scope).value(scope.x ?? 0);
+  if (!Number.isFinite(result)) throw Error("Valor no definido.");
   return result;
 }
 export type Integral = { status: "finite"; value: number; error: number } | {
@@ -278,14 +328,34 @@ export function sample(
   return segments;
 }
 export function userScope(scene: PrimitiveScene): Scope {
-  return Object.fromEntries(scene.variables.map((v) => [v.name, v.value]));
+  const scope: Scope = Object.fromEntries(
+    scene.variables.map((v) => [v.name, v.value]),
+  );
+  const matrices: Record<string, Matrix> = Object.create(null) as Record<
+    string,
+    Matrix
+  >;
+  for (const p of scene.primitives) {
+    if (p.kind !== "data_chart" || p.data.chartType !== "matrix") continue;
+    if (!p.data.matrixName || !p.data.matrixCells) {
+      throw Error("Completa el nombre y las celdas de la matriz.");
+    }
+    const matrix = p.data.matrixCells.map((row) =>
+      row.map((cell) => scalar(cell, scope))
+    );
+    checkMatrix(matrix);
+    matrices[p.data.matrixName] = matrix;
+  }
+  Object.defineProperty(scope, matricesKey, { value: matrices });
+  return scope;
 }
 export function sceneFunctions(
   scene: PrimitiveScene,
 ): Record<string, FunctionDefinition> {
   return Object.fromEntries(
     scene.primitives.flatMap((p) =>
-      p.kind === "function_region"
+      p.kind === "function_region" &&
+        (!p.data.curveMode || p.data.curveMode === "cartesian")
         ? [[p.data.name, {
           source: p.data.expression,
           angleUnit: p.data.angleUnit,
@@ -330,6 +400,16 @@ export function interpolate(
     /\{\{([^{}]{1,500})\}\}/g,
     (_match: string, source: string) => {
       try {
+        const wholeInverse = /^inv\(\s*([a-z][a-z0-9_]*)\s*\)$/.exec(
+          source.trim(),
+        );
+        if (wholeInverse) {
+          const matrix = inverse(scopeMatrix(scope, wholeInverse[1]!));
+          return matrix
+            ? matrix.map((row) => `[${row.map(displayNumber).join(", ")}]`)
+              .join(" ")
+            : "No definida (matriz singular)";
+        }
         const factor = /^factors\((.+)\)$/.exec(source.trim());
         return factor
           ? factors(scalar(factor[1]!, scope, functions))

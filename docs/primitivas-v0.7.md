@@ -1,4 +1,6 @@
-# Lienzo de primitivas componibles — Fontex 0.7.0
+# Lienzo de primitivas componibles — base Fontex 0.7
+
+La versión actual extiende esta base: [primitivas v0.8](primitivas-v0.8.md), con diez familias y 36 plantillas. Este documento conserva el alcance e historial de v0.7.
 
 El editor principal usa un documento declarativo con nueve familias de primitivas. Las plantillas son combinaciones editables de esos elementos, no componentes programados por tema. `/#/lienzo` es la entrada principal; las rutas anteriores de los laboratorios y del lienzo clásico abren el mismo editor.
 

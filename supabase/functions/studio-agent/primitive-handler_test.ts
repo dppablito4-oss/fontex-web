@@ -240,3 +240,60 @@ Deno.test("primitives: strict provider schema requires nullable optional arcHeig
     ),
   );
 });
+
+Deno.test("beta: validates a generated logic circuit and rejects cyclic proposals atomically", async () => {
+  const { templateScene } = await import(
+    "../../../src/core/primitives/templates.ts"
+  );
+  const scene = templateScene("logic-circuit"),
+    graph = scene.primitives.find((p) => p.kind === "node_graph")!;
+  const actions = [
+    ...scene.variables.map((variable) => ({
+      kind: "upsert_variable",
+      variable,
+    })),
+    { kind: "add_primitive", primitive: graph },
+  ];
+  const provider: typeof fetch = () =>
+    Promise.resolve(
+      Response.json({
+        status: "completed",
+        output: [{
+          content: [{
+            type: "output_text",
+            text: JSON.stringify({
+              message: "Un circuito compartido.",
+              actions,
+            }),
+          }],
+        }],
+      }),
+    );
+  const handler = createPrimitiveHandler(env, provider);
+  const success = await events(
+    await handler(request("Crea un circuito lógico", "build"), {
+      userClaims: { id: "user" },
+    }),
+  );
+  assert(
+    success.some((v) =>
+      v && typeof v === "object" && "type" in v && v.type === "result"
+    ),
+  );
+  graph.data.edges.push({ from: "out", to: "both", label: "" });
+  const failure = await events(
+    await handler(request("Crea un circuito lógico", "build"), {
+      userClaims: { id: "user" },
+    }),
+  );
+  assert(
+    failure.some((v) =>
+      v && typeof v === "object" && "type" in v && v.type === "error"
+    ),
+  );
+  assert(
+    !failure.some((v) =>
+      v && typeof v === "object" && "type" in v && v.type === "result"
+    ),
+  );
+});

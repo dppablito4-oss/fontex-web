@@ -20,6 +20,13 @@ import {
   type PrimitiveScene,
   type SceneVariable,
 } from "../../core/primitives/schema";
+import { NodeGraph, TruthMatrix, Venn } from "./AdvancedVisual";
+import { linkedMatrix } from "../../core/primitives/transforms";
+import { curvePoint, sampleCurve } from "../../core/primitives/curves";
+import {
+  type Matrix,
+  transformPoint,
+} from "../../core/primitives/linear-algebra";
 type Props = {
   p: Primitive;
   scene: PrimitiveScene;
@@ -30,6 +37,7 @@ type Props = {
   onSelect: (id: string) => void;
   selected: boolean;
   readOnly?: boolean;
+  visibleStep?: number;
 };
 const safe = (
   source: string,
@@ -37,7 +45,7 @@ const safe = (
   functions: Record<string, FunctionDefinition> = {},
 ) => scalar(source, scope, functions);
 function Coordinate(
-  { p, scene, scope, functions, onSelect }: Props & {
+  { p, scene, scope, functions, onSelect, visibleStep }: Props & {
     p: Extract<Primitive, { kind: "coordinate_canvas" }>;
   },
 ) {
@@ -82,7 +90,8 @@ function Coordinate(
         ? H / 2 - (y - (y0 + y1) / 2) * unitScale
         : H - M - (y - y0) / (y1 - y0) * (H - 2 * M);
   const children = scene.primitives.filter((c) =>
-    "canvasId" in c.data && c.data.canvasId === p.id
+    "canvasId" in c.data && c.data.canvasId === p.id &&
+    (visibleStep === undefined || c.presentationStep <= visibleStep)
   );
   const path = (segments: { x: number; y: number }[][]) =>
     segments.map((points) =>
@@ -192,6 +201,66 @@ function Coordinate(
           {children.map((child) => {
             const stroke = child.style.strokeColor;
             if (child.kind === "function_region") {
+              if (
+                child.data.curveMode && child.data.curveMode !== "cartesian"
+              ) {
+                const segments = sampleCurve(child, scope, [x0, x1, y0, y1]);
+                const parameter = child.data.parameterValueExpr
+                  ? safe(child.data.parameterValueExpr, scope)
+                  : null;
+                const point = parameter === null
+                  ? null
+                  : curvePoint(child, parameter, scope);
+                return (
+                  <g
+                    key={child.id}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Seleccionar curva ${child.data.name}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSelect(child.id);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") onSelect(child.id);
+                    }}
+                  >
+                    <path
+                      className="pc-parametric-curve"
+                      d={path(segments)}
+                      fill="none"
+                      stroke={stroke}
+                      strokeWidth={Math.max(2, child.style.strokeWidth)}
+                    />
+                    <path
+                      d={path(segments)}
+                      fill="none"
+                      stroke="transparent"
+                      strokeWidth="18"
+                    />
+                    {point && Number.isFinite(point.x) &&
+                      Number.isFinite(point.y) && (
+                      <g>
+                        <circle
+                          className="pc-curve-marker"
+                          cx={px(point.x)}
+                          cy={py(point.y)}
+                          r="6"
+                          fill={stroke}
+                        />
+                        <text
+                          x={px(point.x) + 10}
+                          y={py(point.y) - 10}
+                          fontSize="18"
+                          fill="currentColor"
+                        >
+                          ({num(point.x)}, {num(point.y)})
+                        </text>
+                      </g>
+                    )}
+                  </g>
+                );
+              }
               const graph = compile(
                   child.data.expression,
                   scope,
@@ -294,11 +363,25 @@ function Coordinate(
                 </g>
               );
             }
+            const matrix = linkedMatrix(child, scene, scope);
+            if (matrix === null) {
+              return (
+                <text
+                  key={child.id}
+                  x={M + 8}
+                  y={M + 24}
+                  fill="currentColor"
+                  fontSize="18"
+                >
+                  Matriz singular: no se puede aplicar la inversa.
+                </text>
+              );
+            }
             if (child.kind === "vector_segment") {
               return (
                 <Vector
                   key={child.id}
-                  {...{ p: child, scope, functions, px, py }}
+                  {...{ p: child, scope, functions, px, py, matrix }}
                   numberLine={p.data.mode === "number_line"}
                   positiveAngle={p.data.mode === "unit_circle"}
                   onSelect={() => onSelect(child.id)}
@@ -306,7 +389,9 @@ function Coordinate(
               );
             }
             if (child.kind === "geometric_shape") {
-              const vertices = shapeVertices(child, scope);
+              const vertices = shapeVertices(child, scope).map((point) =>
+                matrix ? transformPoint(matrix, point) : point
+              );
               return (
                 <g
                   key={child.id}
@@ -342,7 +427,13 @@ function Coordinate(
                     );
                   })}
                   {child.data.showAngles &&
-                    polygonMetrics(vertices).angles.map((angle, i) => (
+                    (() => {
+                      try {
+                        return polygonMetrics(vertices).angles;
+                      } catch {
+                        return [];
+                      }
+                    })().map((angle, i) => (
                       <text
                         key={i}
                         x={px(vertices[i]![0]) + 12}
@@ -365,7 +456,13 @@ function Coordinate(
           child.kind === "function_region"
             ? (
               <span key={child.id} style={{ color: child.style.strokeColor }}>
-                <strong>{child.data.name}(x) = {child.data.expression}</strong>
+                <strong>
+                  {child.data.curveMode === "parametric"
+                    ? `${child.data.name}(t) = (${child.data.xExpr}, ${child.data.yExpr})`
+                    : child.data.curveMode === "polar"
+                    ? `${child.data.name}: r(θ) = ${child.data.rExpr}`
+                    : `${child.data.name}(x) = ${child.data.expression}`}
+                </strong>
                 {child.data.showDerivative ? " · derivada discontinua" : ""}
                 {child.data.showTangent ? " · tangente dorada" : ""}
                 {child.data.showArea && (() => {
@@ -383,6 +480,9 @@ function Coordinate(
                   }
                 })()}
                 {(() => {
+                  if (
+                    child.data.curveMode && child.data.curveMode !== "cartesian"
+                  ) return null;
                   const coefficients = polynomial(
                     compile(child.data.expression, scope, child.data.angleUnit)
                       .expression,
@@ -432,10 +532,12 @@ function Vector({
   onSelect = () => {},
   numberLine = false,
   positiveAngle = false,
+  matrix,
 }: {
   p: Extract<Primitive, { kind: "vector_segment" }>;
   numberLine?: boolean;
   positiveAngle?: boolean;
+  matrix?: Matrix;
   scope: Scope;
   functions: Record<string, FunctionDefinition>;
   px?: (n: number) => number;
@@ -443,14 +545,16 @@ function Vector({
   onSelect?: () => void;
 }) {
   const marker = useId(),
-    [a, b] = p.data.start.map((x) => safe(x, scope, functions)) as [
+    start = p.data.start.map((x) => safe(x, scope, functions)) as [
       number,
       number,
     ],
-    [c, d] = p.data.end.map((x) => safe(x, scope, functions)) as [
+    end = p.data.end.map((x) => safe(x, scope, functions)) as [
       number,
       number,
     ];
+  const [a, b] = matrix ? transformPoint(matrix, start) : start,
+    [c, d] = matrix ? transformPoint(matrix, end) : end;
   const rawAngle = Math.atan2(d - b, c - a) * 180 / Math.PI;
   const angle = positiveAngle && rawAngle < 0 ? rawAngle + 360 : rawAngle;
   const arc = numberLine && (p.data.arcHeight ?? 0) > 0;
@@ -513,10 +617,11 @@ function Vector({
           y={arc ? py(0) - height - 12 : (py(b) + py(d)) / 2 - 12}
           fontSize="18"
           stroke="none"
+          fill="currentColor"
         >
           {arc
             ? `${displacement > 0 ? "+" : ""}${num(displacement)}`
-            : `|v| = ${num(Math.hypot(c - a, d - b))}`}
+            : `|v| ≈ ${num(Number(Math.hypot(c - a, d - b).toFixed(3)))}`}
         </text>
       )}
       {p.data.showAngleArc && !arc && (
@@ -561,7 +666,9 @@ function shapeVertices(
   );
 }
 function Shape(
-  { p, scope }: Props & { p: Extract<Primitive, { kind: "geometric_shape" }> },
+  { p, scope, scene }: Props & {
+    p: Extract<Primitive, { kind: "geometric_shape" }>;
+  },
 ) {
   const stroke = p.style.strokeColor, fill = p.style.fillColor;
   if (["circle_fraction", "sector"].includes(p.data.shape)) {
@@ -679,7 +786,15 @@ function Shape(
       </div>
     );
   }
-  const points = shapeVertices(p, scope),
+  const matrix = linkedMatrix(p, scene, scope);
+  if (matrix === null) {
+    return (
+      <p role="status">Matriz singular: no se puede aplicar la inversa.</p>
+    );
+  }
+  const points = shapeVertices(p, scope).map((point) =>
+      matrix ? transformPoint(matrix, point) : point
+    ),
     xs = points.map((q) => q[0]),
     ys = points.map((q) => q[1]),
     xmin = Math.min(...xs),
@@ -689,7 +804,22 @@ function Shape(
     s = Math.min(480 / (xmax - xmin || 1), 270 / (ymax - ymin || 1));
   const px = (x: number) => 300 + (x - (xmin + xmax) / 2) * s,
     py = (y: number) => 180 - (y - (ymin + ymax) / 2) * s;
-  const { sides, area, angles } = polygonMetrics(points);
+  let metrics;
+  try {
+    metrics = polygonMetrics(points);
+  } catch {
+    metrics = {
+      sides: points.map((q, i) =>
+        Math.hypot(
+          q[0] - points[(i + 1) % points.length]![0],
+          q[1] - points[(i + 1) % points.length]![1],
+        )
+      ),
+      area: 0,
+      angles: [] as number[],
+    };
+  }
+  const { sides, area, angles } = metrics;
   return (
     <div>
       <svg viewBox="0 0 600 360" role="img" aria-label="Figura con sus medidas">
@@ -714,9 +844,9 @@ function Shape(
                   {num(sides[i]!)} {p.data.unit}
                 </text>
               )}
-              {p.data.showAngles && (
+              {p.data.showAngles && angles[i] !== undefined && (
                 <text x={px(q[0]) + 8} y={py(q[1]) + 20}>
-                  {num(angles[i]!)}°
+                  {num(angles[i])}°
                 </text>
               )}
             </g>
@@ -744,27 +874,43 @@ function Control(
     ref.current = variable;
   }, [variable]);
   useEffect(() => {
-    if (!playing) return;
+    if (!playing || p.data.controlType !== "play_pause") return;
     const timer = setInterval(() => {
       const v = ref.current;
       const next = v.value + v.step * p.data.speed;
       onVariable(v.name, next > v.max ? v.min : Number(next.toPrecision(10)));
     }, 120);
     return () => clearInterval(timer);
-  }, [playing, onVariable, p.data.speed]);
+  }, [playing, onVariable, p.data.speed, p.data.controlType]);
   return (
     <div className="pc-control">
       <label>
         {variable.name} = <strong>{num(variable.value)} {variable.unit}</strong>
-        <input
-          type="range"
-          aria-label={`Variable ${variable.name}`}
-          min={variable.min}
-          max={variable.max}
-          step={variable.step}
-          value={variable.value}
-          onChange={(e) => onVariable(variable.name, Number(e.target.value))}
-        />
+        {p.data.controlType === "toggle"
+          ? (
+            <button
+              type="button"
+              role="switch"
+              aria-checked={variable.value === 1}
+              aria-label={`Proposición ${variable.name}`}
+              onClick={() =>
+                onVariable(variable.name, Number(variable.value === 0))}
+            >
+              {variable.value ? "Verdadero · 1" : "Falso · 0"}
+            </button>
+          )
+          : (
+            <input
+              type="range"
+              aria-label={`Variable ${variable.name}`}
+              min={variable.min}
+              max={variable.max}
+              step={variable.step}
+              value={variable.value}
+              onChange={(e) =>
+                onVariable(variable.name, Number(e.target.value))}
+            />
+          )}
       </label>
       {p.data.controlType === "play_pause"
         ? (
@@ -1062,9 +1208,18 @@ function Annotation(
 function PrimitiveBody(props: Props) {
   const { p, scope, functions, onChange, selected, readOnly } = props;
   if (p.kind === "coordinate_canvas") return <Coordinate {...props} p={p} />;
-  if (p.kind === "geometric_shape") return <Shape {...props} p={p} />;
+  if (p.kind === "geometric_shape") {
+    return p.data.shape === "venn_2" || p.data.shape === "venn_3"
+      ? <Venn {...props} p={p} />
+      : <Shape {...props} p={p} />;
+  }
+  if (p.kind === "node_graph") return <NodeGraph {...props} p={p} />;
   if (p.kind === "control_slider") return <Control {...props} p={p} />;
-  if (p.kind === "data_chart") return <Chart {...props} p={p} />;
+  if (p.kind === "data_chart") {
+    return p.data.chartType === "matrix" || p.data.chartType === "truth_table"
+      ? <TruthMatrix {...props} p={p} />
+      : <Chart {...props} p={p} />;
+  }
   if (p.kind === "annotation_stroke") return <Annotation {...props} p={p} />;
   if (p.kind === "math_block") {
     return selected && !readOnly
@@ -1100,9 +1255,15 @@ function PrimitiveBody(props: Props) {
       );
   }
   if (p.kind === "vector_segment") {
+    const matrix = linkedMatrix(p, props.scene, scope);
+    if (matrix === null) {
+      return (
+        <p role="status">Matriz singular: no se puede aplicar la inversa.</p>
+      );
+    }
     return (
       <svg viewBox="0 0 800 300" role="img" aria-label="Vector">
-        <Vector p={p} scope={scope} functions={functions} />
+        <Vector p={p} scope={scope} functions={functions} matrix={matrix} />
       </svg>
     );
   }
@@ -1204,7 +1365,9 @@ class Boundary extends Component<
 }
 export function PrimitiveVisual(props: Props) {
   return (
-    <Boundary resetKey={JSON.stringify([props.p, props.scope])}>
+    <Boundary
+      resetKey={JSON.stringify([props.p, props.scope, props.scene.updatedAt])}
+    >
       <PrimitiveBody {...props} />
     </Boundary>
   );

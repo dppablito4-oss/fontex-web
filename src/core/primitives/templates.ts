@@ -6,6 +6,37 @@ import {
   type PrimitiveScene,
 } from "./schema.ts";
 export const templates = [
+  { id: "ellipse", name: "Elipse paramétrica", group: "Geometría analítica" },
+  {
+    id: "hyperbola",
+    name: "Hipérbola con dos ramas",
+    group: "Geometría analítica",
+  },
+  { id: "polar-rose", name: "Rosa polar", group: "Trigonometría" },
+  { id: "projectile", name: "Tiro parabólico", group: "Física" },
+  { id: "venn-two", name: "Operaciones entre conjuntos", group: "Conjuntos" },
+  { id: "venn-three", name: "Tres conjuntos y lógica", group: "Conjuntos" },
+  { id: "logic-circuit", name: "Tabla de verdad y circuito", group: "Lógica" },
+  {
+    id: "logic-four",
+    name: "Equivalencia con cuatro proposiciones",
+    group: "Lógica",
+  },
+  {
+    id: "matrix-transform",
+    name: "Transformación lineal 2D",
+    group: "Álgebra lineal",
+  },
+  {
+    id: "matrix-system",
+    name: "Matriz inversa y sistema 3×3",
+    group: "Álgebra lineal",
+  },
+  {
+    id: "probability-tree",
+    name: "Árbol de probabilidades",
+    group: "Estadística",
+  },
   {
     id: "number-jumps",
     name: "Saltos en la recta numérica",
@@ -78,7 +109,322 @@ export function templateScene(id: string): PrimitiveScene {
     add("math_block", (p) => {
       p.data.markdownContent = content;
     });
-  if (id === "number-jumps") {
+
+  if (["ellipse", "hyperbola", "polar-rose", "projectile"].includes(id)) {
+    scene.variables = [];
+    const plane = add("coordinate_canvas", (p) => {
+      p.data.equalScale = true;
+      p.data.domainX = ["-5", "5"];
+      p.data.rangeY = ["-5", "5"];
+    });
+    const curve = (
+      name: string,
+      xExpr: string,
+      yExpr: string,
+      from: string,
+      to: string,
+    ) =>
+      add("function_region", (p) => {
+        p.data.canvasId = plane.id;
+        p.data.name = name;
+        p.data.expression = "0";
+        p.data.curveMode = "parametric";
+        p.data.xExpr = xExpr;
+        p.data.yExpr = yExpr;
+        p.data.parameterFromExpr = from;
+        p.data.parameterToExpr = to;
+        p.data.showArea = false;
+        p.data.pointXs = [];
+      });
+    if (id === "ellipse") {
+      variable("a", 3, .5, 4, .1);
+      variable("b", 2, .5, 4, .1);
+      variable("t", 0, 0, 2 * Math.PI, .05, "rad");
+      const f = curve("f", "a*cos(t)", "b*sin(t)", "0", "2*pi");
+      f.data.parameterValueExpr = "t";
+      for (const name of ["a", "b", "t"]) {
+        add("control_slider", (p) => {
+          p.data.variableName = name;
+        });
+      }
+      text(
+        "## Una elipse completa\n$x(t)=a\\cos(t)$, $y(t)=b\\sin(t)$, de 0 a 2π.\n\nSemiejes: **{{a}}** y **{{b}}**. El punto móvil está en **({{round(a*cos(t),3)}}, {{round(b*sin(t),3)}})**.\n\nCambia los semiejes y el parámetro t. Una circunferencia se obtiene cuando a = b.",
+      );
+    } else if (id === "hyperbola") {
+      variable("a", 1, .5, 2, .1);
+      variable("b", 1, .5, 2, .1);
+      curve(
+        "derecha",
+        "a*(exp(t)+exp(-t))/2",
+        "b*(exp(t)-exp(-t))/2",
+        "-2",
+        "2",
+      );
+      curve(
+        "izquierda",
+        "-a*(exp(t)+exp(-t))/2",
+        "b*(exp(t)-exp(-t))/2",
+        "-2",
+        "2",
+      ).style.strokeColor = "#c47725";
+      for (const name of ["a", "b"]) {
+        add("control_slider", (p) => {
+          p.data.variableName = name;
+        });
+      }
+      text(
+        "## Dos ramas, una relación\n$x^2/a^2-y^2/b^2=1$. Las dos ramas son curvas paramétricas separadas: no se unen a través de la discontinuidad.\n\nUsamos coseno y seno hiperbólicos expresados mediante exp(t) y exp(−t). La ventana y el intervalo del parámetro recortan la representación.",
+      );
+    } else if (id === "polar-rose") {
+      variable("k", 3, 1, 7);
+      variable("theta", 0, 0, 2 * Math.PI, .05, "rad");
+      plane.data.mode = "polar";
+      plane.data.domainX = ["-3", "3"];
+      plane.data.rangeY = ["-3", "3"];
+      const f = curve("rosa", "t", "0", "0", "2*pi");
+      f.data.curveMode = "polar";
+      f.data.rExpr = "2*cos(k*theta)";
+      f.data.parameterValueExpr = "theta";
+      for (const name of ["k", "theta"]) {
+        add("control_slider", (p) => {
+          p.data.variableName = name;
+        });
+      }
+      text(
+        "## Una curva polar real\n$r(θ)=2\\cos(kθ)$. El radio puede ser negativo: entonces el punto aparece en la dirección opuesta.\n\nθ = **{{round(theta,3)}} rad**, radio = **{{round(2*cos(k*theta),3)}}**. Cambia k para comparar los pétalos. Los ejes tienen la misma escala.",
+      );
+    } else {
+      variable("vx", 4, 1, 10, .1, "m/s");
+      variable("vy", 10, 1, 20, .1, "m/s");
+      variable("g", 9.8, 1, 20, .1, "m/s²");
+      variable("t", 0, 0, 2.04, .02, "s");
+      plane.data.domainX = ["-1", "10"];
+      plane.data.rangeY = ["-1", "10"];
+      const f = curve("trayectoria", "vx*t", "vy*t-g*t^2/2", "0", "2*vy/g");
+      f.data.parameterValueExpr = "t";
+      add("control_slider", (p) => {
+        p.data.variableName = "t";
+        p.data.controlType = "play_pause";
+      });
+      text(
+        "## Trayectoria ideal sin resistencia del aire\n$x(t)=v_x t$, $y(t)=v_y t-gt^2/2$.\n\nTiempo: **{{round(t,2)}} s**. Posición: **({{round(vx*t,2)}}, {{round(vy*t-g*t^2/2,2)}}) m**.\n\nEl intervalo de la curva termina en el regreso a y=0. El control de tiempo se puede ajustar en Variables; este ejemplo usa las condiciones iniciales indicadas, no una simulación general de fuerzas.",
+      );
+    }
+  } else if (
+    ["venn-two", "venn-three", "logic-circuit", "logic-four"].includes(id)
+  ) {
+    scene.variables = [];
+    const four = id === "logic-four",
+      three = id === "venn-three" || id === "logic-circuit",
+      vars = four ? ["p", "q", "r", "s"] : three ? ["p", "q", "r"] : ["p", "q"];
+    const expression = four
+      ? "(p -> q) <-> (!r || s)"
+      : three
+      ? "(p && q) || !r"
+      : "p && !q";
+    // Variables are declared before renderers; controls can be revealed later in a presentation.
+    vars.forEach((name, i) => variable(name, i === 0 ? 1 : 0, 0, 1));
+    if (id.startsWith("venn")) {
+      add("geometric_shape", (p) => {
+        p.data.shape = three ? "venn_3" : "venn_2";
+        p.data.logicVariables = vars;
+        p.data.logicExpression = expression;
+        p.data.setLabels = vars.map((_, i) => String.fromCharCode(65 + i));
+      });
+    }
+    add("data_chart", (p) => {
+      p.data.chartType = "truth_table";
+      p.data.logicVariables = vars;
+      p.data.logicExpression = expression;
+    });
+    if (id === "logic-circuit") {
+      add("node_graph", (p) => {
+        p.data.graphType = "logic";
+        p.data.nodes = [
+          {
+            id: "p",
+            label: "p",
+            type: "input",
+            variableName: "p",
+            x: 80,
+            y: 100,
+          },
+          {
+            id: "q",
+            label: "q",
+            type: "input",
+            variableName: "q",
+            x: 80,
+            y: 240,
+          },
+          {
+            id: "r",
+            label: "r",
+            type: "input",
+            variableName: "r",
+            x: 80,
+            y: 440,
+          },
+          {
+            id: "both",
+            label: "Serie",
+            type: "and",
+            variableName: null,
+            x: 320,
+            y: 170,
+          },
+          {
+            id: "neg",
+            label: "Negación",
+            type: "not",
+            variableName: null,
+            x: 320,
+            y: 440,
+          },
+          {
+            id: "either",
+            label: "Paralelo",
+            type: "or",
+            variableName: null,
+            x: 540,
+            y: 300,
+          },
+          {
+            id: "out",
+            label: "Salida",
+            type: "output",
+            variableName: null,
+            x: 720,
+            y: 300,
+          },
+        ];
+        p.data.edges = [
+          { from: "p", to: "both", label: "" },
+          { from: "q", to: "both", label: "" },
+          { from: "r", to: "neg", label: "" },
+          { from: "both", to: "either", label: "" },
+          { from: "neg", to: "either", label: "" },
+          { from: "either", to: "out", label: "" },
+        ];
+      });
+    }
+    vars.forEach((name) =>
+      add("control_slider", (p) => {
+        p.label = `Proposición ${name}`;
+        p.data.variableName = name;
+        p.data.controlType = "toggle";
+      })
+    );
+    text(
+      `## Una expresión, varias representaciones\n**${expression}**.\n\n! significa negación; &&, conjunción; ||, disyunción; ->, implicación; <->, equivalencia. La tabla genera todas las combinaciones y resalta la actual.\n\n${
+        id.startsWith("venn")
+          ? "El sombreado representa el conjunto de combinaciones que hacen verdadera la expresión; el punto señala el estado actual."
+          : "Activa las proposiciones y compara la salida. En un circuito, AND equivale a interruptores en serie y OR a caminos en paralelo. Es un circuito lógico ideal, no un cálculo eléctrico."
+      }`,
+    );
+  } else if (id === "matrix-transform" || id === "matrix-system") {
+    scene.variables = [];
+    const matrix = add("data_chart", (p) => {
+      p.data.chartType = "matrix";
+      p.data.matrixName = "m";
+      p.data.matrixCells = id === "matrix-system"
+        ? [["2", "1", "0"], ["1", "2", "1"], ["0", "1", "2"]]
+        : [["a", "b"], ["0", "1"]];
+      p.data.showInverse = true;
+    });
+    if (id === "matrix-transform") {
+      variable("a", 1, -2, 2, .1);
+      variable("b", 0, -2, 2, .1);
+      const plane = add("coordinate_canvas", (p) => {
+        p.data.equalScale = true;
+        p.data.domainX = ["-5", "5"];
+        p.data.rangeY = ["-5", "5"];
+      });
+      for (const transformed of [false, true]) {
+        add("geometric_shape", (p) => {
+          p.data.canvasId = plane.id;
+          p.data.regular = false;
+          p.data.verticesExpr = [["0", "0"], ["2", "0"], ["2", "1"], [
+            "0",
+            "1",
+          ]];
+          p.data.showSideLengths = false;
+          p.label = transformed ? "Imagen transformada" : "Figura original";
+          p.data.transformMatrixId = transformed ? matrix.id : null;
+          p.style.fillColor = transformed ? "#a7e9d3" : "#aab2bf";
+          p.style.strokeColor = transformed ? "#38a989" : "#7c8798";
+        });
+      }
+      add("vector_segment", (p) => {
+        p.data.canvasId = plane.id;
+        p.data.start = ["0", "0"];
+        p.data.end = ["1", "1"];
+        p.data.transformMatrixId = matrix.id;
+        p.data.showAngleArc = false;
+      });
+      for (const name of ["a", "b"]) {
+        add("control_slider", (p) => {
+          p.data.variableName = name;
+        });
+      }
+      text(
+        "## Una matriz transforma todo el plano\n$m=\\begin{pmatrix}a&b\\\\0&1\\end{pmatrix}$. El gris muestra la figura original y el verde su imagen.\n\nDeterminante: **{{det(m)}}**. El área se multiplica por |det(m)|; un signo negativo invierte la orientación.\n\nCuando a=0, la figura colapsa y no hay inversa. La matriz puede aplicarse también a vectores desde sus campos de edición.",
+      );
+    } else {text(
+        "## Matrices y sistemas lineales\nDeterminante: **{{det(m)}}**. Inversa: **{{inv(m)}}**.\n\nPara $m x=(1,2,3)^T$, multiplicamos por la inversa:\n\n- x₁ = **{{inv(m,1,1)+2*inv(m,1,2)+3*inv(m,1,3)}}**\n- x₂ = **{{inv(m,2,1)+2*inv(m,2,2)+3*inv(m,2,3)}}**\n- x₃ = **{{inv(m,3,1)+2*inv(m,3,2)+3*inv(m,3,3)}}**\n\nEdita las celdas y observa cuándo existe una solución única. Los cálculos son numéricos; una matriz singular no tiene inversa.",
+      );}
+  } else if (id === "probability-tree") {
+    scene.variables = [];
+    add("node_graph", (p) => {
+      p.data.graphType = "relations";
+      p.data.nodes = [
+        {
+          id: "start",
+          label: "Inicio",
+          type: "relation",
+          variableName: null,
+          x: 80,
+          y: 300,
+        },
+        {
+          id: "c",
+          label: "Cara",
+          type: "relation",
+          variableName: null,
+          x: 340,
+          y: 170,
+        },
+        {
+          id: "s",
+          label: "Sello",
+          type: "relation",
+          variableName: null,
+          x: 340,
+          y: 430,
+        },
+        ...["CC", "CS", "SC", "SS"].map((label, i) => ({
+          id: label,
+          label,
+          type: "relation" as const,
+          variableName: null,
+          x: 680,
+          y: 80 + i * 140,
+        })),
+      ];
+      p.data.edges = [
+        { from: "start", to: "c", label: "1/2" },
+        { from: "start", to: "s", label: "1/2" },
+        ...["CC", "CS", "SC", "SS"].map((to, i) => ({
+          from: i < 2 ? "c" : "s",
+          to,
+          label: "1/2",
+        })),
+      ];
+    });
+    text(
+      "## Dos lanzamientos independientes\nCada camino tiene probabilidad $1/2\\times1/2=1/4$. Los cuatro resultados posibles suman 1.\n\nLas conexiones y sus etiquetas se editan como un diagrama general. Las probabilidades de este ejemplo son explicativas: el diagrama no impone automáticamente que cada rama sume 1.",
+    );
+  } else if (id === "number-jumps") {
     scene.variables = [];
     variable("a", 3, -4, 4);
     variable("b", 2, -4, 4);

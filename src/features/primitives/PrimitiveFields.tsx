@@ -1,140 +1,10 @@
-import { useState } from "react";
-import type { Primitive, PrimitiveScene } from "../../core/primitives/schema";
-function Text(
-  { label, value, onChange, type = "text" }: {
-    label: string;
-    value: string;
-    onChange: (s: string) => void;
-    type?: string;
-  },
-) {
-  const [draft, setDraft] = useState(value),
-    [focused, setFocused] = useState(false);
-  return (
-    <label>
-      {label}
-      <input
-        aria-label={label}
-        type={type}
-        value={focused ? draft : value}
-        onFocus={() => {
-          setFocused(true);
-          setDraft(value);
-        }}
-        onChange={(e) => {
-          setDraft(e.target.value);
-          onChange(e.target.value);
-        }}
-        onBlur={() => {
-          setFocused(false);
-          setDraft(value);
-        }}
-      />
-    </label>
-  );
-}
-function NumberField(
-  { label, value, onChange }: {
-    label: string;
-    value: number;
-    onChange: (n: number) => void;
-  },
-) {
-  return (
-    <Text
-      label={label}
-      value={String(value)}
-      type="number"
-      onChange={(s) => {
-        if (s.trim() && Number.isFinite(Number(s))) onChange(Number(s));
-      }}
-    />
-  );
-}
-function Toggle(
-  { label, value, onChange }: {
-    label: string;
-    value: boolean;
-    onChange: (b: boolean) => void;
-  },
-) {
-  return (
-    <label className="pc-toggle">
-      <input
-        type="checkbox"
-        checked={value}
-        onChange={(e) => onChange(e.target.checked)}
-      />
-      {label}
-    </label>
-  );
-}
-const optionLabels: Record<string, string> = {
-  cartesian: "Cartesiano",
-  polar: "Polar",
-  unit_circle: "Círculo unidad",
-  number_line: "Recta numérica",
-  blank_grid: "Cuadrícula",
-  rad: "Radianes",
-  deg: "Grados",
-  signed: "Integral con signo",
-  geometric: "Área geométrica",
-  none: "Ninguno",
-  arrow: "Flecha",
-  dot: "Punto",
-  bar: "Marca / barras",
-  apple: "Manzanas",
-  star: "Estrellas",
-  cube: "Cubos",
-  coin: "Monedas",
-  circle: "Círculos",
-  atom: "Átomos",
-  transparent: "Transparente",
-  card: "Tarjeta",
-  callout_info: "Nota informativa",
-  callout_step: "Paso de explicación",
-  slider: "Deslizador",
-  stepper: "Incrementos",
-  play_pause: "Animación",
-  polygon: "Polígono",
-  triangle: "Triángulo",
-  circle_fraction: "Fracción circular",
-  sector: "Sector circular",
-  prism: "Prisma (diagrama)",
-  cylinder: "Cilindro (diagrama)",
-  inclined_plane: "Plano inclinado (diagrama)",
-  block_mass: "Bloque (diagrama)",
-  table_only: "Tabla",
-  histogram: "Histograma",
-  pie: "Circular",
-  scatter: "Dispersión",
-  freehand: "Dibujo libre",
-  highlighter: "Resaltador",
-  callout_bubble: "Nota",
-};
-function Select(
-  { label, value, options, onChange }: {
-    label: string;
-    value: string;
-    options: readonly string[];
-    onChange: (s: string) => void;
-  },
-) {
-  return (
-    <label>
-      {label}
-      <select
-        aria-label={label}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-      >
-        {options.map((v) => (
-          <option key={v} value={v}>{optionLabels[v] ?? v}</option>
-        ))}
-      </select>
-    </label>
-  );
-}
+import {
+  nextSymbol,
+  type Primitive,
+  type PrimitiveScene,
+} from "../../core/primitives/schema";
+import { NumberField, Select, Text, Toggle } from "./FieldControls";
+import { AdvancedFields } from "./AdvancedFields";
 export function PrimitiveFields(
   { p, scene, onChange }: {
     p: Primitive;
@@ -210,76 +80,82 @@ export function PrimitiveFields(
               value={p.data.name}
               onChange={(name) => patch({ name })}
             />
-            <Text
-              label="Expresión de la función"
-              value={p.data.expression}
-              onChange={(expression) => patch({ expression })}
-            />
-            <Select
-              label="Unidad angular"
-              value={p.data.angleUnit}
-              options={["rad", "deg"]}
-              onChange={(angleUnit) => patch({ angleUnit })}
-            />
-            <Toggle
-              label="Mostrar derivada"
-              value={p.data.showDerivative}
-              onChange={(showDerivative) => patch({ showDerivative })}
-            />
-            <Toggle
-              label="Mostrar tangente"
-              value={p.data.showTangent}
-              onChange={(showTangent) => patch({ showTangent })}
-            />
-            <Text
-              label="Tangente en x"
-              value={p.data.tangentAt}
-              onChange={(tangentAt) => patch({ tangentAt })}
-            />
-            <Toggle
-              label="Sombrear y calcular área"
-              value={p.data.showArea}
-              onChange={(showArea) => patch({ showArea })}
-            />
-            {p.data.showArea && (
+            {(!p.data.curveMode || p.data.curveMode === "cartesian") && (
               <>
                 <Text
-                  label="Desde x"
-                  value={p.data.fromExpr}
-                  onChange={(fromExpr) => patch({ fromExpr })}
-                />
-                <Text
-                  label="Hasta x"
-                  value={p.data.toExpr}
-                  onChange={(toExpr) => patch({ toExpr })}
-                />
-                <Text
-                  label="Segunda curva (opcional)"
-                  value={p.data.secondaryExpression}
-                  onChange={(secondaryExpression) =>
-                    patch({ secondaryExpression })}
+                  label="Expresión de la función"
+                  value={p.data.expression}
+                  onChange={(expression) => patch({ expression })}
                 />
                 <Select
-                  label="Cálculo de la región"
-                  value={p.data.areaMode}
-                  options={["signed", "geometric"]}
-                  onChange={(areaMode) => patch({ areaMode })}
+                  label="Unidad angular"
+                  value={p.data.angleUnit}
+                  options={["rad", "deg"]}
+                  onChange={(angleUnit) => patch({ angleUnit })}
+                />
+                <Toggle
+                  label="Mostrar derivada"
+                  value={p.data.showDerivative}
+                  onChange={(showDerivative) => patch({ showDerivative })}
+                />
+                <Toggle
+                  label="Mostrar tangente"
+                  value={p.data.showTangent}
+                  onChange={(showTangent) => patch({ showTangent })}
                 />
                 <Text
-                  label="Variable del resultado"
-                  value={p.data.resultName}
-                  onChange={(resultName) => patch({ resultName })}
+                  label="Tangente en x"
+                  value={p.data.tangentAt}
+                  onChange={(tangentAt) => patch({ tangentAt })}
+                />
+                <Toggle
+                  label="Sombrear y calcular área"
+                  value={p.data.showArea}
+                  onChange={(showArea) => patch({ showArea })}
+                />
+                {p.data.showArea && (
+                  <>
+                    <Text
+                      label="Desde x"
+                      value={p.data.fromExpr}
+                      onChange={(fromExpr) => patch({ fromExpr })}
+                    />
+                    <Text
+                      label="Hasta x"
+                      value={p.data.toExpr}
+                      onChange={(toExpr) => patch({ toExpr })}
+                    />
+                    <Text
+                      label="Segunda curva (opcional)"
+                      value={p.data.secondaryExpression}
+                      onChange={(secondaryExpression) =>
+                        patch({ secondaryExpression })}
+                    />
+                    <Select
+                      label="Cálculo de la región"
+                      value={p.data.areaMode}
+                      options={["signed", "geometric"]}
+                      onChange={(areaMode) => patch({ areaMode })}
+                    />
+                    <Text
+                      label="Variable del resultado"
+                      value={p.data.resultName}
+                      onChange={(resultName) => patch({ resultName })}
+                    />
+                  </>
+                )}
+                <Text
+                  label="Puntos de la curva (separados por ; )"
+                  value={p.data.pointXs.join("; ")}
+                  onChange={(v) =>
+                    patch({
+                      pointXs: v.split(";").map((s) => s.trim()).filter(
+                        Boolean,
+                      ),
+                    })}
                 />
               </>
             )}
-            <Text
-              label="Puntos de la curva (separados por ; )"
-              value={p.data.pointXs.join("; ")}
-              onChange={(v) =>
-                patch({
-                  pointXs: v.split(";").map((s) => s.trim()).filter(Boolean),
-                })}
-            />
           </>
         )}
         {p.kind === "vector_segment" && (
@@ -405,7 +281,7 @@ export function PrimitiveFields(
             <Select
               label="Tipo de control"
               value={p.data.controlType}
-              options={["slider", "stepper", "play_pause"]}
+              options={["slider", "stepper", "play_pause", "toggle"]}
               onChange={(controlType) => patch({ controlType })}
             />
             <NumberField
@@ -429,82 +305,106 @@ export function PrimitiveFields(
                 "cylinder",
                 "inclined_plane",
                 "block_mass",
+                "venn_2",
+                "venn_3",
               ]}
-              onChange={(shape) => patch({ shape })}
+              onChange={(shape) =>
+                patch({
+                  shape,
+                  ...(shape.startsWith("venn")
+                    ? {
+                      canvasId: null,
+                      logicVariables: shape === "venn_3"
+                        ? ["p", "q", "r"]
+                        : ["p", "q"],
+                      logicExpression: "p && q",
+                      setLabels: shape === "venn_3"
+                        ? ["A", "B", "C"]
+                        : ["A", "B"],
+                    }
+                    : {}),
+                })}
             />
-            <Select
-              label="Unidad"
-              value={p.data.unit}
-              options={["u", "mm", "cm", "m", "km"]}
-              onChange={(unit) => patch({ unit })}
-            />
-            {["circle_fraction", "sector"].includes(p.data.shape)
-              ? (
-                <>
-                  <NumberField
-                    label="Partes iguales"
-                    value={p.data.divisions}
-                    onChange={(divisions) => patch({ divisions })}
-                  />
-                  <Text
-                    label="Porciones coloreadas"
-                    value={p.data.shadedExpr}
-                    onChange={(shadedExpr) => patch({ shadedExpr })}
-                  />
-                  <Text
-                    label="Radio"
-                    value={p.data.radiusExpr}
-                    onChange={(radiusExpr) => patch({ radiusExpr })}
-                  />
-                </>
-              )
-              : (
-                <>
-                  <Toggle
-                    label="Figura regular"
-                    value={p.data.regular}
-                    onChange={(regular) => patch({ regular })}
-                  />
-                  {p.data.regular
-                    ? (
-                      <>
-                        <NumberField
-                          label="Número de lados"
-                          value={p.data.sides}
-                          onChange={(sides) => patch({ sides })}
-                        />
-                        <Text
-                          label="Medida de cada lado"
-                          value={p.data.sideExpr}
-                          onChange={(sideExpr) => patch({ sideExpr })}
-                        />
-                      </>
-                    )
-                    : (
-                      <Text
-                        label="Vértices x,y (separados por ; )"
-                        value={p.data.verticesExpr.map((pair) => pair.join(","))
-                          .join("; ")}
-                        onChange={(v) => {
-                          const pairs = v.split(";").map((pair) =>
-                            pair.split(",").map((s) => s.trim())
-                          );
-                          patch({ verticesExpr: pairs });
-                        }}
+            {!p.data.shape.startsWith("venn") && (
+              <>
+                <Select
+                  label="Unidad"
+                  value={p.data.unit}
+                  options={["u", "mm", "cm", "m", "km"]}
+                  onChange={(unit) => patch({ unit })}
+                />
+                {["circle_fraction", "sector"].includes(p.data.shape)
+                  ? (
+                    <>
+                      <NumberField
+                        label="Partes iguales"
+                        value={p.data.divisions}
+                        onChange={(divisions) => patch({ divisions })}
                       />
-                    )}
-                  <Toggle
-                    label="Medidas de lados"
-                    value={p.data.showSideLengths}
-                    onChange={(showSideLengths) => patch({ showSideLengths })}
-                  />
-                  <Toggle
-                    label="Ángulos interiores"
-                    value={p.data.showAngles}
-                    onChange={(showAngles) => patch({ showAngles })}
-                  />
-                </>
-              )}
+                      <Text
+                        label="Porciones coloreadas"
+                        value={p.data.shadedExpr}
+                        onChange={(shadedExpr) => patch({ shadedExpr })}
+                      />
+                      <Text
+                        label="Radio"
+                        value={p.data.radiusExpr}
+                        onChange={(radiusExpr) => patch({ radiusExpr })}
+                      />
+                    </>
+                  )
+                  : (
+                    <>
+                      <Toggle
+                        label="Figura regular"
+                        value={p.data.regular}
+                        onChange={(regular) => patch({ regular })}
+                      />
+                      {p.data.regular
+                        ? (
+                          <>
+                            <NumberField
+                              label="Número de lados"
+                              value={p.data.sides}
+                              onChange={(sides) => patch({ sides })}
+                            />
+                            <Text
+                              label="Medida de cada lado"
+                              value={p.data.sideExpr}
+                              onChange={(sideExpr) => patch({ sideExpr })}
+                            />
+                          </>
+                        )
+                        : (
+                          <Text
+                            label="Vértices x,y (separados por ; )"
+                            value={p.data.verticesExpr.map((pair) =>
+                              pair.join(",")
+                            )
+                              .join("; ")}
+                            onChange={(v) => {
+                              const pairs = v.split(";").map((pair) =>
+                                pair.split(",").map((s) => s.trim())
+                              );
+                              patch({ verticesExpr: pairs });
+                            }}
+                          />
+                        )}
+                      <Toggle
+                        label="Medidas de lados"
+                        value={p.data.showSideLengths}
+                        onChange={(showSideLengths) =>
+                          patch({ showSideLengths })}
+                      />
+                      <Toggle
+                        label="Ángulos interiores"
+                        value={p.data.showAngles}
+                        onChange={(showAngles) => patch({ showAngles })}
+                      />
+                    </>
+                  )}
+              </>
+            )}
           </>
         )}
         {p.kind === "data_chart" && (
@@ -512,30 +412,60 @@ export function PrimitiveFields(
             <Select
               label="Tipo de gráfico"
               value={p.data.chartType}
-              options={["table_only", "bar", "histogram", "pie", "scatter"]}
-              onChange={(chartType) => patch({ chartType })}
-            />
-            <Toggle
-              label="Regresión lineal"
-              value={p.data.showLinearRegression}
-              onChange={(showLinearRegression) =>
-                patch({ showLinearRegression })}
-            />
-            <Text
-              label="Datos: etiqueta | x | valor (separados por ; )"
-              value={p.data.rows.map((r) =>
-                `${r.label} | ${r.xExpr} | ${r.valueExpr}`
-              ).join("; ")}
-              onChange={(v) =>
+              options={[
+                "table_only",
+                "bar",
+                "histogram",
+                "pie",
+                "scatter",
+                "truth_table",
+                "matrix",
+              ]}
+              onChange={(chartType) =>
                 patch({
-                  rows: v.split(";").map((line) => {
-                    const [label, xExpr, valueExpr] = line.split("|").map((s) =>
-                      s.trim()
-                    );
-                    return { label, xExpr, valueExpr };
-                  }),
+                  chartType,
+                  ...(chartType === "matrix"
+                    ? {
+                      matrixName: nextSymbol(
+                        scene,
+                        p.data.matrixName ?? "m",
+                        p.id,
+                      ),
+                      matrixCells: p.data.matrixCells ??
+                        [["1", "0"], ["0", "1"]],
+                      showInverse: true,
+                    }
+                    : {}),
+                  ...(chartType === "truth_table"
+                    ? { logicVariables: ["p", "q"], logicExpression: "p && q" }
+                    : {}),
                 })}
             />
+            {!["matrix", "truth_table"].includes(p.data.chartType) && (
+              <>
+                <Toggle
+                  label="Regresión lineal"
+                  value={p.data.showLinearRegression}
+                  onChange={(showLinearRegression) =>
+                    patch({ showLinearRegression })}
+                />
+                <Text
+                  label="Datos: etiqueta | x | valor (separados por ; )"
+                  value={p.data.rows.map((r) =>
+                    `${r.label} | ${r.xExpr} | ${r.valueExpr}`
+                  ).join("; ")}
+                  onChange={(v) =>
+                    patch({
+                      rows: v.split(";").map((line) => {
+                        const [label, xExpr, valueExpr] = line.split("|").map((
+                          s,
+                        ) => s.trim());
+                        return { label, xExpr, valueExpr };
+                      }),
+                    })}
+                />
+              </>
+            )}
           </>
         )}
         {p.kind === "annotation_stroke" && (
@@ -561,6 +491,7 @@ export function PrimitiveFields(
               )}
           </>
         )}
+        <AdvancedFields p={p} scene={scene} onChange={onChange} />
       </div>
     </div>
   );

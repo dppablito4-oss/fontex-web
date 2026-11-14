@@ -9,6 +9,8 @@ import {
   sceneFunctions,
   userScope,
 } from "./math.ts";
+import { graphValues, logic, truthTable } from "./logic.ts";
+import { checkMatrix } from "./linear-algebra.ts";
 const finite = z.number().finite();
 const expr = z.string().trim().min(1).max(500);
 const id = z.string().regex(/^[a-zA-Z0-9_-]{1,100}$/);
@@ -45,6 +47,14 @@ const base = {
   presentationStep: z.number().int().min(1).max(100),
   style,
 };
+const graphNode = z.object({
+  id,
+  label: z.string().max(60),
+  type: z.enum(["relation", "input", "and", "or", "not", "output"]),
+  variableName: symbol.nullable(),
+  x: finite.min(55).max(745),
+  y: finite.min(35).max(565),
+}).strict();
 export const primitiveSchema = z.discriminatedUnion("kind", [
   z.object({
     ...base,
@@ -73,6 +83,13 @@ export const primitiveSchema = z.discriminatedUnion("kind", [
       canvasId: id,
       name: symbol,
       expression: expr,
+      curveMode: z.enum(["cartesian", "parametric", "polar"]).nullish(),
+      xExpr: expr.nullish(),
+      yExpr: expr.nullish(),
+      rExpr: expr.nullish(),
+      parameterFromExpr: expr.nullish(),
+      parameterToExpr: expr.nullish(),
+      parameterValueExpr: expr.nullish(),
       secondaryExpression: z.string().max(500),
       angleUnit: z.enum(["rad", "deg"]),
       showDerivative: z.boolean(),
@@ -98,6 +115,8 @@ export const primitiveSchema = z.discriminatedUnion("kind", [
       showMagnitude: z.boolean(),
       showAngleArc: z.boolean(),
       arcHeight: finite.min(0).max(120).nullish(),
+      transformMatrixId: id.nullish(),
+      transformInverse: z.boolean().nullish(),
     }).strict(),
   }).strict(),
   z.object({
@@ -125,7 +144,7 @@ export const primitiveSchema = z.discriminatedUnion("kind", [
     kind: z.literal("control_slider"),
     data: z.object({
       variableName: symbol,
-      controlType: z.enum(["slider", "stepper", "play_pause"]),
+      controlType: z.enum(["slider", "stepper", "play_pause", "toggle"]),
       speed: finite.min(.05).max(20),
     }).strict(),
   }).strict(),
@@ -143,6 +162,8 @@ export const primitiveSchema = z.discriminatedUnion("kind", [
         "cylinder",
         "inclined_plane",
         "block_mass",
+        "venn_2",
+        "venn_3",
       ]),
       regular: z.boolean(),
       sides: z.number().int().min(3).max(24),
@@ -155,19 +176,48 @@ export const primitiveSchema = z.discriminatedUnion("kind", [
       showAngles: z.boolean(),
       showSideLengths: z.boolean(),
       showCenterOfMass: z.boolean(),
+      logicVariables: z.array(symbol).min(2).max(3).nullish(),
+      logicExpression: expr.nullish(),
+      setLabels: z.array(z.string().min(1).max(30)).min(2).max(3).nullish(),
+      transformMatrixId: id.nullish(),
+      transformInverse: z.boolean().nullish(),
     }).strict(),
   }).strict(),
   z.object({
     ...base,
     kind: z.literal("data_chart"),
     data: z.object({
-      chartType: z.enum(["table_only", "bar", "histogram", "pie", "scatter"]),
+      chartType: z.enum([
+        "table_only",
+        "bar",
+        "histogram",
+        "pie",
+        "scatter",
+        "truth_table",
+        "matrix",
+      ]),
       headers: z.tuple([z.string().max(60), z.string().max(60)]),
       rows: z.array(
         z.object({ label: z.string().max(60), xExpr: expr, valueExpr: expr })
           .strict(),
       ).max(200),
       showLinearRegression: z.boolean(),
+      logicVariables: z.array(symbol).min(1).max(4).nullish(),
+      logicExpression: expr.nullish(),
+      matrixName: symbol.nullish(),
+      matrixCells: z.array(z.array(expr).min(2).max(3)).min(2).max(3).nullish(),
+      showInverse: z.boolean().nullish(),
+    }).strict(),
+  }).strict(),
+  z.object({
+    ...base,
+    kind: z.literal("node_graph"),
+    data: z.object({
+      graphType: z.enum(["relations", "logic"]),
+      nodes: z.array(graphNode).min(1).max(32),
+      edges: z.array(
+        z.object({ from: id, to: id, label: z.string().max(60) }).strict(),
+      ).max(64),
     }).strict(),
   }).strict(),
   z.object({
@@ -246,6 +296,15 @@ export function parsePrimitiveScene(value: unknown): PrimitiveScene {
       outputs.add(p.data.resultName);
     }
   }
+  for (const p of scene.primitives) {
+    if (p.kind === "data_chart" && p.data.chartType === "matrix") {
+      const name = p.data.matrixName;
+      if (
+        !name || reservedNames.has(name) || names.has(name) || outputs.has(name)
+      ) throw Error("Nombre de matriz repetido o reservado.");
+      outputs.add(name);
+    }
+  }
   const scope = userScope(scene), defs = sceneFunctions(scene);
   for (const p of scene.primitives) {
     if ("canvasId" in p.data && p.data.canvasId !== null) {
@@ -256,8 +315,33 @@ export function parsePrimitiveScene(value: unknown): PrimitiveScene {
       ) throw new Error("La referencia debe apuntar a un plano existente.");
     }
     if (p.kind === "function_region") {
-      compile(p.data.expression, scope, p.data.angleUnit);
-      if (p.data.secondaryExpression) {
+      const mode = p.data.curveMode ?? "cartesian";
+      if (mode !== "cartesian") {
+        if (p.data.showArea || p.data.showDerivative || p.data.showTangent) {
+          throw Error(
+            "Área, derivada y tangente están disponibles para curvas cartesianas.",
+          );
+        }
+        const expressions = mode === "parametric"
+          ? [p.data.xExpr, p.data.yExpr]
+          : [p.data.rExpr];
+        for (const source of expressions) {
+          if (!source) throw Error("Completa las expresiones de la curva.");
+          compile(
+            source.replace(mode === "polar" ? /\btheta\b/g : /\bt\b/g, "x"),
+            scope,
+            p.data.angleUnit,
+          );
+        }
+        const lo = scalar(p.data.parameterFromExpr ?? "0", scope),
+          hi = scalar(p.data.parameterToExpr ?? "2*pi", scope);
+        if (
+          !Number.isFinite(hi - lo) || hi <= lo ||
+          Math.max(Math.abs(lo), Math.abs(hi)) > 10000
+        ) throw Error("Revisa el intervalo del parámetro.");
+        if (p.data.parameterValueExpr) scalar(p.data.parameterValueExpr, scope);
+      } else compile(p.data.expression, scope, p.data.angleUnit);
+      if (mode === "cartesian" && p.data.secondaryExpression) {
         compile(p.data.secondaryExpression, scope, p.data.angleUnit);
       }
       for (
@@ -269,8 +353,92 @@ export function parsePrimitiveScene(value: unknown): PrimitiveScene {
         ]
       ) scalar(x, scope, defs);
     }
-    if (p.kind === "control_slider" && !names.has(p.data.variableName)) {
-      throw new Error("El control requiere una variable existente.");
+    if (p.kind === "control_slider") {
+      const variable = scene.variables.find((v) =>
+        v.name === p.data.variableName
+      );
+      if (!variable) {
+        throw new Error("El control requiere una variable existente.");
+      }
+      if (
+        p.data.controlType === "toggle" &&
+        (variable.min !== 0 || variable.max !== 1 || variable.step !== 1 ||
+          ![0, 1].includes(variable.value))
+      ) {
+        throw Error(
+          "Un interruptor requiere una variable 0/1, rango 0–1 y paso 1.",
+        );
+      }
+    }
+    if (
+      (p.kind === "vector_segment" || p.kind === "geometric_shape") &&
+      p.data.transformMatrixId
+    ) {
+      if (
+        p.kind === "geometric_shape" &&
+        !["polygon", "triangle"].includes(p.data.shape)
+      ) {
+        throw Error(
+          "Sólo polígonos y triángulos admiten una transformación lineal.",
+        );
+      }
+      const matrix = scene.primitives.find((n) =>
+        n.id === p.data.transformMatrixId
+      );
+      if (
+        !matrix || matrix.kind !== "data_chart" ||
+        matrix.data.chartType !== "matrix" ||
+        matrix.data.matrixCells?.length !== 2
+      ) {
+        throw Error(
+          "La transformación requiere una matriz 2×2 de esta escena.",
+        );
+      }
+    }
+    if (p.kind === "node_graph") {
+      const ids = new Set(p.data.nodes.map((n) => n.id)),
+        edges = new Set<string>();
+      if (ids.size !== p.data.nodes.length) {
+        throw Error("Los nodos deben tener identidades distintas.");
+      }
+      for (const e of p.data.edges) {
+        const key = `${e.from}:${e.to}`;
+        if (!ids.has(e.from) || !ids.has(e.to) || edges.has(key)) {
+          throw Error("Conexión repetida o sin nodo válido.");
+        }
+        edges.add(key);
+      }
+      if (p.data.graphType === "logic") {
+        graphValues(p.data.nodes, p.data.edges, scope);
+      }
+    }
+    if (
+      (p.kind === "data_chart" && p.data.chartType === "truth_table") ||
+      (p.kind === "geometric_shape" &&
+        ["venn_2", "venn_3"].includes(p.data.shape))
+    ) {
+      const variables = p.data.logicVariables ??
+        (p.kind === "geometric_shape" && p.data.shape === "venn_3"
+          ? ["p", "q", "r"]
+          : ["p", "q"]);
+      const expression = p.data.logicExpression ?? "p && q";
+      truthTable(expression, variables);
+      if (
+        p.kind === "geometric_shape" &&
+        (variables.length !== (p.data.shape === "venn_3" ? 3 : 2) ||
+          (p.data.setLabels && p.data.setLabels.length !== variables.length))
+      ) throw Error("Revisa las etiquetas y variables de los conjuntos.");
+      for (const name of logic(expression).variables) {
+        if (Object.hasOwn(scope, name) && ![0, 1].includes(scope[name]!)) {
+          throw Error(`La proposición ${name} requiere 0 o 1.`);
+        }
+      }
+    }
+    if (p.kind === "data_chart" && p.data.chartType === "matrix") {
+      if (!p.data.matrixCells) throw Error("Completa las celdas de la matriz.");
+      checkMatrix(
+        p.data.matrixCells.map((row) => row.map((cell) => scalar(cell, scope))),
+      );
     }
     if (p.kind === "coordinate_canvas") {
       const [a, b] = p.data.domainX.map((x) => scalar(x, scope)),
@@ -336,7 +504,10 @@ export function parsePrimitiveScene(value: unknown): PrimitiveScene {
         }
       }
     }
-    if (p.kind === "data_chart") {
+    if (
+      p.kind === "data_chart" &&
+      !["matrix", "truth_table"].includes(p.data.chartType)
+    ) {
       for (const row of p.data.rows) {
         if (
           [scalar(row.xExpr, scope, defs), scalar(row.valueExpr, scope, defs)]
@@ -397,7 +568,15 @@ export function applyPrimitivePatch(
       next.primitives = next.primitives.filter((p) =>
         p.id !== action.id &&
         !("canvasId" in p.data && p.data.canvasId === action.id)
-      );
+      ).map((p): Primitive => {
+        if (
+          p.kind === "vector_segment" && p.data.transformMatrixId === action.id
+        ) return { ...p, data: { ...p.data, transformMatrixId: null } };
+        if (
+          p.kind === "geometric_shape" && p.data.transformMatrixId === action.id
+        ) return { ...p, data: { ...p.data, transformMatrixId: null } };
+        return p;
+      });
     } else {
       const exists = next.primitives.some((p) => p.id === action.primitive.id);
       if (exists !== (action.kind === "update_primitive")) {
@@ -427,6 +606,29 @@ export function newPrimitiveScene(title = "Mi lienzo"): PrimitiveScene {
     conversation: [],
   };
 }
+export function nextSymbol(
+  scene: PrimitiveScene,
+  preferred: string,
+  excludeId?: string,
+): string {
+  const taken = new Set([
+    ...reservedNames,
+    ...scene.variables.map((v) => v.name),
+    ...scene.primitives.filter((p) => p.id !== excludeId).flatMap((p) =>
+      p.kind === "function_region"
+        ? [p.data.name, p.data.resultName]
+        : p.kind === "data_chart" && p.data.chartType === "matrix" &&
+            p.data.matrixName
+        ? [p.data.matrixName]
+        : []
+    ),
+  ]);
+  const base = preferred.slice(0, 24);
+  if (!taken.has(base)) return base;
+  let n = 2;
+  while (taken.has(`${base}${n}`)) n++;
+  return `${base}${n}`;
+}
 export function createPrimitive<K extends PrimitiveKind>(
   kind: K,
   scene: PrimitiveScene,
@@ -436,7 +638,12 @@ export function createPrimitive<K extends PrimitiveKind>(
   const taken = new Set([
     ...scene.variables.map((v) => v.name),
     ...scene.primitives.flatMap((p) =>
-      p.kind === "function_region" ? [p.data.name, p.data.resultName] : []
+      p.kind === "function_region"
+        ? [p.data.name, p.data.resultName]
+        : p.kind === "data_chart" && p.data.chartType === "matrix" &&
+            p.data.matrixName
+        ? [p.data.matrixName]
+        : []
     ),
   ]);
   while (taken.has(`f${index}`) || taken.has(`area${index}`)) index++;
@@ -517,6 +724,28 @@ export function createPrimitive<K extends PrimitiveKind>(
         valueExpr: "5",
       }, { label: "C", xExpr: "3", valueExpr: "a*4" }],
       showLinearRegression: false,
+    },
+    node_graph: {
+      graphType: "relations",
+      nodes: [
+        {
+          id: "start",
+          label: "Idea inicial",
+          type: "relation",
+          variableName: null,
+          x: 160,
+          y: 180,
+        },
+        {
+          id: "result",
+          label: "Resultado",
+          type: "relation",
+          variableName: null,
+          x: 620,
+          y: 180,
+        },
+      ],
+      edges: [{ from: "start", to: "result", label: "relación" }],
     },
     annotation_stroke: {
       mode: "freehand",

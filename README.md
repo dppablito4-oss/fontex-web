@@ -1,20 +1,22 @@
-# Fontex 0.7.1
+# Fontex 0.8.0
 
 **Un lienzo matemático componible y acompañamiento académico con fuentes documentales.**
 
-El editor principal en `/#/lienzo` combina nueve familias de elementos: planos, funciones y regiones, vectores, pictogramas, texto matemático, controles, figuras, gráficos de datos y anotaciones. Las 25 plantillas son escenas editables hechas con esas primitivas. La IA propone JSON validado; el motor calcula localmente y no ejecuta código generado.
+El editor principal en `/#/lienzo` combina diez familias de elementos: planos, funciones y regiones, vectores, pictogramas, texto matemático, controles, figuras, gráficos de datos, anotaciones y nodos/circuitos. Las 36 plantillas son escenas editables hechas con esas primitivas. La IA propone JSON validado; el motor calcula localmente y no ejecuta código generado.
 
 Una variable compartida puede actualizar a la vez una figura, una curva y su explicación. El editor ofrece selección, movimiento, giro por arrastre y tamaño en escritorio, edición contextual, historial, presentación por pasos y PDF. En móvil conserva una lectura vertical legible y un botón flotante de chat. Fontex AI transmite sus respuestas y permite pasar de conversar a construir mediante el botón **Crear en el lienzo**.
 
-Consulta [el alcance y los límites de las primitivas](docs/primitivas-v0.7.md) y [las mejoras de v0.7.1](docs/primitivas-v0.7.1.md). La versión anterior del código está en `respaldo/pre-primitivas-2026-11-14` (`930dcb9`). El editor nuevo comienza con escenas v2 independientes; no importa los documentos v1. La consolidación v0.7.1 retiró las cuatro escenas anteriores de la tabla activa, conservó una copia administrativa privada y validó la restricción de formato.
+Consulta [el alcance y los límites de las primitivas](docs/primitivas-v0.7.md) y [la consolidación v0.7.1](docs/primitivas-v0.7.1.md) y [las capacidades de v0.8.0](docs/primitivas-v0.8.md). La versión anterior del código está en `respaldo/pre-primitivas-2026-11-14` (`930dcb9`). El editor nuevo comienza con escenas v2 independientes; no importa los documentos v1. La consolidación v0.7.1 retiró las cuatro escenas anteriores de la tabla activa, conservó una copia administrativa privada y validó la restricción de formato.
 
 ## Capacidades
 
 | Área | Estado |
 |---|---|
-| Lienzo | Nueve familias componibles, 25 plantillas, variables compartidas, historial y presentación |
-| Matemática local | AST acotado, grados/radianes, funciones reales de x, derivadas, tangentes, raíces reales hasta grado 4 e integración numérica aproximada |
+| Lienzo | Diez familias componibles, 36 plantillas, variables compartidas, historial y presentación |
+| Matemática local | Curvas cartesianas/paramétricas/polares, AST acotado, grados/radianes, funciones reales de x, derivadas, tangentes, raíces reales hasta grado 4 e integración numérica aproximada |
 | Geometría y datos | Figuras regulares/irregulares simples, unidades, fracciones circulares, conteo, tablas, gráficos y regresión |
+| Conjuntos y lógica | Venn de 2/3 conjuntos, tablas de hasta 16 filas, interruptores y circuitos ideales AND/OR/NOT |
+| Álgebra lineal | Matrices 2×2/3×3, determinante, inversa y transformación 2D de vectores/polígonos |
 | Diagramas físicos | Representaciones esquemáticas de cuerpos; no simulación dinámica ni cálculo 3D |
 | Guardado | Escenas privadas v2 y conversación en `visual_scenes`, copia local por cuenta, revisiones y conservación de copias en conflictos |
 | Aula de práctica | 19 guías introductorias, 38 páginas y 54 ejercicios; contenido independiente del motor del lienzo |
@@ -23,7 +25,7 @@ Consulta [el alcance y los límites de las primitivas](docs/primitivas-v0.7.md) 
 
 Hasta 80 primitivas, 24 variables, 80 turnos y 1 MiB por escena. Los invitados usan una biblioteca local separada de las cuentas. JSON permite descargar y abrir una copia portátil. No hay colaboración simultánea ni reapertura offline desde cero garantizada.
 
-Las curvas, raíces e integrales son aproximaciones numéricas. La integración distingue signo y área geométrica, estima error y rechaza algunos casos no definidos o sin convergencia; no garantiza detectar todas las discontinuidades. No incluye raíces complejas, integración simbólica, curvas paramétricas generales ni superficies multivariables. Las explicaciones libres de IA pueden contener errores.
+Las curvas, raíces e integrales son aproximaciones numéricas. La integración distingue signo y área geométrica, estima error y rechaza algunos casos no definidos o sin convergencia; no garantiza detectar todas las discontinuidades. No incluye raíces complejas, integración simbólica ni superficies multivariables. Las nuevas curvas paramétricas/polares se dibujan numéricamente; no amplían todavía el cálculo de áreas ni las derivadas a esos modos. Las explicaciones libres de IA pueden contener errores.
 
 ## Desarrollo local
 
@@ -74,12 +76,13 @@ npm test
 npm run build
 ```
 
-Los workflows comprueban frontend, handlers de Edge Functions y SQL/RLS. Los handlers se prueban con proveedor simulado; la verificación del proveedor real se registra por separado. Las siete integraciones remotas de Vitest requieren configuración y se omiten cuando falta. `npm run test:remote` exige esa configuración explícitamente; `npm run test:agent:remote` verifica el agente real con cuatro consultas pagadas y consentimiento por variable de entorno. El workflow manual y los requisitos se documentan en v0.7.1.
+Los workflows comprueban frontend, handlers de Edge Functions y SQL/RLS. Los handlers se prueban con proveedor simulado; la verificación del proveedor real se registra por separado. Las siete integraciones remotas de Vitest requieren configuración y se omiten cuando falta. `npm run test:remote` exige esa configuración explícitamente; `npm run test:agent:remote` verifica el agente real con cuatro consultas pagadas y consentimiento por variable de entorno. La batería `npm run test:agent:beta` añade tres generaciones reales para los modos v0.8. El workflow manual y los requisitos se documentan en v0.7.1/v0.8.
 
 El workflow `deploy-pages.yml` publica `dist/` al subir `main`. Variables de compilación: `VITE_BASE_PATH`, `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY`. Usa `/` para el dominio personalizado o `/fontex-web/` para el dominio estándar. El workflow incluye valores públicos del piloto como respaldo.
 
 La migración `replace_test_canvas_with_primitives` bloquea nuevas escrituras de formatos retirados y admite escenas v2. Conserva RLS por propietario y compare-and-set. No modifica Auth, la biblioteca PDF ni los datos académicos. Las cachés antiguas del editor se retiran al abrir la nueva aplicación. Publicar frontend, desplegar funciones y aplicar SQL son pasos independientes.
 
+- [Primitivas v0.8](docs/primitivas-v0.8.md)
 - [Primitivas v0.7](docs/primitivas-v0.7.md)
 - [Propuesta original](docs/plans/v0.7-primitivas-propuesta.md)
 - [Decisiones de integración](docs/plans/v0.7-primitivas-integracion.md)

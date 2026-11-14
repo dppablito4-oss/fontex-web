@@ -10,6 +10,10 @@ on:
         description: 'Run primitive agent E2E (4 billed AI requests)'
         type: boolean
         default: false
+      primitive_beta:
+        description: 'Run v0.8 beta agent E2E (3 billed AI requests)'
+        type: boolean
+        default: false
 permissions:
   contents: read
 jobs:
@@ -41,6 +45,24 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run test:agent:remote
+        env:
+          SUPABASE_TEST_URL: ${{ secrets.SUPABASE_TEST_URL }}
+          SUPABASE_TEST_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_TEST_PUBLISHABLE_KEY }}
+          FONTEX_TEST_EMAIL: ${{ secrets.FONTEX_TEST_EMAIL }}
+          FONTEX_TEST_PASSWORD: ${{ secrets.FONTEX_TEST_PASSWORD }}
+          FONTEX_RUN_PAID_AGENT_TESTS: '1'
+  primitive-beta:
+    if: inputs.primitive_beta
+    runs-on: ubuntu-latest
+    environment: remote-tests
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run test:agent:beta
         env:
           SUPABASE_TEST_URL: ${{ secrets.SUPABASE_TEST_URL }}
           SUPABASE_TEST_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_TEST_PUBLISHABLE_KEY }}

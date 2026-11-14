@@ -2,6 +2,7 @@ import {
   type PointerEvent,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -35,6 +36,7 @@ import {
   createPrimitive,
   MAX_PRIMITIVE_BYTES,
   newPrimitiveScene,
+  nextSymbol,
   parsePrimitiveScene,
   type Primitive,
   type PrimitiveKind,
@@ -45,6 +47,10 @@ import { sceneFunctions, sceneScope } from "../../core/primitives/math";
 import { templates, templateScene } from "../../core/primitives/templates";
 import { requestPrimitiveAgent } from "./agent";
 import { draggedRotation } from "./gestures";
+import {
+  advanceStep,
+  presentationSteps,
+} from "../../core/primitives/presentation";
 import "./primitives.css";
 type Tab = "chat" | "elements" | "templates" | "variables";
 type DragKind = "move" | "resize" | "rotate";
@@ -305,6 +311,13 @@ function Editor(
   function update(p: Primitive) {
     return commit({
       ...live.current,
+      variables: p.kind === "control_slider" && p.data.controlType === "toggle"
+        ? live.current.variables.map((v) =>
+          v.name === p.data.variableName
+            ? { ...v, value: Number(Boolean(v.value)), min: 0, max: 1, step: 1 }
+            : v
+        )
+        : live.current.variables,
       primitives: live.current.primitives.map((old) =>
         old.id === p.id ? p : old
       ),
@@ -395,10 +408,8 @@ function Editor(
   const selected = scene.primitives.find((p) => p.id === selectedId),
     scope = sceneScope(scene),
     functions = sceneFunctions(scene);
-  const maxStep = Math.max(
-    1,
-    ...scene.primitives.map((p) => p.presentationStep),
-  );
+  const steps = useMemo(() => presentationSteps(scene), [scene]);
+  const stepIndex = Math.max(0, steps.indexOf(step));
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
       if (
@@ -415,9 +426,11 @@ function Editor(
       }
       if (presenting && ["ArrowRight", "ArrowLeft"].includes(e.key)) {
         e.preventDefault();
-        setStep((s) =>
-          Math.max(1, Math.min(maxStep, s + (e.key === "ArrowRight" ? 1 : -1)))
-        );
+        setStep((s) => advanceStep(s, e.key === "ArrowRight" ? 1 : -1, steps));
+      }
+      if (presenting && (e.key === "Home" || e.key === "End")) {
+        e.preventDefault();
+        setStep(e.key === "Home" ? steps[0]! : steps.at(-1)!);
       }
       if (
         !presenting && (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z"
@@ -529,7 +542,7 @@ function Editor(
     if (!question.trim() || busy) return;
     if (!authenticated) {
       setNotice(
-        "Inicia sesión para conversar con Fontex AI. Puedes crear con las plantillas y los nueve elementos sin usar IA.",
+        "Inicia sesión para conversar con Fontex AI. Puedes crear con las plantillas y los diez elementos sin usar IA.",
       );
       return;
     }
@@ -603,6 +616,9 @@ function Editor(
     if (p.kind === "function_region") {
       p.data.name = `f${scene.primitives.length + 1}`;
       p.data.resultName = `area${scene.primitives.length + 1}`;
+    }
+    if (p.kind === "data_chart" && p.data.chartType === "matrix") {
+      p.data.matrixName = nextSymbol(scene, p.data.matrixName ?? "m");
     }
     const extra = selected.kind === "coordinate_canvas"
       ? scene.primitives.flatMap((child, i) => {
@@ -702,7 +718,7 @@ function Editor(
             disabled={!scene.primitives.length}
             onClick={() => {
               setSelected(null);
-              setStep(1);
+              setStep(steps[0]!);
               setPresenting(true);
               void root.current?.requestFullscreen?.().catch(() => {});
             }}
@@ -722,18 +738,23 @@ function Editor(
       {presenting && (
         <nav className="pc-present-bar">
           <strong>{scene.title}</strong>
-          <span>Paso {step} de {maxStep}</span>
+          <span>Paso {stepIndex + 1} de {steps.length}</span>
+          <progress
+            aria-label="Avance de presentación"
+            value={stepIndex + 1}
+            max={steps.length}
+          />
           <button
-            disabled={step === 1}
+            disabled={stepIndex === 0}
             aria-label="Paso anterior"
-            onClick={() => setStep((s) => s - 1)}
+            onClick={() => setStep((s) => advanceStep(s, -1, steps))}
           >
             <ChevronLeft />
           </button>
           <button
-            disabled={step === maxStep}
+            disabled={stepIndex === steps.length - 1}
             aria-label="Paso siguiente"
-            onClick={() => setStep((s) => s + 1)}
+            onClick={() => setStep((s) => advanceStep(s, 1, steps))}
           >
             <ChevronRight />
           </button>
@@ -908,7 +929,7 @@ function Editor(
                   {tab === "elements" && (
                     <>
                       <h2>Combina elementos</h2>
-                      <p>Nueve primitivas para construir representaciones.</p>
+                      <p>Diez elementos que puedes combinar.</p>
                       <div className="pc-element-list">
                         {(Object.keys(primitiveNames) as PrimitiveKind[]).map((
                           kind,
@@ -1310,7 +1331,7 @@ function Editor(
                     setSidebar(true);
                   }}
                 >
-                  <Plus size={17} />Explorar los nueve elementos
+                  <Plus size={17} />Explorar los diez elementos
                 </button>
               </div>
             )
@@ -1349,14 +1370,8 @@ function Editor(
                     >
                       <PrimitiveVisual
                         p={p}
-                        scene={presenting
-                          ? {
-                            ...scene,
-                            primitives: scene.primitives.filter((n) =>
-                              n.presentationStep <= step
-                            ),
-                          }
-                          : scene}
+                        scene={scene}
+                        visibleStep={presenting ? step : undefined}
                         scope={scope}
                         functions={functions}
                         onChange={update}
