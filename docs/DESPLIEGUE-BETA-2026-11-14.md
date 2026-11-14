@@ -31,7 +31,9 @@ Las funciones ajenas `chat-stream` e `image-generate` se conservaron.
 
 GitHub dispone de variables explícitas para URL, clave **publicable** de Supabase y base `/`. No se publicaron claves privilegiadas. El dominio configurado en Pages es `fontex.sypablitodp.site`.
 
-El [workflow de publicación](https://github.com/dppablito4-oss/fontex-web/actions/workflows/deploy-pages.yml) ejecuta calidad, SQL y Deno antes del gate del backend y del despliegue. Sus ejecuciones asociadas a cada commit son la evidencia del resultado de Pages. Se corrigió el primer fallo del runner limpio: las pruebas compartidas de Deno ya no dependen de un `node_modules` instalado previamente. Las 7 pruebas afectadas se verificaron en una copia limpia.
+El [despliegue de `91c55be`](https://github.com/dppablito4-oss/fontex-web/actions/runs/43642930697) terminó correctamente: calidad, SQL, Deno, comprobación del backend, compilación y publicación en Pages. Se corrigió el primer fallo del runner limpio: las pruebas compartidas de Deno ya no dependen de un `node_modules` instalado previamente. Las 7 pruebas afectadas se verificaron en una copia limpia.
+
+Se descargó el artefacto de esa ejecución y se comparó por SHA-256 con el dominio HTTPS: el HTML y los 16 archivos JavaScript/CSS publicados coinciden y responden 200. Los chunks incluyen la URL y la clave publicable del proyecto previsto; no se encontró el patrón de clave secreta `sb_secret_`. También se comprobó el contrato REST desde el origen real de Pages. Esta comprobación de archivos y API no sustituye una prueba visual.
 
 Comprobaciones ejecutadas contra el backend alojado:
 
@@ -41,11 +43,12 @@ Comprobaciones ejecutadas contra el backend alojado:
 - Revocación efectiva usando el mismo JWT: bloquea tablas, RPC de créditos y Edge.
 - Una petición real de IA: SSE completado, propuesta validada y conversación sin acciones de edición.
 - Tras cerrar el registro global, una segunda ejecución de 25 comprobaciones confirmó rechazo del alta no invitada, alta invitada, revocación y conservación de acceso a la API `forma` según sus propias políticas. Encabezados de perfil contradictorios no eluden el guard público.
-- 243 pruebas SQL locales en 11 suites tras las actualizaciones. El CI vuelve a comprobar todas las migraciones desde cero.
+- PDF temporal real de una página: reserva, carga privada, extracción de texto, embeddings, estado `ready`, descarga con hash idéntico y eliminación. También se limpiaron su aula e institución temporales. La ejecución completa de ese recorrido pasó 37 comprobaciones antes de eliminar las dos cuentas temporales.
+- 243 pruebas SQL en 11 suites. El CI del despliegue correcto aplicó y probó las 21 migraciones desde cero; también pasaron lint, tipos, pruebas del frontend y comprobaciones de las ocho funciones.
 
 ## Límites pendientes
 
-La prueba autenticada usó cuentas confirmadas por el API administrativo y no envió correos: **no acredita entrega SMTP, confirmación por correo ni recuperación de contraseña**. Tampoco prueba carga y extracción de un PDF real alojado ni todos los tutores con consumo real.
+La prueba autenticada usó cuentas confirmadas por el API administrativo y no envió correos: **no acredita entrega SMTP, confirmación por correo ni recuperación de contraseña**. Tampoco cubre todos los tutores con consumo real. El host de acceso al navegador no estuvo disponible y el control nativo devolvió errores de canal; no se completó la verificación visual en escritorio o móvil.
 
 Los asesores alojados conservaron 9 avisos previos: 8 RPC `SECURITY DEFINER` accesibles al rol autenticado y protección de contraseñas filtradas desactivada. Los RPC conservan sus controles de rol/propiedad y ahora también membresía; la advertencia por privilegios intencionales sigue visible. Debe revisarse su traslado a helpers privados y la disponibilidad de protección de contraseñas filtradas. [Guía del asesor](https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable), [seguridad de contraseñas](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection).
 
