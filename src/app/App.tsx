@@ -1,7 +1,6 @@
 import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes, useMatch } from "react-router-dom";
 
-import { FractionCanvas } from "../features/canvas/FractionCanvas";
 import { LandingPage } from "../features/landing/LandingPage";
 
 import { AppShell } from "./layouts/AppShell";
@@ -15,8 +14,7 @@ import { HomePage } from "../features/home/HomePage";
 import { LibraryPage } from "../features/library/LibraryPage";
 import { WorkspaceProvider } from "../features/workspace/WorkspaceProvider";
 
-const GeneralCanvas = lazy(() => import("../features/general-canvas/GeneralCanvas").then(m => ({ default: m.GeneralCanvas })));
-const StudioShell = lazy(() => import("../features/studio/StudioShell").then(m => ({ default: m.StudioShell })));
+const PrimitiveCanvas = lazy(() => import("../features/primitives/PrimitiveCanvas").then(m => ({ default: m.PrimitiveCanvas })));
 
 const TutorPage = lazy(() =>
   import("../features/tutor/TutorPage").then((module) => ({
@@ -50,10 +48,8 @@ export function App() {
     return <PasswordRecoveryPage key={passwordRoute ? "update" : "request"} updating={!!passwordRoute} />;
   }
 
-  if (generalRoute) return <Suspense fallback={<div>Preparando el laboratorio…</div>}><GeneralCanvas /></Suspense>;
-  if (canvasAlias || classicRoute) return <Suspense fallback={<div>Preparando tu lienzo…</div>}><StudioShell /></Suspense>;
+  if (generalRoute || canvasAlias || classicRoute || fractionsRoute) return <Suspense fallback={<div>Preparando tu lienzo…</div>}><PrimitiveCanvas /></Suspense>;
   if (landingRoute) return <LandingPage />;
-  if (fractionsRoute) return <FractionCanvas />;
 
   if (authRoute) {
     if (status === "loading") return <AuthLoadingPage />;

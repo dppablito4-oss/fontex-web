@@ -1,7 +1,7 @@
 import { ArrowRight, ArrowUpRight, BookOpen, Check, FileText, Heart, PenTool, Sparkles } from "lucide-react";
 import { SiteHeader } from "../../components/ProductNavigation";
 import { BrandMark } from "../../components/BrandMark";
-import { objectRegistry } from "../../core/object-registry/registry";
+import { primitiveNames } from "../../core/primitives/catalog";
 import { ParabolaHero } from "./ParabolaHero";
 import "./landing.css";
 
@@ -24,12 +24,12 @@ export function LandingPage() {
         </div>
         <ParabolaHero />
       </section>
-      <div className="lp-facts" aria-label="Qué puedes explorar"><div><strong>{Object.keys(objectRegistry).length}</strong><span>módulos visuales<br />para experimentar</span></div><div><strong>De inicial<br />a universidad</strong><span>guías introductorias<br />según tu nivel</span></div><div><strong>A tu manera</strong><span>edita, practica, presenta<br />y exporta a PDF</span></div></div>
+      <div className="lp-facts" aria-label="Qué puedes explorar"><div><strong>{Object.keys(primitiveNames).length}</strong><span>elementos componibles<br />para experimentar</span></div><div><strong>De inicial<br />a universidad</strong><span>guías introductorias<br />según tu nivel</span></div><div><strong>A tu manera</strong><span>edita, practica, presenta<br />y exporta a PDF</span></div></div>
       <section className="lp-paths" aria-labelledby="lp-paths-title"><div className="lp-section-heading"><p className="lp-eyebrow">UN ESPACIO. VARIAS FORMAS DE APRENDER.</p><h2 id="lp-paths-title">¿Por dónde quieres empezar?</h2><p>Encuentra lo que necesitas, sin perderte entre herramientas.</p></div>
         <div className="lp-path-grid">{paths.map(({ number, icon: Icon, title, text, href, action, className }) => <a className={`lp-path lp-path-${className}`} href={href} key={number}><div className="lp-path-top"><Icon size={25} /><span>{number}</span></div><h3>{title}</h3><p>{text}</p><span className="lp-path-action">{action}<ArrowRight size={17} /></span></a>)}</div>
       </section>
       <section className="lp-process" aria-labelledby="lp-process-title"><div><p className="lp-eyebrow">MENOS PASOS. MÁS DESCUBRIMIENTOS.</p><h2 id="lp-process-title">De una pregunta<br />a un «ya entendí».</h2><p>No necesitas saber por dónde empezar.<br />Solo tener algo que quieras descubrir.</p><a className="lp-text-link" href="#/lienzo">Vamos al lienzo<ArrowUpRight size={17} /></a></div><ol>{[
-        ["Elige una idea", "Fracciones, geometría, álgebra, estadística… Añade un módulo o parte de un ejemplo."],
+        ["Elige una idea", "Fracciones, geometría, álgebra, estadística… Combina elementos o parte de una plantilla editable."],
         ["Hazla tuya", "Edita sobre el dibujo y mira qué cambia. Recorre la explicación o intenta resolverlo."],
         ["Comparte lo que descubriste", "Presenta tu material como una lección o llévalo a clase en un PDF."],
       ].map(([title, text], i) => <li key={title}><span>{i + 1}</span><div><h3>{title}</h3><p>{text}</p></div></li>)}</ol></section>

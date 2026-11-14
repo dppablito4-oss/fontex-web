@@ -1,3 +1,11 @@
+## Editor de primitivas v0.7
+
+El nuevo editor utiliza escenas `schemaVersion: 2`, `format: primitive-scene`, con hasta 1 MiB por fila en `visual_scenes`. `replace_test_canvas_with_primitives` retira lógicamente los formatos anteriores del piloto, mantiene RLS/revisiones y rechaza nuevas escrituras de formatos antiguos. Los registros anteriores permanecen pendientes de una limpieza físicamente confirmada. No migrar sobres v1 ni reaplicar la limpieza para crear un entorno de pruebas compartido.
+
+Desplegar `studio-agent` junto con sus nuevas dependencias relativas y el import map actualizado de Zod. El endpoint, incluida la ruta `/studio-agent/primitives`, recibe el contrato de primitivas. `FONTEX_CHAT_MODEL` y `FONTEX_AGENT_MODEL` son ajustes del servidor; `OPENAI_API_KEY` permanece en secretos. Ver [contrato y alcance](../docs/primitivas-v0.7.md).
+
+El resto de esta guía conserva detalles de los servicios académicos y del historial de migraciones.
+
 # Supabase de Fontex
 
 **Revisión:** 13 de noviembre de 2026 · CLI del repositorio: `2.120.0`.

@@ -1,7 +1,7 @@
 {
   "name": "fontex-web",
   "private": true,
-  "version": "0.6.0",
+  "version": "0.7.0",
   "type": "module",
   "overrides": {
     "katex": "$katex",
@@ -32,7 +32,8 @@
     "rehype-katex": "7.0.1",
     "remark-math": "6.0.0",
     "tailwind-merge": "^3.3.1",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "zod": "4.6.7"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

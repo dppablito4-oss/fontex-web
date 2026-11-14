@@ -3,7 +3,7 @@ import { expressionScene, parseScene, type Scene } from "../../core/scene/docume
 import { supabase } from "../../lib/supabase/client";
 import type { Json } from "../../lib/supabase/database.types";
 import { clearRetiredMaterials, isRetiredScene, sceneCacheKey as cacheKey } from "./scene-storage";
-import { isCanvasWorkspace } from "../../core/scene/formats";
+import { isCanvasWorkspace, isPrimitiveScene } from "../../core/scene/formats";
 type Collection = { activeId: string; scenes: Scene[]; fresh?: boolean };
 type Ack = Record<string, { revision: number; hash: string }>;
 function initial(owner: string): Collection {
@@ -63,7 +63,7 @@ export function useSceneStore(owner: string) {
           let scenes = [...current.current.scenes], activeId = current.current.activeId, copied = false;
           const remote = new Map<string, { scene: Scene; revision: number; hash: string }>();
           for (const row of result.data) {
-            if (isRetiredScene(row.scene) || isCanvasWorkspace(row.scene)) continue;
+            if (isRetiredScene(row.scene) || isCanvasWorkspace(row.scene) || isPrimitiveScene(row.scene)) continue;
             try { const scene = parseScene(row.scene); remote.set(scene.id, { scene, revision: row.revision, hash: await hash(scene) }); }
             catch { setNotice("Una escena remota no es válida. Las demás siguen disponibles."); }
           }

@@ -34,10 +34,10 @@ describe("Fontex shell", () => {
     const previousWidth = window.innerWidth;
     Object.defineProperty(window, "innerWidth", { configurable: true, writable: true, value: 1366 });
     renderRoute("/lienzo");
-    expect(await screen.findByLabelText("Título del material")).toBeInTheDocument();
-    expect(screen.getByRole("main", { name: "Editor del material" })).toBeInTheDocument();
-    expect(screen.getByRole("complementary", { name: "Asistente del material" })).toBeVisible();
-    expect(screen.getByRole("region", { name: "Fontex Agente" })).toBeInTheDocument();
+    expect(await screen.findByLabelText("Título del lienzo")).toBeInTheDocument();
+    expect(screen.getByRole("main", { name: "Lienzo matemático" })).toBeInTheDocument();
+    expect(screen.getByRole("complementary", { name: "Panel de Fontex" })).toBeVisible();
+    expect(screen.getByText("Fontex Agente")).toBeInTheDocument();
     expect(window.location.hash).toBe("#/lienzo");
     Object.defineProperty(window, "innerWidth", { configurable: true, writable: true, value: previousWidth });
   });

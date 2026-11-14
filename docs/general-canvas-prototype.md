@@ -1,3 +1,5 @@
+> Documento histórico de v0.6. Desde v0.7 las rutas del editor abren el [lienzo de primitivas componibles](primitivas-v0.7.md). El formato descrito a continuación fue retirado durante el reinicio autorizado del piloto.
+
 # General canvas
 
 The expression canvas is available at `/#/laboratorio`. The primary editor at `/#/lienzo` and `/#/lienzo-clasico` is the restored free canvas with its lateral AI assistant. Retiring previous test materials does not retire that interface or its tools.

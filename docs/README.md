@@ -1,11 +1,12 @@
 # Documentación de Fontex
 
-Actualizada el **13 de noviembre de 2026**: el lienzo libre con IA lateral vuelve a ser el editor principal. Usa `visual_scenes` con cachés nuevas y conserva retirado el material de prueba. El laboratorio de expresiones permanece en su ruta propia.
+Actualizada el **14 de noviembre de 2026**: el editor principal utiliza nueve primitivas componibles, variables compartidas y escenas v2. La biblioteca académica y el aula de práctica mantienen sus flujos propios.
 
 | Documento | Qué resuelve |
 |---|---|
 | [README principal](../README.md) | Instalación, capacidades, rutas y despliegue del frontend |
-| [Lienzo general](general-canvas-prototype.md) | Expresiones, escenas privadas, sincronización, formato y límites actuales |
+| [Primitivas v0.7](primitivas-v0.7.md) | Contrato, editor, IA, guardado, alcance y límites del lienzo actual |
+| [Laboratorio anterior](general-canvas-prototype.md) | Expresiones, escenas privadas, sincronización, formato y límites actuales |
 | [Corrección del 13 de noviembre](AUDITORIA-2026-11-13.md) | Regresiones de sincronización y matemáticas, dependencias y retiro de datos de prueba |
 | [Arquitectura](architecture/overview.md) | Componentes, flujos y separación entre datos locales y remotos |
 | [Fontex Studio](architecture/studio.md) | Objetos matemáticos, JSON versión 1, guardado y límites del editor |
@@ -13,6 +14,7 @@ Actualizada el **13 de noviembre de 2026**: el lienzo libre con IA lateral vuelv
 | [Supabase](../supabase/README.md) | Migraciones, tablas, funciones, secretos y pruebas de backend |
 | [Sistema de diseño](design/DESIGN_SYSTEM.md) | Tokens, temas y estilos propios de Studio |
 | [Dependencias](decisions/DEPENDENCIES.md) | Uso de paquetes, herramientas y estado de auditoría |
+| [Preparación de primitivas v0.7](plans/v0.7-primitivas-integracion.md) | Revisión de la propuesta, compatibilidad con el lienzo actual y orden de integración |
 | [Auditoría actual](AUDITORIA.md) | Estado de las diez correcciones, pruebas y requisitos de despliegue |
 | [Reportes](REPORTES.md) | Historial de intervenciones; sus resultados corresponden a cada fecha |
 
