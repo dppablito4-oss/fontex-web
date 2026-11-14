@@ -1,6 +1,6 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { HashRouter } from "react-router-dom";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { App } from "./App";
 import { ThemeProvider } from "../features/theme/ThemeProvider";
@@ -135,4 +135,56 @@ describe("Fontex shell", () => {
     expect(screen.queryByText(/12 documentos/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/metodología de la investigación/i)).not.toBeInTheDocument();
   });
+});
+
+// A generated fixed-height frame must never cover the next object with its content.
+it("expands fixed-height content and moves the following object below it", async () => {
+  const { newPrimitiveScene, createPrimitive } = await import(
+    "../core/primitives/schema"
+  );
+  const scene = newPrimitiveScene();
+  const first = createPrimitive("math_block", scene);
+  first.label = "Texto manual";
+  first.autoHeight = false;
+  first.height = 100;
+  first.y = 20;
+  scene.primitives.push(first);
+  const second = createPrimitive("math_block", scene);
+  second.label = "Texto siguiente";
+  second.autoHeight = false;
+  second.height = 100;
+  second.y = 160;
+  scene.primitives.push(second);
+  localStorage.setItem(
+    "fontex-primitives-v2:guest",
+    JSON.stringify({ activeId: scene.id, scenes: [scene] }),
+  );
+  const previous = globalThis.ResizeObserver,
+    observers = new Map<Element, ResizeObserverCallback>();
+  vi.stubGlobal(
+    "ResizeObserver",
+    class {
+      constructor(private callback: ResizeObserverCallback) {}
+      observe(node: Element) {
+        observers.set(node, this.callback);
+      }
+      unobserve() {}
+      disconnect() {}
+    },
+  );
+  try {
+    renderRoute("/lienzo");
+    const frame = await screen.findByRole("article", { name: "Texto manual" });
+    const content = frame.querySelector<HTMLElement>(".pc-object-content")!;
+    Object.defineProperty(content, "scrollHeight", {
+      configurable: true,
+      value: 450,
+    });
+    act(() => observers.get(content)!([], {} as ResizeObserver));
+    await waitFor(() => expect(frame.style.height).toBe("504px"));
+    expect(screen.getByRole("article", { name: "Texto siguiente" }).style.top)
+      .toBe("564px");
+  } finally {
+    vi.stubGlobal("ResizeObserver", previous);
+  }
 });

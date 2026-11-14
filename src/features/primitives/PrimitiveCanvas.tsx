@@ -136,10 +136,13 @@ function Frame({
   ]);
   useEffect(() => {
     const node = content.current;
-    if (!node || narrow || !p.autoHeight) return;
+    if (!node || narrow) return;
     const observer = new ResizeObserver(() => {
       const next = Math.ceil(node.scrollHeight + 54);
-      if (Math.abs(next - p.height) > 3) {
+      if (
+        (p.autoHeight && Math.abs(next - p.height) > 3) ||
+        (!p.autoHeight && next > p.height + 3)
+      ) {
         onFit(p.id, Math.max(100, Math.min(100000, next)));
       }
     });
@@ -326,7 +329,10 @@ function Editor(
   const fit = useCallback((id: string, height: number) => {
     const current = live.current,
       p = current.primitives.find((n) => n.id === id);
-    if (!p || !p.autoHeight || Math.abs(p.height - height) < 4) return;
+    if (
+      !p || Math.abs(p.height - height) < 4 ||
+      (!p.autoHeight && height <= p.height)
+    ) return;
     const delta = height - p.height,
       next = {
         ...current,
