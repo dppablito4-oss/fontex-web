@@ -313,7 +313,7 @@
 .st-product-grid { max-width:300px; width:100%; }
 /* A visual lesson is split into a generous drawing area and a readable story. */
 .st-object-content { container-type:inline-size; }
-.st-guided { display:grid; grid-template-columns: minmax(0, 1.15fr) minmax(280px, 1fr); gap:24px; align-items:start; min-height:100%; }
+.st-guided { display:grid; grid-template-columns: minmax(0, 1.15fr) minmax(280px, 1fr); gap:24px; align-items:start; align-content:start; min-height:0; }
 .st-visual-panel { min-width:0; padding:22px 16px; border:1px solid var(--st-line); border-radius:18px; background:var(--st-background); display:flex; flex-direction:column; justify-content:center; min-height:320px; }
 .st-visual-panel :is(.st-step-buttons,.st-math-explanation,.st-single-fraction > p,.st-operation-stage,.st-sequence > small) { display:none; }
 .st-visual-panel .st-operands { flex-wrap:wrap; gap:16px; }
@@ -782,7 +782,7 @@
 .st-app .st-canvas-flow :is(.st-object-handle,.st-object-expand) { opacity: 1; }
 
 .st-file-menu .st-general-link { display: block; color: var(--st-primary); font-size: 12px; padding: 8px; }
-.st-function-graph { width:100%; min-width:0; }
+.st-function-graph { width:100%; min-width:0; font-size:24px; }
 .st-function-expression { font-size:1.15em; overflow-wrap:anywhere; }
 .st-function-parameters,.st-function-settings { display:flex; flex-wrap:wrap; gap:12px 22px; align-items:center; }
 .st-function-settings { font-size:.8em; margin-bottom:12px; }
@@ -792,3 +792,21 @@
 .st-function-table { width:100%; border-collapse:collapse; font-size:.85em; }
 .st-function-table :is(th,td) { padding:5px 12px; text-align:center; border-bottom:1px solid var(--st-line); }
 .st-function-table caption { text-align:left; font-weight:600; margin:10px 0; }
+.st-function-source { margin:8px 0 16px; font-size:.85em; }
+.st-function-source small { display:block; color:var(--st-muted); }
+.st-polynomial { padding:14px; border:1px solid var(--st-line); border-radius:12px; margin-bottom:14px; }
+.st-polynomial-heading,.st-polynomial-actions { display:flex; align-items:center; flex-wrap:wrap; gap:12px; justify-content:space-between; }
+.st-polynomial-heading label { display:flex; align-items:center; gap:8px; font-size:.8em; }
+.st-polynomial-form { margin:12px 0; font-size:1.15em; }
+.st-polynomial-coefficients { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:12px; }
+.st-polynomial-coefficients > label { display:flex; flex-direction:column; gap:6px; padding:10px; min-width:100px; border:1px solid var(--st-line); border-radius:8px; }
+.st-polynomial-coefficients small { color:var(--st-muted); font-size:.65em; }
+.st-polynomial-actions { justify-content:flex-start; margin-bottom:10px; }
+.st-polynomial > small { display:block; color:var(--st-muted); font-size:.7em; }
+.st-polynomial-solutions { margin-top:12px; font-size:.85em; }
+.st-math-expression { display:inline; overflow-wrap:anywhere; }
+.st-math-expression sup { font-size:.7em; }
+.st-math-fraction { display:inline-flex; flex-direction:column; vertical-align:middle; text-align:center; font-size:.9em; margin:0 .2em; }
+.st-math-fraction > span:first-child { border-bottom:1px solid currentColor; padding:0 .2em; }
+.st-math-root > span { border-top:1px solid currentColor; padding-inline:.1em; }
+@container (max-width:700px) { .st-function-graph { font-size:18px; } .st-function-svg { min-height:0; } }

@@ -83,7 +83,7 @@ export const agentOutputSchema = object({
                 x: { type: "number", minimum: 0, maximum: 1600 },
                 y: { type: "number", minimum: 0, maximum: 1000000 },
                 width: { type: "number", minimum: 240, maximum: 1600 },
-                height: { type: "number", minimum: 160, maximum: ["text", "fraction", "operation", "function-graph"].includes(type) ? MAX_TEXT_HEIGHT : 1100 },
+                height: { type: "number", minimum: 160, maximum: MAX_TEXT_HEIGHT },
                 data: object(properties),
               })
             ),

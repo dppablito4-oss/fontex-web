@@ -6,6 +6,8 @@ El lienzo libre es el editor principal en `/#/lienzo`, con módulos editables, m
 
 La IA lateral y la paleta del lienzo libre también pueden crear **gráficas reales de funciones**: seno, coseno, tangente, polinomios y las demás expresiones admitidas. La categoría **Funciones** permite editar la expresión, grados/radianes, ventana, parámetros y puntos; sus alturas y derivadas se calculan con el motor. Por ejemplo: «Grafica el seno en grados, de 0 a 360, con puntos en 0, 90, 180, 270 y 360». Consulta [funciones en el lienzo](docs/studio-function-graphs.md).
 
+Los polinomios muestran un recuadro de coeficientes A, B, C… ampliable hasta grado 8, con cambio entre función y ecuación igualada a cero. Las raíces reales se calculan hasta grado 4 en escalas admitidas. El lienzo ajusta la altura al contenido al crecer y al reducirse, conserva los tamaños manuales y muestra potencias con superíndices. Se mantienen tipos de objetos registrados; la IA configura esos tipos y sus expresiones, no genera componentes ejecutables nuevos.
+
 El aula de práctica mantiene 19 guías introductorias, 38 páginas y 54 ejercicios. La biblioteca académica permite consultar PDF privados con un tutor documental y citas por página. Estas experiencias tienen almacenes y endpoints distintos.
 
 ## Estado del 13 de noviembre de 2026

@@ -52,6 +52,7 @@ describe("Edición directa del lienzo", () => {
     const object = createObject(type);
     const view = render(<InlineEditingContext.Provider value={{ object, onChange: () => {} }}><ObjectVisual object={object} onChange={() => {}} /></InlineEditingContext.Provider>);
     for (const field of Object.keys(inlineFields[type])) {
+      if (type === "function-graph" && ["a", "b", "c"].includes(field)) continue; // Polynomials expose A/B/C coefficients instead of unrelated parameters.
       if (type === "probability" && field === "outcomes") continue; // Fixed by coin/dice; editable for a spinner.
       expect(screen.getByLabelText(fieldSpec(object, field).label)).toBeInTheDocument();
     }

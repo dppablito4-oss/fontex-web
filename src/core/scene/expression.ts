@@ -1,3 +1,5 @@
+import { normalizePowers } from "../math-engine/math-notation.ts";
+
 export type Expr =
   | { kind: "number"; value: number }
   | { kind: "variable"; name: string }
@@ -20,7 +22,7 @@ export function parseExpression(source: string): Expr {
   if (!source.trim() || source.length > 500) {
     throw new Error("Escribe una expresión de hasta 500 caracteres.");
   }
-  let text = source.toLowerCase().replace(/π/g, "pi").replace(/×|·/g, "*")
+  let text = normalizePowers(source).toLowerCase().replace(/π/g, "pi").replace(/×|·/g, "*")
     .replace(/÷/g, "/").replace(/−/g, "-").replace(/\bsen\b/g, "sin").replace(
       /\blog\b/g,
       "ln",

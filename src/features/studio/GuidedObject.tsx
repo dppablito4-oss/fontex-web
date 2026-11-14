@@ -7,6 +7,7 @@ import { TeachingMode } from "./teaching-mode";
 import { lessonSteps } from "./lesson-steps";
 import { exactTarget, practiceReply } from "../../core/agent/pedagogy";
 import { parseStudioOperation } from "../../core/math-engine/studio-operations";
+import { MathText } from "./ExpressionMath";
 
 export function GuidedObject({ object }: { object: MathObject }) {
   const mode = useContext(TeachingMode), level = useContext(TeachingLevel);
@@ -38,17 +39,17 @@ export function GuidedObject({ object }: { object: MathObject }) {
     <div className="st-visual-panel" aria-label="Representación visual"><ObjectVisual object={visual} onChange={() => {}} lessonStep={mode === "solve" ? Infinity : current} concealAnswers={practice} /></div>
     <section className="st-story-panel" aria-label={practice ? "Práctica del módulo" : "Pasos del módulo"}>
       {practice && !target ? <><span className="st-story-eyebrow">EXPLORA LA FUNCIÓN</span><h3>Predice antes de comprobar</h3><p>Anticipa las alturas y el cambio de la curva. Edita sus parámetros y abre la tabla para comprobar tus conjeturas. Esta exploración numérica no califica respuestas exactas automáticamente.</p></> : practice ? <>
-        <span className="st-story-eyebrow">TU TURNO</span><h3>{target?.prompt}</h3>
+        <span className="st-story-eyebrow">TU TURNO</span><h3><MathText>{target?.prompt ?? ""}</MathText></h3>
         <p>Observa la representación. Puedes pedir una pista cuando la necesites.</p>
         <form onSubmit={e => { e.preventDefault(); check(hint); }}><label>Respuesta del módulo<input value={answer} onChange={e => { setAnswer(e.target.value); setFeedback(""); }} maxLength={120} placeholder={object.type === "factorization" ? "Ejemplo: 2^2 × 3" : object.type === "circle" ? "Ejemplo: 9π" : object.type === "statistics" && object.data.task === "mode" ? "Ejemplo: 2, 3 o sin moda" : "Ejemplo: 3/2"} /></label><button className="st-primary" type="submit">Comprobar respuesta</button></form>
         {feedback && <p role="status" className="st-story-feedback">{feedback}</p>}
         <button type="button" disabled={hint >= 2} onClick={() => check(hint + 1)}><Lightbulb size={16} />{hint === 0 ? "Dame una pista" : hint === 1 ? "Mostrar comprobación" : "Comprobación mostrada"}</button>
       </> : mode === "solve" ? <>
-        <span className="st-story-eyebrow">RESOLUCIÓN COMPLETA</span><h3>{target ? `Resultado: ${target.result}` : object.label}</h3>
-        <ol className="st-solution-list">{steps.map(([title, text], i) => <li key={title}><strong>{i + 1}. {title}</strong><p>{text}</p></li>)}</ol>
+        <span className="st-story-eyebrow">RESOLUCIÓN COMPLETA</span><h3><MathText>{target ? `Resultado: ${target.result}` : object.label}</MathText></h3>
+        <ol className="st-solution-list">{steps.map(([title, text], i) => <li key={title}><strong>{i + 1}. {title}</strong><p><MathText>{text}</MathText></p></li>)}</ol>
       </> : <>
         <span className="st-story-eyebrow">PASO {current + 1} DE {steps.length}</span>
-        <h3>{steps[current]?.[0]}</h3><p className="st-story-copy" aria-live="polite">{steps[current]?.[1]}</p>
+        <h3>{steps[current]?.[0]}</h3><p className="st-story-copy" aria-live="polite"><MathText>{steps[current]?.[1] ?? ""}</MathText></p>
         <div className="st-progress" aria-hidden="true">{steps.map((_, i) => <span key={i} className={i <= current ? "active" : ""} />)}</div>
         <nav className="st-story-navigation" aria-label="Recorrer explicación"><button disabled={current === 0} onClick={() => setStep(current - 1)}><ArrowLeft size={16} />Anterior paso</button><button className="st-primary" disabled={current === steps.length - 1} onClick={() => setStep(current + 1)}>Siguiente paso<ArrowRight size={16} /></button></nav>
         {current === steps.length - 1 && <p className="st-story-feedback">Ya recorriste la explicación. Cuenta con tus palabras qué cambió y qué se conservó.</p>}

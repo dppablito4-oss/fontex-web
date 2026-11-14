@@ -65,3 +65,36 @@ it("creates and reopens a real sine graph from the free-canvas palette without l
   expect(screen.getByRole("img", { name: /Gráfica de sin\(x\) en grados/ })).toBeInTheDocument();
   expect(screen.getByLabelText("Puntos de x")).toHaveValue("0, 90, 180, 270, 360");
 });
+
+it("edits a quadratic equation with A B C, extends it to cubic with D, undoes and reopens the same graph", () => {
+  const graph = graphObject(); graph.data = { ...graph.data, source: "x²-3*x+2=0" };
+  saveMaterial(localStorage, "guest", { ...createDocument("blank"), objects: [graph] });
+  const view = render(<Editor />);
+  expect(screen.getByLabelText("Coeficiente A")).toHaveValue("1");
+  expect(screen.getByLabelText("Coeficiente B")).toHaveValue("-3");
+  expect(screen.getByLabelText("Coeficiente C")).toHaveValue("2");
+  expect(screen.getByText("Soluciones reales aproximadas: 1, 2.")).toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText("Coeficiente C"), { target: { value: "-4" } });
+  expect(screen.getByText("Soluciones reales aproximadas: -1, 4.")).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Agregar coeficiente D (grado 3)" }));
+  expect(screen.getByLabelText("Coeficiente D")).toHaveValue("0");
+  expect(screen.getByLabelText("Coeficiente C")).toHaveValue("-4");
+  fireEvent.click(screen.getByRole("button", { name: "Deshacer" }));
+  expect(screen.queryByLabelText("Coeficiente D")).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Agregar coeficiente D (grado 3)" }));
+  fireEvent.change(screen.getByLabelText("Coeficiente A"), { target: { value: "0" } });
+  view.unmount(); render(<Editor />);
+  expect(screen.getByLabelText("Coeficiente D")).toHaveValue("0");
+  expect(screen.getByLabelText("Coeficiente A")).toHaveValue("0");
+  expect(screen.getByLabelText<HTMLInputElement>("Función de x").value).not.toContain("^");
+});
+
+it("prints coefficients and actual superscripts without raw carets or editing controls", () => {
+  const graph = graphObject(); graph.data.source = "x^2-3*x+2=0";
+  const html = printableMaterial({ ...createDocument("blank"), objects: [graph] }, "secondary");
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  expect(doc.querySelector(".st-math-expression sup")?.textContent).toBe("2");
+  expect(doc.querySelector(".st-polynomial-solutions")?.textContent).toBe("Soluciones reales aproximadas: 1, 2.");
+  expect(doc.body.textContent).not.toContain("^");
+  expect(doc.querySelector("input,select,button")).toBeNull();
+});

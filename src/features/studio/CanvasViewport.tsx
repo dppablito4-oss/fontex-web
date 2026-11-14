@@ -41,7 +41,7 @@ export function CanvasViewport({
   onBeginEdit,
   onEndEdit,
   onCancelEdit,
-  onTextGrow,
+  onContentMeasure,
   children,
   onZoom,
 }: {
@@ -60,7 +60,7 @@ export function CanvasViewport({
   onBeginEdit?: () => void;
   onEndEdit?: () => void;
   onCancelEdit?: () => void;
-  onTextGrow?: (id: string, height: number) => void;
+  onContentMeasure?: (heights: Record<string, number>) => void;
   children?: ReactNode;
   onZoom?: (zoom: number) => void;
 }) {
@@ -95,23 +95,28 @@ export function CanvasViewport({
     if (left < element.scrollLeft || left > element.scrollLeft + element.clientWidth - 80) element.scrollLeft = Math.max(0, left - 24);
   }, [selectedId, objects, zoom, flow]);
   useLayoutEffect(() => {
-    if (!onTextGrow || presenting || flow) return;
-    const nodes = viewport.current?.querySelectorAll<HTMLElement>(".st-object-text,.st-object-fraction,.st-object-operation,.st-object-function-graph,.st-object-number-line,.st-object-geometry,.st-object-polygon,.st-object-regular-polygon,.st-object-circle,.st-object-angle");
+    if (!onContentMeasure || presenting || flow) return;
+    const nodes = viewport.current?.querySelectorAll<HTMLElement>(".st-object");
     const measure = () => {
+      const heights: Record<string, number> = {};
       for (const node of nodes ?? []) {
         const object = objects.find(item => item.id === node.dataset.objectId);
         const content = node.querySelector<HTMLElement>(".st-object-content");
         const header = node.querySelector<HTMLElement>(".st-object-handle");
-        if (!object || !content || !header) continue;
-        const height = Math.min(maxObjectHeight(object), Math.ceil(content.scrollHeight + header.offsetHeight + 2));
-        if (height > object.height + 1) onTextGrow(object.id, height);
+        const body = content?.querySelector<HTMLElement>(".st-guided,.st-story-text");
+        if (!object || object.autoHeight === false || !content || !header || !body?.offsetHeight) continue;
+        const style = getComputedStyle(content), border = getComputedStyle(node);
+        const number = (value: string) => Number.parseFloat(value) || 0;
+        const height = Math.min(maxObjectHeight(), Math.max(160, Math.ceil(body.offsetHeight + header.offsetHeight + number(style.paddingTop) + number(style.paddingBottom) + number(border.borderTopWidth) + number(border.borderBottomWidth))));
+        if (Math.abs(height - object.height) > 1) heights[object.id] = height;
       }
+      if (Object.keys(heights).length) onContentMeasure(heights);
     };
     measure();
     const observer = new ResizeObserver(measure);
     for (const node of nodes ?? []) { const content = node.querySelector(".st-guided,.st-story-text"); if (content) observer.observe(content); }
     return () => observer.disconnect();
-  }, [objects, onTextGrow, presenting, flow]);
+  }, [objects, onContentMeasure, presenting, flow]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
   const expanded = objects.find((object) => object.id === expandedId);
@@ -244,6 +249,7 @@ export function CanvasViewport({
                 <div className="st-object-handle" onDoubleClick={() => setExpandedId(object.id)}>
                   <span><InlineValue field="label" value={object.label} /></span>
                   {!presenting && <div className="st-canvas-object-actions">
+                    {object.autoHeight === false && <button aria-label={`Ajustar al contenido ${object.label}`} title="Ajustar al contenido" onClick={event => { event.stopPropagation(); onChange({ ...object, autoHeight: true }); }}><MoveDiagonal2 size={14} /></button>}
                     {onDuplicate && <button aria-label={`Duplicar ${object.label}`} title="Duplicar" onClick={event => { event.stopPropagation(); onDuplicate(object); }}><Copy size={14} /></button>}
                     <button aria-label={`Eliminar ${object.label}`} title="Eliminar" onClick={event => { event.stopPropagation(); onDelete(object.id); }}><Trash2 size={14} /></button>
                   </div>}

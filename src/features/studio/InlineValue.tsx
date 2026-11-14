@@ -1,6 +1,7 @@
 import { useContext, useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode, type TextareaHTMLAttributes } from "react";
 import { InlineEditingContext } from "./inline-editing-context";
 import { editField, fieldSpec, fieldValue, formatField } from "./inline-fields";
+import { superscriptPowers } from "../../core/math-engine/math-notation";
 
 /** A displayed input value becomes editable only inside an editable canvas object. */
 export function InlineValue({ field, value, index, children, readOnly = false }: { field: string; value: unknown; index?: number; children?: ReactNode; readOnly?: boolean }) {
@@ -12,7 +13,7 @@ export function InlineValue({ field, value, index, children, readOnly = false }:
   const id = useId();
   const end = editor?.onEnd;
   useEffect(() => () => { if (original.current) end?.(); }, [end]);
-  if (!editor || readOnly) return <>{children ?? String(value)}</>;
+  if (!editor || readOnly) return <>{children ?? superscriptPowers(String(value))}</>;
   const spec = fieldSpec(editor.object, field);
   const actual = fieldValue(editor.object, field);
   const shown = index === undefined ? actual : (actual as number[])[index];

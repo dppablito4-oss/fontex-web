@@ -27,6 +27,7 @@ type ObjectBase = {
   y: number;
   width: number;
   height: number;
+  autoHeight?: boolean;
   visualScale?: number;
 };
 export type MathObject = ObjectBase &
@@ -56,7 +57,7 @@ export const BOARD = { width: 1600, height: 1100 };
 // Objects retain bounded sizes; the document grows downwards as content is added.
 export const MAX_Y = 1_000_000;
 export const MAX_TEXT_HEIGHT = 100_000;
-export const maxObjectHeight = (object: { type: string }) => ["text", "fraction", "operation", "function-graph"].includes(object.type) ? MAX_TEXT_HEIGHT : BOARD.height;
+export const maxObjectHeight = () => MAX_TEXT_HEIGHT;
 export function boardHeight(objects: MathObject[]) {
   return Math.max(BOARD.height, ...objects.map(o => o.y + o.height + 300));
 }
@@ -81,10 +82,11 @@ export function validateObject(value: unknown): value is MathObject {
     !value.id ||
     !string(value.label, 120) ||
     !number(value.width, 240, BOARD.width) ||
-    !number(value.height, 160, typeof value.type === "string" ? maxObjectHeight({ type: value.type }) : BOARD.height) ||
+    !number(value.height, 160, maxObjectHeight()) ||
     !number(value.x, 0, BOARD.width - value.width) ||
     !number(value.y, 0, MAX_Y - value.height) ||
     (value.visualScale !== undefined && !number(value.visualScale, 0.75, 2)) ||
+    (value.autoHeight !== undefined && typeof value.autoHeight !== "boolean") ||
     !record(value.data)
   )
     return false;
@@ -187,6 +189,7 @@ export function parseDocument(value: unknown): StudioDocument {
           width: item.width,
           height: item.height,
           ...(item.visualScale === undefined ? {} : { visualScale: item.visualScale }),
+          ...(item.autoHeight === undefined ? {} : { autoHeight: item.autoHeight }),
           data: structuredClone(item.data),
         }) as MathObject,
     ),
@@ -195,7 +198,7 @@ export function parseDocument(value: unknown): StudioDocument {
 
 export function fitObject(object: MathObject): MathObject {
   const width = Math.max(240, Math.min(BOARD.width, object.width));
-  const height = Math.max(160, Math.min(maxObjectHeight(object), object.height));
+  const height = Math.max(160, Math.min(maxObjectHeight(), object.height));
   return {
     ...object,
     width,

@@ -1,4 +1,5 @@
 import { derivative, evaluate, expressionText, parseExpression, type Expr, type Variables } from "../scene/expression.ts";
+import { isPolynomialEquation, polynomialCoefficients, polynomialSolutions } from "./polynomial-editor.ts";
 
 export type FunctionGraphData = Variables & {
   source: string;
@@ -51,12 +52,14 @@ export function graphNumber(value: number): string {
 }
 export function functionGraphFacts(data: FunctionGraphData) {
   const graph = compileFunctionGraph(data);
+  const coefficients = polynomialCoefficients(data.source, data);
   return {
     source: data.source,
     angleUnit: data.angleUnit,
     trigonometric: graph.trigonometric,
     domainWindow: [data.xMin, data.xMax],
     derivative: expressionText(graph.derived),
+    polynomial: coefficients ? { coefficientsAscending: coefficients, equation: isPolynomialEquation(data.source), solutions: polynomialSolutions(coefficients) } : null,
     samples: data.pointXs.map(x => {
       const y = graph.valueAt(x), slope = graph.slopeAt(x);
       return { x, y: Number.isFinite(y) ? y : null, slope: Number.isFinite(slope) ? slope : null };
@@ -84,10 +87,16 @@ export function sampleFunctionGraph(data: FunctionGraphData, derived = false): G
 }
 export function functionGraphLesson(data: FunctionGraphData): [string, string][] {
   const facts = functionGraphFacts(data);
-  return [
-    ["Lee la función y sus ejes", `f(x) = ${data.source}. El eje horizontal representa x y el vertical, f(x).${facts.trigonometric ? ` Los ángulos se interpretan en ${data.angleUnit === "degrees" ? "grados (°)" : "radianes (rad)"}; las alturas del seno, coseno y tangente no son longitudes.` : ""}`],
+  const steps: [string, string][] = [
+    ["Lee la función y sus ejes", `${facts.polynomial?.equation ? `Igualdad: ${data.source}. Dibujamos la diferencia de sus miembros; sus ceros son soluciones de la igualdad.` : `f(x) = ${data.source}.`} El eje horizontal representa x y el vertical, f(x).${facts.trigonometric ? ` Los ángulos se interpretan en ${data.angleUnit === "degrees" ? "grados (°)" : "radianes (rad)"}; las alturas del seno, coseno y tangente no son longitudes.` : ""}`],
     ["Relaciona los puntos con la curva", facts.samples.length ? `El motor calcula estos puntos: ${facts.samples.map(p => `(${graphNumber(p.x)}, ${p.y === null ? "no definido" : graphNumber(p.y)})`).join("; ")}. Cada pareja conserva el orden (x, f(x)).` : "Elige valores de x y evalúa la expresión para obtener las alturas de sus puntos."],
     ["Interpreta el trazado", `La ventana va de x = ${data.xMin} a ${data.xMax} y de y = ${data.yMin} a ${data.yMax}. La curva es una aproximación muestreada; no se unen puntos a través de valores no definidos ni de asíntotas.`],
     ["Explora el cambio", "Edita la expresión o sus parámetros y observa la curva y los puntos. Puedes mostrar la derivada para comparar las pendientes; si los ángulos están en grados, su cálculo incluye el factor π/180."],
   ];
+  if (facts.polynomial?.equation) {
+    const { coefficientsAscending: c, solutions } = facts.polynomial;
+    const discriminant = c.length === 3 && c[2] !== 0 ? `Para A = ${c[2]}, B = ${c[1]} y C = ${c[0]}, el discriminante B² − 4AC vale ${graphNumber(c[1]! ** 2 - 4 * c[2]! * c[0]!)}. ` : "";
+    steps.splice(1, 0, ["Resuelve la igualdad", discriminant + (solutions.kind === "all" ? "La expresión es cero para todo x real." : solutions.kind === "none" ? "La igualdad no tiene soluciones reales." : solutions.kind === "unsupported" ? "El cálculo de raíces se limita al grado 4 y a escalas numéricas admitidas; puedes seguir explorando la gráfica." : `Soluciones reales aproximadas: ${solutions.roots.map(graphNumber).join(", ")}. Sustituye cada valor en la igualdad original para comprobarlo.`)]);
+  }
+  return steps;
 }

@@ -2,6 +2,8 @@ import { lengthUnits } from "../../core/math-engine/regular-polygons";
 import { validateObject, type MathObject, type ObjectType } from "../../core/document-schema/document";
 import { parseStudioOperation } from "../../core/math-engine/studio-operations";
 import { unitDefinitions, type Unit } from "../../core/math-engine/learning-types";
+import { superscriptPowers } from "../../core/math-engine/math-notation";
+import { isPolynomialEquation, polynomialCoefficients, polynomialSource } from "../../core/math-engine/polynomial-editor";
 
 type Field = { label: string; kind?: "text" | "multiline" | "list" | "vertices" | "decimal" | "real" | "real-list"; hint?: string; choices?: Record<string, string> };
 const lengthUnit: Field = { label: "Unidad de medida", choices: lengthUnits };
@@ -11,7 +13,7 @@ const coefficient = (letter: string): Field => ({ label: `Coeficiente ${letter}`
 type Contracts = { [T in ObjectType]: Record<Exclude<keyof Extract<MathObject, { type: T }>["data"], "stage">, Field> };
 export const inlineFields = {
   "function-graph": {
-    source: { label: "Función de x", kind: "text", hint: "Ejemplos: sin(x), cos(x), tan(x), a*x^2+b*x+c. Hasta 500 caracteres." },
+    source: { label: "Función de x", kind: "text", hint: "Ejemplos: sin(x), cos(x), tan(x), a*x²+b*x+c. Hasta 500 caracteres." },
     angleUnit: { label: "Unidad angular", choices: { degrees: "Grados (°)", radians: "Radianes (rad)" } },
     xMin: { label: "Mínimo de x", kind: "real" }, xMax: { label: "Máximo de x", kind: "real" },
     yMin: { label: "Mínimo de y", kind: "real" }, yMax: { label: "Máximo de y", kind: "real" },
@@ -42,6 +44,7 @@ export const inlineFields = {
 } satisfies Contracts;
 
 export function fieldSpec(object: MathObject, field: string): Field {
+  if (object.type === "function-graph" && /^coefficient:[0-8]$/.test(field)) return { label: `Coeficiente ${String.fromCharCode(65 + Number(field.split(":")[1]))}`, kind: "real", hint: "Número real finito; la curva y las soluciones se actualizan al editar." };
   if (field === "label") return { label: "Nombre del objeto", kind: "text", hint: "Hasta 120 caracteres." };
   if (field === "radicand") return { label: "Radicando", hint: "Raíz exacta cuadrada o cúbica con resultado entero de 0 a 12." };
   const spec = (inlineFields[object.type] as Record<string, Field>)[field];
@@ -50,6 +53,11 @@ export function fieldSpec(object: MathObject, field: string): Field {
   return spec;
 }
 export function fieldValue(object: MathObject, field: string): unknown {
+  if (object.type === "function-graph" && field.startsWith("coefficient:")) {
+    const values = polynomialCoefficients(object.data.source, object.data) ?? [];
+    while (values.length < 3) values.push(0);
+    return values.reverse()[Number(field.split(":")[1])];
+  }
   if (field === "label") return object.label;
   if (field === "unit" && ["geometry", "polygon", "circle"].includes(object.type)) return (object.data as { unit?: string }).unit ?? "u";
   if (field === "radicand" && object.type === "powers-roots") return object.data.base ** object.data.exponent;
@@ -58,7 +66,7 @@ export function fieldValue(object: MathObject, field: string): unknown {
 export function formatField(value: unknown, kind?: Field["kind"]): string {
   if (kind === "vertices") return (value as { x: number; y: number }[]).map(p => `${p.x},${p.y}`).join("; ");
   if (Array.isArray(value)) return (value as number[]).join(", ");
-  return String(value);
+  return typeof value === "string" ? superscriptPowers(value) : String(value);
 }
 const integer = (raw: string) => {
   if (!/^[+-]?\d+$/.test(raw.trim())) throw new Error("Escribe un número entero.");
@@ -87,6 +95,13 @@ export function editField(object: MathObject, field: string, raw: string, index?
   else if (!spec.kind && !spec.choices) value = integer(raw);
   if (object.type === "function-graph" && field === "showDerivative") { if (raw !== "true" && raw !== "false") throw new Error("Elige mostrar u ocultar la derivada."); value = raw === "true"; }
   let next: unknown = field === "label" ? { ...object, label: value } : { ...object, data: { ...object.data, [field]: value } };
+  if (object.type === "function-graph" && field.startsWith("coefficient:")) {
+    const values = polynomialCoefficients(object.data.source, object.data);
+    if (!values) throw new Error("La expresión no es un polinomio editable por coeficientes.");
+    while (values.length < 3) values.push(0);
+    values.reverse()[Number(field.split(":")[1])] = value as number;
+    next = { ...object, data: { ...object.data, source: polynomialSource(values, isPolynomialEquation(object.data.source)) } };
+  }
   if (object.type === "operation" && field === "expression") parseStudioOperation(raw);
   if (object.type === "probability") {
     const data = { ...object.data, [field]: value };

@@ -1,9 +1,14 @@
 import { useId, useMemo } from "react";
 import { compileFunctionGraph, functionGraphFacts, graphNumber, sampleFunctionGraph, type FunctionGraphData, type GraphPoint } from "../../core/math-engine/function-graphs";
 import { InlineOnly, InlineValue } from "./InlineValue";
+import { PolynomialControls, PolynomialExpression } from "./PolynomialControls";
+import { isPolynomialEquation, polynomialCoefficients } from "../../core/math-engine/polynomial-editor";
+import { ExpressionMath } from "./ExpressionMath";
+import { superscriptPowers } from "../../core/math-engine/math-notation";
 
 export function FunctionGraphObject({ data, concealAnswers = false }: { data: FunctionGraphData; concealAnswers?: boolean }) {
   const clipId = useId();
+  const polynomial = polynomialCoefficients(data.source, data), equation = isPolynomialEquation(data.source);
   const analysis = useMemo(() => ({
     graph: compileFunctionGraph(data), facts: functionGraphFacts(data),
     curve: sampleFunctionGraph(data), derivative: data.showDerivative ? sampleFunctionGraph(data, true) : [],
@@ -17,8 +22,10 @@ export function FunctionGraphObject({ data, concealAnswers = false }: { data: Fu
   const angular = analysis.graph.trigonometric ? data.angleUnit === "degrees" ? "°" : "rad" : "";
   const table = <table className="st-function-table"><caption>Puntos calculados de la función</caption><thead><tr><th>x{angular && ` (${angular})`}</th><th>f(x)</th>{data.showDerivative && <th>f′(x)</th>}</tr></thead><tbody>{analysis.facts.samples.map(p => <tr key={p.x}><td>{graphNumber(p.x)}</td><td>{p.y === null ? "No definido" : graphNumber(p.y)}</td>{data.showDerivative && <td>{p.slope === null ? "No definido" : graphNumber(p.slope)}</td>}</tr>)}</tbody></table>;
   return <div className="st-function-graph">
-    <p className="st-function-expression">f(x) = <InlineValue field="source" value={data.source} /></p>
-    <p className="st-function-parameters">{(["a", "b", "c"] as const).map(name => <span key={name}>{name} = <InlineValue field={name} value={data[name]} /></span>)}</p>
+    <p className="st-function-expression">{polynomial ? <PolynomialExpression coefficients={polynomial} equation={equation} /> : equation ? <><ExpressionMath source={data.source.split("=")[0]!} /> = <ExpressionMath source={data.source.split("=")[1]!} /></> : <>f(x) = <ExpressionMath source={data.source} /></>}</p>
+    <PolynomialControls data={data} concealAnswers={concealAnswers} />
+    <InlineOnly>{polynomial ? <details className="st-function-source"><summary>Editar expresión libre</summary><InlineValue field="source" value={data.source} /></details> : <p className="st-function-source"><InlineValue field="source" value={data.source} /><small>Puedes escribir potencias como x² o x³.</small></p>}</InlineOnly>
+    {!polynomial && <p className="st-function-parameters">{(["a", "b", "c"] as const).map(name => <span key={name}>{name} = <InlineValue field={name} value={data[name]} /></span>)}</p>}
     <InlineOnly><div className="st-function-settings">
       <label>Ángulos: <InlineValue field="angleUnit" value={data.angleUnit} /></label>
       <label>x desde <InlineValue field="xMin" value={data.xMin} /> hasta <InlineValue field="xMax" value={data.xMax} /></label>
@@ -26,7 +33,7 @@ export function FunctionGraphObject({ data, concealAnswers = false }: { data: Fu
       <label>Puntos: <InlineValue field="pointXs" value={data.pointXs} /></label>
       <InlineValue field="showDerivative" value={data.showDerivative} />
     </div></InlineOnly>
-    <svg className="st-function-svg" viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`Gráfica de ${data.source}${angular ? ` en ${data.angleUnit === "degrees" ? "grados" : "radianes"}` : ""}, de x ${data.xMin} a ${data.xMax}`}>
+    <svg className="st-function-svg" viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`Gráfica de ${superscriptPowers(data.source)}${angular ? ` en ${data.angleUnit === "degrees" ? "grados" : "radianes"}` : ""}, de x ${data.xMin} a ${data.xMax}`}>
       <defs><clipPath id={clipId}><rect x={left} y={top} width={width - left - right} height={height - top - bottom} /></clipPath></defs>
       {xTicks.map(x => <g key={x}><line x1={px(x)} x2={px(x)} y1={top} y2={height - bottom} stroke="currentColor" opacity="0.12" /><text x={px(x)} y={height - bottom + 29} textAnchor="middle" fill="currentColor" fontSize="21">{graphNumber(x)}</text></g>)}
       {yTicks.map(y => <g key={y}><line x1={left} x2={width - right} y1={py(y)} y2={py(y)} stroke="currentColor" opacity="0.12" /><text x={left - 12} y={py(y) + 7} textAnchor="end" fill="currentColor" fontSize="21">{graphNumber(y)}</text></g>)}
@@ -36,7 +43,7 @@ export function FunctionGraphObject({ data, concealAnswers = false }: { data: Fu
       <g clipPath={`url(#${clipId})`}>
         {analysis.curve.map((points, i) => <path key={i} data-function-curve="true" d={path(points)} fill="none" stroke="var(--st-piece-primary)" strokeWidth="3.5" />)}
         {analysis.derivative.map((points, i) => <path key={i} d={path(points)} fill="none" stroke="var(--st-piece-secondary)" strokeWidth="3" strokeDasharray="8 5" />)}
-        {analysis.facts.samples.filter(p => p.y !== null).map(p => <circle key={p.x} data-function-point={p.x} cx={px(p.x)} cy={py(p.y!)} r="6" fill="var(--st-piece-primary)" stroke="var(--st-piece-stroke)" strokeWidth="1"><title>({graphNumber(p.x)}, {graphNumber(p.y!)})</title></circle>)}
+        {analysis.facts.samples.filter(p => p.y !== null).map(p => <circle key={p.x} data-function-point={p.x} cx={px(p.x)} cy={py(p.y!)} r="6" fill="var(--st-piece-primary)" stroke="var(--st-piece-stroke)" strokeWidth="1"><title>{`(${graphNumber(p.x)}, ${graphNumber(p.y!)})`}</title></circle>)}
       </g>
       <text x={(left + width - right) / 2} y={height - 8} textAnchor="middle" fill="currentColor" fontSize="23">x{angular && ` (${angular})`}</text>
       <text x="18" y={top - 7} fill="currentColor" fontSize="22">f(x)</text>

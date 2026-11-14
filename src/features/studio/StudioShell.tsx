@@ -5,7 +5,7 @@ import { learningIcons } from "../../core/object-registry/learning-registry";
 import { TeachingMode } from "./teaching-mode";
 import { LessonPlayer } from "./LessonPlayer";
 import { agentLevels, agentModes, type AgentMode } from "../../core/agent/protocol";
-import { readableBatch, organizeObjects, wideObject } from "./object-layout";
+import { readableBatch, organizeObjects, wideObject, fitContentHeights } from "./object-layout";
 import { TeachingLevel } from "./teaching-level";
 import type { AgentLevel } from "../../core/agent/protocol";
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
@@ -429,11 +429,9 @@ function StudioEditor({ owner }: { owner: string }) {
             onChange={changeObject}
             onInlineChange={object => changeObject(object, true)}
             onDelete={remove}
-            onTextGrow={(id, height) => store.relayout(current => {
-              const object = current.objects.find(item => item.id === id);
-              if (!object || height <= object.height) return current;
-              const delta = height - object.height, bottom = object.y + object.height;
-              return { ...current, objects: current.objects.map(item => item.id === id ? fitObject({ ...item, height }) : item.y >= bottom && item.x < object.x + object.width && item.x + item.width > object.x ? fitObject({ ...item, y: item.y + delta }) : item) };
+            onContentMeasure={heights => store.relayout(current => {
+              const objects = fitContentHeights(current.objects, heights);
+              return objects === current.objects ? current : { ...current, objects };
             })}
             onAdd={add}
             onBrowse={() => { setModuleFilter(""); setModuleGroup("all"); setModulesOpen(true); requestAnimationFrame(() => moduleSearch.current?.focus()); }}

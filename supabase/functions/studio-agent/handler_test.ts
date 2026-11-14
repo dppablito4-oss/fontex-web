@@ -116,6 +116,22 @@ Deno.test("agent: rechaza código ejecutable en una gráfica sin aplicar objetos
   assert.equal(result.body.batch, undefined);
 });
 
+Deno.test("agent: admite una cuadrática con superíndice y devuelve coeficientes y raíces calculadas como contexto", async () => {
+  const object = createObject("function-graph");
+  if (object.type !== "function-graph") throw Error("Unexpected type");
+  object.data.source = "x²-3*x+2=0";
+  const base = input();
+  const request = { ...base, question: "Explica la ecuación cuadrática seleccionada", selectedId: object.id, document: { ...base.document, objects: [object] } };
+  const result = await run({ request });
+  assert.equal(result.status, 200);
+  const sent = JSON.parse(String(result.providerBody.input));
+  const facts = sent.context.mathematics[0].functionGraph.polynomial;
+  assert.deepEqual(facts.coefficientsAscending, [2, -3, 1]);
+  assert.equal(facts.equation, true);
+  assert.equal(facts.solutions.kind, "roots");
+  assert.ok(Math.abs(facts.solutions.roots[0] - 1) < 1e-10 && Math.abs(facts.solutions.roots[1] - 2) < 1e-10);
+});
+
 Deno.test("agent: no presenta una tarjeta de texto como la gráfica solicitada en la conversación", async () => {
   const object = createObject("text");
   const result = await run({ request: { ...input(), task: "build", question: "Crea en el lienzo lo que acordamos.", history: [{ role: "user", content: "Grafica el seno en grados con los puntos 0,90,180,270,360." }] }, model: { status: "completed", output: [{ type: "message", content: [{ type: "output_text", text: JSON.stringify({ message: "Aquí está la guía de la gráfica.", actions: [{ kind: "create", object }] }) }] }] } });

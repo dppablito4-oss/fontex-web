@@ -72,6 +72,7 @@ function strictObject(value: unknown): value is MathObject {
       "width",
       "height",
       ...(value.visualScale === undefined ? [] : ["visualScale"]),
+      ...(value.autoHeight === undefined ? [] : ["autoHeight"]),
       "data",
     ]) &&
     strictDataKeys(value);
@@ -184,7 +185,7 @@ export function executeActions(
           );
         }
         objects = objects.map((object) =>
-          object.id === id ? action.object : object
+          object.id === id ? { ...action.object, ...(action.object.autoHeight === undefined && existing.autoHeight !== undefined ? { autoHeight: existing.autoHeight } : {}) } : object
         );
       }
     }

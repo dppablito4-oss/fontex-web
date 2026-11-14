@@ -25,6 +25,18 @@ Los puntos del ejemplo se calculan como (0°, 0), (90°, 1), (180°, 0), (270°,
 
 ## Generación y límites
 
+### Polinomios y ecuaciones editables
+
+Las expresiones polinómicas muestran automáticamente campos A, B y C para Ax² + Bx + C. **Agregar coeficiente D** amplía a Ax³ + Bx² + Cx + D conservando los valores de A, B y C; el nuevo término constante empieza en cero. Se puede continuar hasta nueve coeficientes (grado 8) y quitar el último para reducir el grado. El selector **Tipo** alterna función y ecuación igualada a cero. Un primer coeficiente cero reduce el grado efectivo, pero conserva el campo al guardar y reabrir.
+
+La representación sigue siendo `function-graph`: los coeficientes se extraen de la expresión y se guardan en ella; no existen nuevas plantillas por grado ni un tipo independiente de ecuación cuadrática. La expresión libre sigue disponible. Las ecuaciones muestran raíces reales aproximadas hasta grado 4; distinguen contradicciones, identidades y escalas no admitidas. El modo Resolver incluye el discriminante para cuadráticas no degeneradas y los resultados calculados. Se aceptan x², x³ y exponentes enteros con superíndices; los documentos antiguos que emplean el operador de potencia siguen siendo compatibles. La fórmula visual usa superíndices nativos, fracciones y raíces, también al imprimir.
+
+### Altura y separación
+
+La combinación anterior de `min-height: 100%`, medición de `scrollHeight` y crecimiento sin reducción realimentaba la altura de las tarjetas. Se mide ahora el contenido intrínseco sin depender del alto guardado, con mínimo de 160 y máximo de 100000 px por objeto. El ajuste funciona en ambos sentidos y recoloca los objetos inferiores de la misma columna conservando su separación. Una altura automática antigua inflada se corrige al abrir el lienzo libre.
+
+Redimensionar la altura manualmente guarda `autoHeight: false`; el botón **Ajustar al contenido** permite volver al ajuste automático. Cambiar solo el ancho permite que el alto siga adaptándose. **Organizar lienzo** compacta usando las alturas existentes y reactiva el ajuste. La geometría de vista no añade pasos al historial de edición, y no cambia los datos matemáticos.
+
 `studio-agent` anuncia el nuevo tipo tanto al conversar como al crear, con todos sus campos en el esquema. El contrato de generación usa objetos y campos obligatorios conforme a [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs#supported-schemas); los límites matemáticos y de longitud vuelven a validarse en servidor y navegador. Las limitaciones antiguas que figuren en el historial no sustituyen el catálogo actual.
 
 Una petición clara de gráfica, incluida la orden de crear lo acordado tras solicitarla en el historial, no se acepta como cumplida si devuelve únicamente una tarjeta de texto. Se solicita una corrección al proveedor; si vuelve a incumplir, no se aplica el lote. Las solicitudes explícitas de texto continúan permitidas.
@@ -33,10 +45,11 @@ El trazado usa 720 intervalos de muestreo y separa valores no definidos, saltos 
 
 ## Verificación
 
-- 495 pruebas frontend aprobadas y 7 integraciones remotas omitidas; lint, TypeScript y compilación comprobados.
-- 19 pruebas del handler de Studio, con proveedor simulado, incluidas creación de seno en grados, contexto con una limitación antigua, rechazo de texto como gráfica y rechazo de código ejecutable.
+- 502 pruebas frontend aprobadas y 7 integraciones remotas omitidas; lint, TypeScript y compilación comprobados.
+- 20 pruebas del handler de Studio, con proveedor simulado, incluidas creación de seno en grados, contexto con una limitación antigua, rechazo de texto como gráfica, cuadráticas con superíndices y rechazo de código ejecutable.
 - Comprobaciones numéricas del seno/coseno en grados y radianes, derivadas comparadas con diferencias finitas, dominio de ln y separación de las ramas de tan.
 - Pruebas de la paleta real, puntos SVG, edición, deshacer, reapertura y SVG exportado a PDF.
-- No se realizó una llamada pagada al proveedor ni una inspección visual manual de esta ampliación.
+- Prueba de integración en Chrome con CSS real: reparación de una tarjeta de 100000 px, altura estable tras notificaciones, paso a Resolver, tabla de 24 puntos y reducción a 3; la separación con el texto siguiente permanece en 40 px. También se verificaron edición A/B/C, ampliación con D y reapertura, sin errores del navegador. Captura revisada.
+- No se realizó una llamada pagada al proveedor.
 
 Esta ampliación no copia, elimina ni modifica materiales anteriores mediante SQL. La IA solo cambia el documento cuando el usuario solicita crear o editar y se valida el lote completo.
