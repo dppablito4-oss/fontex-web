@@ -2,6 +2,8 @@ import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes, useMatch } from "react-router-dom";
 
 import { LandingPage } from "../features/landing/LandingPage";
+import { BetaGate } from "../features/beta/BetaGate";
+import { BetaInfoPage } from "../features/beta/BetaInfoPage";
 
 import { AppShell } from "./layouts/AppShell";
 import { AdminPage } from "../features/administration/AdminPage";
@@ -33,6 +35,7 @@ export function App() {
   const generalRoute = useMatch("/laboratorio");
   const demoRoute = useMatch("/demo");
   const landingRoute = useMatch("/");
+  const betaRoute = useMatch("/beta");
   const canvasAlias = useMatch("/lienzo");
   const classicRoute = useMatch("/lienzo-clasico");
   const fractionsRoute = useMatch("/fracciones");
@@ -50,6 +53,7 @@ export function App() {
 
   if (generalRoute || canvasAlias || classicRoute || fractionsRoute) return <Suspense fallback={<div>Preparando tu lienzo…</div>}><PrimitiveCanvas /></Suspense>;
   if (landingRoute) return <LandingPage />;
+  if (betaRoute) return <BetaInfoPage />;
 
   if (authRoute) {
     if (status === "loading") return <AuthLoadingPage />;
@@ -81,7 +85,7 @@ export function App() {
   if (status === "anonymous") return <AuthPage />;
 
   return (
-    <WorkspaceProvider>
+    <BetaGate><WorkspaceProvider>
       <Routes>
         <Route element={<AppShell />}>
           <Route path="inicio" element={<HomePage />} />
@@ -106,6 +110,6 @@ export function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
-    </WorkspaceProvider>
+    </WorkspaceProvider></BetaGate>
   );
 }

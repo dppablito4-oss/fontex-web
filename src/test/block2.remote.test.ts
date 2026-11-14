@@ -79,6 +79,8 @@ suite("Block 2 remote Storage and RLS", () => {
     });
 
     for (const [kind, email] of Object.entries(emails) as Array<[keyof typeof emails, string]>) {
+      const invitation = await admin.rpc("admin_invite_beta", {p_email:email});
+      if (invitation.error) throw invitation.error;
       const result = await admin.auth.admin.createUser({
         email,
         password,

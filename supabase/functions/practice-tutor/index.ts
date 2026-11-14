@@ -1,4 +1,5 @@
 import { withSupabase } from "@supabase/server";
+import { betaDenial } from "../_shared/beta.ts";
 
 import { createPayload, generateTutorReply, type TutorRequest } from "../_shared/practice/tutor.ts";
 
@@ -37,6 +38,8 @@ async function readBody(request: Request): Promise<(TutorRequest & { action?: un
 
 export default {
   fetch: withSupabase({ auth: "user" }, async (request, context) => {
+    const denial = await betaDenial(context.userClaims?.id, (name,args) => context.supabaseAdmin.rpc(name,args), true);
+    if (denial) return denial;
     const userId = context.userClaims?.id;
     if (!userId) return json({ message: "Inicia sesión para usar el tutor." }, 401);
     if (request.method !== "POST") return json({ message: "Método no permitido." }, 405);

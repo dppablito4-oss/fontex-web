@@ -1,7 +1,12 @@
 begin;
+-- Explicit beta invitations for this transactional fixture.
+insert into fontex_beta.invitations(email) values ('scene-a@example.invalid'),('scene-b@example.invalid') on conflict(email) do update set enabled=true,expires_at=now()+interval '1 day';
+
 create extension if not exists pgtap with schema extensions;
 select extensions.plan(15);
 insert into auth.users(id,email) values ('cdb70000-0000-4000-8000-000000000001','scene-a@example.invalid'),('cdb70000-0000-4000-8000-000000000002','scene-b@example.invalid');
+-- Fixtures represent accounts with a verified email.
+update auth.users set email_confirmed_at=now() where email in ('scene-a@example.invalid','scene-b@example.invalid');
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"cdb70000-0000-4000-8000-000000000001","role":"authenticated"}',true);
 select extensions.lives_ok($$insert into public.visual_scenes(user_id,id,scene) values ('cdb70000-0000-4000-8000-000000000001','scene-1','{"schemaVersion":2,"format":"primitive-scene","id":"scene-1","title":"Nueva escena","updatedAt":"2026-11-14T00:00:00Z","level":"secundaria","variables":[],"primitives":[],"conversation":[]}')$$,'owner creates native scene');

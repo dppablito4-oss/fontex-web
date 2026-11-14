@@ -86,6 +86,8 @@ suite("Block 4 remote tutor, RAG grounding, citations and conversations", () => 
 
     const userEntries = await Promise.all(
       Object.entries(emails).map(async ([key, email]) => {
+        const invitation = await adminClient.rpc("admin_invite_beta", {p_email:email});
+        if (invitation.error) throw invitation.error;
         const created = await adminClient.auth.admin.createUser({
           email,
           password,

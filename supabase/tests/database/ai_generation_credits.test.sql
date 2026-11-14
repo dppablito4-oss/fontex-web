@@ -1,4 +1,7 @@
 begin;
+-- Explicit beta invitations for this transactional fixture.
+insert into fontex_beta.invitations(email) values ('credit-admin@example.invalid'),('credit-budget@example.invalid'),('credit-user@example.invalid') on conflict(email) do update set enabled=true,expires_at=now()+interval '1 day';
+
 create extension if not exists pgtap with schema extensions;
 select extensions.no_plan();
 insert into auth.users(id,email,raw_user_meta_data) values
@@ -10,6 +13,8 @@ select extensions.is((select balance from fontex_ai.wallets where user_id='ac810
 select extensions.is((select count(*)::int from fontex_ai.events where user_id='ac810000-0000-4000-8000-000000000003' and kind='initial'),1,'initial grant is audited once');
 select fontex_ai.ensure_wallet('ac810000-0000-4000-8000-000000000003');
 select extensions.is((select count(*)::int from fontex_ai.events where user_id='ac810000-0000-4000-8000-000000000003' and kind='initial'),1,'reading or ensuring a wallet cannot repeat the initial grant');
+-- Fixtures represent accounts with a verified email.
+update auth.users set email_confirmed_at=now() where email in ('credit-admin@example.invalid','credit-budget@example.invalid','credit-user@example.invalid');
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"ac810000-0000-4000-8000-000000000002","role":"authenticated"}',true);
 select extensions.is((public.get_ai_credit_status()->>'balance')::int,5,'a signed-in user reads own balance');

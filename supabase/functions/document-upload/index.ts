@@ -1,4 +1,6 @@
 import { withSupabase } from "@supabase/server";
+import { betaDenial } from "../_shared/beta.ts";
+import { BodyError, boundedFormData } from "../_shared/http.ts";
 
 const BUCKET = "fontex-documents";
 const MAX_FILE_BYTES = 5 * 1024 * 1024;
@@ -36,20 +38,17 @@ async function hasPdfSignature(file: File) {
 
 export default {
   fetch: withSupabase({ auth: "user" }, async (request, context) => {
+    const denial = await betaDenial(context.userClaims?.id, (name,args) => context.supabaseAdmin.rpc(name,args), false);
+    if (denial) return denial;
     if (request.method !== "POST") {
       return jsonError("Método no permitido.", "METHOD_NOT_ALLOWED", 405);
     }
 
-    const contentLength = Number(request.headers.get("content-length") ?? "0");
-    if (Number.isFinite(contentLength) && contentLength > MAX_REQUEST_BYTES) {
-      return jsonError("El PDF supera el límite de 5 MiB.", "FILE_TOO_LARGE", 413);
-    }
-
     let formData: FormData;
     try {
-      formData = await request.formData();
-    } catch {
-      return jsonError("La carga debe usar multipart/form-data.", "INVALID_FORM_DATA", 400);
+      formData = await boundedFormData(request, MAX_REQUEST_BYTES);
+    } catch (error) {
+      return jsonError(error instanceof BodyError ? error.message : "Carga inválida.", "INVALID_FORM_DATA", error instanceof BodyError ? error.status : 400);
     }
 
     const documentId = formData.get("documentId");

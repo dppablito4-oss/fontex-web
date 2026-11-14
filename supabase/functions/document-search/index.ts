@@ -1,4 +1,5 @@
 import { withSupabase } from "@supabase/server";
+import { betaDenial } from "../_shared/beta.ts";
 
 import { createEmbeddings, EmbeddingProviderError, vectorToPostgres } from "../_shared/rag/openai.ts";
 
@@ -17,6 +18,8 @@ function databaseError(message: string) {
 
 export default {
   fetch: withSupabase({ auth: "user" }, async (request, context) => {
+    const denial = await betaDenial(context.userClaims?.id, (name,args) => context.supabaseAdmin.rpc(name,args), true);
+    if (denial) return denial;
     if (request.method !== "POST") return jsonError("Método no permitido.", "METHOD_NOT_ALLOWED", 405);
 
     let body: unknown;

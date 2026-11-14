@@ -16,7 +16,7 @@ const createPrimitiveHandler: typeof baseHandler = (
   env,
   provider,
   credits = fakeCredits,
-) => baseHandler(env, provider, credits);
+) => baseHandler(env, provider, credits, {reserve:()=>Promise.resolve({allowed:true,reason:"reserved"}),finish:()=>Promise.resolve()});
 const request = (
   question = "Explica una función",
   task: "chat" | "build" = "chat",

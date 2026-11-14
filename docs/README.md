@@ -1,10 +1,11 @@
 # Documentación de Fontex
 
-Actualizada el **14 de noviembre de 2026**: el editor principal utiliza nueve primitivas componibles, variables compartidas y escenas v2. La biblioteca académica y el aula de práctica mantienen sus flujos propios.
+Actualizada el **14 de noviembre de 2026**: el editor principal utiliza diez primitivas componibles, variables compartidas y escenas v2. La biblioteca académica y el aula de práctica mantienen sus flujos propios.
 
 | Documento | Qué resuelve |
 |---|---|
 | [README principal](../README.md) | Instalación, capacidades, rutas y despliegue del frontend |
+| [Preparación de beta cerrada](beta-cerrada.md) | Correcciones de auditoría, invitaciones, límites, despliegue y pendientes |
 | [Primitivas v0.7](primitivas-v0.7.md) | Contrato, editor, IA, guardado, alcance y límites del lienzo actual |
 | [Laboratorio anterior](general-canvas-prototype.md) | Expresiones, escenas privadas, sincronización, formato y límites actuales |
 | [Corrección del 13 de noviembre](AUDITORIA-2026-11-13.md) | Regresiones de sincronización y matemáticas, dependencias y retiro de datos de prueba |

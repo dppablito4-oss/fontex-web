@@ -1,7 +1,12 @@
 begin;
+-- Explicit beta invitations for this transactional fixture.
+insert into fontex_beta.invitations(email) values ('canvas-a@example.invalid') on conflict(email) do update set enabled=true,expires_at=now()+interval '1 day';
+
 create extension if not exists pgtap with schema extensions;
 select extensions.plan(7);
 insert into auth.users(id,email) values ('ddd70000-0000-4000-8000-000000000001','canvas-a@example.invalid');
+-- Fixtures represent accounts with a verified email.
+update auth.users set email_confirmed_at=now() where email in ('canvas-a@example.invalid');
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"ddd70000-0000-4000-8000-000000000001","role":"authenticated"}',true);
 select extensions.throws_ok($$insert into public.visual_scenes(user_id,id,scene) values ('ddd70000-0000-4000-8000-000000000001','canvas-workspace-v1','{"id":"canvas-workspace-v1","version":1,"format":"canvas-workspace","state":{"documents":[],"conversations":{},"activeId":null}}')$$,'23514',null,'retired module workspace cannot be restored by old clients');

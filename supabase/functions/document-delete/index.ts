@@ -1,11 +1,9 @@
 import { withSupabase } from "@supabase/server";
+import { betaDenial } from "../_shared/beta.ts";
+import { BodyError, jsonObject } from "../_shared/http.ts";
 
 const BUCKET = "fontex-documents";
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-type DeleteRequest = {
-  documentId?: unknown;
-};
 
 function jsonError(message: string, code: string, status: number) {
   return Response.json({ message, code }, { status });
@@ -13,15 +11,17 @@ function jsonError(message: string, code: string, status: number) {
 
 export default {
   fetch: withSupabase({ auth: "user" }, async (request, context) => {
+    const denial = await betaDenial(context.userClaims?.id, (name,args) => context.supabaseAdmin.rpc(name,args), false);
+    if (denial) return denial;
     if (request.method !== "POST") {
       return jsonError("Método no permitido.", "METHOD_NOT_ALLOWED", 405);
     }
 
-    let body: DeleteRequest;
+    let body: Record<string, unknown>;
     try {
-      body = await request.json() as DeleteRequest;
-    } catch {
-      return jsonError("El cuerpo debe ser JSON válido.", "INVALID_JSON", 400);
+      body = await jsonObject(request);
+    } catch (error) {
+      return jsonError(error instanceof BodyError ? error.message : "JSON inválido.", "INVALID_JSON", error instanceof BodyError ? error.status : 400);
     }
 
     const documentId = body.documentId;

@@ -1,7 +1,10 @@
 import { withSupabase } from "@supabase/server";
+import { betaDenial } from "../_shared/beta.ts";
 import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
 
-import { createPageAwareChunks, normalizeExtractedText, type ExtractedPage } from "../_shared/rag/chunking.ts";
+import { createPageAwareChunks } from "../_shared/rag/chunking.ts";
+import { extractPdfPages, ProcessingError } from "../_shared/rag/pdf.ts";
+import { BodyError, jsonObject } from "../_shared/http.ts";
 import { createEmbeddings, EmbeddingProviderError } from "../_shared/rag/openai.ts";
 
 const BUCKET = "fontex-documents";
@@ -30,17 +33,6 @@ type ProcessingClaim = {
 
 type PendingChunk = { id: number; content: string };
 
-class ProcessingError extends Error {
-  constructor(
-    message: string,
-    readonly code: string,
-    readonly status: number,
-    readonly permanent = false,
-  ) {
-    super(message);
-  }
-}
-
 function jsonError(message: string, code: string, status: number) {
   return Response.json({ message, code }, { status });
 }
@@ -53,43 +45,6 @@ async function sha256(value: Uint8Array | string) {
   const bytes = typeof value === "string" ? new TextEncoder().encode(value) : value;
   const copied = Uint8Array.from(bytes);
   return bytesToHex(await crypto.subtle.digest("SHA-256", copied.buffer));
-}
-
-async function extractPages(data: Uint8Array, maximumCharacters: number) {
-  const loadingTask = getDocument({
-    data,
-    stopAtErrors: true,
-    useSystemFonts: true,
-  });
-  let pdf: Awaited<typeof loadingTask.promise> | null = null;
-  try {
-    pdf = await loadingTask.promise;
-    const pages: ExtractedPage[] = [];
-    let totalCharacters = 0;
-    for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
-      const page = await pdf.getPage(pageNumber);
-      const content = await page.getTextContent({ disableNormalization: false });
-      let text = "";
-      for (const item of content.items) {
-        if (!("str" in item)) continue;
-        text += item.str;
-        text += item.hasEOL ? "\n" : " ";
-      }
-      page.cleanup();
-      const normalized = normalizeExtractedText(text);
-      totalCharacters += normalized.length;
-      if (totalCharacters > maximumCharacters) {
-        throw new ProcessingError("El PDF supera el límite de texto extraíble.", "extracted_text_limit", 422, true);
-      }
-      pages.push({ pageNumber, text: normalized });
-    }
-    return { pageCount: pdf.numPages, pages, totalCharacters };
-  } catch (error) {
-    if (error instanceof ProcessingError) throw error;
-    throw new ProcessingError("No fue posible extraer texto del PDF.", "pdf_extraction_failed", 422, true);
-  } finally {
-    await loadingTask.destroy();
-  }
 }
 
 function parseClaim(value: unknown): ProcessingClaim {
@@ -139,13 +94,15 @@ function databaseError(message: string) {
 
 export default {
   fetch: withSupabase({ auth: "user" }, async (request, context) => {
+    const denial = await betaDenial(context.userClaims?.id, (name,args) => context.supabaseAdmin.rpc(name,args), true);
+    if (denial) return denial;
     if (request.method !== "POST") return jsonError("Método no permitido.", "METHOD_NOT_ALLOWED", 405);
 
     let body: unknown;
     try {
-      body = await request.json();
-    } catch {
-      return jsonError("El cuerpo debe ser JSON válido.", "INVALID_JSON", 400);
+      body = await jsonObject(request);
+    } catch (error) {
+      return jsonError(error instanceof BodyError ? error.message : "JSON inválido.", "INVALID_JSON", error instanceof BodyError ? error.status : 400);
     }
     const documentId = body && typeof body === "object" ? Reflect.get(body, "documentId") : null;
     if (typeof documentId !== "string" || !UUID_PATTERN.test(documentId)) {
@@ -192,7 +149,7 @@ export default {
           throw new ProcessingError("El PDF almacenado no coincide con su hash registrado.", "stored_hash_mismatch", 422, true);
         }
 
-        const extraction = await extractPages(bytes, claim.max_extracted_characters);
+        const extraction = await extractPdfPages(getDocument({data: bytes, stopAtErrors: true, useSystemFonts: true}), claim.expected_pages, claim.max_extracted_characters);
         if (extraction.pageCount !== claim.expected_pages) {
           throw new ProcessingError("El número real de páginas no coincide con la carga.", "page_count_mismatch", 422, true);
         }

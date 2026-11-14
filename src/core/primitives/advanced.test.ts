@@ -6,7 +6,7 @@ import {
   inverse,
   transformPoint,
 } from "./linear-algebra";
-import { compile, interpolate, scalar, sceneScope } from "./math";
+import { compile, displayNumber, interpolate, scalar, sceneScope } from "./math";
 import { curvePoint, sampleCurve } from "./curves";
 import {
   applyPrimitivePatch,
@@ -61,6 +61,13 @@ describe("bounded propositional logic", () => {
   });
 });
 describe("numeric linear algebra", () => {
+  it("preserves small nonzero determinants and normalizes only negative zero", () => {
+    const matrix = [[1e-7, 0], [0, 1e-7]];
+    expect(inverse(matrix)).not.toBeNull();
+    expect(displayNumber(determinant(matrix))).toBe("1e-14");
+    expect(displayNumber(-1e-13)).toBe("-1e-13");
+    expect(displayNumber(-0)).toBe("0");
+  });
   it("computes a known 3x3 determinant and inverse", () => {
     const m = [[2, 1, 0], [1, 2, 1], [0, 1, 2]], inv = inverse(m)!;
     expect(determinant(m)).toBe(4);

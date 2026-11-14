@@ -14,6 +14,8 @@ Consulta [el alcance y los límites de las primitivas](docs/primitivas-v0.7.md) 
 
 Cada cuenta tiene **5 créditos iniciales** para generar con IA, sin renovación automática. El chat del lienzo no consume créditos; las plantillas y la edición manual siguen libres. El administrador puede asignar más desde `/#/administracion`. Consulta [la política de uso y administración](docs/politica-uso-ia.md).
 
+La preparación de **beta cerrada** añade invitaciones verificadas en servidor, revocación, límites de uso compartidos por chat/construcción y pausa de IA. Las cuentas ya verificadas del piloto se conservan como cohorte inicial. El acceso local sigue disponible sin cuenta. Consulta [activación, límites y comprobaciones pendientes](docs/beta-cerrada.md); estos cambios requieren aplicar la nueva migración y desplegar las funciones antes de publicar el frontend.
+
 ## Capacidades
 
 | Área | Estado |
@@ -65,6 +67,7 @@ Las rutas van después de `#` para admitir recargas en GitHub Pages.
 | Ruta | Vista |
 |---|---|
 | `/#/` | Presentación pública |
+| `/#/beta` | Ayuda de participantes, datos, límites y contacto para incidencias |
 | `/#/lienzo` | Editor de primitivas y chat lateral |
 | `/#/lienzo-clasico`, `/#/laboratorio`, `/#/fracciones` | Alias del editor actual |
 | `/#/demo` | Aula de práctica; admite `?nivel=inicial`, `primaria`, `secundaria` o `universidad` |
@@ -84,7 +87,7 @@ npm run build
 
 Los workflows comprueban frontend, handlers de Edge Functions y SQL/RLS. Los handlers se prueban con proveedor simulado; la verificación del proveedor real se registra por separado. Las siete integraciones remotas de Vitest requieren configuración y se omiten cuando falta. `npm run test:remote` exige esa configuración explícitamente; `npm run test:agent:remote` verifica el agente real con cuatro consultas pagadas y consentimiento por variable de entorno. La batería `npm run test:agent:beta` añade tres generaciones reales para los modos v0.8. El workflow manual y los requisitos se documentan en v0.7.1/v0.8.
 
-El workflow `deploy-pages.yml` publica `dist/` al subir `main`. Variables de compilación: `VITE_BASE_PATH`, `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY`. Usa `/` para el dominio personalizado o `/fontex-web/` para el dominio estándar. El workflow incluye valores públicos del piloto como respaldo.
+El workflow `deploy-pages.yml` publica `dist/` al subir `main` después de validar frontend, SQL y Edge con el workflow reutilizable de CI. Exige `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY` explícitos y comprueba el contrato `closed-beta-v1` del backend destino; no usa valores del piloto como respaldo. Configura también `VITE_BASE_PATH`: `/` para el dominio personalizado o `/fontex-web/` para el dominio estándar. Esta publicación no despliega SQL ni funciones.
 
 La migración `replace_test_canvas_with_primitives` bloquea nuevas escrituras de formatos retirados y admite escenas v2. Conserva RLS por propietario y compare-and-set. No modifica Auth, la biblioteca PDF ni los datos académicos. Las cachés antiguas del editor se retiran al abrir la nueva aplicación. Publicar frontend, desplegar funciones y aplicar SQL son pasos independientes.
 

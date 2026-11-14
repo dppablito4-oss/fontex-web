@@ -5,6 +5,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
@@ -54,8 +55,15 @@ type WorkspaceContextValue = {
   groupMemberships: GroupMembership[];
   selectClassroom: (classroomId: string) => void;
   refresh: () => Promise<void>;
-  createWorkspace: (organizationName: string, classroomTitle: string, term: string) => Promise<void>;
-  createInvitation: (email: string, role: ClassroomRole) => Promise<InvitationResult>;
+  createWorkspace: (
+    organizationName: string,
+    classroomTitle: string,
+    term: string,
+  ) => Promise<void>;
+  createInvitation: (
+    email: string,
+    role: ClassroomRole,
+  ) => Promise<InvitationResult>;
   acceptInvitation: (token: string) => Promise<void>;
   createGroup: (name: string) => Promise<void>;
   addGroupMember: (groupId: string, userId: string) => Promise<void>;
@@ -64,7 +72,8 @@ type WorkspaceContextValue = {
   setMemberRole: (userId: string, role: ClassroomRole) => Promise<void>;
 };
 
-const unavailable = () => Promise.reject(new Error("El espacio de trabajo no está disponible."));
+const unavailable = () =>
+  Promise.reject(new Error("El espacio de trabajo no está disponible."));
 
 const defaultContext: WorkspaceContextValue = {
   loading: false,
@@ -93,93 +102,147 @@ const defaultContext: WorkspaceContextValue = {
 const WorkspaceContext = createContext<WorkspaceContextValue>(defaultContext);
 
 function readableDataError(message: string) {
-  if (message.includes("row-level security")) return "No tienes permiso para realizar esa acción.";
+  if (message.includes("row-level security")) {
+    return "No tienes permiso para realizar esa acción.";
+  }
   if (message.includes("duplicate key")) return "Ese registro ya existe.";
   return message;
 }
 
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
+  const { user } = useAuth();
+  return (
+    <WorkspaceSession key={user?.id ?? "guest"}>{children}</WorkspaceSession>
+  );
+}
+
+function WorkspaceSession({ children }: { children: ReactNode }) {
   const { status, user } = useAuth();
   const [loading, setLoading] = useState(status === "authenticated");
   const [error, setError] = useState<string | null>(null);
   const [classrooms, setClassrooms] = useState<ClassroomSummary[]>([]);
-  const [activeClassroomId, setActiveClassroomId] = useState<string | null>(null);
+  const [activeClassroomId, setActiveClassroomId] = useState<string | null>(
+    null,
+  );
   const [members, setMembers] = useState<ClassroomMember[]>([]);
   const [groups, setGroups] = useState<StudyGroup[]>([]);
-  const [groupMemberships, setGroupMemberships] = useState<GroupMembership[]>([]);
+  const [groupMemberships, setGroupMemberships] = useState<GroupMembership[]>(
+    [],
+  );
+  const detailsSequence = useRef(0), refreshSequence = useRef(0);
+  const selectedClassroom = useRef<string | null>(null);
+  useEffect(() => () => {
+    detailsSequence.current++;
+    refreshSequence.current++;
+  }, []);
 
-  const activeClassroom = classrooms.find((item) => item.id === activeClassroomId) ?? null;
+  const activeClassroom =
+    classrooms.find((item) => item.id === activeClassroomId) ?? null;
   const activeRole =
-    members.find((member) => member.userId === user?.id && member.status === "active")?.role ?? null;
+    members.find((member) =>
+      member.userId === user?.id && member.status === "active"
+    )?.role ?? null;
 
   const loadDetails = useCallback(async (classroomId: string | null) => {
-    if (!supabase || !classroomId) {
-      setMembers([]);
-      setGroups([]);
-      setGroupMemberships([]);
-      return;
-    }
+    const sequence = ++detailsSequence.current;
+    const current = () => sequence === detailsSequence.current;
+    setMembers([]);
+    setGroups([]);
+    setGroupMemberships([]);
+    setLoading(true);
+    try {
+      if (!supabase || !classroomId) {
+        setMembers([]);
+        setGroups([]);
+        setGroupMemberships([]);
+        return;
+      }
 
-    const [membersResult, groupsResult] = await Promise.all([
-      supabase
-        .from("class_members")
-        .select("user_id, role, status")
-        .eq("classroom_id", classroomId)
-        .eq("status", "active"),
-      supabase
-        .from("study_groups")
-        .select("id, classroom_id, name")
-        .eq("classroom_id", classroomId)
-        .order("name"),
-    ]);
+      const [membersResult, groupsResult] = await Promise.all([
+        supabase
+          .from("class_members")
+          .select("user_id, role, status")
+          .eq("classroom_id", classroomId)
+          .eq("status", "active"),
+        supabase
+          .from("study_groups")
+          .select("id, classroom_id, name")
+          .eq("classroom_id", classroomId)
+          .order("name"),
+      ]);
+      if (!current()) return;
 
-    if (membersResult.error) throw new Error(readableDataError(membersResult.error.message));
-    if (groupsResult.error) throw new Error(readableDataError(groupsResult.error.message));
+      if (membersResult.error) {
+        throw new Error(readableDataError(membersResult.error.message));
+      }
+      if (groupsResult.error) {
+        throw new Error(readableDataError(groupsResult.error.message));
+      }
 
-    const userIds = membersResult.data.map((membership) => membership.user_id);
-    const profileResult = userIds.length
-      ? await supabase.from("profiles").select("id, display_name").in("id", userIds)
-      : { data: [], error: null };
+      const userIds = membersResult.data.map((membership) =>
+        membership.user_id
+      );
+      const profileResult = userIds.length
+        ? await supabase.from("profiles").select("id, display_name").in(
+          "id",
+          userIds,
+        )
+        : { data: [], error: null };
+      if (!current()) return;
 
-    if (profileResult.error) throw new Error(readableDataError(profileResult.error.message));
+      if (profileResult.error) {
+        throw new Error(readableDataError(profileResult.error.message));
+      }
 
-    const names = new Map(profileResult.data.map((profile) => [profile.id, profile.display_name]));
-    setMembers(
-      membersResult.data.map((membership) => ({
+      const names = new Map(
+        profileResult.data.map((profile) => [profile.id, profile.display_name]),
+      );
+      const nextMembers = membersResult.data.map((membership) => ({
         userId: membership.user_id,
         displayName: names.get(membership.user_id) ?? "Usuario",
         role: membership.role,
         status: membership.status,
-      })),
-    );
+      }));
 
-    const nextGroups = groupsResult.data.map((group) => ({
-      id: group.id,
-      classroomId: group.classroom_id,
-      name: group.name,
-    }));
-    setGroups(nextGroups);
-
-    if (!nextGroups.length) {
-      setGroupMemberships([]);
-      return;
+      const nextGroups = groupsResult.data.map((group) => ({
+        id: group.id,
+        classroomId: group.classroom_id,
+        name: group.name,
+      }));
+      const membershipResult = nextGroups.length
+        ? await supabase
+          .from("group_members")
+          .select("group_id, user_id")
+          .in("group_id", nextGroups.map((group) => group.id))
+        : { data: [], error: null };
+      if (!current()) return;
+      if (membershipResult.error) {
+        throw new Error(readableDataError(membershipResult.error.message));
+      }
+      setMembers(nextMembers);
+      setGroups(nextGroups);
+      setGroupMemberships(
+        membershipResult.data.map((membership) => ({
+          groupId: membership.group_id,
+          userId: membership.user_id,
+        })),
+      );
+    } catch (detailError) {
+      if (current()) {
+        setError(
+          detailError instanceof Error
+            ? detailError.message
+            : "No fue posible cargar el aula.",
+        );
+      }
+    } finally {
+      if (current()) setLoading(false);
     }
-
-    const membershipResult = await supabase
-      .from("group_members")
-      .select("group_id, user_id")
-      .in("group_id", nextGroups.map((group) => group.id));
-    if (membershipResult.error) throw new Error(readableDataError(membershipResult.error.message));
-    setGroupMemberships(
-      membershipResult.data.map((membership) => ({
-        groupId: membership.group_id,
-        userId: membership.user_id,
-      })),
-    );
   }, []);
 
   const refresh = useCallback(async () => {
     if (!supabase || status !== "authenticated") return;
+    const sequence = ++refreshSequence.current;
     setLoading(true);
     setError(null);
 
@@ -188,7 +251,10 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         .from("classrooms")
         .select("id, organization_id, title, term, owner_id")
         .order("created_at");
-      if (classroomsError) throw new Error(readableDataError(classroomsError.message));
+      if (sequence !== refreshSequence.current) return;
+      if (classroomsError) {
+        throw new Error(readableDataError(classroomsError.message));
+      }
 
       const nextClassrooms = data.map((classroom) => ({
         id: classroom.id,
@@ -199,17 +265,25 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       }));
       setClassrooms(nextClassrooms);
 
-      const nextActiveId = nextClassrooms.some((item) => item.id === activeClassroomId)
-        ? activeClassroomId
+      const nextActiveId = nextClassrooms.some((item) =>
+          item.id === selectedClassroom.current
+        )
+        ? selectedClassroom.current
         : (nextClassrooms[0]?.id ?? null);
+      selectedClassroom.current = nextActiveId;
       setActiveClassroomId(nextActiveId);
       await loadDetails(nextActiveId);
     } catch (refreshError) {
-      setError(refreshError instanceof Error ? refreshError.message : "No fue posible cargar el aula.");
-    } finally {
-      setLoading(false);
+      if (sequence === refreshSequence.current) {
+        setError(
+          refreshError instanceof Error
+            ? refreshError.message
+            : "No fue posible cargar el aula.",
+        );
+        setLoading(false);
+      }
     }
-  }, [activeClassroomId, loadDetails, status]);
+  }, [loadDetails, status]);
 
   useEffect(() => {
     if (status !== "authenticated") return;
@@ -223,7 +297,9 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       await action();
       await refresh();
     } catch (mutationError) {
-      const message = mutationError instanceof Error ? mutationError.message : "No fue posible guardar el cambio.";
+      const message = mutationError instanceof Error
+        ? mutationError.message
+        : "No fue posible guardar el cambio.";
       setError(message);
       throw new Error(message, { cause: mutationError });
     }
@@ -240,35 +316,40 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       groups,
       groupMemberships,
       selectClassroom(classroomId) {
+        selectedClassroom.current = classroomId;
         setActiveClassroomId(classroomId);
         setLoading(true);
-        void loadDetails(classroomId)
-          .catch((detailError: unknown) => {
-            setError(detailError instanceof Error ? detailError.message : "No fue posible cargar el aula.");
-          })
-          .finally(() => setLoading(false));
+        void loadDetails(classroomId);
       },
       refresh,
       async createWorkspace(organizationName, classroomTitle, term) {
         if (!supabase) return unavailable();
         const client = supabase;
         await runMutation(async () => {
-          const { error: workspaceError } = await client.rpc("create_workspace", {
-            organization_name: organizationName.trim(),
-            classroom_title: classroomTitle.trim(),
-            classroom_term: term.trim() || null,
-          });
-          if (workspaceError) throw new Error(readableDataError(workspaceError.message));
+          const { error: workspaceError } = await client.rpc(
+            "create_workspace",
+            {
+              organization_name: organizationName.trim(),
+              classroom_title: classroomTitle.trim(),
+              classroom_term: term.trim() || null,
+            },
+          );
+          if (workspaceError) {
+            throw new Error(readableDataError(workspaceError.message));
+          }
         });
       },
       async createInvitation(email, role) {
         if (!supabase || !activeClassroom) return unavailable();
         setError(null);
-        const { data, error: invitationError } = await supabase.rpc("create_classroom_invitation", {
-          target_classroom_id: activeClassroom.id,
-          target_email: email.trim(),
-          target_role: role,
-        });
+        const { data, error: invitationError } = await supabase.rpc(
+          "create_classroom_invitation",
+          {
+            target_classroom_id: activeClassroom.id,
+            target_email: email.trim(),
+            target_role: role,
+          },
+        );
         if (invitationError) {
           const message = readableDataError(invitationError.message);
           setError(message);
@@ -288,21 +369,29 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         if (!supabase) return unavailable();
         const client = supabase;
         await runMutation(async () => {
-          const { error: invitationError } = await client.rpc("accept_classroom_invitation", {
-            invitation_token: token.trim(),
-          });
-          if (invitationError) throw new Error(readableDataError(invitationError.message));
+          const { error: invitationError } = await client.rpc(
+            "accept_classroom_invitation",
+            {
+              invitation_token: token.trim(),
+            },
+          );
+          if (invitationError) {
+            throw new Error(readableDataError(invitationError.message));
+          }
         });
       },
       async createGroup(name) {
         if (!supabase || !activeClassroom) return unavailable();
         const client = supabase;
         await runMutation(async () => {
-          const { error: groupError } = await client.from("study_groups").insert({
-            classroom_id: activeClassroom.id,
-            name: name.trim(),
-          });
-          if (groupError) throw new Error(readableDataError(groupError.message));
+          const { error: groupError } = await client.from("study_groups")
+            .insert({
+              classroom_id: activeClassroom.id,
+              name: name.trim(),
+            });
+          if (groupError) {
+            throw new Error(readableDataError(groupError.message));
+          }
         });
       },
       async addGroupMember(groupId, userId) {
@@ -312,7 +401,9 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
           const { error: memberError } = await client
             .from("group_members")
             .insert({ group_id: groupId, user_id: userId });
-          if (memberError) throw new Error(readableDataError(memberError.message));
+          if (memberError) {
+            throw new Error(readableDataError(memberError.message));
+          }
         });
       },
       async removeGroupMember(groupId, userId) {
@@ -324,30 +415,42 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
             .delete()
             .eq("group_id", groupId)
             .eq("user_id", userId);
-          if (memberError) throw new Error(readableDataError(memberError.message));
+          if (memberError) {
+            throw new Error(readableDataError(memberError.message));
+          }
         });
       },
       async removeClassroomMember(userId) {
         if (!supabase || !activeClassroom) return unavailable();
         const client = supabase;
         await runMutation(async () => {
-          const { error: memberError } = await client.rpc("remove_classroom_member", {
-            target_classroom_id: activeClassroom.id,
-            target_user_id: userId,
-          });
-          if (memberError) throw new Error(readableDataError(memberError.message));
+          const { error: memberError } = await client.rpc(
+            "remove_classroom_member",
+            {
+              target_classroom_id: activeClassroom.id,
+              target_user_id: userId,
+            },
+          );
+          if (memberError) {
+            throw new Error(readableDataError(memberError.message));
+          }
         });
       },
       async setMemberRole(userId, role) {
         if (!supabase || !activeClassroom) return unavailable();
         const client = supabase;
         await runMutation(async () => {
-          const { error: memberError } = await client.rpc("set_classroom_member_role", {
-            target_classroom_id: activeClassroom.id,
-            target_user_id: userId,
-            target_role: role,
-          });
-          if (memberError) throw new Error(readableDataError(memberError.message));
+          const { error: memberError } = await client.rpc(
+            "set_classroom_member_role",
+            {
+              target_classroom_id: activeClassroom.id,
+              target_user_id: userId,
+              target_role: role,
+            },
+          );
+          if (memberError) {
+            throw new Error(readableDataError(memberError.message));
+          }
         });
       },
     }),
@@ -366,7 +469,11 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     ],
   );
 
-  return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;
+  return (
+    <WorkspaceContext.Provider value={value}>
+      {children}
+    </WorkspaceContext.Provider>
+  );
 }
 
 // eslint-disable-next-line react-refresh/only-export-components

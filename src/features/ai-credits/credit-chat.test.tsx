@@ -20,6 +20,7 @@ vi.mock(
   }),
 );
 vi.mock("../../lib/supabase/client", () => ({ supabase: null }));
+vi.mock("../beta/useBetaAccess", () => ({useBetaAccess:()=>({status:"allowed",refresh:vi.fn()})}));
 vi.mock(
   "./useAiCredits",
   () => ({

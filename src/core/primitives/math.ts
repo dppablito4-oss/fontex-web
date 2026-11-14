@@ -82,7 +82,7 @@ export const reservedNames = new Set([
 ]);
 export const displayNumber = (n: number) =>
   Number.isFinite(n)
-    ? String(Math.abs(n) < 1e-12 ? 0 : Number(n.toPrecision(8)))
+    ? String(Object.is(n, -0) ? 0 : Number(n.toPrecision(8)))
     : "No definido";
 function substitute(source: string, scope: Scope) {
   return source.replace(

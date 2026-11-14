@@ -17,6 +17,7 @@ import {
   listCreditAccounts,
 } from "./service";
 import "./credits.css";
+import { BetaAdminPanel } from "../beta/BetaAdminPanel";
 const eventNames = {
   initial: "Créditos iniciales",
   grant: "Créditos asignados",
@@ -269,7 +270,7 @@ export function AiCreditPanel() {
             : error ?? "Consultando saldo…"}
         </p>
         <p>
-          Chat sin límite de consultas. Crear en el lienzo consume 1 crédito por
+          Chat sin cobro, con límites temporales de uso. Crear en el lienzo consume 1 crédito por
           propuesta válida completada.
         </p>
         <p className="mt-2 text-sm text-muted-foreground">
@@ -285,6 +286,7 @@ export function AiCreditPanel() {
         <a href="#/lienzo">Ir al lienzo</a>
       </Card>
       {status?.is_admin && <CreditAdministration />}
+      {status?.is_admin && <BetaAdminPanel />}
     </div>
   );
 }

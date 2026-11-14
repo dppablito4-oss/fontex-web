@@ -72,6 +72,7 @@ export function AuthPage({ initialMode = 'signin' }: { initialMode?: Mode }) {
         <button aria-pressed={mode === 'signup'} disabled={pending} className={`flex-1 rounded-lg px-3 py-2 text-sm font-semibold ${mode === 'signup' ? 'bg-surface shadow-sm' : 'text-muted-foreground'}`} onClick={() => switchMode('signup')} type="button">Crear cuenta</button>
       </div>
       {!configured && <p role="alert" className="mt-5 text-sm text-error">El acceso a cuentas no está disponible en esta versión. Puedes seguir usando el lienzo sin una cuenta.</p>}
+      {mode === 'signup' && <p className="mt-5 text-sm text-muted-foreground">Beta cerrada: regístrate con el correo autorizado por el administrador. Si todavía no tienes invitación, puedes explorar el lienzo local.</p>}
       <form className="mt-7 space-y-5" onSubmit={event => void submit(event)}>
         <fieldset disabled={pending || !configured} className="space-y-5 border-0 p-0">
           {mode === 'signup' && <label className="form-field"><span>Nombre visible</span><input autoComplete="name" maxLength={80} minLength={1} onChange={event => setDisplayName(event.target.value)} required value={displayName}/></label>}
@@ -86,6 +87,7 @@ export function AuthPage({ initialMode = 'signin' }: { initialMode?: Mode }) {
       {mode === 'signin' && <div className="mt-5 text-center"><button type="button" disabled={pending || !configured || cooldown > 0} className="text-xs font-semibold text-primary underline disabled:opacity-50" onClick={() => void resend()}>{cooldown > 0 ? `Reenviar confirmación en ${cooldown} s` : 'Reenviar correo de confirmación'}</button>{confirmationEmail && <p className="mt-2 break-words text-xs text-muted-foreground">Confirma el correo indicado antes de entrar.</p>}</div>}
       {mode === 'signin' && <a className="mt-5 block text-center text-sm font-semibold text-primary underline" href="#/recuperar-contrasena">Olvidé mi contraseña</a>}
       <a className="mt-6 flex items-center justify-center gap-2 text-sm font-semibold text-primary" href="#/lienzo"><ArrowLeft size={15}/> Continuar al lienzo sin cuenta</a>
+      <a className="mt-4 block text-center text-sm text-primary underline" href="#/beta">Ayuda y datos durante la beta</a>
       </Card>
     </div>
   </main>;

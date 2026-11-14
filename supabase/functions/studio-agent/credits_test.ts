@@ -1,10 +1,11 @@
-import { createPrimitiveHandler } from "./primitive-handler.ts";
+import { createPrimitiveHandler as baseHandler } from "./primitive-handler.ts";
 import { type CreditAccess, creditAccess } from "./credits.ts";
 import {
   createPrimitive,
   newPrimitiveScene,
 } from "../../../src/core/primitives/schema.ts";
 import { eventData } from "../../../src/core/agent/event-stream.ts";
+const createPrimitiveHandler: typeof baseHandler = (env, provider, credits) => baseHandler(env,provider,credits,{reserve:()=>Promise.resolve({allowed:true,reason:"reserved"}),finish:()=>Promise.resolve()});
 function assert(value: unknown, message = "Assertion failed"): asserts value {
   if (!value) throw Error(message);
 }

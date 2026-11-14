@@ -1,6 +1,6 @@
 import { withSupabase } from "@supabase/server";
 import { sceneHandler } from "./handler.ts";
-const handler = sceneHandler((name) => Deno.env.get(name));
+const handler = sceneHandler();
 export default {
   fetch: withSupabase(
     { auth: "user" },

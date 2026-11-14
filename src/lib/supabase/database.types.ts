@@ -27,7 +27,7 @@ export type Database = {
   public: {
     Tables: {
       visual_scenes: {
-        Row: { user_id: string; id: string; scene: Json; revision: number; updated_at: string };
+        Row: { user_id: string; id: string; scene: Json; revision: number; updated_at: string; scene_title: string | null; scene_bytes: number };
         Insert: { user_id: string; id: string; scene: Json; revision: number };
         Update: { scene?: Json; revision?: number };
         Relationships: [];
@@ -439,6 +439,11 @@ export type Database = {
     };
     Views: Record<string, never>;
     Functions: {
+      get_beta_access_status: { Args: Record<string,never>; Returns: Json };
+      admin_invite_beta: { Args: {p_email:string}; Returns: Json };
+      admin_revoke_beta: { Args: {p_user_id:string}; Returns: undefined };
+      admin_beta_overview: { Args: Record<string,never>; Returns: Json };
+      admin_set_beta_ai_enabled: { Args: {p_enabled:boolean}; Returns: undefined };
       get_ai_credit_status: { Args: Record<string,never>; Returns: Json };
       admin_list_ai_accounts: { Args: {p_search?:string;p_limit?:number;p_offset?:number}; Returns: Json };
       admin_grant_ai_credits: { Args: {p_user_id:string;p_amount:number;p_reason:string;p_request_id:string}; Returns: Json };

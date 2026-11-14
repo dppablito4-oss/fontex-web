@@ -74,6 +74,8 @@ suite("Block 3 remote extraction, indexing and retrieval", () => {
     if (!remoteUrl || !publishableKey || !serviceRoleKey) return;
     admin = createClient<Database>(remoteUrl, serviceRoleKey, { auth: { autoRefreshToken: false, persistSession: false } });
     for (const [kind, email] of Object.entries(emails) as Array<[keyof typeof emails, string]>) {
+      const invitation = await admin.rpc("admin_invite_beta", {p_email:email});
+      if (invitation.error) throw invitation.error;
       const created = await admin.auth.admin.createUser({
         email,
         password,

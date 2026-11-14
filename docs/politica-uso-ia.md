@@ -2,7 +2,7 @@
 
 ## Uso y saldo
 
-Cada cuenta recibe **5 créditos iniciales de generación**. Es una asignación única, sin renovación diaria o mensual; las cuentas existentes también reciben el saldo al activar esta política. El chat del lienzo no tiene límite de consultas de la aplicación y no consume estos créditos. Esto se aplica al Agente Fontex del lienzo; los tutores del aula de práctica y documental conservan sus propias políticas.
+Cada cuenta invitada recibe **5 créditos iniciales de generación**. Es una asignación única, sin renovación diaria o mensual; las cuentas existentes también reciben el saldo al activar esta política. El chat del lienzo no consume créditos. Durante la beta, chat y construcción comparten límites de frecuencia, concurrencia y presupuesto: inicialmente 20 solicitudes/hora, 60/24 horas móviles y una solicitud simultánea por cuenta. Los tutores del aula de práctica y documental conservan además sus propias cuotas. Consulta [la guía de beta](beta-cerrada.md) para los límites globales, invitaciones y activación.
 
 Una solicitud de **Crear lienzo / Crear en el lienzo** consume un crédito cuando el servidor termina y valida una propuesta. Una propuesta válida completada cuenta aunque luego el usuario cambie de documento, decida no utilizarla o pierda la conexión después de completarse. Conversar, editar, usar plantillas, presentar y exportar PDF no consumen saldo.
 
@@ -31,7 +31,7 @@ La migración `agent_generation_credits` crea `fontex_ai`, un esquema de almacen
 
 El saldo se reserva dentro de una transacción y bajo bloqueo de la cartera. Se admite una generación pendiente por cuenta. Confirmaciones y devoluciones son idempotentes; un resultado ya completado no puede devolverse después ni una devolución repetirse. El historial registra el crédito inicial, asignaciones administrativas, reservas, finalizaciones y devoluciones. Este registro tiene el mismo aislamiento privado.
 
-Si falla la contabilidad, el modo build no consulta al proveedor. El modo chat no llama al sistema de reservas, así que continúa disponible sin saldo. Las reglas del proveedor y su disponibilidad siguen siendo externas a esta política.
+Si falla la contabilidad de créditos, el modo build no consulta al proveedor. El chat no reserva créditos y sigue disponible con saldo cero, pero ambos modos deben reservar uso en servidor antes de consultar al proveedor. Si falla esa comprobación, se alcanza un límite o el administrador pausa IA, se rechaza la consulta antes de llamar al proveedor. Las reglas del proveedor y su disponibilidad siguen siendo externas a esta política.
 
 ## Validación
 

@@ -17,6 +17,11 @@ function renderRoute(route = "/inicio") {
 }
 
 describe("Fontex shell", () => {
+  it("offers beta help and a report link without requiring an account", () => {
+    renderRoute("/beta");
+    expect(screen.getByRole("heading", { name: "Ayuda y datos durante la beta", level: 1 })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Reportar un problema" })).toHaveAttribute("href", "mailto:pabloclsa87@gmail.com?subject=Incidencia%20beta%20Fontex");
+  });
   it.each(["/", "/lienzo", "/lienzo-clasico", "/fracciones", "/demo"])("permite alternar y conservar el tema desde %s", async (route) => {
     const view = renderRoute(route);
     fireEvent.click(await screen.findByRole("button", { name: "Activar tema oscuro" }, { timeout: 5000 }));

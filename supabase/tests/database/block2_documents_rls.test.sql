@@ -1,4 +1,7 @@
 begin;
+-- Explicit beta invitations for this transactional fixture.
+insert into fontex_beta.invitations(email) values ('outsider.block2@fontex.test'),('student-a@fontex.test'),('student-b@fontex.test'),('student-c@fontex.test'),('teacher.block2@fontex.test') on conflict(email) do update set enabled=true,expires_at=now()+interval '1 day';
+
 
 create extension if not exists pgtap with schema extensions;
 
@@ -129,6 +132,8 @@ values
     now()
   );
 
+-- Fixtures represent accounts with a verified email.
+update auth.users set email_confirmed_at=now() where email in ('outsider.block2@fontex.test','student-a@fontex.test','student-b@fontex.test','student-c@fontex.test','teacher.block2@fontex.test');
 set local role authenticated;
 set local "request.jwt.claims" = '{"sub":"00000000-0000-4000-8000-000000000205","email":"outsider.block2@fontex.test","role":"authenticated"}';
 

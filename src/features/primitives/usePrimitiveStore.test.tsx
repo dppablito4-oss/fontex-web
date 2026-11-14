@@ -12,6 +12,8 @@ import {
 
 const cloud = vi.hoisted(() => ({
   rows: new Map<string, { scene: Scene; revision: number }>(),
+  fullReads: [] as string[][],
+  pages: [] as number[],
 }));
 vi.mock("../../lib/supabase/client", () => ({
   supabase: {
@@ -19,8 +21,33 @@ vi.mock("../../lib/supabase/client", () => ({
       select: () => {
         const query = {
           eq: () => query,
-          order: () =>
-            Promise.resolve({ data: [...cloud.rows.values()], error: null }),
+          order: () => query,
+          range: (start: number, end: number) => {
+            cloud.pages.push(start);
+            return Promise.resolve({
+              data: [...cloud.rows.values()].filter((row) =>
+                row.scene.format === "primitive-scene"
+              ).sort((a, b) => a.scene.id.localeCompare(b.scene.id)).slice(
+                start,
+                end + 1,
+              ).map((row) => ({
+                id: row.scene.id,
+                revision: row.revision,
+                scene_title: row.scene.title,
+              })),
+              error: null,
+            });
+          },
+          in: (_key: string, ids: string[]) => {
+            cloud.fullReads.push(ids);
+            return Promise.resolve({
+              data: ids.flatMap((id) => {
+                const row = cloud.rows.get(id);
+                return row ? [structuredClone(row)] : [];
+              }),
+              error: null,
+            });
+          },
         };
         return query;
       },
@@ -64,12 +91,34 @@ vi.mock("../../lib/supabase/client", () => ({
         };
         return query;
       },
+      delete: () => {
+        const filters: Record<string, unknown> = {};
+        const query = {
+          eq: (key: string, value: unknown) => {
+            filters[key] = value;
+            return query;
+          },
+          select: () => ({
+            maybeSingle: () => {
+              const row = cloud.rows.get(String(filters.id));
+              if (!row || row.revision !== filters.revision) {
+                return Promise.resolve({ data: null, error: null });
+              }
+              cloud.rows.delete(String(filters.id));
+              return Promise.resolve({ data: { id: filters.id }, error: null });
+            },
+          }),
+        };
+        return query;
+      },
     }),
   },
 }));
 
 beforeEach(() => {
   cloud.rows.clear();
+  cloud.fullReads.length = 0;
+  cloud.pages.length = 0;
   localStorage.clear();
 });
 afterEach(() => {
@@ -107,9 +156,9 @@ it("saves edits with revisions and refreshes another device's changes", async ()
   cloud.rows.set(scene.id, { scene, revision: 1 });
   const { result } = renderHook(() => useSceneStore("account"));
   await waitFor(() => expect(result.current.status).toBe("saved"));
-  act(() =>
-    result.current.setScene((s) => ({ ...s, title: "Edited locally" }))
-  );
+  act(() => {
+    result.current.setScene((s) => ({ ...s, title: "Edited locally" }));
+  });
   await waitFor(() => expect(cloud.rows.get(scene.id)?.revision).toBe(2));
   const row = cloud.rows.get(scene.id)!;
   cloud.rows.set(scene.id, {
@@ -130,7 +179,9 @@ it("preserves both versions after simultaneous device edits", async () => {
   cloud.rows.set(scene.id, { scene, revision: 1 });
   const { result } = renderHook(() => useSceneStore("account"));
   await waitFor(() => expect(result.current.status).toBe("saved"));
-  act(() => result.current.setScene((s) => ({ ...s, title: "Local work" })));
+  act(() => {
+    result.current.setScene((s) => ({ ...s, title: "Local work" }));
+  });
   cloud.rows.set(scene.id, {
     scene: { ...scene, title: "Remote work" },
     revision: 2,
@@ -148,16 +199,111 @@ it("preserves both versions after simultaneous device edits", async () => {
 
 it("restores guest primitive scenes with their shared variables", () => {
   const first = renderHook(() => useSceneStore("guest"));
-  act(() =>
+  act(() => {
     first.result.current.setScene((s) => ({
       ...s,
       variables: s.variables.map((v) => ({ ...v, value: 3 })),
-    }))
-  );
+    }));
+  });
   const id = first.result.current.scene.id;
   first.unmount();
   const next = renderHook(() => useSceneStore("guest"));
   expect(next.result.current.scene.id).toBe(id);
   expect(next.result.current.scene.variables[0]?.value).toBe(3);
   expect(cloud.rows.size).toBe(0);
+});
+
+it("paginates metadata and downloads only opened or changed content", async () => {
+  for (let i = 0; i < 30; i++) {
+    const scene = {
+      ...expressionScene(),
+      id: `scene-${String(i).padStart(2, "0")}`,
+    };
+    cloud.rows.set(scene.id, { scene, revision: 1 });
+  }
+  const { result } = renderHook(() => useSceneStore("account"));
+  await waitFor(() => expect(result.current.status).toBe("saved"));
+  expect(result.current.scenes).toHaveLength(30);
+  expect(cloud.pages).toEqual([0, 25]);
+  expect(cloud.fullReads.flat()).toEqual(["scene-00"]);
+  await act(async () => {
+    window.dispatchEvent(new Event("focus"));
+    await Promise.resolve();
+  });
+  await waitFor(() => expect(result.current.status).toBe("saved"));
+  expect(cloud.fullReads.flat()).toEqual(["scene-00"]);
+  act(() => result.current.open("scene-29"));
+  await waitFor(() => expect(result.current.scene.id).toBe("scene-29"));
+  expect(cloud.fullReads.flat()).toEqual(["scene-00", "scene-29"]);
+});
+
+it("removes a saved scene without resurrecting it on another refresh", async () => {
+  const scene = expressionScene();
+  cloud.rows.set(scene.id, { scene, revision: 1 });
+  const { result } = renderHook(() => useSceneStore("account"));
+  await waitFor(() => expect(result.current.status).toBe("saved"));
+  let removed = false;
+  await act(async () => {
+    removed = await result.current.remove(scene.id);
+  });
+  expect(removed).toBe(true);
+  expect(cloud.rows.has(scene.id)).toBe(false);
+  await act(async () => {
+    window.dispatchEvent(new Event("focus"));
+    await Promise.resolve();
+  });
+  await waitFor(() => expect(result.current.status).toBe("saved"));
+  expect(result.current.scene.id).not.toBe(scene.id);
+  expect(cloud.rows.has(scene.id)).toBe(false);
+});
+
+it("honors a remote deletion and preserves unsaved work as a different scene", async () => {
+  const scene = expressionScene();
+  cloud.rows.set(scene.id, { scene, revision: 1 });
+  const { result } = renderHook(() => useSceneStore("account"));
+  await waitFor(() => expect(result.current.status).toBe("saved"));
+  act(() => {
+    result.current.setScene((s) => ({ ...s, title: "Unsaved work" }));
+  });
+  cloud.rows.delete(scene.id);
+  await act(async () => {
+    window.dispatchEvent(new Event("focus"));
+    await Promise.resolve();
+  });
+  await waitFor(() => expect(result.current.status).toBe("saved"));
+  expect(result.current.scene.title).toBe("Unsaved work (copia local)");
+  expect(result.current.scene.id).not.toBe(scene.id);
+  expect(cloud.rows.has(scene.id)).toBe(false);
+});
+
+it("does not resurrect a cloud deletion when browser storage becomes read-only", async () => {
+  const scene = expressionScene();
+  cloud.rows.set(scene.id, { scene, revision: 1 });
+  const { result } = renderHook(() => useSceneStore("account"));
+  await waitFor(() => expect(result.current.status).toBe("saved"));
+  vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+    throw Error("quota");
+  });
+  await act(async () => {
+    expect(await result.current.remove(scene.id)).toBe(true);
+  });
+  await act(async () => {
+    window.dispatchEvent(new Event("focus"));
+    await Promise.resolve();
+  });
+  await waitFor(() => expect(result.current.status).toBe("saved"));
+  expect(cloud.rows.has(scene.id)).toBe(false);
+  expect(result.current.scene.id).not.toBe(scene.id);
+});
+
+it("frees a quota slot when other scenes exist only in the remote catalog",async()=>{
+  for(let i=0;i<30;i++){const scene={...expressionScene(),id:`scene-${String(i).padStart(2,"0")}`};cloud.rows.set(scene.id,{scene,revision:1});}
+  const {result}=renderHook(()=>useSceneStore("account"));
+  await waitFor(()=>expect(result.current.status).toBe("saved"));
+  await act(async()=>{expect(await result.current.remove("scene-00")).toBe(true);});
+  expect(result.current.scene.id).toBe("scene-01");
+  await act(async()=>{window.dispatchEvent(new Event("focus"));await Promise.resolve();});
+  await waitFor(()=>expect(result.current.status).toBe("saved"));
+  expect(cloud.rows.size).toBe(29);
+  expect(result.current.scenes).toHaveLength(29);
 });

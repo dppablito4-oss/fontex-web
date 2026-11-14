@@ -28,6 +28,8 @@ import {
 import { createPortal } from "react-dom";
 import { SiteHeader } from "../../components/ProductNavigation";
 import { useAuth } from "../auth/AuthProvider";
+import { AuthLoadingPage } from "../auth/AuthPage";
+import { useBetaAccess } from "../beta/useBetaAccess";
 import { AcademicMarkdown } from "../tutor/components/AcademicMarkdown";
 import { usePrimitiveStore } from "./usePrimitiveStore";
 import { PrimitiveVisual } from "./PrimitiveVisual";
@@ -228,16 +230,20 @@ function Frame({
 }
 export function PrimitiveCanvas() {
   const { user } = useAuth();
+  const access = useBetaAccess();
+  const participant = !!user && access.status === "allowed";
+  if (user && access.status === "loading") return <AuthLoadingPage />;
   return (
     <Editor
-      key={user?.id ?? "guest"}
-      owner={user?.id ?? "guest"}
-      authenticated={!!user}
+      key={participant ? user.id : "guest"}
+      owner={participant ? user.id : "guest"}
+      authenticated={participant}
+      accessNote={user && !participant ? access.status === "loading" ? "Verificando tu invitación a la beta…" : "Esta cuenta no tiene acceso remoto disponible. Puedes seguir creando en el lienzo local o consultar al administrador." : ""}
     />
   );
 }
 function Editor(
-  { owner, authenticated }: { owner: string; authenticated: boolean },
+  { owner, authenticated, accessNote }: { owner: string; authenticated: boolean; accessNote: string },
 ) {
   const library = usePrimitiveStore(owner), { scene, setScene } = library;
   const credits = useAiCredits();
@@ -308,6 +314,7 @@ function Editor(
   function commit(next: PrimitiveScene, history = true) {
     try {
       const valid = parsePrimitiveScene(next);
+      if (!setScene(valid)) return false;
       if (history) {
         viewportBatch.current = { id: "", time: 0 };
         const previous = live.current;
@@ -315,7 +322,6 @@ function Editor(
         setFuture([]);
       }
       live.current = valid;
-      setScene(valid);
       setNotice("");
       return true;
     } catch (e) {
@@ -552,7 +558,9 @@ function Editor(
     setSidebar(false);
   }
   function load(id: string) {
-    if (commit(templateScene(id))) {
+    const template = templateScene(id);
+    if (!live.current.primitives.length && !live.current.conversation.length) template.id = live.current.id;
+    if (commit(template)) {
       setSelected(null);
       setStep(1);
       setSidebar(false);
@@ -770,9 +778,9 @@ function Editor(
           </button>
         </div>
       </header>
-      {(notice || library.notice) && (
+      {(notice || library.notice || accessNote) && (
         <div className="pc-banner" role="status">
-          {notice || library.notice}
+          {notice || library.notice || accessNote}
           <button aria-label="Cerrar aviso" onClick={() => setNotice("")}>
             <X size={16} />
           </button>
@@ -855,7 +863,7 @@ function Editor(
                           : credits.error ?? "Consultando saldo…"}
                       </strong>
                       <small>
-                        Chat sin límite. Crear en el lienzo consume 1 crédito.
+                        Chat sin cobro, con límites de uso. Crear en el lienzo consume 1 crédito.
                       </small>
                       {credits.status?.balance === 0 && (
                         <span>Sin saldo: puedes seguir conversando.</span>
@@ -1201,6 +1209,10 @@ function Editor(
                   Nuevo
                 </button>
                 <button onClick={download}>Guardar JSON</button>
+                <button disabled={busy || library.status === "saving" || library.status === "loading"} onClick={() => {
+                  if (!window.confirm(`¿Eliminar el lienzo «${scene.title || "Sin título"}»? Guarda un JSON si necesitas conservar una copia.`)) return;
+                  void library.remove(scene.id).then((removed) => { if(removed){setSelected(null);setPast([]);setFuture([]);} });
+                }}>Eliminar lienzo</button>
                 <button onClick={() => file.current?.click()}>
                   Abrir JSON
                 </button>

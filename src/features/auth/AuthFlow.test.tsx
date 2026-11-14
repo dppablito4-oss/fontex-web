@@ -11,6 +11,7 @@ const mocked = vi.hoisted(() => ({
   listener: null as null | ((event: string, session: unknown) => void),
 }));
 vi.mock('../../lib/supabase/client', () => ({ supabase: {
+  rpc: vi.fn().mockResolvedValue({ data: { allowed: true, is_admin: false }, error: null }),
   auth: { ...mocked, onAuthStateChange: (callback: typeof mocked.listener) => { mocked.listener = callback; return { data: { subscription: { unsubscribe: vi.fn() } } }; } },
   from: () => ({ select: () => ({ eq: () => ({ single: () => Promise.resolve({ data: { id: 'test-user', display_name: 'Estudiante' }, error: null }) }) }) }),
 } }));
@@ -20,7 +21,7 @@ function renderFlow(route = '/ingresar') {
   return render(<ThemeProvider><AuthProvider><HashRouter><App/></HashRouter></AuthProvider></ThemeProvider>);
 }
 async function fillSignIn() {
-  await screen.findByRole('button', { name: 'Entrar a Fontex' });
+  await screen.findByRole('button', { name: 'Entrar a Fontex' }, { timeout: 5000 });
   fireEvent.change(screen.getByLabelText('Correo'), { target: { value: 'student@example.com' } });
   fireEvent.change(screen.getByLabelText('Contraseña'), { target: { value: 'Testing-123!' } });
 }
@@ -83,6 +84,7 @@ describe('Acceso completo a Fontex', () => {
   it('abre el acceso desde el lienzo y vuelve al lienzo con una sesión válida', async () => {
     renderFlow('/lienzo');
     fireEvent.click(await screen.findByRole('link', { name: 'Entrar' }));
+    await waitFor(() => expect(window.location.hash).toBe('#/ingresar'), { timeout: 5000 });
     await fillSignIn();
     fireEvent.click(screen.getByRole('button', { name: 'Entrar a Fontex' }));
     expect(await screen.findByRole('link', { name: 'Mi cuenta' })).toBeInTheDocument();
