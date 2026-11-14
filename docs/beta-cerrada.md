@@ -1,6 +1,6 @@
 # Preparación y operación de la beta cerrada
 
-Cambios locales del 14 de noviembre de 2026, a partir de la [auditoría](AUDITORIA-BETA-CERRADA-2026-11-14.md). **No se han aplicado a producción.**
+Cambios del 14 de noviembre de 2026, a partir de la [auditoría](AUDITORIA-BETA-CERRADA-2026-11-14.md). El backend de producción `goegjuglstapjwcckawp` ya incorpora los controles de esta beta. El resultado de la publicación se registra en [el acta de despliegue](DESPLIEGUE-BETA-2026-11-14.md).
 
 ## Cambios implementados
 
@@ -22,6 +22,8 @@ Se añadió recuperación ante errores de renderizado, copia de seguridad local 
 ## Participantes e invitaciones
 
 La migración `20261114190450_closed_beta_controls.sql` conserva como cohorte inicial las cuentas ya verificadas del piloto y los administradores existentes. Revisa esa lista antes de abrir la beta. Las cuentas futuras requieren una invitación por correo. `user_metadata` no concede acceso ni administración.
+
+Producción comparte Auth con la aplicación `forma`. Las migraciones `20261114220000` y `20261114221500` mantienen su API y sus datos separados de las restricciones de Fontex. Por decisión explícita del operador, **el registro de todo el proyecto compartido requiere invitación**, incluida esa aplicación. Tener una cuenta o un token no sustituye la membresía activa de Fontex. El guard usa el perfil correspondiente al método HTTP; un encabezado de lectura no puede eludir las restricciones de escritura y viceversa.
 
 Desde `/#/administracion`, un administrador puede autorizar un correo, ver participantes, revocar acceso y pausar nuevas peticiones de IA. La invitación de registro dura 30 días y se consume al crear la cuenta. La persona invitada debe confirmar su correo conforme a Auth. Autorizar una cuenta ya existente habilita su UUID. El panel no envía correos de invitación: comparte el enlace `/#/crear-cuenta` por tu canal habitual.
 
@@ -71,7 +73,7 @@ Los tutores académicos conservan además sus cuotas anteriores. El sistema no r
 
 ## Activación en el entorno destino
 
-1. Identificar un proyecto dedicado de Supabase y guardar un respaldo recuperable. La nueva política restrictiva cubre todas las tablas de `public` de este proyecto, además del bucket de documentos.
+1. Identificar el proyecto de Supabase y guardar un respaldo recuperable. La política restrictiva cubre las tablas de Fontex en `public` y su bucket de documentos. La tabla ajena `forma_connection_checks` y el esquema `forma` conservan sus propias políticas.
 2. Revisar el plan de migraciones del destino. No usar `db reset` sobre el proyecto habitual ni reparar el historial a ciegas. La auditoría detectó un desfase en la base local habitual.
 3. Aplicar las migraciones revisadas **antes** de publicar este frontend. Si ya existe otro `pgrst.db_pre_request`, la migración se detiene: el operador debe componer los controles en lugar de sustituir el hook existente. El guard se complementa con RLS para Storage/Realtime, conforme a la [guía de Supabase](https://supabase.com/docs/guides/api/securing-your-api).
 4. Desplegar las ocho funciones del repositorio, incluida la respuesta de retirada de `scene-agent`. Mantener JWT habilitado. Desplegar desde la raíz para incluir los imports compartidos de `src/core`.
@@ -98,11 +100,11 @@ Resultado local al cerrar esta intervención:
 | Lint, tipos y compilación | Correctos |
 | Vitest (frontend y gate de publicación) | 363 pruebas correctas; 7 integraciones remotas omitidas |
 | Handlers y utilidades Deno | 38 pruebas correctas; ocho endpoints comprueban tipos y lint |
-| SQL desde cero | 19 migraciones; 238 pruebas correctas en 11 suites |
+| SQL | Base inicial de 19 migraciones probada desde cero; actualización a 21 migraciones y 243 pruebas correctas en 11 suites |
 | Asesores SQL, nivel warning/error | Sin incidencias |
 | Concurrencia con ocho conexiones reales | Una reserva por cuenta y cuatro globales, sin excederlas |
 | Gate de publicación | Casos simulados de backend incompatible, configuración ausente y rutas inseguras rechazados |
 
 Las pruebas locales verifican propiedad/RLS, membresía, registro no invitado, revocación, cuotas, presupuestos, pausa, límites de PDF/HTTP, carreras de aulas y sincronización. También se probaron ocho conexiones PostgreSQL simultáneas: una reserva admitida para la misma cuenta; cuatro para ocho cuentas distintas, respetando el límite global.
 
-Queda pendiente verificar el entorno alojado, el recorrido visual en navegadores reales, la entrega de correos, la restauración de respaldos y el proveedor real. Durante esta intervención el host de automatización de navegador no estuvo disponible; no se presenta una prueba DOM como prueba visual. La recuperación duradera de propuestas después de perder la conexión, MFA administrativo con enrolamiento/verificación y telemetría operativa más completa siguen siendo mejoras posteriores; no se consideran implementadas.
+La verificación alojada y las limitaciones vigentes se registran en el acta de despliegue. La recuperación duradera de propuestas después de perder la conexión, MFA administrativo con enrolamiento/verificación y telemetría operativa más completa siguen siendo mejoras posteriores; no se consideran implementadas.

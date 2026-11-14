@@ -53,7 +53,7 @@ jobs:
           deno check --config supabase/functions/document-upload/deno.json supabase/functions/document-upload/index.ts
           deno check --config supabase/functions/document-delete/deno.json supabase/functions/document-delete/index.ts
       - name: Test bounded requests and PDF extraction
-        run: deno test supabase/functions/_shared/http_test.ts supabase/functions/_shared/rag/pdf_test.ts supabase/functions/_shared/beta_test.ts
+        run: deno test --node-modules-dir=none supabase/functions/_shared/http_test.ts supabase/functions/_shared/rag/pdf_test.ts supabase/functions/_shared/beta_test.ts
       - name: Check document search
         run: deno check --config supabase/functions/document-search/deno.json supabase/functions/document-search/index.ts
       - name: Check tutor chat

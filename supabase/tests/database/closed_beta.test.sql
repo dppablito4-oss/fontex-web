@@ -1,9 +1,10 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 select extensions.no_plan();
-select extensions.is((select count(*)::int from pg_tables t where schemaname='public' and not exists(select 1 from pg_policies p where p.schemaname=t.schemaname and p.tablename=t.tablename and p.policyname='beta_members_only')),0,'every application table retains the beta restriction');
+select extensions.is((select count(*)::int from pg_tables t where schemaname='public' and tablename<>'forma_connection_checks' and not exists(select 1 from pg_policies p where p.schemaname=t.schemaname and p.tablename=t.tablename and p.policyname='beta_members_only')),0,'every Fontex table retains the beta restriction');
 insert into fontex_beta.invitations(email) values ('beta-admin@example.invalid'),('beta-user@example.invalid'),('beta-other@example.invalid');
-select extensions.throws_ok($$insert into auth.users(id,email) values('be7a0000-0000-4000-8000-000000000099','uninvited@example.invalid')$$,'42501',null,'uninvited registration is rejected before creating an account');
+select extensions.throws_ok($$insert into auth.users(id,email) values('be7a0000-0000-4000-8000-000000000099','uninvited@example.invalid')$$,'42501',null,'all shared project signups require an administrator invitation');
+select extensions.is(fontex_beta.allowed('be7a0000-0000-4000-8000-000000000099'),false,'shared Auth registration does not admit an uninvited Fontex participant');
 insert into auth.users(id,email,raw_user_meta_data) values
 ('be7a0000-0000-4000-8000-000000000001','beta-admin@example.invalid','{}'),
 ('be7a0000-0000-4000-8000-000000000002','beta-user@example.invalid','{"is_admin":true,"beta":true}'),
@@ -30,6 +31,16 @@ select extensions.throws_ok($$select public.get_ai_credit_status()$$,'42501','be
 select extensions.throws_ok($$select public.create_workspace('Blocked','Blocked',null)$$,'42501','beta_invitation_required','direct definer RPC writes cannot bypass membership');
 select set_config('request.path','/rpc/get_ai_credit_status',true);
 select extensions.throws_ok($$select public.check_beta_request()$$,'42501','beta_invitation_required','API guard also rejects credit and other definer RPCs');
+select set_config('request.method','GET',true);
+select set_config('request.headers','{"accept-profile":"forma"}',true);
+select extensions.lives_ok($$select public.check_beta_request()$$,'shared forma reads remain independent of Fontex membership');
+select set_config('request.method','POST',true);
+select extensions.throws_ok($$select public.check_beta_request()$$,'42501','beta_invitation_required','a forged read profile cannot bypass a public POST guard');
+select set_config('request.headers','{"content-profile":"forma"}',true);
+select extensions.lives_ok($$select public.check_beta_request()$$,'shared forma writes remain independent of Fontex membership');
+select set_config('request.method','GET',true);
+select extensions.throws_ok($$select public.check_beta_request()$$,'42501','beta_invitation_required','a forged write profile cannot bypass a public GET guard');
+select set_config('request.headers','{}',true);
 select set_config('request.path','/rpc/get_beta_access_status',true);
 select extensions.lives_ok($$select public.check_beta_request()$$,'membership status remains accessible to a blocked account');
 select set_config('request.jwt.claims','{"sub":"be7a0000-0000-4000-8000-000000000001","role":"authenticated"}',true);
