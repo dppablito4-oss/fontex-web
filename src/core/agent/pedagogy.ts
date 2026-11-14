@@ -123,6 +123,7 @@ export function exactTarget(object: MathObject): ExactTarget | null {
         result: equationResult(solution),
       };
     }
+    case "function-graph":
     case "text":
       return null;
   }
@@ -149,6 +150,7 @@ export function practiceReply(request: AgentRequest): AgentReply {
     item.id === request.selectedId
   );
   const target = object ? exactTarget(object) : null;
+  if (object?.type === "function-graph") return { message: "Predice las alturas y el cambio de la curva antes de mostrar sus valores. Edita la función o sus parámetros para comprobar tus conjeturas. Esta exploración usa aproximaciones numéricas y no califica respuestas exactas automáticamente.", batch: { documentId: request.document.id, actions: [] }, verification: [] };
   let message =
     "Selecciona un objeto matemático compatible para practicar. El texto libre no se evalúa automáticamente.";
   if (target) {
@@ -187,6 +189,7 @@ export function practiceReply(request: AgentRequest): AgentReply {
         : "Escribe un entero, un decimal o una fracción a/b; el denominador debe ser distinto de cero.")
       : "";
     const initialStrategies: Record<MathObject["type"], string> = {
+      "function-graph": "Observa cómo cambia la altura de la curva con acompañamiento.",
       ...Object.fromEntries(learningTypes.map(type => [type, "Observa el dibujo y cuenta las unidades con acompañamiento. Relaciona cada cambio con la pregunta."])) as Record<LearningType, string>,
       "regular-polygon": "Cuenta los lados iguales y recorre el borde sin saltarte ninguno.",
       polygon: "Cuenta cuadrados completos y junta las partes de cuadrados de la figura.",

@@ -96,7 +96,7 @@ export function CanvasViewport({
   }, [selectedId, objects, zoom, flow]);
   useLayoutEffect(() => {
     if (!onTextGrow || presenting || flow) return;
-    const nodes = viewport.current?.querySelectorAll<HTMLElement>(".st-object-text,.st-object-fraction,.st-object-operation,.st-object-number-line,.st-object-geometry,.st-object-polygon,.st-object-regular-polygon,.st-object-circle,.st-object-angle");
+    const nodes = viewport.current?.querySelectorAll<HTMLElement>(".st-object-text,.st-object-fraction,.st-object-operation,.st-object-function-graph,.st-object-number-line,.st-object-geometry,.st-object-polygon,.st-object-regular-polygon,.st-object-circle,.st-object-angle");
     const measure = () => {
       for (const node of nodes ?? []) {
         const object = objects.find(item => item.id === node.dataset.objectId);

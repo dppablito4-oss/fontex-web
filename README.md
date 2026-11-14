@@ -4,6 +4,8 @@
 
 El lienzo libre es el editor principal en `/#/lienzo`, con módulos editables, movimiento y tamaño de objetos, presentación y la IA en un panel lateral. El laboratorio de expresiones permanece en `/#/laboratorio`: una misma expresión alimenta la evaluación, la derivada simbólica, las tangentes y las raíces reales de polinomios hasta grado cuatro.
 
+La IA lateral y la paleta del lienzo libre también pueden crear **gráficas reales de funciones**: seno, coseno, tangente, polinomios y las demás expresiones admitidas. La categoría **Funciones** permite editar la expresión, grados/radianes, ventana, parámetros y puntos; sus alturas y derivadas se calculan con el motor. Por ejemplo: «Grafica el seno en grados, de 0 a 360, con puntos en 0, 90, 180, 270 y 360». Consulta [funciones en el lienzo](docs/studio-function-graphs.md).
+
 El aula de práctica mantiene 19 guías introductorias, 38 páginas y 54 ejercicios. La biblioteca académica permite consultar PDF privados con un tutor documental y citas por página. Estas experiencias tienen almacenes y endpoints distintos.
 
 ## Estado del 13 de noviembre de 2026

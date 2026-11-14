@@ -15,6 +15,7 @@ import { analyzeCollection, numberLineTicks } from "../math-engine/numbers.ts";
 import { geometryPerimeter } from "../math-engine/geometry.ts";
 import { unitOf } from "../math-engine/regular-polygons.ts";
 import { solveLinearEquation } from "../math-engine/equations.ts";
+import { functionGraphFacts } from "../math-engine/function-graphs.ts";
 
 import { analyzePolygon, analyzeFactors } from "../math-engine/adapted-modules.ts";
 
@@ -40,6 +41,7 @@ export function exactKeys(
 }
 const dataKeys: Record<MathObject["type"], string[]> = {
   ...learningDataKeys,
+  "function-graph": ["source", "angleUnit", "xMin", "xMax", "yMin", "yMax", "a", "b", "c", "pointXs", "showDerivative"],
   polygon: ["vertices"],
   factorization: ["number"],
   geometry: ["figure", "base", "height"],
@@ -218,6 +220,7 @@ export function readStudioContext(
     mathematics: snapshot.objects.map((object) => {
       if (isLearningObject(object)) return { id: object.id, type: object.type, calculation: learningLesson(object).facts };
       switch (object.type) {
+        case "function-graph": return { id: object.id, functionGraph: functionGraphFacts(object.data) };
         case "polygon": return { id: object.id, polygon: analyzePolygon(object.data.vertices), unit: unitOf(object.data) };
         case "factorization": return { id: object.id, factorization: analyzeFactors(object.data.number) };
         case "geometry":

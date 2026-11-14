@@ -15,6 +15,15 @@ const string = { type: "string" };
 const shape = { type: "string", enum: ["bar", "circle"] };
 const data = {
   ...learningSchemas,
+  "function-graph": {
+    source: { type: "string", description: "Función real de x de hasta 500 caracteres: sin/cos/tan/ln/exp/sqrt, potencias, parámetros a/b/c. Nunca código." },
+    angleUnit: { type: "string", enum: ["degrees", "radians"] },
+    xMin: { type: "number", minimum: -10000, maximum: 10000 }, xMax: { type: "number", minimum: -10000, maximum: 10000 },
+    yMin: { type: "number", minimum: -10000, maximum: 10000 }, yMax: { type: "number", minimum: -10000, maximum: 10000 },
+    a: { type: "number", minimum: -5, maximum: 5 }, b: { type: "number", minimum: -5, maximum: 5 }, c: { type: "number", minimum: -5, maximum: 5 },
+    pointXs: { type: "array", maxItems: 24, items: { type: "number", minimum: -10000, maximum: 10000 } },
+    showDerivative: { type: "boolean" },
+  },
   polygon: { unit: { type: "string", enum: ["u", "mm", "cm", "m", "km"] }, vertices: { type: "array", minItems: 3, maxItems: 8, items: object({ x: integer(0, 20), y: integer(0, 20) }) } },
   factorization: { number: integer(2, 360) },
   geometry: { figure: { type: "string", enum: ["rectangle", "triangle"] }, base: integer(1, 100), height: integer(1, 100), unit: { type: "string", enum: ["u", "mm", "cm", "m", "km"] } },
@@ -74,7 +83,7 @@ export const agentOutputSchema = object({
                 x: { type: "number", minimum: 0, maximum: 1600 },
                 y: { type: "number", minimum: 0, maximum: 1000000 },
                 width: { type: "number", minimum: 240, maximum: 1600 },
-                height: { type: "number", minimum: 160, maximum: ["text", "fraction", "operation"].includes(type) ? MAX_TEXT_HEIGHT : 1100 },
+                height: { type: "number", minimum: 160, maximum: ["text", "fraction", "operation", "function-graph"].includes(type) ? MAX_TEXT_HEIGHT : 1100 },
                 data: object(properties),
               })
             ),

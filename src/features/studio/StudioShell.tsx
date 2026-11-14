@@ -391,7 +391,7 @@ function StudioEditor({ owner }: { owner: string }) {
                   className={`st-type-icon st-type-${type}`}
                 >
                   {
-                    { ...learningIcons, polygon: "⬡", factorization: "pⁿ", geometry: "△", fraction: "⅔", operation: "±", text: "T", sequence: "⋯", collection: "#", "number-line": "↔", "linear-equation": "𝑥" }[
+                    { ...learningIcons, "function-graph": "f(x)", polygon: "⬡", factorization: "pⁿ", geometry: "△", fraction: "⅔", operation: "±", text: "T", sequence: "⋯", collection: "#", "number-line": "↔", "linear-equation": "𝑥" }[
                       type
                     ]
                   }

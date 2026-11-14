@@ -9,6 +9,7 @@ import {
 import { learningRegistry } from "./learning-registry.ts";
 export const objectRegistry = {
   ...learningRegistry,
+  "function-graph": { name: "Gráfica de función", width: 1480, height: 1000, data: { source: "x^2", angleUnit: "radians", xMin: -5, xMax: 5, yMin: -2, yMax: 10, a: 1, b: 0, c: -1, pointXs: [-2, -1, 0, 1, 2], showDerivative: false } },
   polygon: { name: "Polígonos", width: 1100, height: 720, data: { vertices: [{ x: 0, y: 0 }, { x: 6, y: 0 }, { x: 6, y: 4 }, { x: 0, y: 4 }] } },
   factorization: { name: "Factores primos", width: 1100, height: 720, data: { number: 36 } },
   geometry: { name: "Geometría: áreas", width: 720, height: 640, data: { figure: "rectangle", base: 6, height: 4 } },

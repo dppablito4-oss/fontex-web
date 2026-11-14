@@ -51,6 +51,7 @@ describe("Ejecutor transaccional de Studio", () => {
       "collection",
       "number-line",
       "linear-equation",
+      "function-graph",
     ] as const,
   )("admite el tipo registrado %s", (type) => {
     const doc = createDocument("blank");

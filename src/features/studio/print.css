@@ -64,3 +64,4 @@ html, body { margin: 0; background: #fff !important; color: #24272b !important; 
 .st-print-document :is(.st-regular-controls,.st-inline-caption) { display: none !important; }
 
 .st-print-document .st-circle svg { width: 42mm; height: auto; aspect-ratio: 1; max-width: 100%; }
+.st-print-document .st-function-svg { width:100%; max-height:100mm !important; }

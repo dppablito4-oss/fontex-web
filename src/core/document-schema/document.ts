@@ -2,6 +2,7 @@ import { validLengthUnit } from "../math-engine/regular-polygons.ts";
 import { parseStudioOperation } from "../math-engine/studio-operations.ts";
 import { analyzeCollection, numberLineTicks } from "../math-engine/numbers.ts";
 import { solveLinearEquation, type LinearCoefficients } from "../math-engine/equations.ts";
+import { validateFunctionGraph, type FunctionGraphData } from "../math-engine/function-graphs.ts";
 
 import { type GeometryData } from "../math-engine/geometry.ts";
 import { analyzePolygon, analyzeFactors, type PolygonData, type FactorizationData } from "../math-engine/adapted-modules.ts";
@@ -31,6 +32,7 @@ type ObjectBase = {
 export type MathObject = ObjectBase &
   (
     | LearningPayload
+    | { type: "function-graph"; data: FunctionGraphData }
     | { type: "polygon"; data: PolygonData }
     | { type: "factorization"; data: FactorizationData }
     | { type: "geometry"; data: GeometryData }
@@ -54,7 +56,7 @@ export const BOARD = { width: 1600, height: 1100 };
 // Objects retain bounded sizes; the document grows downwards as content is added.
 export const MAX_Y = 1_000_000;
 export const MAX_TEXT_HEIGHT = 100_000;
-export const maxObjectHeight = (object: { type: string }) => ["text", "fraction", "operation"].includes(object.type) ? MAX_TEXT_HEIGHT : BOARD.height;
+export const maxObjectHeight = (object: { type: string }) => ["text", "fraction", "operation", "function-graph"].includes(object.type) ? MAX_TEXT_HEIGHT : BOARD.height;
 export function boardHeight(objects: MathObject[]) {
   return Math.max(BOARD.height, ...objects.map(o => o.y + o.height + 300));
 }
@@ -88,6 +90,7 @@ export function validateObject(value: unknown): value is MathObject {
     return false;
   const d = value.data;
   switch (value.type) {
+    case "function-graph": return validateFunctionGraph(d);
     case "polygon":
       if (d.unit !== undefined && !validLengthUnit(d.unit)) return false;
       try { if (!Array.isArray(d.vertices) || !d.vertices.every(p => record(p) && Object.keys(p).length === 2 && "x" in p && "y" in p)) return false; analyzePolygon(d.vertices as PolygonData["vertices"]); return true; } catch { return false; }

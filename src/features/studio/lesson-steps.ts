@@ -8,10 +8,12 @@ import { solveLinearEquation, equationResult } from "../../core/math-engine/equa
 import { analyzePolygon, analyzeFactors } from "../../core/math-engine/adapted-modules";
 import { isLearningObject } from "../../core/math-engine/learning-types";
 import { learningLesson } from "../../core/math-engine/learning-modules";
+import { functionGraphLesson } from "../../core/math-engine/function-graphs";
 export function lessonSteps(object: MathObject, level: AgentLevel): [string, string][] {
   if (isLearningObject(object)) return learningLesson(object, level).steps;
   const simple = level === "initial" || level === "primary";
   switch (object.type) {
+    case "function-graph": return functionGraphLesson(object.data);
     case "text": return [];
     case "polygon": {
       const p = analyzePolygon(object.data.vertices), unit = unitOf(object.data);

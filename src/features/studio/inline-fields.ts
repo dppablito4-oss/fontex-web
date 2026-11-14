@@ -3,13 +3,22 @@ import { validateObject, type MathObject, type ObjectType } from "../../core/doc
 import { parseStudioOperation } from "../../core/math-engine/studio-operations";
 import { unitDefinitions, type Unit } from "../../core/math-engine/learning-types";
 
-type Field = { label: string; kind?: "text" | "multiline" | "list" | "vertices" | "decimal"; hint?: string; choices?: Record<string, string> };
+type Field = { label: string; kind?: "text" | "multiline" | "list" | "vertices" | "decimal" | "real" | "real-list"; hint?: string; choices?: Record<string, string> };
 const lengthUnit: Field = { label: "Unidad de medida", choices: lengthUnits };
 const shape = { label: "Representación", choices: { bar: "Barras", circle: "Círculos" } };
 const coefficient = (letter: string): Field => ({ label: `Coeficiente ${letter}`, hint: "Entero de −1000 a 1000." });
 // Every module, including future ones, must declare the editing contract for its inputs.
 type Contracts = { [T in ObjectType]: Record<Exclude<keyof Extract<MathObject, { type: T }>["data"], "stage">, Field> };
 export const inlineFields = {
+  "function-graph": {
+    source: { label: "Función de x", kind: "text", hint: "Ejemplos: sin(x), cos(x), tan(x), a*x^2+b*x+c. Hasta 500 caracteres." },
+    angleUnit: { label: "Unidad angular", choices: { degrees: "Grados (°)", radians: "Radianes (rad)" } },
+    xMin: { label: "Mínimo de x", kind: "real" }, xMax: { label: "Máximo de x", kind: "real" },
+    yMin: { label: "Mínimo de y", kind: "real" }, yMax: { label: "Máximo de y", kind: "real" },
+    a: { label: "Parámetro a", kind: "real", hint: "Número de −5 a 5." }, b: { label: "Parámetro b", kind: "real", hint: "Número de −5 a 5." }, c: { label: "Parámetro c", kind: "real", hint: "Número de −5 a 5." },
+    pointXs: { label: "Puntos de x", kind: "real-list", hint: "Hasta 24 valores separados por comas; decimales con punto. El motor calcula sus alturas." },
+    showDerivative: { label: "Mostrar derivada", choices: { false: "Ocultar derivada", true: "Mostrar derivada" } },
+  },
   "regular-polygon": { sides: { label: "Número de lados", hint: "Entero de 3 a 12; todos los lados y ángulos son iguales." }, sideLength: { label: "Longitud del lado", kind: "decimal", hint: "De 0,01 a 1000, hasta dos decimales." }, unit: { label: "Unidad de medida", choices: { u: "u", mm: "mm", cm: "cm", m: "m", km: "km" } } },
   fraction: { numerator: { label: "Numerador", hint: "Entero de 0 a 72, hasta tres unidades." }, denominator: { label: "Denominador", hint: "Entero de 1 a 24; hasta tres unidades." }, shape },
   operation: { expression: { label: "Operación", kind: "text", hint: "Ejemplo: 2/3 + 1/6. También resta y multiplicación." }, shape },
@@ -55,12 +64,13 @@ const integer = (raw: string) => {
   if (!/^[+-]?\d+$/.test(raw.trim())) throw new Error("Escribe un número entero.");
   return Number(raw);
 };
+const real = (raw: string) => { const value = Number(raw.trim().replace(",", ".")); if (!raw.trim() || !Number.isFinite(value)) throw new Error("Escribe un número real finito."); return value; };
 export function editField(object: MathObject, field: string, raw: string, index?: number): MathObject {
   const spec = fieldSpec(object, field);
   let value: unknown = raw;
   if (index !== undefined) {
     const values = [...fieldValue(object, field) as number[]];
-    values[index] = integer(raw);
+    values[index] = spec.kind === "real-list" ? real(raw) : integer(raw);
     value = values;
   } else if (spec.kind === "vertices") {
     value = raw.split(";").map(pair => {
@@ -71,8 +81,11 @@ export function editField(object: MathObject, field: string, raw: string, index?
   } else if (spec.kind === "decimal") {
     if (!/^\d+(?:[.,]\d{1,2})?$/.test(raw.trim())) throw new Error(spec.hint);
     value = Number(raw.trim().replace(",", "."));
-  } else if (spec.kind === "list") value = raw.trim() ? raw.split(",").map(integer) : [];
+  } else if (spec.kind === "real") value = real(raw);
+  else if (spec.kind === "real-list") value = raw.trim() ? raw.split(",").map(real) : [];
+  else if (spec.kind === "list") value = raw.trim() ? raw.split(",").map(integer) : [];
   else if (!spec.kind && !spec.choices) value = integer(raw);
+  if (object.type === "function-graph" && field === "showDerivative") { if (raw !== "true" && raw !== "false") throw new Error("Elige mostrar u ocultar la derivada."); value = raw === "true"; }
   let next: unknown = field === "label" ? { ...object, label: value } : { ...object, data: { ...object.data, [field]: value } };
   if (object.type === "operation" && field === "expression") parseStudioOperation(raw);
   if (object.type === "probability") {

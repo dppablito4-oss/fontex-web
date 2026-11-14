@@ -89,6 +89,48 @@ Deno.test("agent: requiere autenticación antes de invocar al proveedor", async 
   assert.equal(result.status, 401);
   assert.equal(result.calls, 0);
 });
+
+Deno.test("agent: crea una gráfica real del seno en grados con puntos y capacidad anunciada en el esquema", async () => {
+  const object = createObject("function-graph");
+  if (object.type !== "function-graph") throw Error("Unexpected type");
+  object.data = { ...object.data, source: "sin(x)", angleUnit: "degrees", xMin: 0, xMax: 360, yMin: -1.5, yMax: 1.5, pointXs: [0,90,180,270,360] };
+  const request = { ...input(), task: "build", question: "Crea en el lienzo lo que acordamos, con sus puntos y unidades.", history: [{ role: "user", content: "Grafica el seno en grados: (0,0), (90,1), (180,0), (270,-1), (360,0)." }, { role: "assistant", content: "Antes no estaba disponible el módulo de funciones." }] };
+  const result = await run({ request, model: { status: "completed", output: [{ type: "message", content: [{ type: "output_text", text: JSON.stringify({ message: "El seno está dibujado en grados y sus puntos se calculan en el lienzo.", actions: [{ kind: "create", object }] }) }] }] } });
+  assert.equal(result.status, 200);
+  assert.equal(result.body.batch.actions[0].object.type, "function-graph");
+  assert.equal(result.body.batch.actions[0].object.data.angleUnit, "degrees");
+  assert.ok(result.body.verification.some((line: string) => line.includes("(90, 1)") && line.includes("(270, -1)")));
+  assert.ok(String(result.providerBody.instructions).includes("no la sustituyas por texto"));
+  const schema = JSON.stringify(result.providerBody.text);
+  assert.ok(schema.includes("function-graph") && schema.includes("angleUnit") && schema.includes("pointXs"));
+  const sent = JSON.parse(String(result.providerBody.input));
+  assert.ok(sent.context.supportedTypes.includes("function-graph"));
+});
+
+Deno.test("agent: rechaza código ejecutable en una gráfica sin aplicar objetos parciales", async () => {
+  const object = createObject("function-graph");
+  if (object.type !== "function-graph") throw Error("Unexpected type");
+  object.data.source = "x;fetch('https://example.invalid')";
+  const result = await run({ model: { status: "completed", output: [{ type: "message", content: [{ type: "output_text", text: JSON.stringify({ message: "Gráfica", actions: [{ kind: "create", object }] }) }] }] } });
+  assert.equal(result.status, 422);
+  assert.equal(result.body.batch, undefined);
+});
+
+Deno.test("agent: no presenta una tarjeta de texto como la gráfica solicitada en la conversación", async () => {
+  const object = createObject("text");
+  const result = await run({ request: { ...input(), task: "build", question: "Crea en el lienzo lo que acordamos.", history: [{ role: "user", content: "Grafica el seno en grados con los puntos 0,90,180,270,360." }] }, model: { status: "completed", output: [{ type: "message", content: [{ type: "output_text", text: JSON.stringify({ message: "Aquí está la guía de la gráfica.", actions: [{ kind: "create", object }] }) }] }] } });
+  assert.equal(result.status, 422);
+  assert.equal(result.calls, 2);
+  assert.equal(result.body.batch, undefined);
+  assert.ok(String(result.providerBody.input).includes("gráfica real"));
+});
+
+Deno.test("agent: conserva una petición explícita de solo texto sobre funciones", async () => {
+  const object = createObject("text");
+  const result = await run({ request: { ...input(), task: "build", question: "Crea solo un texto para explicar cómo graficar la función seno." }, model: { status: "completed", output: [{ type: "message", content: [{ type: "output_text", text: JSON.stringify({ message: "Explicación creada.", actions: [{ kind: "create", object }] }) }] }] } });
+  assert.equal(result.status, 200);
+  assert.equal(result.body.batch.actions[0].object.type, "text");
+});
 Deno.test("agent: rechaza método, cuerpo inválido y cuerpos grandes", async () => {
   assert.equal((await run({ method: "GET" })).status, 405);
   for (

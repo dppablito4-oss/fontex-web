@@ -782,3 +782,13 @@
 .st-app .st-canvas-flow :is(.st-object-handle,.st-object-expand) { opacity: 1; }
 
 .st-file-menu .st-general-link { display: block; color: var(--st-primary); font-size: 12px; padding: 8px; }
+.st-function-graph { width:100%; min-width:0; }
+.st-function-expression { font-size:1.15em; overflow-wrap:anywhere; }
+.st-function-parameters,.st-function-settings { display:flex; flex-wrap:wrap; gap:12px 22px; align-items:center; }
+.st-function-settings { font-size:.8em; margin-bottom:12px; }
+.st-function-settings label { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+.st-function-svg { display:block; width:100%; height:auto; min-height:200px; }
+.st-function-caption { font-size:.8em; color:var(--st-muted); }
+.st-function-table { width:100%; border-collapse:collapse; font-size:.85em; }
+.st-function-table :is(th,td) { padding:5px 12px; text-align:center; border-bottom:1px solid var(--st-line); }
+.st-function-table caption { text-align:left; font-weight:600; margin:10px 0; }

@@ -39,6 +39,8 @@ Las tablas públicas creadas por estas migraciones habilitan RLS. La lectura del
 
 Todos los endpoints se diseñan para usuario autenticado. `withSupabase({ auth: 'user' })` valida al llamante. El cliente administrativo solo debe usarse después de validar identidad y alcance; sus consultas no quedan protegidas por RLS del usuario.
 
+El agente de Studio admite `function-graph`: genera una gráfica nativa y editable con unidades angulares, ventana, parámetros y puntos calculados. El motor compartido valida la expresión y aplica la conversión de grados también al derivar. Esta capacidad requiere publicar el frontend y desplegar `studio-agent` con todas sus dependencias relativas, incluido `src/core/math-engine/function-graphs.ts` y `src/core/scene/expression.ts`; no necesita una migración SQL. Las [pruebas y límites](../docs/studio-function-graphs.md) distinguen muestreo numérico, verificaciones de contrato y llamadas reales al proveedor.
+
 ## Preparar el entorno local
 
 Requisitos: Node.js 22, npm 10 y Docker operativo. Instala con `npm ci` y utiliza `npx supabase` para ejecutar la versión fijada por el repositorio. La CLI v3 cambia comportamientos; esta guía describe v2.120.0.

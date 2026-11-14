@@ -1,6 +1,22 @@
 import type { AgentRequest } from "../../../src/core/agent/protocol.ts";
 import type { ActionBatch } from "../../../src/core/agent/actions.ts";
 import { ProposalError } from "./proposal.ts";
+const normalized = (text: string) => text.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
+const noPlot = (text: string) => /\b(?:no|sin)\s+(?:dibuj\w*|grafic\w*|traz\w*)/.test(text) || /\b(?:solo|unicamente)\b.*\b(?:texto|tarjeta)\b/.test(text) || /^(?:crea|genera)\s+(?:(?:un|una|el|la)\s+)?(?:texto|tarjeta)\b.*\b(?:sobre|explicando|para explicar)\b/.test(text);
+const plotRequest = (text: string) => !noPlot(text) && /\b(?:grafica|graficar|dibuja|dibujar|traza|trazar)\b/.test(text) && /\b(?:seno|coseno|tangente|sin|cos|tan|funcion|funciones|parabola|polinomio|polinomios)\b/.test(text);
+
+/** A clear graph request must not report success after adding only explanatory text. */
+export function enforceFunctionGraphIntent(input: AgentRequest, batch: ActionBatch) {
+  const question = normalized(input.question);
+  if (noPlot(question)) return;
+  const direct = plotRequest(question);
+  const contextual = /\b(?:crea|genera|construye)\b/.test(question) && /acord|conversacion|planead|lo que/.test(question) &&
+    (input.history ?? []).some(turn => turn.role === "user" && plotRequest(normalized(turn.content)));
+  if (!direct && !contextual) return;
+  if (batch.actions.some(action => action.kind !== "delete" && action.object.type === "function-graph")) return;
+  if (!direct && input.document.objects.some(object => object.type === "function-graph")) return;
+  throw new ProposalError("AI_INVALID_ACTIONS", "La petición requiere una gráfica real. Crea o actualiza function-graph con la función, unidad angular, ventana y puntos acordados; no la sustituyas por una tarjeta de texto ni afirmes haberla dibujado sin ese objeto.");
+}
 function canonical(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(canonical);
   if (value && typeof value === "object") return Object.fromEntries(Object.entries(value).sort(([a], [b]) => a.localeCompare(b)).map(([key, item]) => [key, canonical(item)]));

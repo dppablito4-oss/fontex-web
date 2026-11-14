@@ -16,6 +16,7 @@ import type {
 import { sequenceTerms } from "../../core/math-engine/sequences";
 import { parseStudioOperation, type FractionProduct } from "../../core/math-engine/studio-operations";
 import { CollectionObject, LinearEquationObject, NumberLineObject } from "./ExtendedMathObjects";
+import { FunctionGraphObject } from "./FunctionGraphObject";
 
 function FractionLabel({ n, d, editable = false }: { n: number; d: number; editable?: boolean }) {
   return (
@@ -260,6 +261,7 @@ export function ObjectVisual({
   const level = useContext(TeachingLevel);
   if (isLearningObject(object)) return <LearningMathObject object={object} lessonStep={lessonStep} concealAnswers={concealAnswers} />;
   switch (object.type) {
+    case "function-graph": return <FunctionGraphObject data={object.data} concealAnswers={concealAnswers} />;
     case "polygon": return <PolygonObject data={object.data} lessonStep={lessonStep} concealAnswers={concealAnswers} />;
     case "factorization": return <FactorizationObject data={object.data} lessonStep={lessonStep} concealAnswers={concealAnswers} />;
     case "geometry": return <GeometryObject data={object.data} lessonStep={lessonStep} concealAnswers={concealAnswers} />;

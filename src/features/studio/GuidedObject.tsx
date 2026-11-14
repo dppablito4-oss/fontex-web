@@ -34,10 +34,10 @@ export function GuidedObject({ object }: { object: MathObject }) {
     setHint(nextHint);
     setFeedback(practiceReply({ document: { schemaVersion: 1, id: "practice-preview", title: "Práctica", updatedAt: new Date().toISOString(), objects: [object] }, selectedId: object.id, mode: "practice", level, question: "Practicar", attempt: answer, hintLevel: nextHint }).message);
   }
-  return <div className={`st-guided st-guided-${mode} ${["fraction", "operation", "number-line", "geometry", "regular-polygon", "polygon", "circle", "angle"].includes(object.type) ? "st-guided-wide" : ""}`}>
+  return <div className={`st-guided st-guided-${mode} ${["function-graph", "fraction", "operation", "number-line", "geometry", "regular-polygon", "polygon", "circle", "angle"].includes(object.type) ? "st-guided-wide" : ""}`}>
     <div className="st-visual-panel" aria-label="Representación visual"><ObjectVisual object={visual} onChange={() => {}} lessonStep={mode === "solve" ? Infinity : current} concealAnswers={practice} /></div>
     <section className="st-story-panel" aria-label={practice ? "Práctica del módulo" : "Pasos del módulo"}>
-      {practice ? <>
+      {practice && !target ? <><span className="st-story-eyebrow">EXPLORA LA FUNCIÓN</span><h3>Predice antes de comprobar</h3><p>Anticipa las alturas y el cambio de la curva. Edita sus parámetros y abre la tabla para comprobar tus conjeturas. Esta exploración numérica no califica respuestas exactas automáticamente.</p></> : practice ? <>
         <span className="st-story-eyebrow">TU TURNO</span><h3>{target?.prompt}</h3>
         <p>Observa la representación. Puedes pedir una pista cuando la necesites.</p>
         <form onSubmit={e => { e.preventDefault(); check(hint); }}><label>Respuesta del módulo<input value={answer} onChange={e => { setAnswer(e.target.value); setFeedback(""); }} maxLength={120} placeholder={object.type === "factorization" ? "Ejemplo: 2^2 × 3" : object.type === "circle" ? "Ejemplo: 9π" : object.type === "statistics" && object.data.task === "mode" ? "Ejemplo: 2, 3 o sin moda" : "Ejemplo: 3/2"} /></label><button className="st-primary" type="submit">Comprobar respuesta</button></form>

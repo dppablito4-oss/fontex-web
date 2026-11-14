@@ -47,7 +47,7 @@ export function InlineValue({ field, value, index, children, readOnly = false }:
   return <span className={`st-inline-value ${spec.kind === "multiline" ? "st-inline-multiline" : ""}`} onPointerDown={event => event.stopPropagation()} onDoubleClick={event => event.stopPropagation()}>
     {spec.choices ? <select {...common} className="st-inline-input">{Object.entries(spec.choices).map(([key, caption]) => <option key={key} value={key}>{caption}</option>)}</select>
       : spec.kind === "multiline" ? <GrowingText resizeKey={editor.object.type === "text" ? editor.object.data.fontSize : undefined} {...common} className="st-inline-input" maxLength={5000} />
-      : <input {...common} className="st-inline-input" inputMode={spec.kind === "decimal" ? "decimal" : !spec.kind || index !== undefined ? "numeric" : "text"} maxLength={field === "label" ? 120 : 500} style={{ width: `${Math.min(45, Math.max(2, text.length + 1))}ch` }} />}
+      : <input {...common} className="st-inline-input" inputMode={spec.kind === "decimal" || spec.kind === "real" ? "decimal" : !spec.kind || index !== undefined ? "numeric" : "text"} maxLength={field === "label" ? 120 : 500} style={{ width: `${Math.min(45, Math.max(2, text.length + 1))}ch` }} />}
     {error && <span className="st-inline-error" role="alert" id={id}>{error}</span>}
   </span>;
 }
