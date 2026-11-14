@@ -387,13 +387,14 @@
 }
 .pc-object {
   position: absolute;
-  border: 1px solid transparent;
-  background: transparent;
+  border: 1px solid var(--pc-line);
+  background: var(--pc-surface);
   outline: none;
   padding: 0;
   min-width: 0;
   overflow: visible;
-  border-radius: 9px;
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgb(25 40 70 / .025);
 }
 .pc-object:focus-visible {
   outline: 2px solid var(--pc-accent);
@@ -409,11 +410,12 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  height: 35px;
-  padding: 4px 10px;
-  font-size: 12px;
+  min-height: 40px;
+  padding: 7px 16px;
+  font-size: 13px;
+  font-weight: 600;
   color: var(--pc-muted);
-  opacity: .75;
+  border-bottom: 1px solid var(--pc-line);
 }
 .pc-object-heading > button {
   min-height: 25px;
@@ -425,7 +427,7 @@
   touch-action: none;
 }
 .pc-object-content {
-  padding: 8px 10px 12px;
+  padding: 12px 16px 16px;
   overflow-wrap: anywhere;
   min-width: 0;
 }
@@ -1240,3 +1242,90 @@
 .pc-credit-info small { color: var(--pc-muted); }
 .pc-credit-info a { color: var(--pc-accent); text-decoration: underline; }
 .pc-credit-info button { padding: 4px 8px; min-height: 30px; justify-self: start; }
+
+/* Working space and contextual properties */
+.pc-stage {
+  background-image: radial-gradient(var(--pc-line) .8px, transparent .8px);
+  background-size: 18px 18px;
+}
+.pc-inspector {
+  flex: 0 0 310px;
+  min-width: 0;
+  overflow: auto;
+  background: var(--pc-surface);
+  border-left: 1px solid var(--pc-line);
+  z-index: 35;
+}
+.pc-inspector .pc-selection-bar {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 18px;
+  margin: 0;
+}
+.pc-inspector .pc-selection-actions > strong { flex: 1 1 65%; font-size: 15px; }
+.pc-inspector .pc-selection-actions > label:first-of-type { flex-basis: 100%; display: grid; }
+.pc-inspector .pc-selection-actions input { max-width: 100%; }
+.pc-inspector .pc-field-row > label { flex-basis: 100%; max-width: none; font-size: 12px; }
+.pc-inspector .pc-field-row input, .pc-inspector .pc-field-row select { padding: 8px; }
+.pc-inspector .pc-field-row .pc-toggle { flex-basis: 100%; }
+.pc-inspector details { margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--pc-line); }
+.pc-inspector summary { cursor: pointer; font-size: 13px; font-weight: 600; }
+.pc-inspector .pc-pair { flex-basis: 100%; }
+.pc-plot-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.pc-plot-toolbar > div { display: flex; gap: 4px; flex: none; }
+.pc-plot-toolbar button { min-height: 32px; padding: 6px 8px; font-size: 12px; }
+.pc-plot-toolbar button svg { width: 16px; height: 16px; min-height: 0!important; flex: none; }
+.pc-plot-toolbar button[aria-pressed=true] { background: var(--pc-soft); border-color: var(--pc-accent); color: var(--pc-accent); }
+.pc-plot-scale { display: grid; font-size: 13px; font-weight: 600; }
+.pc-plot-scale small { color: var(--pc-muted); font-size: 11px; font-weight: 400; }
+.pc-plot-legend .pc-shape-summary { display: flex; justify-content: start; flex-wrap: wrap; text-align: left; min-height: 32px; padding: 5px 8px; font-size: 12px; border: 0; background: var(--pc-soft); }
+.pc-shape-summary > span:first-child { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.pc-shape-summary > span:last-child { color: var(--pc-muted); }
+.pc-coordinate svg [role=button] { cursor: pointer; }
+.pc-coordinate svg [role=button]:focus-visible { outline: 2px solid var(--pc-accent); }
+.pc-coordinate > svg text { font-size: var(--pc-plot-label-size, 16px); }
+.pc-app .pc-plot-hint { font-size: 11px; color: var(--pc-muted); margin: 0 0 4px; }
+.pc-plot-panning { cursor: grab; touch-action: none; user-select: none; }
+.pc-plot-panning:active { cursor: grabbing; }
+.pc-control { display: grid; gap: 8px; padding: 0; }
+.pc-control-main { display: flex; align-items: center; gap: 16px; }
+.pc-control-symbol { font-size: 26px; font-weight: 600; color: var(--pc-accent); min-width: 45px; }
+.pc-control-symbol small { display: block; color: var(--pc-muted); font-size: 11px; font-weight: 400; }
+.pc-control .pc-exact-value { flex: 1; font-size: 11px; }
+.pc-unit-input { display: flex; align-items: center; border: 1px solid var(--pc-line); border-radius: 8px; background: var(--pc-bg); }
+.pc-app .pc-unit-input input { width: 100%; border: 0; background: transparent; font-size: 20px; padding: 6px 10px; }
+.pc-unit-input > span { padding-right: 12px; font-size: 13px; color: var(--pc-muted); }
+.pc-unit-input:focus-within { outline: 2px solid var(--pc-accent); outline-offset: 2px; }
+.pc-unit-input input:focus-visible { outline: 0; }
+.pc-control > .pc-range-label { min-width: 0; width: 100%; }
+.pc-range-limits { display: flex; justify-content: space-between; color: var(--pc-muted); font-size: 11px; }
+.pc-exact-value > small { color: #c34245; }
+.pc-control > button { justify-self: start; }
+.pc-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.pc-node-math_block .pc-object-content { padding: 18px 24px 22px; }
+.pc-app .pc-node-math_block .academic-markdown h2 { font-size: 1.2em; margin-top: 0; }
+.pc-app .pc-node-math_block .academic-markdown h3 { font-size: 1em; }
+.pc-zoom > span { font-size: 11px; color: var(--pc-muted); }
+
+@media (max-width: 1000px) and (min-width: 761px) {
+  .pc-inspector { flex-basis: 280px; }
+  .pc-sidebar { width: 290px; }
+}
+@media (max-width: 760px) {
+  .pc-inspector { position: absolute; inset: auto 0 0; max-height: 48dvh; border-left: 0; border-top: 1px solid var(--pc-line); box-shadow: 0 -8px 24px rgb(0 0 0 / .1); }
+  .pc-stage:has(+ .pc-inspector) { padding-bottom: 48dvh; }
+  .pc-object-content { padding: 12px; }
+  .pc-object-heading { padding: 8px 12px; }
+  .pc-plot-toolbar { flex-wrap: wrap; }
+  .pc-plot-toolbar > div { margin-left: auto; }
+  .pc-app .pc-plot-hint { font-size: 10px; }
+  .pc-node-math_block .pc-object-content { padding: 16px; }
+  .pc-zoom > span { display: none; }
+  .pc-top-actions { gap: 4px; }
+}
+@media print {
+  .pc-inspector, .pc-plot-toolbar, .pc-plot-hint { display: none!important; }
+  .pc-object { box-shadow: none; background: white; }
+  .pc-stage { background-image: none; }
+}

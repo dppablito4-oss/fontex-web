@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { HashRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 
@@ -187,4 +187,42 @@ it("expands fixed-height content and moves the following object below it", async
   } finally {
     vi.stubGlobal("ResizeObserver", previous);
   }
+});
+
+it("edits a 100 cm measure, follows it on the plot, and restores automatic fitting after zoom undo", async () => {
+  const { templateScene } = await import("../core/primitives/templates");
+  const scene = templateScene("geometry");
+  localStorage.setItem("fontex-primitives-v2:guest", JSON.stringify({ activeId: scene.id, scenes: [scene] }));
+  renderRoute("/lienzo");
+  const input = await screen.findByLabelText("Valor de b");
+  fireEvent.focus(input);
+  fireEvent.change(input, { target: { value: "100" } });
+  fireEvent.keyDown(input, { key: "Enter" });
+  expect(input).toHaveValue("100");
+  expect(screen.getByRole("slider", { name: "Variable b" })).toHaveAttribute("max", "100");
+  expect(screen.getByText("Área 300 cm² · Perímetro 206 cm")).toBeInTheDocument();
+  const plot = screen.getByRole("img", { name: "Compara las figuras" });
+  const polygon = plot.querySelector("polygon")!;
+  const width = () => {
+    const xs = polygon.getAttribute("points")!.split(" ").map((pair) => Number(pair.split(",")[0]));
+    return Math.max(...xs) - Math.min(...xs);
+  };
+  const originalWidth = width();
+  fireEvent.click(screen.getByRole("button", { name: "Acercar plano" }));
+  fireEvent.click(screen.getByRole("button", { name: "Acercar plano" }));
+  expect(width()).toBeGreaterThan(originalWidth);
+  expect(screen.getByText("Vista libre")).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Deshacer" }));
+  expect(screen.getByText("Escala automática")).toBeInTheDocument();
+  expect(width()).toBeCloseTo(originalWidth);
+  expect(input).toHaveValue("100");
+  fireEvent.click(screen.getByRole("button", { name: "Rehacer" }));
+  expect(screen.getByText("Vista libre")).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Ajustar plano a las figuras" }));
+  expect(screen.getByText("Escala automática")).toBeInTheDocument();
+  // Selecting a figure exposes an independent inspector, keeping the plot in the workspace.
+  fireEvent.keyDown(screen.getByRole("button", { name: "Seleccionar figura Rectángulo" }), { key: "Enter" });
+  const inspector = screen.getByRole("complementary", { name: "Propiedades del elemento" });
+  expect(within(inspector).getByLabelText("Nombre del elemento")).toHaveValue("Rectángulo");
+  expect(within(screen.getByRole("main", { name: "Lienzo matemático" })).queryByLabelText("Nombre del elemento")).not.toBeInTheDocument();
 });

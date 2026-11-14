@@ -5,6 +5,7 @@ import {
   type Primitive,
   type PrimitiveScene,
 } from "./schema.ts";
+import { organizePrimitiveScene } from "./layout.ts";
 export const templates = [
   { id: "ellipse", name: "Elipse paramétrica", group: "Geometría analítica" },
   {
@@ -589,8 +590,36 @@ export function templateScene(id: string): PrimitiveScene {
         "## Una variable, varias representaciones\nFunción $f(x)=a x^2$. Mueve **a** y observa cómo cambian la curva, su derivada y el área.\n\nIntegral aproximada entre 0 y 2: **{{round(area,5)}} u²**.\n\nLa línea discontinua es la derivada. El área numérica se calcula localmente, con una estimación de error.",
       );
     }
+  } else if (id === "geometry") {
+    scene.variables = [];
+    variable("b", 7, 1, 20, .1, "cm");
+    variable("h", 3, 1, 20, .1, "cm");
+    variable("l", 4, 1, 20, .1, "cm");
+    const plane = add("coordinate_canvas", (p) => {
+      p.label = "Compara las figuras";
+      p.data.equalScale = true;
+    });
+    add("geometric_shape", (p) => {
+      p.label = "Rectángulo";
+      p.data.canvasId = plane.id;
+      p.data.regular = false;
+      p.data.verticesExpr = [["0", "0"], ["b", "0"], ["b", "h"], ["0", "h"]];
+      p.style.strokeColor = "#4366df";
+      p.style.fillColor = "#9bb9ff";
+    });
+    add("geometric_shape", (p) => {
+      p.label = "Cuadrado";
+      p.data.canvasId = plane.id;
+      p.data.regular = false;
+      p.data.verticesExpr = [["b+3", "0"], ["b+3+l", "0"], ["b+3+l", "l"], ["b+3", "l"]];
+    });
+    for (const [name, label] of [["b", "Base del rectángulo"], ["h", "Altura del rectángulo"], ["l", "Lado del cuadrado"]]) {
+      add("control_slider", (p) => { p.label = label!; p.data.variableName = name!; });
+    }
+    text("### Dos figuras, la misma escala\nAzul: rectángulo de **{{b}} × {{h}} cm**. Verde: cuadrado de **{{l}} cm** de lado.\n\nEscribe las medidas o mueve los controles. El plano se adapta para mostrar ambas figuras.");
+    text("## Del dibujo al cálculo\n### 1. Calcula la superficie\nEl rectángulo ocupa **base × altura**: $A=b\\cdot h$ = **{{round(b*h,2)}} cm²**. El cuadrado tiene lados iguales: $A=l^2$ = **{{round(l*l,2)}} cm²**.\n\n### 2. Recorre el borde\nEn el rectángulo sumamos dos bases y dos alturas: $P=2(b+h)$ = **{{round(2*(b+h),2)}} cm**. En el cuadrado: $P=4l$ = **{{round(4*l,2)}} cm**.\n\n### 3. Compara y explora\nLa diferencia de superficies es **{{round(abs(b*h-l*l),2)}} cm²**. Prueba una base de **100 cm**: el dibujo conserva sus proporciones y cada división del plano representa más centímetros. Acerca la vista para observar intervalos menores. El zoom cambia la vista; las medidas y los resultados se conservan.");
   } else if (
-    ["geometry", "irregular", "circle", "fractions", "sum"].includes(id)
+    ["irregular", "circle", "fractions", "sum"].includes(id)
   ) {
     const shape = add("geometric_shape");
     if (id === "fractions" || id === "sum") {
@@ -739,5 +768,5 @@ export function templateScene(id: string): PrimitiveScene {
       )?.presentationStep ?? 1;
     } else p.presentationStep = presentationStep++;
   }
-  return parsePrimitiveScene(scene);
+  return parsePrimitiveScene(organizePrimitiveScene(scene));
 }

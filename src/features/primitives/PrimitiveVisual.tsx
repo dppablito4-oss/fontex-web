@@ -1,4 +1,10 @@
-import { Component, useEffect, useId, useRef, useState } from "react";
+import { Component, type CSSProperties, useEffect, useId, useRef, useState } from "react";
+import { Hand, Maximize, Minus, Plus } from "lucide-react";
+import { VariableValueField } from "./VariableValueField";
+import {
+  authoredBounds, equalPlotBounds, fitPlotBounds, panPlotBounds,
+  shapeVertices, zoomPlotBounds, type PlotBounds,
+} from "../../core/primitives/viewport";
 import { AcademicMarkdown } from "../tutor/components/AcademicMarkdown";
 import {
   compile,
@@ -33,11 +39,13 @@ type Props = {
   scope: Scope;
   functions: Record<string, FunctionDefinition>;
   onChange: (p: Primitive) => void;
+  onViewportChange?: (p: Extract<Primitive, { kind: "coordinate_canvas" }>) => void;
   onVariable: (name: string, value: number) => void;
   onSelect: (id: string) => void;
   selected: boolean;
   readOnly?: boolean;
   visibleStep?: number;
+  displayScale?: number;
 };
 const safe = (
   source: string,
@@ -45,7 +53,7 @@ const safe = (
   functions: Record<string, FunctionDefinition> = {},
 ) => scalar(source, scope, functions);
 function Coordinate(
-  { p, scene, scope, functions, onSelect, visibleStep }: Props & {
+  { p, scene, scope, functions, onSelect, onChange, onViewportChange, visibleStep, displayScale = 1 }: Props & {
     p: Extract<Primitive, { kind: "coordinate_canvas" }>;
   },
 ) {
@@ -60,35 +68,50 @@ function Coordinate(
     );
     observer.observe(node);
     return () => observer.disconnect();
-  }, []);
-  const [x0, x1] = p.data.domainX.map((x) => safe(x, scope)) as [
-      number,
-      number,
-    ],
-    [y0, y1] = p.data.rangeY.map((x) => safe(x, scope)) as [number, number];
-  const square = p.data.mode === "unit_circle" || p.data.equalScale === true;
+  }, [displayScale]);
+  const [panning, setPanning] = useState(false);
+  const pan = useRef<{ x: number; y: number; bounds: PlotBounds } | null>(null);
+  const navigate = onViewportChange ?? onChange;
+  const automatic = p.data.autoFit ?? true;
+  const initial = automatic ? fitPlotBounds(p, scene, scope) : authoredBounds(p, scope);
+  const square = p.data.mode === "unit_circle" || p.data.equalScale !== false;
   const W = 800,
-    H = p.data.mode === "number_line" ? 310 : square ? 800 : 440,
-    M = pixelWidth < 500
-      ? Math.max(
-        72,
-        Math.min(
-          140,
-          ...niceTicks(y0, y1, 3).map((n) => num(n).length * 16 + 16),
-        ),
-      )
-      : 72,
-    unitScale = Math.min((W - 2 * M) / (x1 - x0), (H - 2 * M) / (y1 - y0)),
+    H = p.data.mode === "number_line" ? 310 : 520,
+    M = pixelWidth < 500 ? 90 : 64;
+  const bounds = square ? equalPlotBounds(initial, (W - 2 * M) / (H - 2 * M)) : initial;
+  const [x0, x1, y0, y1] = bounds;
+  const
     px = (x: number) =>
-      square
-        ? W / 2 + (x - (x0 + x1) / 2) * unitScale
-        : M + (x - x0) / (x1 - x0) * (W - 2 * M),
+      M + (x - x0) / (x1 - x0) * (W - 2 * M),
     py = (y: number) =>
       p.data.mode === "number_line"
         ? H - 68
-        : square
-        ? H / 2 - (y - (y0 + y1) / 2) * unitScale
         : H - M - (y - y0) / (y1 - y0) * (H - 2 * M);
+  const changeWindow = (next: PlotBounds) => {
+    const values = next.map((v) => String(Number(v.toPrecision(10))));
+    navigate({ ...p, data: { ...p.data, autoFit: false,
+      referenceWindow: p.data.referenceWindow ?? { domainX: p.data.domainX, rangeY: p.data.rangeY },
+      domainX: [values[0]!, values[1]!], rangeY: [values[2]!, values[3]!] } });
+  };
+  const wheelAction = useRef<(e: WheelEvent) => void>(() => {});
+  useEffect(() => {
+    wheelAction.current = (e) => {
+      if (!e.ctrlKey && !e.metaKey) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const box = svg.current!.getBoundingClientRect();
+      const ax = Math.max(0, Math.min(1, ((e.clientX - box.left) / box.width * W - M) / (W - 2 * M)));
+      const ay = Math.max(0, Math.min(1, 1 - ((e.clientY - box.top) / box.height * H - M) / (H - 2 * M)));
+      changeWindow(zoomPlotBounds(bounds, Math.exp(Math.max(-1, Math.min(1, e.deltaY * .002))), [ax, ay]));
+    };
+  });
+  useEffect(() => {
+    const node = svg.current;
+    if (!node) return;
+    const wheel = (e: WheelEvent) => wheelAction.current(e);
+    node.addEventListener("wheel", wheel, { passive: false });
+    return () => node.removeEventListener("wheel", wheel);
+  }, []);
   const children = scene.primitives.filter((c) =>
     "canvasId" in c.data && c.data.canvasId === p.id &&
     (visibleStep === undefined || c.presentationStep <= visibleStep)
@@ -108,16 +131,54 @@ function Coordinate(
     y1,
     Math.max(
       3,
-      Math.min(p.data.subdivisions, Math.floor(pixelWidth * .55 / 70)),
+      Math.min(p.data.subdivisions, Math.floor(pixelWidth * H / W / 70)),
     ),
   );
   return (
     <div className="pc-coordinate">
+      <div className="pc-plot-toolbar" onClick={(e) => e.stopPropagation()}>
+        <span className="pc-plot-scale">
+          {automatic ? "Escala automática" : "Vista libre"}
+          <small>1 división: x {num(xTicks.length > 1 ? xTicks[1]! - xTicks[0]! : x1 - x0)}
+            {p.data.mode !== "number_line" && ` · y ${num(yTicks.length > 1 ? yTicks[1]! - yTicks[0]! : y1 - y0)}`}</small>
+        </span>
+        <div role="group" aria-label="Navegación del plano">
+          <button aria-label="Alejar plano" title="Alejar plano" onClick={() => changeWindow(zoomPlotBounds(bounds, 1.4))}><Minus size={16} /></button>
+          <button aria-label="Acercar plano" title="Acercar plano" onClick={() => changeWindow(zoomPlotBounds(bounds, 1 / 1.4))}><Plus size={16} /></button>
+          <button aria-label="Mover vista del plano" title="Activa y arrastra para mover el plano" aria-pressed={panning} onClick={() => setPanning(!panning)}><Hand size={16} /></button>
+          <button aria-label="Ajustar plano a las figuras" title="Ajustar y seguir los cambios de las figuras" onClick={() => navigate({ ...p, data: { ...p.data, ...p.data.referenceWindow, autoFit: true, referenceWindow: null } })}><Maximize size={16} /><span>Ajustar</span></button>
+        </div>
+      </div>
       <svg
         ref={svg}
+        className={panning ? "pc-plot-panning" : ""}
+        style={{ "--pc-plot-label-size": `${16 * Math.max(1, Math.min(2.4, 600 / pixelWidth))}px` } as CSSProperties}
         viewBox={`0 0 ${W} ${H}`}
         role="img"
         aria-label={p.label || "Plano matemático"}
+        onPointerDown={(e) => {
+          if (!panning && e.button !== 1) return;
+          e.preventDefault();
+          e.stopPropagation();
+          e.currentTarget.setPointerCapture(e.pointerId);
+          pan.current = { x: e.clientX, y: e.clientY, bounds };
+        }}
+        onPointerMove={(e) => {
+          if (!pan.current) return;
+          e.stopPropagation();
+          const box = e.currentTarget.getBoundingClientRect(), start = pan.current;
+          changeWindow(panPlotBounds(start.bounds,
+            -(e.clientX - start.x) / box.width * W / (W - 2 * M) * (start.bounds[1] - start.bounds[0]),
+            (e.clientY - start.y) / box.height * H / (H - 2 * M) * (start.bounds[3] - start.bounds[2])));
+        }}
+        onPointerUp={(e) => {
+          if (!pan.current) return;
+          e.stopPropagation();
+          pan.current = null;
+          e.currentTarget.releasePointerCapture(e.pointerId);
+        }}
+        onPointerCancel={() => { pan.current = null; }}
+        onClickCapture={(e) => { if (panning) { e.stopPropagation(); e.preventDefault(); } }}
       >
         <defs>
           <clipPath id={clip}>
@@ -395,6 +456,16 @@ function Coordinate(
               return (
                 <g
                   key={child.id}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Seleccionar figura ${child.label}`}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onSelect(child.id);
+                    }
+                  }}
                   onClick={(e) => {
                     e.stopPropagation();
                     onSelect(child.id);
@@ -451,7 +522,24 @@ function Coordinate(
           })}
         </g>
       </svg>
+      <p className="pc-plot-hint">{panning ? "Arrastra para recorrer el plano." : "Selecciona una figura para editarla."} Ctrl + rueda para acercar o alejar.</p>
       <div className="pc-plot-legend">
+        {children.filter((child) => child.kind === "geometric_shape").map((child) => {
+          const matrix = linkedMatrix(child, scene, scope);
+          if (matrix === null) return null;
+          const points = shapeVertices(child, scope).map((point) => matrix ? transformPoint(matrix, point) : point);
+          let metrics: ReturnType<typeof polygonMetrics> | null = null;
+          try {
+            metrics = polygonMetrics(points);
+          } catch { /* A singular forward transform can collapse a valid polygon. */ }
+          return <button key={child.id} className="pc-shape-summary" onClick={(e) => { e.stopPropagation(); onSelect(child.id); }}>
+            <span style={{ background: child.style.strokeColor }} />
+            <strong>{child.label}</strong>
+            <span>{metrics
+              ? `Área ${num(Number(metrics.area.toFixed(2)))} ${child.data.unit}² · Perímetro ${num(Number(metrics.perimeter.toFixed(2)))} ${child.data.unit}`
+              : "Figura colapsada por la transformación"}</span>
+          </button>;
+        })}
         {children.map((child) =>
           child.kind === "function_region"
             ? (
@@ -641,28 +729,6 @@ function Vector({
         </text>
       )}
     </g>
-  );
-}
-function shapeVertices(
-  p: Extract<Primitive, { kind: "geometric_shape" }>,
-  scope: Scope,
-): [number, number][] {
-  if (!p.data.regular) {
-    return p.data.verticesExpr.map((
-      [x, y],
-    ) => [safe(x, scope), safe(y, scope)]);
-  }
-  const n = p.data.shape === "triangle" ? 3 : p.data.sides,
-    r = safe(p.data.sideExpr, scope) / (2 * Math.sin(Math.PI / n));
-  return Array.from(
-    { length: n },
-    (
-      _,
-      i,
-    ) => [
-      r * Math.cos(2 * Math.PI * i / n - Math.PI / 2),
-      r * Math.sin(2 * Math.PI * i / n - Math.PI / 2),
-    ],
   );
 }
 function Shape(
@@ -884,8 +950,12 @@ function Control(
   }, [playing, onVariable, p.data.speed, p.data.controlType]);
   return (
     <div className="pc-control">
-      <label>
-        {variable.name} = <strong>{num(variable.value)} {variable.unit}</strong>
+      <div className="pc-control-main">
+        <div className="pc-control-symbol">{variable.name}<small>{variable.unit || "valor"}</small></div>
+        {p.data.controlType !== "toggle" && <VariableValueField variable={variable} onChange={onVariable} />}
+      </div>
+      <label className="pc-range-label">
+        <span className="pc-sr-only">Ajustar {variable.name}</span>
         {p.data.controlType === "toggle"
           ? (
             <button
@@ -912,6 +982,7 @@ function Control(
             />
           )}
       </label>
+      {p.data.controlType !== "toggle" && <div className="pc-range-limits"><span>{num(variable.min)} {variable.unit}</span><span>{num(variable.max)} {variable.unit}</span></div>}
       {p.data.controlType === "play_pause"
         ? (
           <button onClick={() => setPlaying(!playing)}>

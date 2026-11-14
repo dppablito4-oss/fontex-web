@@ -3,6 +3,7 @@ import { expect, it, vi } from "vitest";
 import { PrimitiveVisual } from "./PrimitiveVisual";
 import { templateScene } from "../../core/primitives/templates";
 import { sceneFunctions, sceneScope } from "../../core/primitives/math";
+import { parsePrimitiveScene } from "../../core/primitives/schema";
 function draw(id: string, value?: number) {
   const scene = templateScene(id);
   if (value !== undefined) {
@@ -10,6 +11,7 @@ function draw(id: string, value?: number) {
   }
   const p = scene.primitives[0]!;
   const onSelect = vi.fn();
+  const onChange = vi.fn();
   return {
     ...render(
       <PrimitiveVisual
@@ -18,13 +20,14 @@ function draw(id: string, value?: number) {
         scope={sceneScope(scene)}
         functions={sceneFunctions(scene)}
         onSelect={onSelect}
-        onChange={() => {}}
+        onChange={onChange}
         onVariable={() => {}}
         selected={false}
       />,
     ),
     scene,
     onSelect,
+    onChange,
   };
 }
 it("draws two number-line jumps, including the signed negative displacement, with editable selection", () => {
@@ -39,6 +42,55 @@ it("draws two number-line jumps, including the signed negative displacement, wit
   expect(onSelect).toHaveBeenCalledWith(
     scene.primitives.filter((p) => p.kind === "vector_segment")[1]!.id,
   );
+});
+
+it("zooms with Ctrl + wheel and pans with the hand tool, keeping a valid scene", () => {
+  const { scene, onChange } = draw("geometry");
+  const plot = screen.getByRole("img", { name: "Compara las figuras" });
+  vi.spyOn(plot, "getBoundingClientRect").mockReturnValue({
+    x: 0, y: 0, left: 0, top: 0, right: 800, bottom: 520, width: 800, height: 520, toJSON: () => ({}),
+  });
+  fireEvent.wheel(plot, { deltaY: -100, clientX: 400, clientY: 260 });
+  expect(onChange).not.toHaveBeenCalled();
+  fireEvent.wheel(plot, { ctrlKey: true, deltaY: -100, clientX: 400, clientY: 260 });
+  expect(onChange).toHaveBeenCalledTimes(1);
+  const zoomed = onChange.mock.calls[0]![0] as typeof scene.primitives[number];
+  expect(zoomed.kind === "coordinate_canvas" && zoomed.data.autoFit).toBe(false);
+  expect(() => parsePrimitiveScene({ ...scene, primitives: scene.primitives.map((p) => p.id === zoomed.id ? zoomed : p) })).not.toThrow();
+  const previous = window.PointerEvent;
+  Object.defineProperty(window, "PointerEvent", { configurable: true, value: MouseEvent });
+  Object.defineProperty(plot, "setPointerCapture", { configurable: true, value: vi.fn() });
+  Object.defineProperty(plot, "releasePointerCapture", { configurable: true, value: vi.fn() });
+  try {
+    fireEvent.click(screen.getByRole("button", { name: "Mover vista del plano" }));
+    fireEvent.pointerDown(plot, { button: 0, clientX: 400, clientY: 260 });
+    fireEvent.pointerMove(plot, { clientX: 480, clientY: 300 });
+    fireEvent.pointerUp(plot);
+    const panned = onChange.mock.calls.at(-1)![0] as typeof scene.primitives[number];
+    expect(onChange).toHaveBeenCalledTimes(2);
+    expect(() => parsePrimitiveScene({ ...scene, primitives: scene.primitives.map((p) => p.id === panned.id ? panned : p) })).not.toThrow();
+    if (panned.kind === "coordinate_canvas" && zoomed.kind === "coordinate_canvas") {
+      expect(Number(panned.data.domainX[0])).toBeLessThan(Number(zoomed.data.domainX[0]));
+    }
+  } finally {
+    Object.defineProperty(window, "PointerEvent", { configurable: true, value: previous });
+    vi.restoreAllMocks();
+  }
+});
+
+it("restores a function plot's reference window after a saved zoom", () => {
+  const view = draw("calculus");
+  const plane = view.scene.primitives[0]!;
+  if (plane.kind !== "coordinate_canvas") throw Error("Missing plane");
+  fireEvent.click(screen.getByRole("button", { name: "Acercar plano" }));
+  const zoomed = view.onChange.mock.calls[0]![0] as typeof plane;
+  const scene = parsePrimitiveScene({ ...view.scene, primitives: view.scene.primitives.map((p) => p.id === zoomed.id ? zoomed : p) });
+  view.rerender(<PrimitiveVisual p={zoomed} scene={scene} scope={sceneScope(scene)} functions={sceneFunctions(scene)} onChange={view.onChange} onSelect={view.onSelect} onVariable={() => {}} selected={false} />);
+  fireEvent.click(screen.getByRole("button", { name: "Ajustar plano a las figuras" }));
+  const restored = view.onChange.mock.calls.at(-1)![0] as typeof plane;
+  expect(restored.data.domainX).toEqual(plane.data.domainX);
+  expect(restored.data.rangeY).toEqual(plane.data.rangeY);
+  expect(restored.data.autoFit).toBe(true);
 });
 it("draws the unit circle with equal horizontal and vertical scale", () => {
   const { container } = draw("unit-circle");

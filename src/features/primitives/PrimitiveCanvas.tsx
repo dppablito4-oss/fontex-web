@@ -13,6 +13,7 @@ import {
   Copy,
   Download,
   Expand,
+  LayoutDashboard,
   GripVertical,
   MessageCircle,
   Pencil,
@@ -47,6 +48,8 @@ import { sceneFunctions, sceneScope } from "../../core/primitives/math";
 import { templates, templateScene } from "../../core/primitives/templates";
 import { requestPrimitiveAgent } from "./agent";
 import { draggedRotation } from "./gestures";
+import { organizePrimitiveScene } from "../../core/primitives/layout";
+import { VariableValueField } from "./VariableValueField";
 import {
   advanceStep,
   presentationSteps,
@@ -242,7 +245,7 @@ function Editor(
     (!credits.status || credits.status.balance < 1 ||
       credits.status.active_generation);
   const [selectedId, setSelected] = useState<string | null>(null),
-    [tab, setTab] = useState<Tab>("chat"),
+    [tab, setTab] = useState<Tab>("templates"),
     [sidebar, setSidebar] = useState(() =>
       !window.matchMedia("(max-width:760px)").matches
     );
@@ -263,6 +266,7 @@ function Editor(
   const [variableName, setVariableName] = useState("b"),
     [templateFilter, setTemplateFilter] = useState("");
   const variableBatch = useRef({ name: "", time: 0 });
+  const viewportBatch = useRef({ id: "", time: 0 });
   const root = useRef<HTMLDivElement>(null),
     stage = useRef<HTMLDivElement>(null),
     file = useRef<HTMLInputElement>(null),
@@ -305,7 +309,9 @@ function Editor(
     try {
       const valid = parsePrimitiveScene(next);
       if (history) {
-        setPast((h) => [...h.slice(-39), live.current]);
+        viewportBatch.current = { id: "", time: 0 };
+        const previous = live.current;
+        setPast((h) => [...h.slice(-39), previous]);
         setFuture([]);
       }
       live.current = valid;
@@ -317,7 +323,7 @@ function Editor(
       return false;
     }
   }
-  function update(p: Primitive) {
+  function update(p: Primitive, history = true) {
     return commit({
       ...live.current,
       variables: p.kind === "control_slider" && p.data.controlType === "toggle"
@@ -330,7 +336,12 @@ function Editor(
       primitives: live.current.primitives.map((old) =>
         old.id === p.id ? p : old
       ),
-    });
+    }, history);
+  }
+  function navigatePlot(p: Extract<Primitive, { kind: "coordinate_canvas" }>) {
+    const now = Date.now();
+    const history = viewportBatch.current.id !== p.id || now - viewportBatch.current.time > 700;
+    if (update(p, history)) viewportBatch.current = { id: p.id, time: now };
   }
   const fit = useCallback((id: string, height: number) => {
     const current = live.current,
@@ -363,7 +374,7 @@ function Editor(
       const valid = parsePrimitiveScene({
         ...current,
         variables: current.variables.map((v) =>
-          v.name === name ? { ...v, value } : v
+          v.name === name ? { ...v, value, min: Math.min(v.min, value), max: Math.max(v.max, value) } : v
         ),
       });
       if (
@@ -371,6 +382,7 @@ function Editor(
           current.variables.find((v) => v.name === name)?.value
       ) return;
       const now = Date.now();
+      viewportBatch.current = { id: "", time: 0 };
       if (
         variableBatch.current.name !== name ||
         now - variableBatch.current.time > 700
@@ -387,18 +399,22 @@ function Editor(
   }, [setScene]);
   function undo() {
     variableBatch.current = { name: "", time: 0 };
+    viewportBatch.current = { id: "", time: 0 };
     const previous = past.at(-1);
     if (previous) {
-      setFuture((h) => [live.current, ...h]);
+      const current = live.current;
+      setFuture((h) => [current, ...h]);
       setPast((h) => h.slice(0, -1));
       commit(previous, false);
     }
   }
   function redo() {
     variableBatch.current = { name: "", time: 0 };
+    viewportBatch.current = { id: "", time: 0 };
     const next = future[0];
     if (next) {
-      setPast((h) => [...h, live.current]);
+      const current = live.current;
+      setPast((h) => [...h, current]);
       setFuture((h) => h.slice(1));
       commit(next, false);
     }
@@ -465,8 +481,7 @@ function Editor(
     const p = createPrimitive(kind, next);
     next.primitives.push(p);
     if (commit(next)) {
-      setSelected(p.id);
-      if (narrow) setSidebar(false);
+      selectPrimitive(p.id);
     }
   }
   function beginDrag(
@@ -532,11 +547,15 @@ function Editor(
     setPast((h) => [...h.slice(-39), d.scene]);
     setFuture([]);
   }
+  function selectPrimitive(id: string) {
+    setSelected(id);
+    setSidebar(false);
+  }
   function load(id: string) {
     if (commit(templateScene(id))) {
       setSelected(null);
       setStep(1);
-      if (narrow) setSidebar(false);
+      setSidebar(false);
     }
   }
   function download() {
@@ -603,7 +622,7 @@ function Editor(
         throw Error("La conversación devolvió cambios inesperados.");
       }
       commit({
-        ...patched,
+        ...(task === "build" && before.primitives.length === 0 ? organizePrimitiveScene(patched) : patched),
         conversation: [...turns, {
           role: "assistant" as const,
           content: reply.message,
@@ -711,14 +730,19 @@ function Editor(
             onClick={() => {
               setTab("elements");
               setSidebar(true);
+              setSelected(null);
             }}
           >
             <Plus size={17} />Elementos
+          </button>
+          <button onClick={() => { setTab("templates"); setSidebar(!sidebar || tab !== "templates"); setSelected(null); }}>
+            <LayoutDashboard size={17} />Plantillas
           </button>
           <button
             onClick={() => {
               setTab("chat");
               setSidebar(!sidebar || tab !== "chat");
+              setSelected(null);
             }}
           >
             <MessageCircle size={17} />
@@ -1060,18 +1084,7 @@ function Editor(
                           <strong>
                             {v.name} <small>{v.unit}</small>
                           </strong>
-                          <label>
-                            Valor<input
-                              aria-label={`Valor de ${v.name}`}
-                              type="number"
-                              value={v.value}
-                              min={v.min}
-                              max={v.max}
-                              step={v.step}
-                              onChange={(e) =>
-                                variable(v.name, Number(e.target.value))}
-                            />
-                          </label>
+                          <VariableValueField variable={v} onChange={variable} />
                           {(["min", "max", "step", "unit"] as const).map(
                             (key) => (
                               <label key={key}>
@@ -1201,8 +1214,99 @@ function Editor(
           ref={stage}
           onClick={() => setSelected(null)}
         >
+          {!roots.length
+            ? (
+              <div className="pc-empty">
+                <span className="pc-empty-symbol">
+                  ƒ <span>⬡</span> ↗
+                </span>
+                <small>UN LIENZO. IDEAS QUE SE CONECTAN.</small>
+                <h1>Construye algo que puedas explorar.</h1>
+                <p>
+                  Combina figuras, expresiones y datos. Cambia un valor y
+                  descubre qué sucede.
+                </p>
+                <div>
+                  {["calculus", "fractions", "geometry"].map((id) => (
+                    <button
+                      key={id}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        load(id);
+                      }}
+                    >
+                      <Pencil size={20} />
+                      {templates.find((t) => t.id === id)?.name}
+                      <span>↗</span>
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setTab("elements");
+                    setSidebar(true);
+                  }}
+                >
+                  <Plus size={17} />Explorar los diez elementos
+                </button>
+              </div>
+            )
+            : (
+              <div
+                className="pc-board-space"
+                style={{
+                  width: narrow ? "100%" : 1200 * zoom,
+                  height: narrow ? "auto" : height * zoom,
+                }}
+              >
+                <div
+                  className="pc-board"
+                  style={{
+                    width: narrow ? "100%" : 1200,
+                    height: narrow ? "auto" : height,
+                    transform: narrow ? "none" : `scale(${zoom})`,
+                  }}
+                >
+                  {roots.filter((p) =>
+                    !presenting || p.presentationStep <= step
+                  ).sort((a, b) => a.y - b.y || a.x - b.x).map((p) => (
+                    <Frame
+                      key={p.id}
+                      p={p}
+                      selected={p.id === selectedId}
+                      editing={!presenting}
+                      onSelect={() => {
+                        if (!presenting) selectPrimitive(p.id);
+                      }}
+                      onDrag={(e, kind, bounds) =>
+                        beginDrag(e, kind, p, bounds)}
+                      onFit={fit}
+                      narrow={narrow}
+                      scale={zoom}
+                    >
+                      <PrimitiveVisual
+                        p={p}
+                        scene={scene}
+                        visibleStep={presenting ? step : undefined}
+                        displayScale={narrow ? 1 : zoom}
+                        scope={scope}
+                        functions={functions}
+                        onChange={update}
+                        onViewportChange={navigatePlot}
+                        onVariable={variable}
+                        onSelect={selectPrimitive}
+                        selected={p.id === selectedId}
+                        readOnly={presenting}
+                      />
+                    </Frame>
+                  ))}
+                </div>
+              </div>
+            )}
+        </main>
           {selected && !presenting && (
-            <div className="pc-selection-dock">
+            <aside className="pc-inspector" aria-label="Propiedades del elemento">
               <section
                 className="pc-selection-bar"
                 onClick={(e) => e.stopPropagation()}
@@ -1340,97 +1444,9 @@ function Editor(
                   </div>
                 </details>
               </section>
-            </div>
+            </aside>
           )}
-          {!roots.length
-            ? (
-              <div className="pc-empty">
-                <span className="pc-empty-symbol">
-                  ƒ <span>⬡</span> ↗
-                </span>
-                <small>UN LIENZO. IDEAS QUE SE CONECTAN.</small>
-                <h1>Construye algo que puedas explorar.</h1>
-                <p>
-                  Combina figuras, expresiones y datos. Cambia un valor y
-                  descubre qué sucede.
-                </p>
-                <div>
-                  {["calculus", "fractions", "geometry"].map((id) => (
-                    <button
-                      key={id}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        load(id);
-                      }}
-                    >
-                      <Pencil size={20} />
-                      {templates.find((t) => t.id === id)?.name}
-                      <span>↗</span>
-                    </button>
-                  ))}
-                </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setTab("elements");
-                    setSidebar(true);
-                  }}
-                >
-                  <Plus size={17} />Explorar los diez elementos
-                </button>
-              </div>
-            )
-            : (
-              <div
-                className="pc-board-space"
-                style={{
-                  width: narrow ? "100%" : 1200 * zoom,
-                  height: narrow ? "auto" : height * zoom,
-                }}
-              >
-                <div
-                  className="pc-board"
-                  style={{
-                    width: narrow ? "100%" : 1200,
-                    height: narrow ? "auto" : height,
-                    transform: narrow ? "none" : `scale(${zoom})`,
-                  }}
-                >
-                  {roots.filter((p) =>
-                    !presenting || p.presentationStep <= step
-                  ).sort((a, b) => a.y - b.y || a.x - b.x).map((p) => (
-                    <Frame
-                      key={p.id}
-                      p={p}
-                      selected={p.id === selectedId}
-                      editing={!presenting}
-                      onSelect={() => {
-                        if (!presenting) setSelected(p.id);
-                      }}
-                      onDrag={(e, kind, bounds) =>
-                        beginDrag(e, kind, p, bounds)}
-                      onFit={fit}
-                      narrow={narrow}
-                      scale={zoom}
-                    >
-                      <PrimitiveVisual
-                        p={p}
-                        scene={scene}
-                        visibleStep={presenting ? step : undefined}
-                        scope={scope}
-                        functions={functions}
-                        onChange={update}
-                        onVariable={variable}
-                        onSelect={setSelected}
-                        selected={p.id === selectedId}
-                        readOnly={presenting}
-                      />
-                    </Frame>
-                  ))}
-                </div>
-              </div>
-            )}
-        </main>
+
       </div>
       <footer className="pc-bottom">
         <span>
@@ -1439,28 +1455,14 @@ function Editor(
         </span>
         <button
           onClick={() => {
-            let y = 24;
-            commit({
-              ...scene,
-              primitives: scene.primitives.map((p) => {
-                if ("canvasId" in p.data && p.data.canvasId) return p;
-                const next = {
-                  ...p,
-                  x: 24,
-                  y,
-                  width: 1152,
-                  rotation: 0,
-                  autoHeight: true,
-                };
-                y += p.height + 24;
-                return next;
-              }),
-            });
+            commit(organizePrimitiveScene(scene));
+            setAutoZoom(true);
           }}
         >
-          Organizar lienzo
+          <LayoutDashboard size={16} />Organizar lienzo
         </button>
         <span className="pc-zoom">
+          <span>Zoom del lienzo</span>
           {narrow ? "Vista móvil" : (
             <>
               <button
@@ -1481,7 +1483,7 @@ function Editor(
               >
                 +
               </button>
-              <button onClick={() => setAutoZoom(true)}>Ajustar</button>
+              <button onClick={() => setAutoZoom(true)}>Ajustar ancho</button>
             </>
           )}
         </span>
@@ -1493,6 +1495,7 @@ function Editor(
           onClick={() => {
             setTab("chat");
             setSidebar(true);
+            setSelected(null);
           }}
         >
           <MessageCircle size={20} />Chat

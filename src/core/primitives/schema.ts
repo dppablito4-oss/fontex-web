@@ -71,6 +71,8 @@ export const primitiveSchema = z.discriminatedUnion("kind", [
       rangeY: pair,
       angleUnit: z.enum(["rad", "deg"]),
       equalScale: z.boolean().nullish(),
+      autoFit: z.boolean().nullish(),
+      referenceWindow: z.object({ domainX: pair, rangeY: pair }).strict().nullish(),
       showGrid: z.boolean(),
       showAxisLabels: z.boolean(),
       subdivisions: z.number().int().min(2).max(20),
@@ -441,12 +443,14 @@ export function parsePrimitiveScene(value: unknown): PrimitiveScene {
       );
     }
     if (p.kind === "coordinate_canvas") {
-      const [a, b] = p.data.domainX.map((x) => scalar(x, scope)),
-        [c, d] = p.data.rangeY.map((x) => scalar(x, scope));
-      if (
-        b! - a! < .001 || d! - c! < .001 ||
-        [a, b, c, d].some((x) => Math.abs(x!) > 10000)
-      ) throw new Error("Revisa el dominio y la ventana del plano.");
+      for (const window of [p.data, ...(p.data.referenceWindow ? [p.data.referenceWindow] : [])]) {
+        const [a, b] = window.domainX.map((x) => scalar(x, scope)),
+          [c, d] = window.rangeY.map((x) => scalar(x, scope));
+        if (
+          b! - a! < .001 || d! - c! < .001 ||
+          [a, b, c, d].some((x) => Math.abs(x!) > 10000)
+        ) throw new Error("Revisa el dominio y la ventana del plano.");
+      }
     }
     if (p.kind === "vector_segment") {
       for (const x of [...p.data.start, ...p.data.end]) {
@@ -650,6 +654,8 @@ export function createPrimitive<K extends PrimitiveKind>(
   const defaults = {
     coordinate_canvas: {
       mode: "cartesian",
+      autoFit: true,
+      equalScale: true,
       domainX: ["-5", "5"],
       rangeY: ["-3", "5"],
       angleUnit: "rad",

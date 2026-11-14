@@ -20,9 +20,11 @@ export function PrimitiveFields(
       <div className="pc-field-row">
         {p.kind === "coordinate_canvas" && (
           <>
+            <Toggle label="Ajustar automáticamente a las figuras" value={p.data.autoFit ?? true}
+              onChange={(autoFit) => patch({ autoFit, ...(autoFit && p.data.referenceWindow ? { ...p.data.referenceWindow, referenceWindow: null } : {}) })} />
             <Toggle
               label="Misma escala en ambos ejes"
-              value={p.data.equalScale ?? false}
+              value={p.data.equalScale ?? true}
               onChange={(equalScale) => patch({ equalScale })}
             />
             <Select
@@ -48,6 +50,8 @@ export function PrimitiveFields(
                     value={v}
                     onChange={(value) =>
                       patch({
+                        autoFit: false,
+                        referenceWindow: null,
                         [key]: p.data[key].map((old, j) =>
                           j === i ? value : old
                         ),
