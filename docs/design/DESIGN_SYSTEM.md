@@ -16,16 +16,16 @@ Los componentes nuevos deben consumir tokens. La portada, el lienzo, el laborato
 |---|---|---|
 | Espacio académico y autenticación | `src/styles/globals.css` | Claro y oscuro mediante `ThemeProvider` |
 | Aula de práctica | `src/features/demo/demo.css` | Claro y oscuro, con alias de los tokens globales |
-| Studio | `src/features/studio/studio.css` | Claro y oscuro, incluidos tablero, SVG, inspector y diálogos |
+| Lienzo de primitivas | `src/features/primitives/primitives.css` | Claro y oscuro, incluidos tablero, pestañas, menús y panel derecho |
 | Fracciones | `src/features/canvas/canvas.css` | Claro y oscuro, incluidas figuras y notas |
 
-Studio usa una cabecera compacta, paleta de objetos, tablero e inspector. En tablet el inspector pasa debajo del lienzo; en móvil las herramientas se distribuyen horizontalmente. Materiales, guardado, historial, presentación y selector de tema se concentran en la cabecera. Se retiraron lemas, notas persistentes sobre almacenamiento y metadatos técnicos sin una acción asociada.
+El lienzo usa pestañas de documentos sobre la barra de herramientas. Archivo, Elementos, Plantillas y Variables se despliegan desde arriba. El panel derecho reserva su espacio al chat y alterna a propiedades al seleccionar un objeto; no añade una segunda columna de inspección. El saldo se pliega, los iconos de herramientas comparten estilo y las etiquetas permanecen visibles. Véase [Organización del lienzo](../interfaz-lienzo.md).
 
 Los SVG comparten `--ui-math-primary`, `--ui-math-secondary` y `--ui-math-empty`, con valores para ambos temas. Las pruebas comprueban contraste mínimo 3:1 de piezas coloreadas frente a la tarjeta y a las piezas vacías. Texto, formularios, errores y foco conservan sus tokens semánticos.
 
-Fontex Agent ocupa un panel desplegable dentro del inspector, conservando el editor y sus rutas. Agrupa modo/nivel, orientación y vista previa de acciones; el JSON local y el contexto quedan bajo controles avanzados. No aplica cambios automáticamente. Las figuras de colecciones, rectas y ecuaciones usan los mismos tokens; los puntos demasiado próximos se identifican en una lista para evitar etiquetas superpuestas. Las nuevas ayudas de formulario usan `aria-describedby`, separadas del nombre del campo. La revisión visual de estos controles sigue pendiente.
+Fontex Agent ocupa el panel derecho, con conversación y compositor propios. Su nivel permanece junto al mensaje y la creación con IA se distingue del botón que abre un lienzo vacío. La gestión JSON vive en Archivo. Las ayudas de formulario utilizan nombres accesibles; el foco de los menús se restaura al cerrarlos con Escape.
 
-Los módulos se editan al 100 % por defecto en escritorio, con tamaños iniciales más amplios, tirador de redimensionado y vista ampliada en diálogo nativo. El diálogo elimina la reducción de escala del lienzo sin modificar el documento; mantiene el tema y usa gráficos más grandes. Sus operandos se apilan en móvil. Redimensionar conserva los límites y se confirma como un único paso de historial. Las dimensiones de documentos previos no se migran automáticamente.
+El editor adapta el zoom al ancho disponible y permite controlarlo desde la barra inferior. Los objetos conservan sus controles de tamaño, movimiento y giro, y los planos tienen su propia navegación. En móvil se apilan las representaciones. La reorganización de controles no modifica las dimensiones de los documentos guardados.
 
 ## Paleta oficial
 

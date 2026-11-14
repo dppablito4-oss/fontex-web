@@ -15,6 +15,7 @@ Actualizada el **14 de noviembre de 2026**: el editor principal utiliza diez pri
 | [Fontex Agent](architecture/fontex-agent.md) | Tres fases, acciones, backend, pedagogía, pruebas y límites reales |
 | [Supabase](../supabase/README.md) | Migraciones, tablas, funciones, secretos y pruebas de backend |
 | [Sistema de diseño](design/DESIGN_SYSTEM.md) | Tokens, temas y estilos propios de Studio |
+| [Organización del lienzo](interfaz-lienzo.md) | Pestañas superiores, herramientas desplegables y panel de chat/propiedades |
 | [Dependencias](decisions/DEPENDENCIES.md) | Uso de paquetes, herramientas y estado de auditoría |
 | [Preparación de primitivas v0.7](plans/v0.7-primitivas-integracion.md) | Revisión de la propuesta, compatibilidad con el lienzo actual y orden de integración |
 | [Auditoría actual](AUDITORIA.md) | Estado de las diez correcciones, pruebas y requisitos de despliegue |

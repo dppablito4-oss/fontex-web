@@ -43,13 +43,12 @@ it("keeps chat enabled when generation credit is zero", async () => {
       <PrimitiveCanvas />
     </ThemeProvider>,
   );
-  fireEvent.click(screen.getByRole("button", { name: "Chat" }));
   expect(screen.getByText("0 créditos para generar")).toBeInTheDocument();
   fireEvent.change(
     screen.getByRole("textbox", { name: "Mensaje para Fontex AI" }),
     { target: { value: "Ayúdame a entender fracciones" } },
   );
-  expect(screen.getByRole("button", { name: "Crear lienzo" }))
+  expect(screen.getByRole("button", { name: "Crear con IA" }))
     .toBeDisabled();
   expect(screen.getByRole("button", { name: "Enviar" }))
     .toBeEnabled();

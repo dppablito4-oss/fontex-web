@@ -39,7 +39,9 @@ describe("Fontex shell", () => {
     const previousWidth = window.innerWidth;
     Object.defineProperty(window, "innerWidth", { configurable: true, writable: true, value: 1366 });
     renderRoute("/lienzo");
-    expect(await screen.findByLabelText("Título del lienzo")).toBeInTheDocument();
+    expect(await screen.findByRole("tablist", { name: "Lienzos" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Archivo" }));
+    expect(screen.getByLabelText("Título del lienzo")).toBeInTheDocument();
     expect(screen.getByRole("main", { name: "Lienzo matemático" })).toBeInTheDocument();
     expect(screen.getByRole("complementary", { name: "Panel de Fontex" })).toBeVisible();
     expect(screen.getByText("Fontex Agente")).toBeInTheDocument();
@@ -227,7 +229,7 @@ it("edits a 100 cm measure, follows it on the plot, and restores automatic fitti
   expect(screen.getByText("Escala automática")).toBeInTheDocument();
   // Selecting a figure exposes an independent inspector, keeping the plot in the workspace.
   fireEvent.keyDown(screen.getByRole("button", { name: "Seleccionar figura Rectángulo" }), { key: "Enter" });
-  const inspector = screen.getByRole("complementary", { name: "Propiedades del elemento" });
+  const inspector = screen.getByRole("region", { name: "Propiedades del elemento" });
   expect(within(inspector).getByLabelText("Nombre del elemento")).toHaveValue("Rectángulo");
   expect(within(screen.getByRole("main", { name: "Lienzo matemático" })).queryByLabelText("Nombre del elemento")).not.toBeInTheDocument();
 });

@@ -8,6 +8,18 @@ import {
 } from "react";
 import {
   Check,
+  ChartColumn,
+  ChartSpline,
+  Grid2X2,
+  LayoutGrid,
+  MoveUpRight,
+  Network,
+  PenLine,
+  Shapes,
+  Type,
+  type LucideIcon,
+  FolderOpen,
+  SlidersHorizontal,
   ChevronLeft,
   ChevronRight,
   Copy,
@@ -34,6 +46,8 @@ import { AcademicMarkdown } from "../tutor/components/AcademicMarkdown";
 import { usePrimitiveStore } from "./usePrimitiveStore";
 import { PrimitiveVisual } from "./PrimitiveVisual";
 import { PrimitiveFields } from "./PrimitiveFields";
+import { CanvasDocumentTabs, CanvasToolMenu } from "./CanvasWorkspaceControls";
+import { canvasTabId } from "./canvas-tabs";
 import {
   applyPrimitivePatch,
   createPrimitive,
@@ -59,7 +73,19 @@ import {
 import { useAiCredits } from "../ai-credits/useAiCredits";
 import { creditsChanged } from "../ai-credits/service";
 import "./primitives.css";
-type Tab = "chat" | "elements" | "templates" | "variables";
+type Tab = "file" | "elements" | "templates" | "variables";
+const primitiveIcons: Record<PrimitiveKind, LucideIcon> = {
+  coordinate_canvas: Grid2X2,
+  function_region: ChartSpline,
+  vector_segment: MoveUpRight,
+  stamp_grid: LayoutGrid,
+  math_block: Type,
+  control_slider: SlidersHorizontal,
+  geometric_shape: Shapes,
+  data_chart: ChartColumn,
+  node_graph: Network,
+  annotation_stroke: PenLine,
+};
 type DragKind = "move" | "resize" | "rotate";
 type Drag = {
   kind: DragKind;
@@ -251,10 +277,12 @@ function Editor(
     (!credits.status || credits.status.balance < 1 ||
       credits.status.active_generation);
   const [selectedId, setSelected] = useState<string | null>(null),
-    [tab, setTab] = useState<Tab>("templates"),
+    [tab, setTab] = useState<Tab | null>(null),
     [sidebar, setSidebar] = useState(() =>
       !window.matchMedia("(max-width:760px)").matches
     );
+  const [dockView, setDockView] = useState<"chat" | "properties">("chat");
+  const closeTools = useCallback(() => setTab(null), []);
   const [narrow, setNarrow] = useState(() =>
       window.matchMedia("(max-width:760px)").matches
     ),
@@ -265,8 +293,10 @@ function Editor(
     [notice, setNotice] = useState(""),
     [presenting, setPresenting] = useState(false),
     [step, setStep] = useState(1);
-  const [prompt, setPrompt] = useState(""),
-    [busy, setBusy] = useState(false),
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const prompt = drafts[scene.id] ?? "";
+  const setPrompt = (value: string) => setDrafts((current) => ({ ...current, [scene.id]: value }));
+  const [busy, setBusy] = useState(false),
     [streamText, setStreamText] = useState("");
   const level = scene.level;
   const [variableName, setVariableName] = useState("b"),
@@ -286,7 +316,7 @@ function Editor(
   useEffect(() => () => abort.current?.abort(), []);
   useEffect(() => {
     messageEnd.current?.scrollIntoView({ block: "nearest" });
-  }, [scene.conversation.length, streamText]);
+  }, [scene.conversation.length, streamText, sidebar, dockView]);
   useEffect(() => {
     const query = window.matchMedia("(max-width:760px)");
     const change = () => setNarrow(query.matches);
@@ -555,7 +585,9 @@ function Editor(
   }
   function selectPrimitive(id: string) {
     setSelected(id);
-    setSidebar(false);
+    setSidebar(true);
+    setDockView("properties");
+    setTab(null);
   }
   function load(id: string) {
     const template = templateScene(id);
@@ -563,7 +595,8 @@ function Editor(
     if (commit(template)) {
       setSelected(null);
       setStep(1);
-      setSidebar(false);
+      setDockView("chat");
+      setTab(null);
     }
   }
   function download() {
@@ -699,340 +732,43 @@ function Editor(
       !("canvasId" in p.data && p.data.canvasId)
     ),
     height = Math.max(700, ...roots.map((p) => p.y + p.height + 40));
-  return (
-    <div
-      className={`pc-app${presenting ? " pc-presenting" : ""}${
-        sidebar ? " pc-sidebar-open" : ""
-      }`}
-      ref={root}
-      onPointerMove={move}
-      onPointerUp={endDrag}
-      onPointerCancel={endDrag}
-    >
-      <SiteHeader />
-      <header className="pc-topbar">
-        <input
-          aria-label="Título del lienzo"
-          value={scene.title}
-          maxLength={160}
-          onChange={(e) => commit({ ...scene, title: e.target.value })}
-        />
-        <span className="pc-save">
-          <Check size={14} />
-          {library.status === "saved"
-            ? "Guardado en tu cuenta"
-            : library.status === "local"
-            ? "Guardado local"
-            : library.status === "saving" || library.status === "loading"
-            ? "Sincronizando…"
-            : "Guardado local · sincronización pendiente"}
-        </span>
-        <div className="pc-top-actions">
-          <button aria-label="Deshacer" disabled={!past.length} onClick={undo}>
-            <Undo2 size={17} />
-          </button>
-          <button aria-label="Rehacer" disabled={!future.length} onClick={redo}>
-            <Redo2 size={17} />
-          </button>
-          <button
-            onClick={() => {
-              setTab("elements");
-              setSidebar(true);
-              setSelected(null);
-            }}
-          >
-            <Plus size={17} />Elementos
-          </button>
-          <button onClick={() => { setTab("templates"); setSidebar(!sidebar || tab !== "templates"); setSelected(null); }}>
-            <LayoutDashboard size={17} />Plantillas
-          </button>
-          <button
-            onClick={() => {
-              setTab("chat");
-              setSidebar(!sidebar || tab !== "chat");
-              setSelected(null);
-            }}
-          >
-            <MessageCircle size={17} />
-            <span>Asistente</span>
-          </button>
-          <button
-            onClick={() => {
-              setSelected(null);
-              window.print();
-            }}
-          >
-            <Download size={17} />PDF
-          </button>
-          <button
-            className="pc-present-action"
-            disabled={!scene.primitives.length}
-            onClick={() => {
-              setSelected(null);
-              setStep(steps[0]!);
-              setPresenting(true);
-              void root.current?.requestFullscreen?.().catch(() => {});
-            }}
-          >
-            <Expand size={17} />Presentar
-          </button>
-        </div>
-      </header>
-      {(notice || library.notice || accessNote) && (
-        <div className="pc-banner" role="status">
-          {notice || library.notice || accessNote}
-          <button aria-label="Cerrar aviso" onClick={() => setNotice("")}>
-            <X size={16} />
-          </button>
-        </div>
-      )}
-      {presenting && (
-        <nav className="pc-present-bar">
-          <strong>{scene.title}</strong>
-          <span>Paso {stepIndex + 1} de {steps.length}</span>
-          <progress
-            aria-label="Avance de presentación"
-            value={stepIndex + 1}
-            max={steps.length}
-          />
-          <button
-            disabled={stepIndex === 0}
-            aria-label="Paso anterior"
-            onClick={() => setStep((s) => advanceStep(s, -1, steps))}
-          >
-            <ChevronLeft />
-          </button>
-          <button
-            disabled={stepIndex === steps.length - 1}
-            aria-label="Paso siguiente"
-            onClick={() => setStep((s) => advanceStep(s, 1, steps))}
-          >
-            <ChevronRight />
-          </button>
-          <button
-            onClick={() => {
-              setPresenting(false);
-              if (document.fullscreenElement) {
-                void document.exitFullscreen().catch(() => {});
-              }
-            }}
-          >
-            Salir de presentación
-          </button>
-        </nav>
-      )}
-      <div className="pc-shell">
-        {sidebar && !presenting && (
-          <aside className="pc-sidebar" aria-label="Panel de Fontex">
-            <header>
-              <strong>Fontex Agente</strong>
-              <button
-                aria-label="Cerrar panel"
-                onClick={() =>
-                  setSidebar(false)}
-              >
-                <X size={18} />
-              </button>
-            </header>
-            <nav className="pc-tabs">
-              {(["chat", "elements", "templates", "variables"] as const).map(
-                (t) => (
-                  <button
-                    key={t}
-                    aria-pressed={tab === t}
-                    onClick={() => setTab(t)}
-                  >
-                    {({
-                      chat: "Chat",
-                      elements: "Elementos",
-                      templates: "Plantillas",
-                      variables: "Variables",
-                    })[t]}
-                  </button>
-                ),
-              )}
-            </nav>
-            {tab === "chat"
-              ? (
-                <>
-                  {authenticated && (
-                    <div className="pc-credit-info" aria-live="polite">
-                      <strong>
-                        {credits.status
-                          ? `${credits.status.balance} créditos para generar`
-                          : credits.error ?? "Consultando saldo…"}
-                      </strong>
-                      <small>
-                        Chat sin cobro, con límites de uso. Crear en el lienzo consume 1 crédito.
-                      </small>
-                      {credits.status?.balance === 0 && (
-                        <span>Sin saldo: puedes seguir conversando.</span>
-                      )}
-                      {credits.status?.active_generation && (
-                        <small>Hay una generación en curso.</small>
-                      )}
-                      {credits.error && (
-                        <button onClick={() => void credits.refresh()}>
-                          Reintentar saldo
-                        </button>
-                      )}
-                      {credits.status?.is_admin && (
-                        <a href="#/administracion">Administrar créditos</a>
-                      )}
-                    </div>
-                  )}
-                  <div className="pc-chat-log" role="log" aria-live="polite">
-                    {!scene.conversation.length && (
-                      <div className="pc-chat-welcome">
-                        <span>✦</span>
-                        <h2>¿Qué exploramos?</h2>
-                        <p>
-                          Conversa, prepara una explicación o construye una idea
-                          en el lienzo.
-                        </p>
-                        <div>
-                          {[
-                            "Explica qué representa una derivada",
-                            "Quiero explorar áreas y perímetros",
-                            "Cómo sumo fracciones",
-                          ].map((q) => (
-                            <button
-                              key={q}
-                              onClick={() => setPrompt(q)}
-                            >
-                              {q}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    {scene.conversation.map((turn, i) => (
-                      <div
-                        className={`pc-message pc-message-${turn.role}`}
-                        key={i}
-                      >
-                        <small>
-                          {turn.role === "user" ? "Tú" : "Fontex AI"}
-                        </small>
-                        <AcademicMarkdown content={turn.content} />
-                        {turn.role === "assistant" &&
-                          i === scene.conversation.length - 1 && (
-                          <button
-                            disabled={busy || creditBlocked}
-                            onClick={() =>
-                              void ask(
-                                "build",
-                                `Construye en el lienzo la propuesta acordada en la conversación. Última propuesta: ${
-                                  turn.content.slice(0, 3000)
-                                }`,
-                              )}
-                          >
-                            <Plus size={15} />Crear en el lienzo
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                    {busy && (
-                      <div className="pc-message">
-                        <small>Fontex AI</small>
-                        <AcademicMarkdown
-                          content={streamText || "Preparando…"}
-                        />
-                        <span className="pc-writing">Escribiendo…</span>
-                      </div>
-                    )}
-                    <div ref={messageEnd} />
-                  </div>
-                  <form
-                    className="pc-chat-composer"
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      void ask("chat");
-                    }}
-                  >
-                    <label>
-                      Nivel<select
-                        value={level}
-                        onChange={(e) =>
-                          commit({
-                            ...scene,
-                            level: e.target.value as typeof level,
-                          })}
-                      >
-                        <option value="inicial">Inicial</option>
-                        <option value="primaria">Primaria</option>
-                        <option value="secundaria">Secundaria</option>
-                        <option value="universidad">Universidad</option>
-                      </select>
-                    </label>
-                    <textarea
-                      aria-label="Mensaje para Fontex AI"
-                      placeholder="Escribe una idea o una pregunta…"
-                      value={prompt}
-                      onChange={(e) =>
-                        setPrompt(e.target.value)}
-                      maxLength={4000}
-                      rows={3}
-                    />
-                    <div>
-                      <button
-                        type="button"
-                        disabled={busy || creditBlocked || !prompt.trim()}
-                        onClick={() => void ask("build")}
-                      >
-                        <Plus size={16} />Crear lienzo
-                      </button>
-                      <button
-                        type="submit"
-                        className="pc-primary"
-                        disabled={busy || !prompt.trim()}
-                      >
-                        <Send size={16} />Enviar
-                      </button>
-                      {busy && (
-                        <button
-                          type="button"
-                          onClick={() => abort.current?.abort()}
-                        >
-                          Detener
-                        </button>
-                      )}
-                    </div>
-                  </form>
-                </>
-              )
-              : (
+  function resetEditor() {
+    setSelected(null); setPast([]); setFuture([]); setStep(1); setDockView("chat");
+  }
+  function openScene(id: string) {
+    if (id === scene.id) return;
+    abort.current?.abort();
+    library.open(id);
+    resetEditor();
+    closeTools();
+  }
+  function newScene() {
+    abort.current?.abort();
+    const next = newPrimitiveScene(`Lienzo ${library.scenes.length + 1}`);
+    if (setScene(next)) { live.current = next; resetEditor(); closeTools(); }
+  }
+  function toggleTools(tool: Tab) { setTab((current) => current === tool ? null : tool); }
+  const toolContent = (
                 <div className="pc-panel-content">
                   {tab === "elements" && (
                     <>
                       <h2>Combina elementos</h2>
                       <p>Diez elementos que puedes combinar.</p>
                       <div className="pc-element-list">
-                        {(Object.keys(primitiveNames) as PrimitiveKind[]).map((
-                          kind,
-                          i,
-                        ) => (
+                        {(Object.keys(primitiveNames) as PrimitiveKind[]).map((kind) => {
+                          const Icon = primitiveIcons[kind];
+                          return (
                           <button
                             key={kind}
                             onClick={() => add(kind)}
                           >
-                            <span>
-                              {[
-                                "⊞",
-                                "ƒ",
-                                "↗",
-                                "▦",
-                                "T",
-                                "☷",
-                                "⬡",
-                                "▥",
-                                "✎",
-                              ][i]}
+                            <span aria-hidden="true">
+                              <Icon size={19} />
                             </span>
                             <strong>{primitiveNames[kind]}</strong>
                             <Plus size={16} />
                           </button>
-                        ))}
+                        ); })}
                       </div>
                       {!!scene.primitives.length && (
                         <>
@@ -1044,7 +780,9 @@ function Editor(
                               aria-pressed={selectedId === p.id}
                               onClick={() => {
                                 setSelected(p.id);
-                                if (narrow) setSidebar(false);
+                                setDockView("properties");
+                                setSidebar(true);
+                                setTab(null);
                               }}
                             >
                               {p.label || primitiveNames[p.kind]}
@@ -1178,49 +916,98 @@ function Editor(
                     </>
                   )}
                 </div>
-              )}
-            <footer className="pc-library">
-              <label>
-                Mis lienzos<select
-                  aria-label="Mis lienzos"
-                  value={scene.id}
-                  onChange={(e) => {
-                    if (busy) abort.current?.abort();
-                    library.open(e.target.value);
-                    setSelected(null);
-                    setPast([]);
-                    setFuture([]);
-                    setStep(1);
-                  }}
-                >
-                  {library.scenes.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.title || "Sin título"}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <div>
-                <button
-                  onClick={() => {
-                    commit(newPrimitiveScene());
-                    setSelected(null);
-                  }}
-                >
-                  Nuevo
-                </button>
-                <button onClick={download}>Guardar JSON</button>
-                <button disabled={busy || library.status === "saving" || library.status === "loading"} onClick={() => {
-                  if (!window.confirm(`¿Eliminar el lienzo «${scene.title || "Sin título"}»? Guarda un JSON si necesitas conservar una copia.`)) return;
-                  void library.remove(scene.id).then((removed) => { if(removed){setSelected(null);setPast([]);setFuture([]);} });
-                }}>Eliminar lienzo</button>
-                <button onClick={() => file.current?.click()}>
-                  Abrir JSON
-                </button>
-              </div>
-            </footer>
-          </aside>
-        )}
+  );
+  return (
+    <div
+      className={`pc-app${presenting ? " pc-presenting" : ""}${
+        sidebar ? " pc-sidebar-open" : ""
+      }`}
+      ref={root}
+      onPointerMove={move}
+      onPointerUp={endDrag}
+      onPointerCancel={endDrag}
+    >
+      <SiteHeader />
+      <CanvasDocumentTabs scenes={library.scenes} activeId={scene.id} onOpen={openScene} onNew={newScene} />
+      <header className="pc-topbar" aria-label="Herramientas del lienzo">
+        <div className="pc-toolbar-menus">
+          <CanvasToolMenu label="Archivo" icon={<FolderOpen size={16} />} open={tab === "file"} onToggle={() => toggleTools("file")} onClose={closeTools}>
+            <div className="pc-file-menu">
+              <label>Título del lienzo<input aria-label="Título del lienzo" value={scene.title} maxLength={160} onChange={(e) => commit({ ...scene, title: e.target.value })} /></label>
+              <button onClick={newScene}><Plus size={16} />Nuevo lienzo</button>
+              <button onClick={() => { closeTools(); file.current?.click(); }}><FolderOpen size={16} />Abrir JSON</button>
+              <button onClick={() => { download(); closeTools(); }}><Download size={16} />Guardar JSON</button>
+              <button onClick={() => { closeTools(); setSelected(null); window.print(); }}><Download size={16} />Exportar PDF</button>
+              <button className="pc-delete-document" disabled={busy || library.status === "saving" || library.status === "loading"} onClick={() => {
+                if (!window.confirm(`¿Eliminar el lienzo «${scene.title || "Sin título"}»? Guarda un JSON si necesitas conservar una copia.`)) return;
+                closeTools();
+                void library.remove(scene.id).then((removed) => { if (removed) resetEditor(); });
+              }}><Trash2 size={16} />Eliminar lienzo</button>
+            </div>
+          </CanvasToolMenu>
+          {(["elements", "templates", "variables"] as const).map((tool) => <CanvasToolMenu key={tool}
+            label={{elements:"Elementos",templates:"Plantillas",variables:"Variables"}[tool]}
+            icon={tool === "elements" ? <Plus size={16} /> : tool === "templates" ? <LayoutDashboard size={16} /> : <SlidersHorizontal size={16} />}
+            open={tab === tool} onToggle={() => toggleTools(tool)} onClose={closeTools}
+          >{toolContent}</CanvasToolMenu>)}
+        </div>
+        <div className="pc-history-actions">
+          <button aria-label="Deshacer" title="Deshacer" disabled={!past.length} onClick={undo}><Undo2 size={16} /></button>
+          <button aria-label="Rehacer" title="Rehacer" disabled={!future.length} onClick={redo}><Redo2 size={16} /></button>
+        </div>
+        <span className="pc-save" role="status"><Check size={13} />{library.status === "saved" ? "Guardado en tu cuenta" : library.status === "local" ? "Guardado local" : library.status === "saving" || library.status === "loading" ? "Sincronizando…" : "Sincronización pendiente"}</span>
+        <div className="pc-top-actions">
+          <button aria-pressed={sidebar && dockView === "chat"} onClick={() => { setDockView("chat"); setSidebar(!sidebar || dockView !== "chat"); closeTools(); }}><MessageCircle size={16} /><span>Asistente</span></button>
+          <button className="pc-present-action" disabled={!scene.primitives.length} onClick={() => {
+            closeTools(); setSelected(null); setStep(steps[0]!); setPresenting(true);
+            void root.current?.requestFullscreen?.().catch(() => {});
+          }}><Expand size={16} /><span>Presentar</span></button>
+        </div>
+      </header>
+      {(notice || library.notice || accessNote) && (
+        <div className="pc-banner" role="status">
+          {notice || library.notice || accessNote}
+          <button aria-label="Cerrar aviso" onClick={() => setNotice("")}>
+            <X size={16} />
+          </button>
+        </div>
+      )}
+      {presenting && (
+        <nav className="pc-present-bar">
+          <strong>{scene.title}</strong>
+          <span>Paso {stepIndex + 1} de {steps.length}</span>
+          <progress
+            aria-label="Avance de presentación"
+            value={stepIndex + 1}
+            max={steps.length}
+          />
+          <button
+            disabled={stepIndex === 0}
+            aria-label="Paso anterior"
+            onClick={() => setStep((s) => advanceStep(s, -1, steps))}
+          >
+            <ChevronLeft />
+          </button>
+          <button
+            disabled={stepIndex === steps.length - 1}
+            aria-label="Paso siguiente"
+            onClick={() => setStep((s) => advanceStep(s, 1, steps))}
+          >
+            <ChevronRight />
+          </button>
+          <button
+            onClick={() => {
+              setPresenting(false);
+              if (document.fullscreenElement) {
+                void document.exitFullscreen().catch(() => {});
+              }
+            }}
+          >
+            Salir de presentación
+          </button>
+        </nav>
+      )}
+      <div className="pc-shell" id="canvas-workspace" role="tabpanel" aria-labelledby={canvasTabId(scene.id)}>
         <main
           aria-label="Lienzo matemático"
           className="pc-stage"
@@ -1259,7 +1046,6 @@ function Editor(
                   onClick={(e) => {
                     e.stopPropagation();
                     setTab("elements");
-                    setSidebar(true);
                   }}
                 >
                   <Plus size={17} />Explorar los diez elementos
@@ -1319,8 +1105,19 @@ function Editor(
               </div>
             )}
         </main>
-          {selected && !presenting && (
-            <aside className="pc-inspector" aria-label="Propiedades del elemento">
+
+        {sidebar && !presenting && (
+          <aside className="pc-sidebar" aria-label="Panel de Fontex">
+            <header>
+              <strong><MessageCircle size={17} />{dockView === "properties" && selected ? "Propiedades" : "Fontex Agente"}</strong>
+              <button aria-label="Cerrar panel" onClick={() => setSidebar(false)}><X size={17} /></button>
+            </header>
+            {selected && <nav className="pc-dock-tabs" aria-label="Vista del panel">
+              <button aria-pressed={dockView === "chat"} onClick={() => setDockView("chat")}><MessageCircle size={15} />Chat</button>
+              <button aria-pressed={dockView === "properties"} onClick={() => setDockView("properties")}><SlidersHorizontal size={15} />Propiedades</button>
+            </nav>}
+            {dockView === "properties" && selected ? (
+            <section className="pc-inspector" aria-label="Propiedades del elemento">
               <section
                 className="pc-selection-bar"
                 onClick={(e) => e.stopPropagation()}
@@ -1378,7 +1175,7 @@ function Editor(
                   </button>
                   <button
                     aria-label="Cerrar edición"
-                    onClick={() => setSelected(null)}
+                    onClick={() => { setSelected(null); setDockView("chat"); }}
                   >
                     <X size={16} />
                   </button>
@@ -1458,8 +1255,156 @@ function Editor(
                   </div>
                 </details>
               </section>
-            </aside>
-          )}
+            </section>
+            ) : (<>
+                  {authenticated && (
+                    <details className="pc-credit-info">
+                      <summary>
+                        {credits.status
+                          ? `${credits.status.balance} créditos para generar`
+                          : credits.error ?? "Consultando saldo…"}
+                      </summary>
+                      <small>
+                        Chat sin cobro, con límites de uso. Crear en el lienzo consume 1 crédito.
+                      </small>
+                      {credits.status?.balance === 0 && (
+                        <span>Sin saldo: puedes seguir conversando.</span>
+                      )}
+                      {credits.status?.active_generation && (
+                        <small>Hay una generación en curso.</small>
+                      )}
+                      {credits.error && (
+                        <button onClick={() => void credits.refresh()}>
+                          Reintentar saldo
+                        </button>
+                      )}
+                      {credits.status?.is_admin && (
+                        <a href="#/administracion">Administrar créditos</a>
+                      )}
+                    </details>
+                  )}
+                  <div className="pc-chat-log" role="log" aria-live="polite">
+                    {!scene.conversation.length && (
+                      <div className="pc-chat-welcome">
+                        <span>✦</span>
+                        <h2>¿Qué exploramos?</h2>
+                        <p>
+                          Conversa, prepara una explicación o construye una idea
+                          en el lienzo.
+                        </p>
+                        <div>
+                          {[
+                            "Explica qué representa una derivada",
+                            "Quiero explorar áreas y perímetros",
+                            "Cómo sumo fracciones",
+                          ].map((q) => (
+                            <button
+                              key={q}
+                              onClick={() => setPrompt(q)}
+                            >
+                              {q}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {scene.conversation.map((turn, i) => (
+                      <div
+                        className={`pc-message pc-message-${turn.role}`}
+                        key={i}
+                      >
+                        <small>
+                          {turn.role === "user" ? "Tú" : "Fontex AI"}
+                        </small>
+                        <AcademicMarkdown content={turn.content} />
+                        {turn.role === "assistant" &&
+                          i === scene.conversation.length - 1 && (
+                          <button
+                            disabled={busy || creditBlocked}
+                            onClick={() =>
+                              void ask(
+                                "build",
+                                `Construye en el lienzo la propuesta acordada en la conversación. Última propuesta: ${
+                                  turn.content.slice(0, 3000)
+                                }`,
+                              )}
+                          >
+                            <Plus size={15} />Crear en el lienzo
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                    {busy && (
+                      <div className="pc-message">
+                        <small>Fontex AI</small>
+                        <AcademicMarkdown
+                          content={streamText || "Preparando…"}
+                        />
+                        <span className="pc-writing">Escribiendo…</span>
+                      </div>
+                    )}
+                    <div ref={messageEnd} />
+                  </div>
+                  <form
+                    className="pc-chat-composer"
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      void ask("chat");
+                    }}
+                  >
+                    <label>
+                      Nivel<select
+                        value={level}
+                        onChange={(e) =>
+                          commit({
+                            ...scene,
+                            level: e.target.value as typeof level,
+                          })}
+                      >
+                        <option value="inicial">Inicial</option>
+                        <option value="primaria">Primaria</option>
+                        <option value="secundaria">Secundaria</option>
+                        <option value="universidad">Universidad</option>
+                      </select>
+                    </label>
+                    <textarea
+                      aria-label="Mensaje para Fontex AI"
+                      placeholder="Escribe una idea o una pregunta…"
+                      value={prompt}
+                      onChange={(e) =>
+                        setPrompt(e.target.value)}
+                      maxLength={4000}
+                      rows={2}
+                    />
+                    <div>
+                      <button
+                        type="button"
+                        disabled={busy || creditBlocked || !prompt.trim()}
+                        onClick={() => void ask("build")}
+                      >
+                        <Plus size={16} />Crear con IA
+                      </button>
+                      <button
+                        type="submit"
+                        className="pc-primary"
+                        disabled={busy || !prompt.trim()}
+                      >
+                        <Send size={16} />Enviar
+                      </button>
+                      {busy && (
+                        <button
+                          type="button"
+                          onClick={() => abort.current?.abort()}
+                        >
+                          Detener
+                        </button>
+                      )}
+                    </div>
+                  </form>
+            </>)}
+          </aside>
+        )}
+
 
       </div>
       <footer className="pc-bottom">
@@ -1507,7 +1452,7 @@ function Editor(
           className="pc-chat-launcher"
           aria-label="Abrir chat de Fontex"
           onClick={() => {
-            setTab("chat");
+            setDockView("chat");
             setSidebar(true);
             setSelected(null);
           }}
