@@ -297,6 +297,14 @@ export function parsePrimitiveScene(value: unknown): PrimitiveScene {
       }
     }
     if (
+      p.kind === "geometric_shape" && p.data.canvasId !== null &&
+      !["polygon", "triangle"].includes(p.data.shape)
+    ) {
+      throw new Error(
+        "En el plano se admiten polígonos y triángulos. Esta figura requiere un elemento independiente.",
+      );
+    }
+    if (
       p.kind === "geometric_shape" && !p.data.regular &&
       ["polygon", "triangle"].includes(p.data.shape)
     ) {

@@ -4,6 +4,7 @@ import {
   factors,
   integrate,
   interpolate,
+  niceTicks,
   polygonMetrics,
   scalar,
   sceneFunctions,
@@ -45,6 +46,15 @@ describe("composable scene contract", () => {
       p.kind !== "coordinate_canvas"
     );
     expect(() => parsePrimitiveScene(broken)).toThrow(/referencia/);
+    const circle = createPrimitive("geometric_shape", scene);
+    circle.data.shape = "circle_fraction";
+    circle.data.canvasId = scene.primitives[0]!.id;
+    expect(() =>
+      parsePrimitiveScene({
+        ...scene,
+        primitives: [...scene.primitives, circle],
+      })
+    ).toThrow(/plano/);
     scene.variables.push({ ...scene.variables[0]! });
     expect(() => parsePrimitiveScene(scene)).toThrow(/repetid/);
   });
@@ -175,4 +185,10 @@ it("keeps shaded regions visible when the function extends above the viewport", 
   expect(paths).toHaveLength(1);
   expect(Math.max(...paths[0]!.map((p) => p.x))).toBe(2);
   expect(Math.max(...paths[0]!.map((p) => p.y))).toBeLessThanOrEqual(5.8);
+});
+
+it("uses concise responsive axis ticks without repeating decimal labels", () => {
+  expect(niceTicks(-.5, 2.5, 3)).toEqual([0, 1, 2]);
+  expect(niceTicks(-22, 22, 5)).toEqual([-20, -10, 0, 10, 20]);
+  expect(niceTicks(0, 0)).toEqual([]);
 });

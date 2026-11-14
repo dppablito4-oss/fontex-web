@@ -5,6 +5,7 @@ import {
   displayNumber as num,
   type FunctionDefinition,
   interpolate,
+  niceTicks,
   polygonMetrics,
   regionResult,
   sample,
@@ -41,6 +42,17 @@ function Coordinate(
   },
 ) {
   const clip = useId();
+  const svg = useRef<SVGSVGElement>(null),
+    [pixelWidth, setPixelWidth] = useState(800);
+  useEffect(() => {
+    const node = svg.current;
+    if (!node) return;
+    const observer = new ResizeObserver(() =>
+      setPixelWidth(node.getBoundingClientRect().width || 800)
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
   const [x0, x1] = p.data.domainX.map((x) => safe(x, scope)) as [
       number,
       number,
@@ -48,7 +60,15 @@ function Coordinate(
     [y0, y1] = p.data.rangeY.map((x) => safe(x, scope)) as [number, number];
   const W = 800,
     H = p.data.mode === "number_line" ? 190 : 440,
-    M = 48,
+    M = pixelWidth < 500
+      ? Math.max(
+        72,
+        Math.min(
+          140,
+          ...niceTicks(y0, y1, 3).map((n) => num(n).length * 16 + 16),
+        ),
+      )
+      : 72,
     px = (x: number) => M + (x - x0) / (x1 - x0) * (W - 2 * M),
     py = (y: number) => H - M - (y - y0) / (y1 - y0) * (H - 2 * M);
   const children = scene.primitives.filter((c) =>
@@ -59,13 +79,23 @@ function Coordinate(
       points.map((v, i) => `${i ? "L" : "M"}${px(v.x)},${py(v.y)}`).join(" ")
     ).join(" ");
   const lineY = p.data.mode === "number_line" ? H / 2 : py(0);
-  const ticks = Array.from(
-    { length: p.data.subdivisions + 1 },
-    (_, i) => i / p.data.subdivisions,
+  const xTicks = niceTicks(
+    x0,
+    x1,
+    Math.max(3, Math.min(p.data.subdivisions, Math.floor(pixelWidth / 100))),
+  );
+  const yTicks = niceTicks(
+    y0,
+    y1,
+    Math.max(
+      3,
+      Math.min(p.data.subdivisions, Math.floor(pixelWidth * .55 / 70)),
+    ),
   );
   return (
     <div className="pc-coordinate">
       <svg
+        ref={svg}
         viewBox={`0 0 ${W} ${H}`}
         role="img"
         aria-label={p.label || "Plano matemático"}
@@ -75,16 +105,16 @@ function Coordinate(
             <rect x={M} y={M} width={W - 2 * M} height={H - 2 * M} />
           </clipPath>
         </defs>
-        {p.data.showGrid && p.data.mode !== "number_line" &&
-          ticks.map((t) => (
-            <g key={t} stroke="var(--pc-grid)" strokeWidth="1">
-              <path
-                d={`M${M + t * (W - 2 * M)},${M}V${H - M}M${M},${
-                  M + t * (H - 2 * M)
-                }H${W - M}`}
-              />
-            </g>
-          ))}
+        {p.data.showGrid && p.data.mode !== "number_line" && (
+          <g stroke="var(--pc-grid)" strokeWidth="1">
+            {xTicks.map((x) => (
+              <path key={`x${x}`} d={`M${px(x)},${M}V${H - M}`} />
+            ))}
+            {yTicks.map((y) => (
+              <path key={`y${y}`} d={`M${M},${py(y)}H${W - M}`} />
+            ))}
+          </g>
+        )}
         {["polar", "unit_circle"].includes(p.data.mode) && (
           <g fill="none" stroke="var(--pc-grid)">
             {[1, 2, 3, 4].map((r) => (
@@ -116,23 +146,27 @@ function Coordinate(
             strokeWidth="1.5"
           />
         )}
-        {p.data.showAxisLabels &&
-          ticks.map((t) => (
-            <g key={t} fill="currentColor" fontSize="16">
+        {p.data.showAxisLabels && (
+          <g fill="currentColor" fontSize="16">
+            {xTicks.map((x) => (
               <text
-                x={px(x0 + t * (x1 - x0))}
+                className="pc-x-tick"
+                key={`x${x}`}
+                x={px(x)}
                 y={p.data.mode === "number_line" ? lineY + 28 : H - 12}
                 textAnchor="middle"
               >
-                {num(x0 + t * (x1 - x0))}
+                {num(x)}
               </text>
-              {p.data.mode !== "number_line" && (
-                <text x={M - 8} y={py(y0 + t * (y1 - y0)) + 5} textAnchor="end">
-                  {num(y0 + t * (y1 - y0))}
+            ))}
+            {p.data.mode !== "number_line" &&
+              yTicks.map((y) => (
+                <text key={`y${y}`} x={M - 8} y={py(y) + 5} textAnchor="end">
+                  {num(y)}
                 </text>
-              )}
-            </g>
-          ))}
+              ))}
+          </g>
+        )}
         <g clipPath={`url(#${clip})`}>
           {children.map((child) => {
             const stroke = child.style.strokeColor;

@@ -1081,3 +1081,23 @@
   isolation: isolate;
   z-index: 0;
 }
+
+.pc-selection-dock {
+  position: sticky;
+  top: 0;
+  height: 0;
+  z-index: 150;
+  pointer-events: none;
+}
+.pc-selection-dock > .pc-selection-bar {
+  position: relative;
+  margin-bottom: 0;
+  max-height: 55dvh;
+  overflow: auto;
+  pointer-events: auto;
+}
+@media print {
+  .pc-selection-dock {
+    display: none!important;
+  }
+}

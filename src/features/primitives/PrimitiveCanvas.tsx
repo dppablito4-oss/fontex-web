@@ -105,8 +105,13 @@ function Frame({
       }}
       tabIndex={0}
       aria-label={p.label || primitiveNames[p.kind]}
-      onFocus={(e) => {
-        if (e.target === e.currentTarget) onSelect();
+      onKeyDown={(e) => {
+        if (
+          e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")
+        ) {
+          e.preventDefault();
+          onSelect();
+        }
       }}
     >
       <header className="pc-object-heading">
@@ -1044,138 +1049,145 @@ function Editor(
           onClick={() => setSelected(null)}
         >
           {selected && !presenting && (
-            <section
-              className="pc-selection-bar"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="pc-selection-actions">
-                <strong>{primitiveNames[selected.kind]}</strong>
-                <label>
-                  Nombre<input
-                    aria-label="Nombre del elemento"
-                    value={selected.label}
-                    maxLength={120}
-                    onChange={(e) =>
-                      update({ ...selected, label: e.target.value })}
-                  />
-                </label>
-                <label>
-                  Color<input
-                    type="color"
-                    aria-label="Color del elemento"
-                    value={selected.style.strokeColor}
-                    onChange={(e) =>
-                      update({
-                        ...selected,
-                        style: {
-                          ...selected.style,
-                          strokeColor: e.target.value,
-                        },
-                      })}
-                  />
-                </label>
-                <label>
-                  Relleno<input
-                    type="color"
-                    aria-label="Relleno del elemento"
-                    value={selected.style.fillColor}
-                    onChange={(e) =>
-                      update({
-                        ...selected,
-                        style: { ...selected.style, fillColor: e.target.value },
-                      })}
-                  />
-                </label>
-                <button aria-label="Duplicar elemento" onClick={duplicate}>
-                  <Copy size={16} />
-                </button>
-                <button
-                  aria-label="Eliminar elemento"
-                  disabled={selected.locked}
-                  onClick={remove}
-                >
-                  <Trash2 size={16} />
-                </button>
-                <button
-                  aria-label="Cerrar edición"
-                  onClick={() => setSelected(null)}
-                >
-                  <X size={16} />
-                </button>
-              </div>
-              <PrimitiveFields
-                key={selected.id}
-                p={selected}
-                scene={scene}
-                onChange={update}
-              />
-              <details>
-                <summary>Posición, tamaño y presentación</summary>
-                <div className="pc-field-row">
-                  {([
-                    "x",
-                    "y",
-                    "width",
-                    "height",
-                    "rotation",
-                    "presentationStep",
-                  ] as const).map((key) => (
-                    <label key={key}>
-                      {{
-                        x: "Posición x",
-                        y: "Posición y",
-                        width: "Ancho",
-                        height: "Alto",
-                        rotation: "Rotación",
-                        presentationStep: "Paso de presentación",
-                      }[key]}
-                      <input
-                        type="number"
-                        value={selected[key]}
-                        onChange={(e) =>
-                          update({
-                            ...selected,
-                            [key]: Number(e.target.value),
-                            ...(key === "height" ? { autoHeight: false } : {}),
-                          })}
-                      />
-                    </label>
-                  ))}
+            <div className="pc-selection-dock">
+              <section
+                className="pc-selection-bar"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="pc-selection-actions">
+                  <strong>{primitiveNames[selected.kind]}</strong>
                   <label>
-                    <input
-                      type="checkbox"
-                      checked={selected.locked}
+                    Nombre<input
+                      aria-label="Nombre del elemento"
+                      value={selected.label}
+                      maxLength={120}
                       onChange={(e) =>
-                        update({ ...selected, locked: e.target.checked })}
-                    />Bloquear
+                        update({ ...selected, label: e.target.value })}
+                    />
                   </label>
                   <label>
-                    <input
-                      type="checkbox"
-                      checked={selected.autoHeight}
-                      onChange={(e) =>
-                        update({ ...selected, autoHeight: e.target.checked })}
-                    />Ajustar alto al contenido
-                  </label>
-                  <label>
-                    Tamaño de letra<input
-                      type="number"
-                      min="12"
-                      max="80"
-                      value={selected.style.fontSize}
+                    Color<input
+                      type="color"
+                      aria-label="Color del elemento"
+                      value={selected.style.strokeColor}
                       onChange={(e) =>
                         update({
                           ...selected,
                           style: {
                             ...selected.style,
-                            fontSize: Number(e.target.value),
+                            strokeColor: e.target.value,
                           },
                         })}
                     />
                   </label>
+                  <label>
+                    Relleno<input
+                      type="color"
+                      aria-label="Relleno del elemento"
+                      value={selected.style.fillColor}
+                      onChange={(e) =>
+                        update({
+                          ...selected,
+                          style: {
+                            ...selected.style,
+                            fillColor: e.target.value,
+                          },
+                        })}
+                    />
+                  </label>
+                  <button aria-label="Duplicar elemento" onClick={duplicate}>
+                    <Copy size={16} />
+                  </button>
+                  <button
+                    aria-label="Eliminar elemento"
+                    disabled={selected.locked}
+                    onClick={remove}
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                  <button
+                    aria-label="Cerrar edición"
+                    onClick={() => setSelected(null)}
+                  >
+                    <X size={16} />
+                  </button>
                 </div>
-              </details>
-            </section>
+                <PrimitiveFields
+                  key={selected.id}
+                  p={selected}
+                  scene={scene}
+                  onChange={update}
+                />
+                <details>
+                  <summary>Posición, tamaño y presentación</summary>
+                  <div className="pc-field-row">
+                    {([
+                      "x",
+                      "y",
+                      "width",
+                      "height",
+                      "rotation",
+                      "presentationStep",
+                    ] as const).map((key) => (
+                      <label key={key}>
+                        {{
+                          x: "Posición x",
+                          y: "Posición y",
+                          width: "Ancho",
+                          height: "Alto",
+                          rotation: "Rotación",
+                          presentationStep: "Paso de presentación",
+                        }[key]}
+                        <input
+                          type="number"
+                          value={selected[key]}
+                          onChange={(e) =>
+                            update({
+                              ...selected,
+                              [key]: Number(e.target.value),
+                              ...(key === "height"
+                                ? { autoHeight: false }
+                                : {}),
+                            })}
+                        />
+                      </label>
+                    ))}
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={selected.locked}
+                        onChange={(e) =>
+                          update({ ...selected, locked: e.target.checked })}
+                      />Bloquear
+                    </label>
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={selected.autoHeight}
+                        onChange={(e) =>
+                          update({ ...selected, autoHeight: e.target.checked })}
+                      />Ajustar alto al contenido
+                    </label>
+                    <label>
+                      Tamaño de letra<input
+                        type="number"
+                        min="12"
+                        max="80"
+                        value={selected.style.fontSize}
+                        onChange={(e) =>
+                          update({
+                            ...selected,
+                            style: {
+                              ...selected.style,
+                              fontSize: Number(e.target.value),
+                            },
+                          })}
+                      />
+                    </label>
+                  </div>
+                </details>
+              </section>
+            </div>
           )}
           {!roots.length
             ? (

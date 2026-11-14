@@ -519,3 +519,18 @@ export function shadeContours(
   end();
   return result;
 }
+/** Human-readable tick spacing (1, 2, 2.5, 5...) rather than repeating decimals. */
+export function niceTicks(min: number, max: number, target = 6): number[] {
+  if (!Number.isFinite(min) || !Number.isFinite(max) || max <= min) return [];
+  const raw = (max - min) / Math.max(2, target),
+    power = 10 ** Math.floor(Math.log10(raw));
+  const factor = [1, 2, 2.5, 5, 10].find((n) => n * power >= raw) ?? 10,
+    step = factor * power;
+  const ticks: number[] = [];
+  for (
+    let index = Math.ceil(min / step);
+    index * step <= max + step * 1e-9 && ticks.length < 32;
+    index++
+  ) ticks.push(Number((index * step).toPrecision(10)));
+  return ticks;
+}

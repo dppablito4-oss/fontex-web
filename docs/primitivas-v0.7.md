@@ -16,7 +16,7 @@ El editor principal usa un documento declarativo con nueve familias de primitiva
 | Tabla y gráfico | Tablas, barras, histogramas, proporciones, dispersión y regresión lineal |
 | Trazo y anotación | Dibujo libre, resaltado y notas; puntos simplificados antes de guardar |
 
-Prismas, cilindros, planos inclinados y bloques se muestran como diagramas esquemáticos. No se anuncian como simulación física ni como cálculo 3D. La cuadrícula polar es un escenario radial; las funciones se evalúan como f(x), no como curvas paramétricas ni superficies multivariables.
+Prismas, cilindros, planos inclinados y bloques se muestran como diagramas esquemáticos. No se anuncian como simulación física ni como cálculo 3D. Dentro de un plano se anclan funciones, vectores y polígonos/triángulos; las otras figuras se crean como elementos independientes. La cuadrícula polar es un escenario radial; las funciones se evalúan como f(x), no como curvas paramétricas ni superficies multivariables.
 
 Hay 22 plantillas iniciales, desde conteo y fracciones hasta trigonometría, ecuaciones, derivadas, integrales y un ejemplo de posición en movimiento rectilíneo uniforme. Sirven para comenzar una escena; no equivalen a cubrir todo un currículo ni a un curso completo de física.
 
@@ -61,3 +61,9 @@ Respaldo del código anterior: `respaldo/pre-primitivas-2026-11-14`, commit `930
 Ejecutar lint, TypeScript, Vitest y build del frontend. Las pruebas del núcleo contrastan áreas e integrales con resultados conocidos, revisan discontinuidades, polígonos cruzados/cóncavos, variables y parches atómicos. El handler se prueba con proveedor simulado, incluidos streaming, autenticación y rechazo de referencias inválidas. Las pruebas SQL verifican propietario, revisiones, rechazo de formatos retirados, límites y aislamiento.
 
 Las pruebas de navegador cubren creación de las nueve familias, actualización de integral/texto con un control, deshacer, recarga, presentación y PDF en vistas de escritorio y móvil. Una prueba simulada del handler no acredita por sí sola el funcionamiento del proveedor real; esa verificación debe registrarse por separado.
+
+### Verificación de publicación del 14 de noviembre
+
+La primera publicación pasó CI y Pages con 545 pruebas frontend y 7 integraciones remotas omitidas, 25 pruebas de handlers y las pruebas SQL de aislamiento/formato. Se añadió después una regresión de ejes legibles. En Chrome se comprobó una escena generada con dos consultas reales: conversación y creación mediante el botón, con respuestas SSE. Su plano, función, región integrada, control y texto se guardaron y reabrieron junto con cuatro turnos de conversación. Dos contextos de escritorio/móvil intercambiaron cambios de la variable; el motor calculó una integral de 8 para a=3. La escena temporal de QA se eliminó al finalizar, sin alterar los registros históricos pendientes de limpieza.
+
+La revisión visual posterior comprueba etiquetas de ejes sin solapamiento, selección que conserva la posición visible del lienzo y arrastre/redimensionado en escritorio. No se realizaron consultas IA adicionales para estas comprobaciones de interfaz.
