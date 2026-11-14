@@ -13,6 +13,7 @@ import {
   eventData,
   partialMessage,
 } from "../../../src/core/agent/event-stream.ts";
+import type { CreditAccess } from "./credits.ts";
 const requestSchema = z.object({
   scene: z.unknown(),
   question: z.string().trim().min(1).max(4000),
@@ -95,6 +96,7 @@ async function streamedProposal(
 export function createPrimitiveHandler(
   env: (name: string) => string | undefined,
   provider: typeof fetch = fetch,
+  credits?: CreditAccess,
 ) {
   return async (
     request: Request,
@@ -142,6 +144,37 @@ export function createPrimitiveHandler(
         message:
           "La IA no está configurada. Puedes usar los elementos y plantillas locales.",
       }, 503);
+    }
+    let reservationId: string | null = null;
+    let charged = false;
+    if (input.task === "build") {
+      if (!credits) {
+        return json({
+          code: "credits_unavailable",
+          message:
+            "No se pudo verificar el saldo de generaciones. El chat sigue disponible.",
+        }, 503);
+      }
+      const id = crypto.randomUUID();
+      try {
+        const reservation = await credits.reserve(context.userClaims.id!, id);
+        if (!reservation.allowed) {
+          return json({
+            code: reservation.reason,
+            message: reservation.reason === "credits_exhausted"
+              ? "No tienes créditos para generar. Puedes seguir conversando o pedir más créditos al administrador."
+              : "Ya hay una generación en curso. Espera a que termine e inténtalo de nuevo.",
+            balance: reservation.balance,
+          }, reservation.reason === "credits_exhausted" ? 402 : 429);
+        }
+        reservationId = id;
+      } catch {
+        return json({
+          code: "credits_unavailable",
+          message:
+            "No se pudo verificar el saldo de generaciones. El chat sigue disponible.",
+        }, 503);
+      }
     }
     const abort = new AbortController(),
       signal = AbortSignal.any([
@@ -278,8 +311,30 @@ export function createPrimitiveHandler(
             );
           }
           applyPrimitivePatch(scene, reply, templateScene);
+          if (reservationId && credits) {
+            const settled = await credits.finish(reservationId, true);
+            if (settled.status !== "succeeded") {
+              throw Error(
+                "La generación venció y se devolvió su crédito. Intenta de nuevo.",
+              );
+            }
+            charged = true;
+            send({ type: "credits", balance: settled.balance });
+          }
           send({ type: "result", reply });
         } catch (error) {
+          if (reservationId && credits && !charged) {
+            try {
+              const settled = await credits.finish(reservationId, false);
+              try {
+                send({ type: "credits", balance: settled.balance });
+              } catch { /* Client disconnected. */ }
+            } catch {
+              console.warn(
+                JSON.stringify({ event: "ai_credit_settlement_pending" }),
+              );
+            }
+          }
           if (!signal.aborted) {
             send({
               type: "error",

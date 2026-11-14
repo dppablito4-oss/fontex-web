@@ -1236,3 +1236,7 @@
     break-inside: avoid;
   }
 }
+.pc-credit-info { flex-shrink: 0; display: grid; gap: 4px; padding: 10px 16px; border-bottom: 1px solid var(--pc-line); font-size: 12px; }
+.pc-credit-info small { color: var(--pc-muted); }
+.pc-credit-info a { color: var(--pc-accent); text-decoration: underline; }
+.pc-credit-info button { padding: 4px 8px; min-height: 30px; justify-self: start; }

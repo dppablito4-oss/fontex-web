@@ -1,4 +1,4 @@
-# Fontex 0.8.0
+# Fontex 0.8.1
 
 **Un lienzo matemático componible y acompañamiento académico con fuentes documentales.**
 
@@ -7,6 +7,8 @@ El editor principal en `/#/lienzo` combina diez familias de elementos: planos, f
 Una variable compartida puede actualizar a la vez una figura, una curva y su explicación. El editor ofrece selección, movimiento, giro por arrastre y tamaño en escritorio, edición contextual, historial, presentación por pasos y PDF. En móvil conserva una lectura vertical legible y un botón flotante de chat. Fontex AI transmite sus respuestas y permite pasar de conversar a construir mediante el botón **Crear en el lienzo**.
 
 Consulta [el alcance y los límites de las primitivas](docs/primitivas-v0.7.md) y [la consolidación v0.7.1](docs/primitivas-v0.7.1.md) y [las capacidades de v0.8.0](docs/primitivas-v0.8.md). La versión anterior del código está en `respaldo/pre-primitivas-2026-11-14` (`930dcb9`). El editor nuevo comienza con escenas v2 independientes; no importa los documentos v1. La consolidación v0.7.1 retiró las cuatro escenas anteriores de la tabla activa, conservó una copia administrativa privada y validó la restricción de formato.
+
+Cada cuenta tiene **5 créditos iniciales** para generar con IA, sin renovación automática. El chat del lienzo no consume créditos; las plantillas y la edición manual siguen libres. El administrador puede asignar más desde `/#/administracion`. Consulta [la política de uso y administración](docs/politica-uso-ia.md).
 
 ## Capacidades
 

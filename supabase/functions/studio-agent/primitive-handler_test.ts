@@ -1,4 +1,4 @@
-import { createPrimitiveHandler } from "./primitive-handler.ts";
+import { createPrimitiveHandler as baseHandler } from "./primitive-handler.ts";
 import {
   createPrimitive,
   newPrimitiveScene,
@@ -7,6 +7,16 @@ import { eventData } from "../../../src/core/agent/event-stream.ts";
 function assert(value: unknown, message = "Assertion failed"): asserts value {
   if (!value) throw Error(message);
 }
+const fakeCredits = {
+  reserve: () =>
+    Promise.resolve({ allowed: true, balance: 4, reason: "reserved" }),
+  finish: () => Promise.resolve({ balance: 4, status: "succeeded" as const }),
+};
+const createPrimitiveHandler: typeof baseHandler = (
+  env,
+  provider,
+  credits = fakeCredits,
+) => baseHandler(env, provider, credits);
 const request = (
   question = "Explica una función",
   task: "chat" | "build" = "chat",
@@ -296,4 +306,17 @@ Deno.test("beta: validates a generated logic circuit and rejects cyclic proposal
       v && typeof v === "object" && "type" in v && v.type === "result"
     ),
   );
+});
+
+Deno.test("credits: production build fails closed without a credit service", async () => {
+  let called = false;
+  const handler = baseHandler(env, () => {
+    called = true;
+    throw Error("not expected");
+  });
+  const response = await handler(request("Crea un texto", "build"), {
+    userClaims: { id: "user" },
+  });
+  assert(response.status === 503);
+  assert(!called);
 });

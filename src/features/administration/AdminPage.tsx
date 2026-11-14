@@ -1,5 +1,5 @@
 import { Database, Gauge, LockKeyhole, LogOut, Save, Settings2 } from "lucide-react";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, lazy, Suspense, useState } from "react";
 
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
@@ -7,6 +7,8 @@ import { Card } from "../../components/ui/card";
 import { useAuth } from "../auth/AuthProvider";
 import { PageHeader } from "../shared/PageHeader";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
+
+const AiCreditPanel = lazy(() => import("../ai-credits/AiCreditPanel").then(module => ({default:module.AiCreditPanel})));
 
 const demoItems = [
   { icon: LockKeyhole, title: "Identidad y permisos", detail: "Gestiona quién puede entrar a tus aulas", tone: "orange" as const },
@@ -58,6 +60,7 @@ export function AdminPage() {
   return (
     <div className="page-wrap">
       <PageHeader eyebrow="Configuración segura" title="Administración" description="Edita tu perfil y consulta los datos de tu aula." />
+      {status === "authenticated" && <Suspense fallback={<p role="status">Consultando créditos…</p>}><AiCreditPanel/></Suspense>}
       <div className="mt-8 grid gap-5 lg:grid-cols-[1.2fr_.8fr]">
         <Card className="p-5 sm:p-7">
           <p className="eyebrow">Perfil</p>

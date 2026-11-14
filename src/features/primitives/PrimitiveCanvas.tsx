@@ -51,6 +51,8 @@ import {
   advanceStep,
   presentationSteps,
 } from "../../core/primitives/presentation";
+import { useAiCredits } from "../ai-credits/useAiCredits";
+import { creditsChanged } from "../ai-credits/service";
 import "./primitives.css";
 type Tab = "chat" | "elements" | "templates" | "variables";
 type DragKind = "move" | "resize" | "rotate";
@@ -235,6 +237,10 @@ function Editor(
   { owner, authenticated }: { owner: string; authenticated: boolean },
 ) {
   const library = usePrimitiveStore(owner), { scene, setScene } = library;
+  const credits = useAiCredits();
+  const creditBlocked = authenticated &&
+    (!credits.status || credits.status.balance < 1 ||
+      credits.status.active_generation);
   const [selectedId, setSelected] = useState<string | null>(null),
     [tab, setTab] = useState<Tab>("chat"),
     [sidebar, setSidebar] = useState(() =>
@@ -552,6 +558,12 @@ function Editor(
       );
       return;
     }
+    if (task === "build" && credits.status?.balance === 0) {
+      setNotice(
+        "No tienes créditos para generar. El chat sigue disponible; puedes pedir más saldo al administrador.",
+      );
+      return;
+    }
     const before = live.current, controller = new AbortController();
     abort.current = controller;
     setBusy(true);
@@ -605,6 +617,7 @@ function Editor(
       );
       setPrompt(question);
     } finally {
+      if (task === "build") creditsChanged();
       setBusy(false);
       setStreamText("");
       abort.current = null;
@@ -810,6 +823,32 @@ function Editor(
             {tab === "chat"
               ? (
                 <>
+                  {authenticated && (
+                    <div className="pc-credit-info" aria-live="polite">
+                      <strong>
+                        {credits.status
+                          ? `${credits.status.balance} créditos para generar`
+                          : credits.error ?? "Consultando saldo…"}
+                      </strong>
+                      <small>
+                        Chat sin límite. Crear en el lienzo consume 1 crédito.
+                      </small>
+                      {credits.status?.balance === 0 && (
+                        <span>Sin saldo: puedes seguir conversando.</span>
+                      )}
+                      {credits.status?.active_generation && (
+                        <small>Hay una generación en curso.</small>
+                      )}
+                      {credits.error && (
+                        <button onClick={() => void credits.refresh()}>
+                          Reintentar saldo
+                        </button>
+                      )}
+                      {credits.status?.is_admin && (
+                        <a href="#/administracion">Administrar créditos</a>
+                      )}
+                    </div>
+                  )}
                   <div className="pc-chat-log" role="log" aria-live="polite">
                     {!scene.conversation.length && (
                       <div className="pc-chat-welcome">
@@ -847,7 +886,7 @@ function Editor(
                         {turn.role === "assistant" &&
                           i === scene.conversation.length - 1 && (
                           <button
-                            disabled={busy}
+                            disabled={busy || creditBlocked}
                             onClick={() =>
                               void ask(
                                 "build",
@@ -906,7 +945,7 @@ function Editor(
                     <div>
                       <button
                         type="button"
-                        disabled={busy || !prompt.trim()}
+                        disabled={busy || creditBlocked || !prompt.trim()}
                         onClick={() => void ask("build")}
                       >
                         <Plus size={16} />Crear lienzo

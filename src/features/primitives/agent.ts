@@ -26,8 +26,25 @@ export async function requestPrimitiveAgent(
     { body: input, signal, timeout: 55000 },
   );
   if (result.error) {
+    const invocationError: unknown = result.error;
+    const response: unknown =
+      invocationError && typeof invocationError === "object" &&
+        "context" in invocationError
+        ? invocationError.context
+        : null;
+    let message: string | null = null;
+    if (response instanceof Response) {
+      try {
+        const data: unknown = await response.clone().json();
+        if (
+          data && typeof data === "object" && "message" in data &&
+          typeof data.message === "string" && data.message.length <= 500
+        ) message = data.message;
+      } catch { /* Non-JSON failures use the generic connection message. */ }
+    }
     throw Error(
-      "No se pudo consultar al agente. Revisa la sesión y vuelve a intentarlo.",
+      message ??
+        "No se pudo consultar al agente. Revisa la sesión y vuelve a intentarlo.",
     );
   }
   const stream = result.data instanceof ReadableStream

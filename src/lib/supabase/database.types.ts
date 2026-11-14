@@ -439,6 +439,11 @@ export type Database = {
     };
     Views: Record<string, never>;
     Functions: {
+      get_ai_credit_status: { Args: Record<string,never>; Returns: Json };
+      admin_list_ai_accounts: { Args: {p_search?:string;p_limit?:number;p_offset?:number}; Returns: Json };
+      admin_grant_ai_credits: { Args: {p_user_id:string;p_amount:number;p_reason:string;p_request_id:string}; Returns: Json };
+      admin_ai_credit_history: { Args: {p_user_id:string}; Returns: Json };
+
       create_workspace: {
         Args: {
           organization_name: string;
