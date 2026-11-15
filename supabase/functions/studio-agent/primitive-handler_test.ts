@@ -37,12 +37,171 @@ const request = (
     }),
   });
 const env = (key: string) => key === "OPENAI_API_KEY" ? "test-only" : undefined;
+const allowedUsage = {
+  reserve: () => Promise.resolve({ allowed: true, reason: "reserved" }),
+  finish: () => Promise.resolve(),
+};
 async function events(response: Response) {
   assert(response.body);
   const out: unknown[] = [];
   for await (const e of eventData(response.body)) out.push(e);
   return out;
 }
+Deno.test("recovery: saves the validated proposal and charge before sending a result", async () => {
+  const scene = newPrimitiveScene();
+  const reply = {
+    message: "Resultado",
+    actions: [{
+      kind: "add_primitive",
+      primitive: createPrimitive("stamp_grid", scene),
+    }],
+  };
+  const id = "fc010001-0000-4000-8000-000000000001";
+  let stored = false, legacySettlements = 0;
+  const handler = baseHandler(
+    env,
+    () =>
+      Promise.resolve(
+        Response.json({
+          status: "completed",
+          output: [{
+            content: [{ type: "output_text", text: JSON.stringify(reply) }],
+          }],
+        }),
+      ),
+    {
+      ...fakeCredits,
+      finish: () => {
+        legacySettlements++;
+        return Promise.resolve({ balance: 4, status: "succeeded" as const });
+      },
+    },
+    allowedUsage,
+    {
+      begin: (_user, key) => {
+        assert(key === id);
+        return Promise.resolve({
+          allowed: true,
+          balance: 4,
+          reason: "reserved",
+        });
+      },
+      complete: (_key, value) => {
+        assert(JSON.stringify(value) === JSON.stringify(reply));
+        stored = true;
+        return Promise.resolve({ balance: 4, status: "succeeded" });
+      },
+      fail: () => Promise.resolve(),
+    },
+  );
+  const response = await handler(
+    new Request("https://example.invalid/studio-agent/primitives", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        scene,
+        question: "Crea una fracción",
+        task: "build",
+        level: "primaria",
+        selectedId: null,
+        requestId: id,
+      }),
+    }),
+    { userClaims: { id: "user" } },
+  );
+  let delivered = false;
+  for await (const event of eventData(response.body!)) {
+    if (
+      event && typeof event === "object" && "type" in event &&
+      event.type === "result"
+    ) {
+      assert(stored);
+      delivered = true;
+    }
+  }
+  assert(delivered && legacySettlements === 0);
+});
+Deno.test("recovery: a repeated request never calls the provider or reserves credit again", async () => {
+  let providerCalls = 0, creditCalls = 0;
+  const handler = baseHandler(
+    env,
+    () => {
+      providerCalls++;
+      return Promise.resolve(Response.json({}));
+    },
+    {
+      ...fakeCredits,
+      reserve: () => {
+        creditCalls++;
+        return fakeCredits.reserve();
+      },
+    },
+    allowedUsage,
+    {
+      begin: () =>
+        Promise.resolve({
+          allowed: false,
+          balance: 4,
+          reason: "duplicate_request",
+        }),
+      complete: () => Promise.reject(Error("unexpected")),
+      fail: () => Promise.resolve(),
+    },
+  );
+  const response = await handler(request("Crea una fracción", "build"), {
+    userClaims: { id: "user" },
+  });
+  assert(response.status === 429 && providerCalls === 0 && creditCalls === 0);
+});
+Deno.test("recovery: storage failure refunds the reservation and never claims success", async () => {
+  const source = newPrimitiveScene();
+  let refunded = false;
+  const handler = baseHandler(
+    env,
+    () =>
+      Promise.resolve(Response.json({
+        status: "completed",
+        output: [{
+          content: [{
+            type: "output_text",
+            text: JSON.stringify({
+              message: "Resultado",
+              actions: [{
+                kind: "add_primitive",
+                primitive: createPrimitive("stamp_grid", source),
+              }],
+            }),
+          }],
+        }],
+      })),
+    {
+      ...fakeCredits,
+      finish: (_id, success) => {
+        assert(!success);
+        refunded = true;
+        return Promise.resolve({ balance: 5, status: "refunded" as const });
+      },
+    },
+    allowedUsage,
+    {
+      begin: () =>
+        Promise.resolve({ allowed: true, balance: 4, reason: "reserved" }),
+      complete: () => Promise.reject(Error("Storage unavailable")),
+      fail: () => Promise.resolve(),
+    },
+  );
+  const result = await events(
+    await handler(request("Crea una fracción", "build"), {
+      userClaims: { id: "user" },
+    }),
+  );
+  assert(
+    refunded &&
+      !result.some((e) =>
+        e && typeof e === "object" && "type" in e && e.type === "result"
+      ),
+  );
+});
 Deno.test("build: a variable-only reply cannot charge an empty canvas", async () => {
   const settled: boolean[] = [];
   const credits = {

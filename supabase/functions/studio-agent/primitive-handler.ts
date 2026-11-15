@@ -14,11 +14,13 @@ import {
   partialMessage,
 } from "../../../src/core/agent/event-stream.ts";
 import type { CreditAccess } from "./credits.ts";
+import type { BuildAccess } from "./builds.ts";
 import type { RequestAccess } from "../_shared/beta.ts";
 const requestSchema = z.object({
   scene: z.unknown(),
   question: z.string().trim().min(1).max(4000),
   task: z.enum(["chat", "build"]),
+  requestId: z.uuid().optional(),
   level: z.enum(["inicial", "primaria", "secundaria", "universidad"]),
   selectedId: z.string().max(100).nullable(),
 }).strict();
@@ -99,6 +101,7 @@ export function createPrimitiveHandler(
   provider: typeof fetch = fetch,
   credits?: CreditAccess,
   usage?: RequestAccess,
+  builds?: BuildAccess,
 ) {
   return async (
     request: Request,
@@ -293,15 +296,25 @@ export function createPrimitiveHandler(
             "No se pudo verificar el saldo de generaciones. El chat sigue disponible.",
         }, 503);
       }
-      const id = crypto.randomUUID();
+      if (input.requestId && !builds) {
+        await releaseRequest();
+        return json({ message: "La recuperación de construcciones no está disponible. Intenta más tarde." }, 503);
+      }
+      const id = input.requestId ?? crypto.randomUUID();
       try {
-        const reservation = await credits.reserve(context.userClaims.id!, id);
+        const reservation = builds
+          ? await builds.begin(context.userClaims.id!, id, scene, input.question)
+          : await credits.reserve(context.userClaims.id!, id);
         if (!reservation.allowed) {
           await releaseRequest();
           return json({
             code: reservation.reason,
             message: reservation.reason === "credits_exhausted"
               ? "No tienes créditos para generar. Puedes seguir conversando o pedir más créditos al administrador."
+              : reservation.reason === "duplicate_request"
+              ? "Esta solicitud ya fue recibida. Recupera su resultado desde las construcciones pendientes, sin volver a generar."
+              : reservation.reason === "receipt_limit"
+              ? "Alcanzaste el límite de construcciones recuperables de esta semana. Intenta más tarde."
               : "Ya hay una generación en curso. Espera a que termine e inténtalo de nuevo.",
             balance: reservation.balance,
           }, reservation.reason === "credits_exhausted" ? 402 : 429);
@@ -323,6 +336,9 @@ export function createPrimitiveHandler(
         AbortSignal.timeout(75000),
       ]),
       encoder = new TextEncoder();
+    const started = Date.now();
+    const requestId = reservationId ?? usageId;
+    console.info(JSON.stringify({ event: "canvas_request_started", request_id: requestId, task: input.task }));
     const body = new ReadableStream<Uint8Array>({
       async start(controller) {
         const send = (value: unknown) =>
@@ -330,7 +346,7 @@ export function createPrimitiveHandler(
             encoder.encode(`data: ${JSON.stringify(value)}\n\n`),
           );
         try {
-          send({ type: "status", stage: input.task === "build" ? "building" : "chatting" });
+          send({ type: "status", stage: input.task === "build" ? "building" : "chatting", requestId });
           const response = await provider(
             "https://api.openai.com/v1/responses",
             {
@@ -390,7 +406,7 @@ export function createPrimitiveHandler(
             throw Error("La IA no devolvió elementos para el lienzo. No se aplicaron cambios; vuelve a intentarlo con una petición concreta.");
           }
           if (reservationId && credits) {
-            const settled = await credits.finish(reservationId, true);
+            const settled = builds ? await builds.complete(reservationId, reply) : await credits.finish(reservationId, true);
             if (settled.status !== "succeeded") {
               throw Error(
                 "La generación venció y se devolvió su crédito. Intenta de nuevo.",
@@ -399,8 +415,10 @@ export function createPrimitiveHandler(
             charged = true;
             send({ type: "credits", balance: settled.balance });
           }
+          console.info(JSON.stringify({ event: "canvas_request_completed", request_id: requestId, task: input.task, duration_ms: Date.now() - started, charged }));
           send({ type: "result", reply });
         } catch (error) {
+          console.warn(JSON.stringify({ event: "canvas_request_failed", request_id: requestId, task: input.task, duration_ms: Date.now() - started, charged, cancelled: signal.aborted }));
           if (reservationId && credits && !charged) {
             try {
               const settled = await credits.finish(reservationId, false);
@@ -412,6 +430,10 @@ export function createPrimitiveHandler(
                 JSON.stringify({ event: "ai_credit_settlement_pending" }),
               );
             }
+          }
+          if (reservationId && builds && !charged) {
+            try { await builds.fail(reservationId, signal.aborted ? "cancelled" : "generation_failed"); }
+            catch { console.warn(JSON.stringify({ event: "canvas_receipt_status_pending", request_id: requestId })); }
           }
           if (!signal.aborted) {
             send({

@@ -399,14 +399,13 @@
 }
 .pc-object {
   position: absolute;
-  border: 1px solid var(--pc-line);
-  background: var(--pc-surface);
+  border: 1px solid transparent;
+  background: transparent;
   outline: none;
   padding: 0;
   min-width: 0;
   overflow: visible;
-  border-radius: 14px;
-  box-shadow: 0 2px 8px rgb(var(--ui-shadow) / .025);
+  border-radius: 8px;
 }
 .pc-object:focus-visible {
   outline: 2px solid var(--pc-accent);
@@ -422,13 +421,15 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  min-height: 40px;
-  padding: 7px 16px;
+  min-height: 24px;
+  padding: 0 8px;
   font-size: 13px;
   font-weight: 600;
   color: var(--pc-muted);
-  border-bottom: 1px solid var(--pc-line);
+  opacity: 0;
+  transition: opacity 120ms;
 }
+.pc-object:is(:hover,:focus-within,.pc-selected) > .pc-object-heading { opacity: 1; }
 .pc-object-heading > button {
   min-height: 25px;
   height: 25px;
@@ -439,7 +440,7 @@
   touch-action: none;
 }
 .pc-object-content {
-  padding: 12px 16px 16px;
+  padding: 0 8px 8px;
   overflow-wrap: anywhere;
   min-width: 0;
 }
@@ -451,6 +452,7 @@
 }
 .pc-coordinate {
   width: 100%;
+  position: relative;
 }
 .pc-coordinate > small {
   display: block;
@@ -1381,4 +1383,43 @@
   .pc-sidebar .pc-chat-welcome { padding-block: 10px; }
   .pc-app .pc-tool-popover .pc-element-list { grid-template-columns: 1fr 1fr; }
   .pc-empty > div > button { min-height: 64px; }
+}
+
+/* Free canvas: invisible surfaces, a local camera and floating plot definitions. */
+.pc-object .pc-math { background: transparent; border-color: transparent; box-shadow: none; }
+.pc-stage { background-image: none; }
+.pc-sidebar { position: relative; }
+.pc-dock-resizer { position: absolute; inset: 0 auto 0 -4px; width: 8px; z-index: 40; cursor: col-resize; touch-action: none; }
+.pc-dock-resizer:hover, .pc-dock-resizer:focus-visible { background: color-mix(in srgb,var(--pc-accent) 35%,transparent); outline: 0; }
+.pc-camera-moving, .pc-camera-moving * { cursor: grabbing!important; user-select: none; }
+.pc-focused > .fx-site-header, .pc-focused > .pc-document-strip { display: none; }
+.pc-plot-overlay { position: absolute; top: 54px; left: 12px; z-index: 4; max-width: calc(100% - 24px); }
+.pc-plot-definitions { max-width: 370px; border: 1px solid var(--pc-line); border-radius: 10px; background: color-mix(in srgb,var(--pc-surface) 94%,transparent); box-shadow: 0 4px 16px rgb(var(--ui-shadow) / .06); }
+.pc-plot-definitions > summary { padding: 8px 12px; cursor: pointer; font-size: 12px; font-weight: 600; }
+.pc-plot-definitions > summary > span { font-weight: 400; color: var(--pc-muted); margin-left: 8px; }
+.pc-plot-definition-content { width: 360px; max-width: 100%; padding: 4px 14px 14px; max-height: min(55dvh,480px); overflow: auto; overscroll-behavior: contain; font-size: 13px; }
+.pc-plot-definition-content section + section { border-top: 1px solid var(--pc-line); margin-top: 12px; padding-top: 12px; }
+.pc-plot-definition-content .academic-markdown { font-size: 13px; }
+.pc-plot-definition-content .pc-exact-value { margin-block: 10px; }
+.pc-plot-definition-content .pc-field-row > label { flex-basis: 100%; max-width: 100%; }
+.pc-plot-definition-content .pc-pair { flex-basis: 100%; }
+.pc-app .pc-plot-definition-link { justify-content: start; width: 100%; border: 0; padding: 6px; font-size: 12px; background: transparent; }
+@media (min-width:761px) {
+  .pc-stage:not(.pc-presenting .pc-stage) { overflow: hidden; }
+  .pc-board-space { margin: 0; }
+}
+@media (max-width:760px) {
+  .pc-plot-overlay { top: 92px; left: 4px; max-width: calc(100% - 8px); }
+  .pc-plot-toolbar { min-height: 82px; }
+  .pc-plot-definitions { max-width: min(340px,100%); }
+  .pc-dock-resizer { display: none; }
+}
+@media print {
+  .pc-plot-overlay { position: static; max-width: none; }
+  .pc-plot-definitions { max-width: none; border: 0; box-shadow: none; background: transparent; }
+  .pc-plot-definitions > summary { display: none; }
+  .pc-plot-definitions > .pc-plot-definition-content { display: block!important; width: auto; max-height: none; overflow: visible; }
+  .pc-plot-definition-content :is(button,input,select,.pc-fields,.pc-exact-value), .pc-dock-resizer { display: none!important; }
+  .pc-stage { overflow: visible!important; }
+  .pc-board-space { transform: none!important; }
 }

@@ -1,6 +1,8 @@
 import { Component, type CSSProperties, useEffect, useId, useRef, useState } from "react";
 import { Hand, Maximize, Minus, Plus } from "lucide-react";
 import { VariableValueField } from "./VariableValueField";
+import { PrimitiveFields } from "./PrimitiveFields";
+import { plotCompanions } from "../../core/primitives/layout";
 import { diagramColor } from "./visual-colors";
 import {
   authoredBounds, equalPlotBounds, fitPlotBounds, panPlotBounds,
@@ -44,6 +46,7 @@ type Props = {
   onVariable: (name: string, value: number) => void;
   onSelect: (id: string) => void;
   selected: boolean;
+  selectedId?: string | null;
   readOnly?: boolean;
   visibleStep?: number;
   displayScale?: number;
@@ -54,7 +57,7 @@ const safe = (
   functions: Record<string, FunctionDefinition> = {},
 ) => scalar(source, scope, functions);
 function Coordinate(
-  { p, scene, scope, functions, onSelect, onChange, onViewportChange, visibleStep, displayScale = 1 }: Props & {
+  { p, scene, scope, functions, onSelect, onChange, onVariable, onViewportChange, selectedId, readOnly, visibleStep, displayScale = 1 }: Props & {
     p: Extract<Primitive, { kind: "coordinate_canvas" }>;
   },
 ) {
@@ -117,6 +120,10 @@ function Coordinate(
     "canvasId" in c.data && c.data.canvasId === p.id &&
     (visibleStep === undefined || c.presentationStep <= visibleStep)
   );
+  const companions = plotCompanions(scene, p.id).filter((c) => visibleStep === undefined || c.presentationStep <= visibleStep);
+  const definitions = companions.filter((c) => c.kind === "math_block");
+  const controls = companions.filter((c) => c.kind === "control_slider");
+  const editingChild = children.find((c) => c.id === selectedId);
   const path = (segments: { x: number; y: number }[][]) =>
     segments.map((points) =>
       points.map((v, i) => `${i ? "L" : "M"}${px(v.x)},${py(v.y)}`).join(" ")
@@ -137,6 +144,27 @@ function Coordinate(
   );
   return (
     <div className="pc-coordinate">
+      <div className="pc-plot-overlay" onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
+        <details className="pc-plot-definitions" open={editingChild ? true : undefined}>
+          <summary>Definiciones y medidas <span>{children.length} figuras</span></summary>
+          <div className="pc-plot-definition-content">
+            {definitions.map((item) => <section key={item.id}>
+              <AcademicMarkdown content={interpolate(item.data.markdownContent, scope, functions)} />
+              {!readOnly && <button onClick={() => onSelect(item.id)}>Editar explicación</button>}
+            </section>)}
+            {controls.map((item) => <PrimitiveVisual key={item.id} p={item} scene={scene} scope={scope} functions={functions}
+              onChange={onChange} onVariable={onVariable} onSelect={onSelect} selected={item.id === selectedId} readOnly={readOnly} />)}
+            {children.map((child) => <button key={child.id} className="pc-plot-definition-link" onClick={() => onSelect(child.id)}>
+              <span style={{ color: diagramColor(child.style.strokeColor) }}>●</span>{child.label}
+            </button>)}
+            {!definitions.length && !children.length && <p>Añade funciones o figuras desde Elementos.</p>}
+            {!readOnly && editingChild && <section aria-label="Edición sobre el plano">
+              <strong>{editingChild.label}</strong>
+              <PrimitiveFields p={editingChild} scene={scene} onChange={onChange} />
+            </section>}
+          </div>
+        </details>
+      </div>
       <div className="pc-plot-toolbar" onClick={(e) => e.stopPropagation()}>
         <span className="pc-plot-scale">
           {automatic ? "Escala automática" : "Vista libre"}
@@ -148,6 +176,7 @@ function Coordinate(
           <button aria-label="Acercar plano" title="Acercar plano" onClick={() => changeWindow(zoomPlotBounds(bounds, 1 / 1.4))}><Plus size={16} /></button>
           <button aria-label="Mover vista del plano" title="Activa y arrastra para mover el plano" aria-pressed={panning} onClick={() => setPanning(!panning)}><Hand size={16} /></button>
           <button aria-label="Ajustar plano a las figuras" title="Ajustar y seguir los cambios de las figuras" onClick={() => navigate({ ...p, data: { ...p.data, ...p.data.referenceWindow, autoFit: true, referenceWindow: null } })}><Maximize size={16} /><span>Ajustar</span></button>
+          {!readOnly && <button aria-label="Ampliar plano al ancho del lienzo" title="Usar todo el ancho del lienzo" onClick={() => onChange({ ...p, x: 24, width: 1152, height: Math.max(790, p.height), autoHeight: true })}>Ancho completo</button>}
         </div>
       </div>
       <svg
@@ -158,7 +187,7 @@ function Coordinate(
         role="img"
         aria-label={p.label || "Plano matemático"}
         onPointerDown={(e) => {
-          if (!panning && e.button !== 1) return;
+          if ((!panning || e.button !== 0) && e.button !== 1 && e.button !== 2) return;
           e.preventDefault();
           e.stopPropagation();
           e.currentTarget.setPointerCapture(e.pointerId);
@@ -179,6 +208,7 @@ function Coordinate(
           e.currentTarget.releasePointerCapture(e.pointerId);
         }}
         onPointerCancel={() => { pan.current = null; }}
+        onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); }}
         onClickCapture={(e) => { if (panning) { e.stopPropagation(); e.preventDefault(); } }}
       >
         <defs>
@@ -351,7 +381,7 @@ function Coordinate(
               return (
                 <g
                   key={child.id}
-                  onPointerDown={(e) => e.stopPropagation()}
+                  onPointerDown={(e) => { if (e.button === 0 && !panning) e.stopPropagation(); }}
                   onClick={(e) => {
                     e.stopPropagation();
                     onSelect(child.id);
@@ -523,7 +553,7 @@ function Coordinate(
           })}
         </g>
       </svg>
-      <p className="pc-plot-hint">{panning ? "Arrastra para recorrer el plano." : "Selecciona una figura para editarla."} Ctrl + rueda para acercar o alejar.</p>
+      <p className="pc-plot-hint">Clic derecho + arrastrar para mover el plano. Ctrl + rueda para acercar o alejar.</p>
       <div className="pc-plot-legend">
         {children.filter((child) => child.kind === "geometric_shape").map((child) => {
           const matrix = linkedMatrix(child, scene, scope);
@@ -658,7 +688,7 @@ function Vector({
     <g
       stroke={diagramColor(p.style.strokeColor)}
       fill={diagramColor(p.style.strokeColor)}
-      onPointerDown={(e) => e.stopPropagation()}
+      onPointerDown={(e) => { if (e.button === 0) e.stopPropagation(); }}
       onClick={(e) => {
         e.stopPropagation();
         onSelect();

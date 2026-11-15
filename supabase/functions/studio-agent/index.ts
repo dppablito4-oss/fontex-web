@@ -1,6 +1,7 @@
 import { withSupabase } from "@supabase/server";
 import { createPrimitiveHandler } from "./primitive-handler.ts";
 import { creditAccess } from "./credits.ts";
+import { buildAccess } from "./builds.ts";
 import { betaDenial, requestAccess } from "../_shared/beta.ts";
 export default {
   fetch: withSupabase({ auth: "user" }, async (request, context) => {
@@ -10,7 +11,7 @@ export default {
     const credits = creditAccess((name, args) =>
       context.supabaseAdmin.rpc(name, args)
     );
-    return createPrimitiveHandler((name) => Deno.env.get(name), fetch, credits, requestAccess(rpc))(
+    return createPrimitiveHandler((name) => Deno.env.get(name), fetch, credits, requestAccess(rpc), buildAccess(rpc))(
       request,
       { userClaims: context.userClaims },
     );

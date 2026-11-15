@@ -26,7 +26,7 @@ select extensions.throws_ok($$select public.reserve_ai_generation('ac810000-0000
 select extensions.throws_ok($$select public.finish_ai_generation(gen_random_uuid(),false)$$,'42501',null,'client cannot refund arbitrary requests');
 select extensions.throws_ok($$update fontex_ai.wallets set balance=100 where user_id='ac810000-0000-4000-8000-000000000002'$$,'42501',null,'client cannot alter balances directly');
 select extensions.throws_ok($$select * from fontex_ai.events$$,'42501',null,'client cannot read private audit rows');
-select set_config('request.jwt.claims','{"sub":"ac810000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+select set_config('request.jwt.claims','{"sub":"ac810000-0000-4000-8000-000000000001","role":"authenticated","aal":"aal2"}',true);
 select extensions.is((public.get_ai_credit_status()->>'is_admin')::boolean,true,'database-authorized admin is recognized');
 select extensions.is(jsonb_array_length(public.admin_list_ai_accounts('credit-user@example.invalid',25,0)->'accounts'),1,'admin can search a registered account by email');
 select extensions.is((public.admin_grant_ai_credits('ac810000-0000-4000-8000-000000000002',3,'Beta','ac810001-0000-4000-8000-000000000001')->>'balance')::int,8,'admin grants additional credits');

@@ -21,6 +21,16 @@ jobs:
       - run: npm run typecheck
       - run: npm run test
       - run: npm run build
+      - name: Install browser for canvas verification
+        run: npx playwright install --with-deps chromium
+      - name: Test real browser canvas flows
+        run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: browser-test-results
+          path: test-results/
+          retention-days: 7
 
   database-security:
     runs-on: ubuntu-latest
@@ -35,6 +45,8 @@ jobs:
         run: npx supabase db start
       - name: Test schema and RLS
         run: npx supabase test db --local
+      - name: Rehearse isolated database backup and restore
+        run: node scripts/check-database-restore.mjs
       - name: Stop isolated Postgres
         if: always()
         run: npx supabase stop --no-backup

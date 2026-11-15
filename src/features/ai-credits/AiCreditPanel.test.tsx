@@ -1,6 +1,9 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
 import { AiCreditPanel } from "./AiCreditPanel";
+import type { ReactNode } from "react";
+vi.mock("../auth/AdminMfaGate", () => ({ AdminMfaGate: ({children}: {children:ReactNode}) => children }));
+vi.mock("../beta/CanvasDiagnostics", () => ({ CanvasDiagnostics: () => null }));
 const mock = vi.hoisted(() => ({
   status: {
     balance: 5,

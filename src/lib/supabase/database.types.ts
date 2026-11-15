@@ -439,6 +439,10 @@ export type Database = {
     };
     Views: Record<string, never>;
     Functions: {
+      get_canvas_build: { Args: {p_request_id:string}; Returns: Json };
+      list_canvas_builds: { Args: {p_scene_id:string}; Returns: Json };
+      ack_canvas_build: { Args: {p_request_id:string}; Returns: undefined };
+      admin_canvas_diagnostics: { Args: Record<string,never>; Returns: Json };
       get_beta_access_status: { Args: Record<string,never>; Returns: Json };
       admin_invite_beta: { Args: {p_email:string}; Returns: Json };
       admin_revoke_beta: { Args: {p_user_id:string}; Returns: undefined };

@@ -108,6 +108,6 @@ it("labels the dynamic 3-4-5 triangle inside its coordinate plane", () => {
   const unitX = Math.abs(points[1]![0]! - points[0]![0]!) / 3;
   const unitY = Math.abs(points[2]![1]! - points[0]![1]!) / 4;
   expect(unitX).toBeCloseTo(unitY, 8);
-  expect(screen.getByText("5 cm")).toBeInTheDocument();
-  expect(screen.getByText("90°")).toBeInTheDocument();
+  expect(container.querySelector(".pc-coordinate > svg")!.textContent).toContain("5 cm");
+  expect(container.querySelector(".pc-coordinate > svg")!.textContent).toContain("90°");
 });

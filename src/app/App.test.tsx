@@ -188,9 +188,9 @@ it("expands fixed-height content and moves the following object below it", async
       value: 450,
     });
     act(() => observers.get(content)!([], {} as ResizeObserver));
-    await waitFor(() => expect(frame.style.height).toBe("504px"));
+    await waitFor(() => expect(frame.style.height).toBe("474px"));
     expect(screen.getByRole("article", { name: "Texto siguiente" }).style.top)
-      .toBe("564px");
+      .toBe("534px");
   } finally {
     vi.stubGlobal("ResizeObserver", previous);
   }
@@ -201,6 +201,7 @@ it("edits a 100 cm measure, follows it on the plot, and restores automatic fitti
   const scene = templateScene("geometry");
   localStorage.setItem("fontex-primitives-v2:guest", JSON.stringify({ activeId: scene.id, scenes: [scene] }));
   renderRoute("/lienzo");
+  fireEvent.click(await screen.findByText(/Definiciones y medidas/));
   const input = await screen.findByLabelText("Valor de b");
   fireEvent.focus(input);
   fireEvent.change(input, { target: { value: "100" } });
@@ -227,9 +228,9 @@ it("edits a 100 cm measure, follows it on the plot, and restores automatic fitti
   expect(screen.getByText("Vista libre")).toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: "Ajustar plano a las figuras" }));
   expect(screen.getByText("Escala automática")).toBeInTheDocument();
-  // Selecting a figure exposes an independent inspector, keeping the plot in the workspace.
+  // Figure measurements are edited directly over the same full-width plot.
   fireEvent.keyDown(screen.getByRole("button", { name: "Seleccionar figura Rectángulo" }), { key: "Enter" });
-  const inspector = screen.getByRole("region", { name: "Propiedades del elemento" });
-  expect(within(inspector).getByLabelText("Nombre del elemento")).toHaveValue("Rectángulo");
-  expect(within(screen.getByRole("main", { name: "Lienzo matemático" })).queryByLabelText("Nombre del elemento")).not.toBeInTheDocument();
+  const inspector = screen.getByRole("region", { name: "Edición sobre el plano" });
+  expect(within(inspector).getByLabelText("Unidad")).toHaveValue("cm");
+  expect(screen.getByRole("main", { name: "Lienzo matemático" })).toContainElement(inspector);
 });

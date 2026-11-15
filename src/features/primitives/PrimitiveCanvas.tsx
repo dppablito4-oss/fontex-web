@@ -25,6 +25,8 @@ import {
   Copy,
   Download,
   Expand,
+  Maximize2,
+  Minimize2,
   LayoutDashboard,
   GripVertical,
   MessageCircle,
@@ -65,7 +67,12 @@ import { sceneFunctions, sceneScope } from "../../core/primitives/math";
 import { templates, templateScene } from "../../core/primitives/templates";
 import { requestPrimitiveAgent } from "./agent";
 import { draggedRotation } from "./gestures";
-import { organizePrimitiveScene } from "../../core/primitives/layout";
+import { organizePrimitiveScene, workspaceRoots } from "../../core/primitives/layout";
+import { useWorkspaceViewport } from "./useWorkspaceViewport";
+import { DockResizeHandle } from "./DockResizeHandle";
+import { buildContent, getCanvasBuild, readPendingBuild, recoveredScene, savePendingBuild, type BuildReceipt } from "./buildRecovery";
+import { useBuildRecovery } from "./useBuildRecovery";
+import { GenerationProgress } from "./GenerationProgress";
 import { VariableValueField } from "./VariableValueField";
 import {
   advanceStep,
@@ -172,7 +179,7 @@ function Frame({
     const node = content.current;
     if (!node || narrow) return;
     const observer = new ResizeObserver(() => {
-      const next = Math.ceil(node.scrollHeight + 54);
+      const next = Math.ceil(node.scrollHeight + 24);
       if (
         (p.autoHeight && Math.abs(next - p.height) > 3) ||
         (!p.autoHeight && next > p.height + 3)
@@ -286,6 +293,15 @@ function Editor(
       !window.matchMedia("(max-width:760px)").matches
     );
   const [dockView, setDockView] = useState<"chat" | "properties">("chat");
+  const [focused, setFocused] = useState(false);
+  const [dockWidth, setDockWidth] = useState(() => {
+    try { return Math.max(300, Math.min(560, Number(localStorage.getItem("fontex-dock-width")) || 380)); }
+    catch { return 380; }
+  });
+  const resizeDock = (width: number) => {
+    setDockWidth(width);
+    try { localStorage.setItem("fontex-dock-width", String(width)); } catch { /* Preference is optional. */ }
+  };
   const closeTools = useCallback(() => setTab(null), []);
   const [narrow, setNarrow] = useState(() =>
       window.matchMedia("(max-width:760px)").matches
@@ -316,6 +332,9 @@ function Editor(
     live = useRef(scene),
     abort = useRef<AbortController | null>(null),
     messageEnd = useRef<HTMLDivElement>(null);
+  const viewport = useWorkspaceViewport(stage, narrow || presenting);
+  const roots = workspaceRoots(scene);
+  const boardWidth = Math.max(1200, ...roots.map((p) => p.x + p.width + 24));
   useEffect(() => {
     live.current = scene;
   }, [scene]);
@@ -334,12 +353,12 @@ function Editor(
     if (!node) return;
     const observer = new ResizeObserver(() => {
       if (autoZoom && !narrow) {
-        setZoom(Math.min(1, (node.clientWidth - 32) / 1200));
+        setZoom(Math.min(1.5, (node.clientWidth - 32) / boardWidth));
       }
     });
     observer.observe(node);
     return () => observer.disconnect();
-  }, [autoZoom, narrow, sidebar]);
+  }, [autoZoom, narrow, sidebar, focused, boardWidth]);
   useEffect(() => {
     const exit = () => {
       if (!document.fullscreenElement) setPresenting(false);
@@ -365,6 +384,18 @@ function Editor(
       return false;
     }
   }
+  function recoverBuild(receipt: BuildReceipt, separate = false) {
+    try {
+      const next = recoveredScene(live.current, receipt, separate);
+      if (!commit(next)) return false;
+      savePendingBuild(owner, receipt.source.id, null);
+      viewport.reset(); setAutoZoom(true);
+      setNotice(separate ? "Propuesta recuperada en otro lienzo. No se consumieron créditos." : "Construcción recuperada y aplicada. No se consumieron créditos adicionales.");
+      return true;
+    } catch (error) { setNotice(error instanceof Error ? error.message : "No se pudo recuperar la construcción."); return false; }
+  }
+  const recovery = useBuildRecovery({ authenticated, scene, status: library.status, busy,
+    current: () => live.current, apply: recoverBuild });
   function update(p: Primitive, history = true) {
     return commit({
       ...live.current,
@@ -381,6 +412,8 @@ function Editor(
     }, history);
   }
   function navigatePlot(p: Extract<Primitive, { kind: "coordinate_canvas" }>) {
+    // Called only by viewport input handlers; this time groups one gesture into one undo entry.
+    // eslint-disable-next-line react-hooks/purity
     const now = Date.now();
     const history = viewportBatch.current.id !== p.id || now - viewportBatch.current.time > 700;
     if (update(p, history)) viewportBatch.current = { id: p.id, time: now };
@@ -488,6 +521,7 @@ function Editor(
         )
       ) return;
       if (e.key === "Escape") {
+        setFocused(false);
         setSelected(null);
         setPresenting(false);
         if (document.fullscreenElement) {
@@ -568,12 +602,12 @@ function Editor(
       : d.kind === "move"
       ? {
         ...d.old,
-        x: Math.max(0, Math.min(1200 - d.old.width, d.old.x + dx)),
+        x: Math.max(0, Math.min(10000, d.old.x + dx)),
         y: Math.max(0, d.old.y + dy),
       }
       : {
         ...d.old,
-        width: Math.max(100, Math.min(1200 - d.old.x, d.old.width + dx)),
+        width: Math.max(100, Math.min(1600, d.old.width + dx)),
         height: Math.max(100, Math.min(100000, d.old.height + dy)),
         autoHeight: false,
       };
@@ -591,8 +625,11 @@ function Editor(
   }
   function selectPrimitive(id: string) {
     setSelected(id);
-    setSidebar(true);
-    setDockView("properties");
+    const item = live.current.primitives.find((p) => p.id === id);
+    if (!(item && "canvasId" in item.data && item.data.canvasId)) {
+      setSidebar(true);
+      setDockView("properties");
+    }
     setTab(null);
   }
   function load(id: string) {
@@ -636,6 +673,26 @@ function Editor(
     setStreamText("");
     setNotice("");
     setPrompt("");
+    let requestId: string | undefined;
+    if (task === "build") {
+      try {
+        const previous = readPendingBuild(owner, before.id);
+        if (previous && previous.question === question.trim()) {
+          const receipt = await getCanvasBuild(previous.id);
+          if (receipt?.state === "ready") {
+            recoverBuild(receipt);
+            setBusyTask(null); abort.current = null; return;
+          }
+          if (receipt?.state === "pending") throw Error("La construcción sigue en curso. Su resultado aparecerá aquí al completarse, sin volver a cobrar.");
+          if (!receipt && previous.content === buildContent(before)) requestId = previous.id;
+        }
+        requestId ??= crypto.randomUUID();
+        savePendingBuild(owner, before.id, { id: requestId, question: question.trim(), content: buildContent(before) });
+      } catch (error) {
+        setNotice(error instanceof Error ? error.message : "No se pudo comprobar la construcción pendiente.");
+        setBusyTask(null); setPrompt(question); abort.current = null; return;
+      }
+    }
     const last = before.conversation.at(-1);
     const turns =
       (last?.role === "user" && last.content === question.trim()
@@ -651,7 +708,7 @@ function Editor(
     }
     try {
       const reply = await requestPrimitiveAgent(
-        { scene: before, question: question.trim(), task, level, selectedId },
+        { scene: before, question: question.trim(), task, level, selectedId, ...(requestId ? { requestId } : {}) },
         setStreamText,
         controller.signal,
       );
@@ -681,12 +738,15 @@ function Editor(
           role: "assistant" as const,
           content: reply.message,
         }].slice(-80),
+        ...(requestId ? { appliedBuildIds: [...(before.appliedBuildIds ?? []), requestId].slice(-100) } : {}),
       }, task === "build");
       if (!applied) throw Error("La respuesta se recibió, pero no pudo guardarse en el lienzo. Conserva esta pestaña y revisa el aviso de guardado.");
       if (task === "build") {
+        savePendingBuild(owner, before.id, null);
         setNotice(`Construcción aplicada al lienzo: ${patched.primitives.length} elementos.`);
         if (!before.primitives.length) {
           setAutoZoom(true);
+          viewport.reset();
           stage.current?.scrollTo({ top: 0, left: 0 });
         }
       }
@@ -751,11 +811,9 @@ function Editor(
       })
     );
   }, [presenting, step]);
-  const roots = scene.primitives.filter((p) =>
-      !("canvasId" in p.data && p.data.canvasId)
-    ),
-    height = Math.max(700, ...roots.map((p) => p.y + p.height + 40));
+  const height = Math.max(700, ...roots.map((p) => p.y + p.height + 40));
   function resetEditor() {
+    viewport.reset();
     setSelected(null); setPast([]); setFuture([]); setStep(1); setDockView("chat");
   }
   function openScene(id: string) {
@@ -942,7 +1000,7 @@ function Editor(
   );
   return (
     <div
-      className={`pc-app${presenting ? " pc-presenting" : ""}${
+      className={`pc-app${focused ? " pc-focused" : ""}${presenting ? " pc-presenting" : ""}${
         sidebar ? " pc-sidebar-open" : ""
       }`}
       ref={root}
@@ -980,6 +1038,7 @@ function Editor(
         </div>
         <span className="pc-save" role="status"><Check size={13} />{library.status === "saved" ? "Guardado en tu cuenta" : library.status === "local" ? "Guardado local" : library.status === "saving" || library.status === "loading" ? "Sincronizando…" : "Sincronización pendiente"}</span>
         <div className="pc-top-actions">
+          <button aria-label={focused ? "Restaurar espacio de trabajo" : "Ampliar lienzo"} aria-pressed={focused} title="Ampliar lienzo · Escape para volver" onClick={() => setFocused(!focused)}>{focused ? <Minimize2 size={16} /> : <Maximize2 size={16} />}</button>
           <button aria-pressed={sidebar && dockView === "chat"} onClick={() => { setDockView("chat"); setSidebar(!sidebar || dockView !== "chat"); closeTools(); }}><MessageCircle size={16} /><span>Asistente</span></button>
           <button className="pc-present-action" disabled={!scene.primitives.length} onClick={() => {
             closeTools(); setSelected(null); setStep(steps[0]!); setPresenting(true);
@@ -995,6 +1054,11 @@ function Editor(
           </button>
         </div>
       )}
+      {!busy && recovery.available.map((receipt) => <div className="pc-banner" key={receipt.id} role="status">
+        Hay una propuesta completada sobre una versión anterior de este lienzo.
+        <button onClick={() => recoverBuild(receipt, true)}>Recuperar en otro lienzo · sin crédito</button>
+      </div>)}
+      {recovery.error && <p className="pc-recovery-note" role="status">{recovery.error}</p>}
       {presenting && (
         <nav className="pc-present-bar">
           <strong>{scene.title}</strong>
@@ -1033,8 +1097,9 @@ function Editor(
       <div className="pc-shell" id="canvas-workspace" role="tabpanel" aria-labelledby={canvasTabId(scene.id)}>
         <main
           aria-label="Lienzo matemático"
-          className="pc-stage"
+          className={`pc-stage${viewport.moving ? " pc-camera-moving" : ""}`}
           ref={stage}
+          {...viewport.events}
           onClick={() => setSelected(null)}
         >
           {!roots.length
@@ -1079,14 +1144,15 @@ function Editor(
               <div
                 className="pc-board-space"
                 style={{
-                  width: narrow ? "100%" : 1200 * zoom,
+                  width: narrow ? "100%" : boardWidth * zoom,
                   height: narrow ? "auto" : height * zoom,
+                  transform: narrow || presenting ? undefined : `translate(${viewport.offset.x}px, ${viewport.offset.y}px)`,
                 }}
               >
                 <div
                   className="pc-board"
                   style={{
-                    width: narrow ? "100%" : 1200,
+                    width: narrow ? "100%" : boardWidth,
                     height: narrow ? "auto" : height,
                     transform: narrow ? "none" : `scale(${zoom})`,
                   }}
@@ -1120,6 +1186,7 @@ function Editor(
                         onVariable={variable}
                         onSelect={selectPrimitive}
                         selected={p.id === selectedId}
+                        selectedId={selectedId}
                         readOnly={presenting}
                       />
                     </Frame>
@@ -1129,8 +1196,9 @@ function Editor(
             )}
         </main>
 
-        {sidebar && !presenting && (
-          <aside className="pc-sidebar" aria-label="Panel de Fontex">
+        {sidebar && !presenting && !focused && (
+          <aside className="pc-sidebar" style={narrow ? undefined : { width: dockWidth }} aria-label="Panel de Fontex">
+            {!narrow && <DockResizeHandle width={dockWidth} onChange={resizeDock} />}
             <header>
               <strong><MessageCircle size={17} />{dockView === "properties" && selected ? "Propiedades" : "Fontex Agente"}</strong>
               <button aria-label="Cerrar panel" onClick={() => setSidebar(false)}><X size={17} /></button>
@@ -1368,7 +1436,7 @@ function Editor(
                         <AcademicMarkdown
                           content={streamText || "Preparando…"}
                         />
-                        <span className="pc-writing">{busyTask === "build" ? "Construyendo en el lienzo…" : "Escribiendo…"}</span>
+                        <GenerationProgress building={busyTask === "build"} />
                       </div>
                     )}
                     <div ref={messageEnd} />
@@ -1471,7 +1539,7 @@ function Editor(
               >
                 +
               </button>
-              <button onClick={() => setAutoZoom(true)}>Ajustar ancho</button>
+              <button onClick={() => { setAutoZoom(true); viewport.reset(); }}>Ajustar ancho</button>
             </>
           )}
         </span>

@@ -9,8 +9,8 @@ const contract = await fetch(`${base}/rest/v1/rpc/get_release_contract`, {
   method: "POST", headers: { apikey: key, "Content-Type": "application/json" },
   body: "{}", signal: AbortSignal.timeout(10000),
 });
-if (!contract.ok || await contract.json() !== "closed-beta-v1") {
-  throw Error("El backend no acredita el contrato closed-beta-v1. Aplica y verifica las migraciones antes de publicar.");
+if (!contract.ok || await contract.json() !== "closed-beta-v2") {
+  throw Error("El backend no acredita el contrato closed-beta-v2. Aplica y verifica las migraciones antes de publicar.");
 }
 for (const endpoint of ["studio-agent", "scene-agent", "tutor-chat", "practice-tutor", "document-upload", "document-delete", "document-process", "document-search"]) {
   const preflight = await fetch(`${base}/functions/v1/${endpoint}`, {
