@@ -136,7 +136,7 @@
   background: var(--pc-surface);
 }
 .pc-document-tabs { display: flex; gap: 4px; min-width: 0; overflow-x: auto; scrollbar-width: thin; }
-.pc-app .pc-document-tabs > button {
+.pc-app .pc-document-tabs .pc-document-tab > [role=tab] {
   gap: 9px;
   min-width: 125px;
   max-width: 210px;
@@ -148,8 +148,8 @@
   color: var(--pc-muted);
   font-size: 12px;
 }
-.pc-document-tabs > button > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.pc-app .pc-document-tabs > button[aria-selected=true] { background: var(--pc-bg); color: var(--pc-ink); border-bottom-color: var(--pc-accent); }
+.pc-document-tabs .pc-document-tab > [role=tab] > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pc-app .pc-document-tabs .pc-document-tab > [role=tab][aria-selected=true] { background: var(--pc-bg); color: var(--pc-ink); border-bottom-color: var(--pc-accent); }
 .pc-document-indicator { width: 6px; height: 6px; flex: none; border: 1px solid currentColor; border-radius: 2px; }
 .pc-document-tabs [aria-selected=true] .pc-document-indicator { background: var(--pc-accent); border-color: var(--pc-accent); }
 .pc-app .pc-new-document { flex: none; width: 36px; min-height: 34px; padding: 7px; border: 0; background: transparent; color: var(--pc-muted); }
@@ -1369,7 +1369,7 @@
 }
 @media (max-width: 760px) {
   .pc-document-strip { padding: 5px 8px 0; }
-  .pc-app .pc-document-tabs > button { min-width: 108px; max-width: 165px; padding: 7px 12px; font-size: 11px; }
+  .pc-app .pc-document-tabs .pc-document-tab > [role=tab] { min-width: 108px; max-width: 165px; padding: 7px 12px; font-size: 11px; }
   .pc-topbar { flex-wrap: wrap; gap: 6px; padding: 6px 8px; }
   .pc-toolbar-menus { flex: 1 1 100%; justify-content: space-between; }
   .pc-tool-menu > button { min-height: 32px; padding-inline: 8px; font-size: 11px; }
@@ -1450,3 +1450,40 @@
   .pc-shell > .pc-sidebar { width: min(88%, 390px); z-index: 20; }
   .pc-text-editor textarea { font-size: 16px; }
 }
+.pc-document-tab { display: flex; flex: none; align-items: stretch; }
+.pc-document-tabs .pc-document-tab > [role=tab] { border-radius: 8px 0 0 0; }
+.pc-document-tabs .pc-close-tab { padding: 0 7px; min-width: 28px; border-radius: 0 8px 0 0; }
+.pc-dialog-shade { position: fixed; inset: 0; z-index: 120; background: #0008; display: grid; place-items: center; padding: 16px; }
+.pc-dialog { background: var(--pc-surface, white); color: var(--pc-ink, #18231e); width: min(100%, 480px); max-height: 85dvh; overflow: auto; border-radius: 16px; padding: 24px; box-shadow: 0 12px 60px #0004; }
+.pc-dialog h2 { font-size: 19px; margin-bottom: 12px; }
+.pc-dialog p { margin-bottom: 16px; }
+.pc-dialog-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+.pc-dialog input:not([type=checkbox]) { width: 100%; }
+.pc-saved-list { display: grid; gap: 6px; max-height: 260px; overflow: auto; }
+.pc-export-sheet { width: 1000px; padding: 24px; background: white; color: #18231e; }
+.pc-export-sheet .pc-export-item { width: 952px; height: auto; overflow: hidden; margin-bottom: 20px; }
+.pc-public-page { height: auto; min-height: 100dvh; overflow: auto; }
+.pc-public-content { width: min(100%, 1100px); margin: auto; padding: 24px; }
+.pc-public-content h1 { font-size: 26px; margin-bottom: 8px; }
+.pc-reading-content > section { margin-block: 24px; }
+.pc-reading-content > section > h2 { font-size: 12px; color: var(--pc-muted); margin-bottom: 12px; }
+.pc-reading-content svg { max-width: 100%; }
+.pc-reading-content .pc-plot-toolbar button, .pc-reading-content .pc-plot-hint,
+.pc-reading-content .pc-plot-definition-link { display: none; }
+.pc-export-sheet {
+  display: block; height: auto; min-height: 0; overflow: visible;
+  --pc-ink: #18231e; --pc-muted: #526158; --pc-bg: #fff; --pc-surface: #fff;
+  --pc-line: #dce5df; --pc-empty: #f0f4f1; --pc-grid: #dce5df;
+  --ui-math-primary: #15803d; --ui-math-secondary: #ea580c; --ui-math-fill: #dcfce7;
+  --color-foreground: #18231e; --color-muted-foreground: #526158;
+}
+.pc-export-sheet .academic-markdown { color: #18231e; }
+dialog.pc-dialog { position: fixed; inset: 0; margin: auto; border: 1px solid var(--pc-line); }
+dialog.pc-dialog::backdrop { background: #0008; }
+.pc-dialog button { padding: 8px 12px; border: 1px solid var(--pc-line); border-radius: 8px; }
+/* Reading and PDF layouts keep explanations above the drawing. */
+.pc-reading-content .pc-plot-overlay { position: static; max-width: none; margin-bottom: 16px; }
+.pc-reading-content .pc-plot-definitions { max-width: none; background: transparent; box-shadow: none; }
+.pc-reading-content .pc-plot-definition-content { width: auto; max-height: none; overflow: visible; }
+.pc-reading-content .pc-coordinate { display: flex; flex-direction: column; }
+.pc-reading-content .pc-control button { display: none; }

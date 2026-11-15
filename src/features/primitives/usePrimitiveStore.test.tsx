@@ -307,3 +307,29 @@ it("frees a quota slot when other scenes exist only in the remote catalog",async
   expect(cloud.rows.size).toBe(29);
   expect(result.current.scenes).toHaveLength(29);
 });
+
+it("closes saved tabs without deleting their JSON and reopens them from the catalog", async () => {
+  const scene = expressionScene("Fracciones");
+  cloud.rows.set(scene.id, { scene, revision: 1 });
+  const { result } = renderHook(() => useSceneStore("account"));
+  await waitFor(() => expect(result.current.status).toBe("saved"));
+  await act(async () => { expect(await result.current.close(scene.id, false)).toBe(true); });
+  expect(result.current.tabs.some(s => s.id === scene.id)).toBe(false);
+  expect(result.current.scenes.some(s => s.id === scene.id)).toBe(true);
+  expect(cloud.rows.has(scene.id)).toBe(true);
+  act(() => result.current.open(scene.id));
+  expect(result.current.scene.title).toBe("Fracciones");
+  expect(result.current.tabs.some(s => s.id === scene.id)).toBe(true);
+});
+
+it("discards edits to the opened version while preserving the saved document", async () => {
+  const scene = expressionScene("Original");
+  cloud.rows.set(scene.id, { scene, revision: 1 });
+  const { result } = renderHook(() => useSceneStore("account"));
+  await waitFor(() => expect(result.current.status).toBe("saved"));
+  act(() => { result.current.setScene(s => ({ ...s, title: "Cambios descartables" })); });
+  await act(async () => { expect(await result.current.close(scene.id, true)).toBe(true); });
+  await waitFor(() => expect(cloud.rows.get(scene.id)?.scene.title).toBe("Original"));
+  act(() => result.current.open(scene.id));
+  expect(result.current.scene.title).toBe("Original");
+});

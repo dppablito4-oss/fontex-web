@@ -16,6 +16,8 @@ import { HomePage } from "../features/home/HomePage";
 import { LibraryPage } from "../features/library/LibraryPage";
 import { WorkspaceProvider } from "../features/workspace/WorkspaceProvider";
 
+const SharedCanvasPage = lazy(() => import("../features/primitives/CanvasReading").then(m => ({ default: m.SharedCanvasPage })));
+
 const PrimitiveCanvas = lazy(() => import("../features/primitives/PrimitiveCanvas").then(m => ({ default: m.PrimitiveCanvas })));
 
 const TutorPage = lazy(() =>
@@ -32,6 +34,7 @@ const DemoPage = lazy(() =>
 
 export function App() {
   const { status } = useAuth();
+  const sharedRoute = useMatch("/compartido/:token");
   const generalRoute = useMatch("/laboratorio");
   const demoRoute = useMatch("/demo");
   const landingRoute = useMatch("/");
@@ -45,6 +48,8 @@ export function App() {
   const recoveryRoute = useMatch("/recuperar-contrasena");
   const passwordRoute = useMatch("/nueva-contrasena");
   const authRoute = tutorSignIn || signInRoute || signUpRoute;
+
+  if (sharedRoute) return <Suspense fallback={<div>Abriendo lienzo…</div>}><SharedCanvasPage token={sharedRoute.params.token!} /></Suspense>;
 
   if (recoveryRoute || passwordRoute) {
     if (status === "loading") return <AuthLoadingPage />;

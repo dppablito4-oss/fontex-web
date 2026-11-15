@@ -1,3 +1,4 @@
+import { PersonalCanvases } from "./components/PersonalCanvases";
 import { Filter, FolderOpen, Search, SlidersHorizontal } from "lucide-react";
 import { useMemo, useState } from "react";
 
@@ -102,6 +103,8 @@ export function LibraryPage() {
           />
         )}
       />
+
+      {user && <PersonalCanvases owner={user.id} />}
 
       {!activeClassroom && (
         <p className="mt-6 rounded-xl border border-warning-border bg-warning-surface p-3 text-sm text-warning" role="status">

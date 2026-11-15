@@ -68,13 +68,19 @@ async function computeHash(scene: PrimitiveScene) {
 }
 export function usePrimitiveStore(owner: string) {
   const [collection, setCollection] = useState(() => initial(owner));
+  const checkpoints = useRef(new Map<string, PrimitiveScene | null>(collection.scenes.map(s => [s.id, s.primitives.length ? s : null])));
+  const [closedIds, setClosedIds] = useState<string[]>(() => {
+    try { const ids: unknown = JSON.parse(localStorage.getItem(cacheKey(owner) + ":closed") ?? "[]"); return Array.isArray(ids) ? ids.filter((id: unknown): id is string => typeof id === "string") : []; } catch { return []; }
+  });
+  useEffect(() => { try { localStorage.setItem(cacheKey(owner) + ":closed", JSON.stringify(closedIds)); } catch { /* Optional tab preference. */ } }, [closedIds, owner]);
+  const saveAction = useRef<() => Promise<boolean>>(() => Promise.resolve(false));
   const [catalog, setCatalog] = useState<{ id: string; title: string }[]>([]);
   const catalogRef = useRef<{ id: string; title: string }[]>([]);
   const requestedId = useRef<string | null>(null), deleting = useRef(false);
   const removeAction = useRef<(id: string) => Promise<boolean>>(() =>
     Promise.resolve(false)
   );
-  const persistAction = useRef<() => void>(() => {});
+  const persistAction = useRef<() => boolean>(() => true);
   const cacheTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   );
@@ -94,11 +100,13 @@ export function usePrimitiveStore(owner: string) {
       try {
         localStorage.setItem(cacheKey(owner), JSON.stringify(current.current));
         if (owner === "guest") setStatus("local");
+        return true;
       } catch {
         if (owner === "guest") setStatus("error");
         setNotice(
           "No se pudo guardar la copia local. Exporta tu trabajo antes de cerrar esta pestaña.",
         );
+        return false;
       }
     };
     persistAction.current = persist;
@@ -143,6 +151,8 @@ export function usePrimitiveStore(owner: string) {
       );
       return false;
     }
+    if (!checkpoints.current.has(scene.id)) checkpoints.current.set(scene.id, null);
+    setClosedIds(ids => ids.filter(id => id !== scene.id));
     version.current++;
     if (owner === "guest") setStatus("saving");
     store({
@@ -156,6 +166,9 @@ export function usePrimitiveStore(owner: string) {
     return true;
   }
   function open(id: string) {
+    const opening = current.current.scenes.find(s => s.id === id);
+    if (closedIds.includes(id) && opening) checkpoints.current.set(id, opening);
+    setClosedIds(ids => ids.filter(value => value !== id));
     if (deleting.current) return;
     requestedId.current = null;
     if (current.current.scenes.some((s) => s.id === id)) {
@@ -211,6 +224,7 @@ export function usePrimitiveStore(owner: string) {
       }
     }
     let alive = true,
+      lastSyncFailed = false,
       running = false,
       queued = false,
       timer: ReturnType<typeof setTimeout> | undefined;
@@ -219,6 +233,7 @@ export function usePrimitiveStore(owner: string) {
       queued = true;
       if (running) return;
       running = true;
+      lastSyncFailed = false;
       try {
         let attempts = 0;
         while (queued && alive && attempts++ < 4) {
@@ -298,6 +313,7 @@ export function usePrimitiveStore(owner: string) {
             try {
               const rawId = (row.scene as { id: string }).id;
               const scene = reused.get(rawId) ?? parsePrimitiveScene(row.scene);
+              if (!checkpoints.current.has(scene.id)) checkpoints.current.set(scene.id, scene);
               remote.set(scene.id, {
                 scene,
                 revision: row.revision,
@@ -424,6 +440,7 @@ export function usePrimitiveStore(owner: string) {
           if (alive) setStatus(queued ? "saving" : "saved");
         }
       } catch (error) {
+        lastSyncFailed = true;
         if (alive) {
           setStatus(navigator.onLine ? "error" : "offline");
           setNotice(
@@ -505,6 +522,18 @@ export function usePrimitiveStore(owner: string) {
         if (alive) schedule();
       }
     };
+    saveAction.current = async () => {
+      const deadline = Date.now() + 15000;
+      do {
+        await sync();
+        const snapshot = current.current.scenes.find(s => s.id === current.current.activeId)!;
+        if (!running && lastSyncFailed) return false;
+        if (!running && !queued && ack[snapshot.id]?.hash === await hash(snapshot)) return true;
+        if (!navigator.onLine) return false;
+        await new Promise(resolve => setTimeout(resolve, 100));
+      } while (alive && Date.now() < deadline);
+      return false;
+    };
     wake.current = schedule;
     function refresh() {
       if (document.visibilityState === "visible") void sync();
@@ -525,7 +554,48 @@ export function usePrimitiveStore(owner: string) {
       document.removeEventListener("visibilitychange", refresh);
     };
   }, [owner]);
+  async function save() {
+    const localOk = persistAction.current();
+    const ok = owner === "guest" ? localOk : await saveAction.current();
+    if (ok) {
+      const active = current.current.scenes.find(s => s.id === current.current.activeId)!;
+      checkpoints.current.set(active.id, active);
+    }
+    return ok;
+  }
+  async function close(id: string, discard: boolean) {
+    const baseline = checkpoints.current.get(id);
+    if (discard && !baseline) {
+      if (owner !== "guest" && !await saveAction.current()) return false;
+      if (!await remove(id)) return false;
+    } else {
+      if (discard && baseline) {
+        version.current++;
+        store({ ...current.current, scenes: current.current.scenes.map(s => s.id === id ? baseline : s) });
+        wake.current();
+      }
+      if (!await save()) return false;
+      const saved = current.current.scenes.find(s => s.id === id);
+      if(saved) checkpoints.current.set(id, saved);
+    }
+    const hidden = [...closedIds, id];
+    const remaining = current.current.scenes.find(s => s.id === current.current.activeId && s.id !== id)
+      ?? current.current.scenes.find(s => s.id !== id && !hidden.includes(s.id));
+    if (remaining) store({ ...current.current, activeId: remaining.id });
+    else {
+      const blank = newPrimitiveScene("Lienzo sin título");
+      checkpoints.current.set(blank.id, null);
+      store({ ...current.current, activeId: blank.id, scenes: [...current.current.scenes, blank] });
+      version.current++;
+      wake.current();
+    }
+    setClosedIds(hidden);
+    return true;
+  }
   return {
+    save,
+    close,
+    tabs: collection.scenes.filter(s => !closedIds.includes(s.id) || s.id === collection.activeId).map(s => ({ id: s.id, title: s.title })),
     scene: collection.scenes.find((s) => s.id === collection.activeId)!,
     scenes: [
       ...new Map(

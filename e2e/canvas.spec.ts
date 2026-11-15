@@ -103,3 +103,27 @@ test("text edits stay in Properties with live KaTeX and mobile outside dismissal
     await expect(page.getByRole("textbox", { name: "Mensaje para Fontex AI" })).toHaveValue("Mi borrador");
   }
 });
+
+test("closes, cancels, reopens saved canvases and downloads a PDF without print", async ({ page }) => {
+  await page.getByRole("button", { name: "Derivada e integral" }).click();
+  if(await page.getByRole("button", { name: "Cerrar panel", exact: true }).count()) await page.getByRole("button", { name: "Cerrar panel", exact: true }).click();
+  const title = await page.getByRole("tab", { selected: true }).textContent();
+  await page.getByRole("button", { name: `Cerrar ${title}`, exact: true }).click();
+  await page.getByRole("button", { name: "Cancelar", exact: true }).click();
+  await expect(page.getByRole("tab", { name: title!, exact: true })).toBeVisible();
+  await page.getByRole("button", { name: `Cerrar ${title}`, exact: true }).click();
+  await page.getByRole("button", { name: "Guardar y cerrar", exact: true }).click();
+  await expect(page.getByRole("tab", { name: title!, exact: true })).toHaveCount(0);
+  await page.getByRole("button", { name: "Archivo", exact: true }).click();
+  await page.getByText("Abrir mis lienzos", { exact: true }).click();
+  await page.getByRole("button", { name: title!, exact: true }).click();
+  await expect(page.getByRole("tab", { name: title!, exact: true })).toBeVisible();
+  await page.evaluate(() => { window.print = () => { throw Error("Print must not be used"); }; });
+  await page.getByRole("button", { name: "PDF", exact: true }).click();
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Descargar PDF", exact: true }).click();
+  const file = await download;
+  expect(file.suggestedFilename()).toMatch(/\.pdf$/);
+  await file.saveAs(test.info().outputPath("fontex.pdf"));
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+});

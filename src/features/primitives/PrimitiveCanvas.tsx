@@ -49,6 +49,9 @@ import { usePrimitiveStore } from "./usePrimitiveStore";
 import { PrimitiveVisual } from "./PrimitiveVisual";
 import { PrimitiveFields } from "./PrimitiveFields";
 import { CanvasDocumentTabs, CanvasToolMenu } from "./CanvasWorkspaceControls";
+import { CanvasDialog } from "./CanvasDialog";
+import { contextualTitle } from "./document-title";
+import { publishCanvas, revokeCanvas } from "./sharing";
 import { canvasTabId } from "./canvas-tabs";
 import { agentTask } from "../../core/agent/conversation";
 import {
@@ -283,6 +286,41 @@ function Editor(
   { owner, authenticated, accessNote }: { owner: string; authenticated: boolean; accessNote: string },
 ) {
   const library = usePrimitiveStore(owner), { scene, setScene } = library;
+  const [closeId, setCloseId] = useState<string | null>(null);
+  const [pdfDialog, setPdfDialog] = useState(false), [publicQr, setPublicQr] = useState(false);
+  const [documentBusy, setDocumentBusy] = useState(false), [documentError, setDocumentError] = useState("");
+  const [shareLink, setShareLink] = useState("");
+  const openRequested = useRef(false);
+  useEffect(() => {
+    const requested = new URLSearchParams(window.location.hash.split("?")[1]).get("abrir");
+    if (!openRequested.current && requested && library.scenes.some(s => s.id === requested)) {
+      openRequested.current = true;
+      library.open(requested);
+    }
+  }, [library]);
+  async function closeDocument(discard: boolean) {
+    if (!closeId || documentBusy) return;
+    setDocumentBusy(true); setDocumentError("");
+    try {
+      if (!await library.close(closeId, discard)) throw Error("No se pudo completar el guardado. Conservamos la pestaña abierta.");
+      setCloseId(null); resetEditor();
+    } catch(e) { setDocumentError(e instanceof Error ? e.message : "No se pudo cerrar el lienzo."); }
+    finally { setDocumentBusy(false); }
+  }
+  async function downloadPdf() {
+    setDocumentBusy(true); setDocumentError("");
+    try {
+      let url: string | undefined;
+      if(publicQr) {
+        if(!await library.save()) throw Error("Espera a que el lienzo se guarde en tu cuenta antes de compartirlo.");
+        url = await publishCanvas(scene.id); setShareLink(url);
+      }
+      const { exportCanvasPdf } = await import("./export-pdf");
+      await exportCanvasPdf(scene, url);
+      setPdfDialog(false);
+    } catch(e) { setDocumentError(e instanceof Error ? e.message : "No se pudo generar el PDF."); }
+    finally { setDocumentBusy(false); }
+  }
   const credits = useAiCredits();
   const creditBlocked = authenticated &&
     (!credits.status || credits.status.balance < 1 ||
@@ -516,6 +554,7 @@ function Editor(
   const stepIndex = Math.max(0, steps.indexOf(step));
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
+      if (document.querySelector("dialog[open]")) return;
       if (
         (e.target as HTMLElement)?.closest(
           "input,textarea,select,[contenteditable=true]",
@@ -727,9 +766,10 @@ function Editor(
           "El lienzo cambió durante la generación. Vuelve a pedir la propuesta sobre la versión actual.",
         );
       }
-      const patched = task === "build"
+      let patched = task === "build"
         ? applyPrimitivePatch(live.current, reply, templateScene)
         : live.current;
+      if (task === "build") patched = { ...patched, title: contextualTitle(patched, question) };
       if (task === "build" && (!reply.actions.length || (!before.primitives.length && !patched.primitives.length))) {
         throw Error("La respuesta no incluyó elementos para construir. Tu lienzo sigue intacto.");
       }
@@ -821,7 +861,7 @@ function Editor(
     setSelected(null); setPast([]); setFuture([]); setStep(1); setDockView("chat");
   }
   function openScene(id: string) {
-    if (id === scene.id) return;
+    if (id === scene.id) { closeTools(); return; }
     abort.current?.abort();
     library.open(id);
     resetEditor();
@@ -1012,17 +1052,41 @@ function Editor(
       onPointerUp={endDrag}
       onPointerCancel={endDrag}
     >
+      {closeId && <CanvasDialog title="Cerrar lienzo" onClose={() => { if(!documentBusy) setCloseId(null); }}>
+        <p>¿Guardar «{library.scenes.find(s => s.id === closeId)?.title || "Sin título"}» antes de cerrar?</p>
+        <p>El guardado automático conserva tu trabajo. «Sin guardar cambios» restaura la versión que abriste o guardaste manualmente; un lienzo nuevo se descarta.</p>
+        {documentError && <p role="alert">{documentError}</p>}
+        <div className="pc-dialog-actions">
+          <button disabled={documentBusy} onClick={() => void closeDocument(false)}>Guardar y cerrar</button>
+          <button disabled={documentBusy} onClick={() => void closeDocument(true)}>Cerrar sin guardar cambios</button>
+          <button disabled={documentBusy} onClick={() => setCloseId(null)}>Cancelar</button>
+        </div>
+      </CanvasDialog>}
+      {pdfDialog && <CanvasDialog title="Descargar PDF" onClose={() => { if(!documentBusy) setPdfDialog(false); }}>
+        <p>Incluye el logo de Fontex, el título del lienzo y un QR al final.</p>
+        <label><input type="checkbox" checked={publicQr} disabled={!authenticated || documentBusy} onChange={e => setPublicQr(e.target.checked)} /> Compartir este lienzo mediante el QR</label>
+        <p>{authenticated ? "Quien tenga el enlace podrá ver una copia del lienzo sin cuenta. La conversación del chat permanece privada. Puedes desactivar el enlace desde Archivo." : "Inicia sesión para compartirlo. El PDF incluirá un QR a Fontex."}</p>
+        {shareLink && <p><a href={shareLink} target="_blank" rel="noreferrer">Abrir enlace compartido</a></p>}
+        {documentError && <p role="alert">{documentError}</p>}
+        <div className="pc-dialog-actions"><button disabled={documentBusy} onClick={() => void downloadPdf()}>{documentBusy ? "Preparando PDF…" : "Descargar PDF"}</button><button disabled={documentBusy} onClick={() => setPdfDialog(false)}>Cancelar</button></div>
+      </CanvasDialog>}
       <SiteHeader />
-      <CanvasDocumentTabs scenes={library.scenes} activeId={scene.id} onOpen={openScene} onNew={newScene} />
+      <CanvasDocumentTabs scenes={library.tabs} activeId={scene.id} onOpen={openScene} onNew={newScene} onClose={id => { if(!busy) { setCloseId(id); setDocumentError(""); } }} />
       <header className="pc-topbar" aria-label="Herramientas del lienzo">
         <div className="pc-toolbar-menus">
           <CanvasToolMenu label="Archivo" icon={<FolderOpen size={16} />} open={tab === "file"} onToggle={() => toggleTools("file")} onClose={closeTools}>
             <div className="pc-file-menu">
               <label>Título del lienzo<input aria-label="Título del lienzo" value={scene.title} maxLength={160} onChange={(e) => commit({ ...scene, title: e.target.value })} /></label>
+              <button onClick={() => void library.save().then(ok => setNotice(ok ? authenticated ? "Guardado en tu cuenta." : "Guardado en este navegador." : "No se pudo guardar en tu cuenta."))}>Guardar lienzo</button>
+              <details><summary>Abrir mis lienzos</summary><div className="pc-saved-list">
+                {library.scenes.map(s => <button key={s.id} onClick={() => openScene(s.id)}>{s.title || "Sin título"}</button>)}
+              </div></details>
+              <a href="#/biblioteca">Mis lienzos personales en la biblioteca</a>
               <button onClick={newScene}><Plus size={16} />Nuevo lienzo</button>
               <button onClick={() => { closeTools(); file.current?.click(); }}><FolderOpen size={16} />Abrir JSON</button>
               <button onClick={() => { download(); closeTools(); }}><Download size={16} />Guardar JSON</button>
-              <button onClick={() => { closeTools(); setSelected(null); window.print(); }}><Download size={16} />Exportar PDF</button>
+              <button onClick={() => { closeTools(); setDocumentError(""); setPdfDialog(true); }}><Download size={16} />Exportar PDF</button>
+              {authenticated && <button onClick={() => void revokeCanvas(scene.id, owner).then(() => { setShareLink(""); setNotice("Enlace público desactivado."); }).catch((e: unknown) => setNotice(e instanceof Error ? e.message : "No se pudo desactivar el enlace."))}>Desactivar enlace público</button>}
               <button className="pc-delete-document" disabled={busy || library.status === "saving" || library.status === "loading"} onClick={() => {
                 if (!window.confirm(`¿Eliminar el lienzo «${scene.title || "Sin título"}»? Guarda un JSON si necesitas conservar una copia.`)) return;
                 closeTools();
@@ -1044,6 +1108,7 @@ function Editor(
         <div className="pc-top-actions">
           <button aria-label={focused ? "Restaurar espacio de trabajo" : "Ampliar lienzo"} aria-pressed={focused} title="Ampliar lienzo · Escape para volver" onClick={() => setFocused(!focused)}>{focused ? <Minimize2 size={16} /> : <Maximize2 size={16} />}</button>
           <button aria-pressed={sidebar && dockView === "chat"} onClick={() => { setDockView("chat"); setSidebar(!sidebar || dockView !== "chat"); closeTools(); }}><MessageCircle size={16} /><span>Asistente</span></button>
+          <button disabled={!scene.primitives.length || documentBusy} onClick={() => { setDocumentError(""); setPdfDialog(true); }}><Download size={16} /><span>PDF</span></button>
           <button className="pc-present-action" disabled={!scene.primitives.length} onClick={() => {
             closeTools(); setSelected(null); setStep(steps[0]!); setPresenting(true);
             void root.current?.requestFullscreen?.().catch(() => {});

@@ -26,6 +26,12 @@ type Relationship = {
 export type Database = {
   public: {
     Tables: {
+      canvas_public_shares: {
+        Row: { token: string; user_id: string; scene_id: string; scene: Json; updated_at: string };
+        Insert: { user_id: string; scene_id: string; scene: Json };
+        Update: { scene?: Json };
+        Relationships: [];
+      };
       visual_scenes: {
         Row: { user_id: string; id: string; scene: Json; revision: number; updated_at: string; scene_title: string | null; scene_bytes: number };
         Insert: { user_id: string; id: string; scene: Json; revision: number };
@@ -439,6 +445,8 @@ export type Database = {
     };
     Views: Record<string, never>;
     Functions: {
+      publish_canvas: { Args: { p_scene_id: string }; Returns: string };
+      read_public_canvas: { Args: { p_token: string }; Returns: Json };
       get_canvas_build: { Args: {p_request_id:string}; Returns: Json };
       list_canvas_builds: { Args: {p_scene_id:string}; Returns: Json };
       ack_canvas_build: { Args: {p_request_id:string}; Returns: undefined };

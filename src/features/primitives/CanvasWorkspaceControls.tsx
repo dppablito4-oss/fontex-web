@@ -1,12 +1,13 @@
 import { type ReactNode, useEffect, useId, useRef, useState } from "react";
-import { ChevronDown, Plus } from "lucide-react";
+import { ChevronDown, Plus, X } from "lucide-react";
 import { canvasTabId } from "./canvas-tabs";
 
-export function CanvasDocumentTabs({ scenes, activeId, onOpen, onNew }: {
+export function CanvasDocumentTabs({ scenes, activeId, onOpen, onNew, onClose }: {
   scenes: { id: string; title: string }[];
   activeId: string;
   onOpen: (id: string) => void;
   onNew: () => void;
+  onClose?: (id: string) => void;
 }) {
   const active = useRef<HTMLButtonElement | null>(null);
   const [order, setOrder] = useState(() => scenes.map((scene) => scene.id));
@@ -20,7 +21,7 @@ export function CanvasDocumentTabs({ scenes, activeId, onOpen, onNew }: {
   useEffect(() => { active.current?.scrollIntoView({ block: "nearest", inline: "nearest" }); }, [activeId]);
   return <div className="pc-document-strip">
     <div className="pc-document-tabs" role="tablist" aria-label="Lienzos">
-      {ordered.map((scene, index) => <button
+      {ordered.map((scene, index) => <div className="pc-document-tab" key={scene.id}><button
         key={scene.id}
         ref={scene.id === activeId ? active : undefined}
         id={canvasTabId(scene.id)}
@@ -38,11 +39,13 @@ export function CanvasDocumentTabs({ scenes, activeId, onOpen, onNew }: {
           else if (event.key === "End") next = ordered.length - 1;
           else return;
           event.preventDefault();
-          const buttons = event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('[role="tab"]');
+          const buttons = event.currentTarget.closest('[role="tablist"]')?.querySelectorAll<HTMLButtonElement>('[role="tab"]');
           buttons?.[next]?.focus();
           onOpen(ordered[next]!.id);
         }}
-      ><span className="pc-document-indicator" aria-hidden="true" /><span>{scene.title || "Sin título"}</span></button>)}
+      ><span className="pc-document-indicator" aria-hidden="true" /><span>{scene.title || "Sin título"}</span></button>
+        {onClose && <button className="pc-close-tab" aria-label={`Cerrar ${scene.title || "Sin título"}`} onClick={() => onClose(scene.id)}><X size={13} /></button>}
+      </div>)}
     </div>
     <button className="pc-new-document" onClick={onNew} aria-label="Nuevo lienzo" title="Nuevo lienzo"><Plus size={17} /></button>
   </div>;
