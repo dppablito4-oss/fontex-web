@@ -11,7 +11,8 @@ const backup = execFileSync('docker', ['exec', container, 'pg_dump', '-U', 'post
 assert.ok(backup.length > 1000);
 try {
   sql('postgres', `create database ${database}`);
-  execFileSync('docker', ['exec', '-i', container, 'pg_restore', '-U', 'postgres', '-d', database, '--clean', '--if-exists', '--no-owner', '--exit-on-error'], { input: backup, maxBuffer: 10 * 1024 * 1024 });
+  sql(database, 'drop schema public cascade');
+  execFileSync('docker', ['exec', '-i', container, 'pg_restore', '-U', 'postgres', '-d', database, '--no-owner', '--exit-on-error'], { input: backup, maxBuffer: 10 * 1024 * 1024 });
   assert.equal(sql(database, 'select count(*) from supabase_migrations.schema_migrations'), original);
   const count = "select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='fontex_ai'";
   assert.equal(sql(database, count), sql('postgres', count));

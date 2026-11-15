@@ -381,7 +381,6 @@ function Coordinate(
               return (
                 <g
                   key={child.id}
-                  onPointerDown={(e) => { if (e.button === 0 && !panning) e.stopPropagation(); }}
                   onClick={(e) => {
                     e.stopPropagation();
                     onSelect(child.id);
@@ -688,7 +687,6 @@ function Vector({
     <g
       stroke={diagramColor(p.style.strokeColor)}
       fill={diagramColor(p.style.strokeColor)}
-      onPointerDown={(e) => { if (e.button === 0) e.stopPropagation(); }}
       onClick={(e) => {
         e.stopPropagation();
         onSelect();

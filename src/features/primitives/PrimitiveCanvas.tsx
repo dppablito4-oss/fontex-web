@@ -389,6 +389,7 @@ function Editor(
       const next = recoveredScene(live.current, receipt, separate);
       if (!commit(next)) return false;
       savePendingBuild(owner, receipt.source.id, null);
+      if (prompt.trim() === receipt.question) setPrompt("");
       viewport.reset(); setAutoZoom(true);
       setNotice(separate ? "Propuesta recuperada en otro lienzo. No se consumieron créditos." : "Construcción recuperada y aplicada. No se consumieron créditos adicionales.");
       return true;
