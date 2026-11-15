@@ -688,6 +688,9 @@ function Editor(
           if (!receipt && previous.content === buildContent(before)) requestId = previous.id;
         }
         requestId ??= crypto.randomUUID();
+        if (controller.signal.aborted || live.current.id !== before.id) {
+          setBusyTask(null); abort.current = null; return;
+        }
         savePendingBuild(owner, before.id, { id: requestId, question: question.trim(), content: buildContent(before) });
       } catch (error) {
         setNotice(error instanceof Error ? error.message : "No se pudo comprobar la construcción pendiente.");

@@ -25,7 +25,7 @@ export function useBuildRecovery({ authenticated, scene, status, busy, current, 
           if (!alive) return;
           const latest = actions.current.current();
           if (latest.id !== scene.id || latest.appliedBuildIds?.includes(item.id)) continue;
-          if (item.state !== "ready") continue;
+          if (item.state !== "ready" || item.applied_at) continue;
           const receipt = await getCanvasBuild(item.id);
           if (!alive || !receipt || actions.current.current().id !== scene.id) return;
           if (buildContent(actions.current.current()) === buildContent(receipt.source)) {

@@ -66,6 +66,7 @@ function normalizeProviderSchema(value: unknown): void {
 async function streamedProposal(
   response: Response,
   emit: (text: string) => void,
+  requestId: string,
 ): Promise<unknown> {
   if (!response.body) throw new Error("Falta la respuesta del proveedor.");
   let output = "", visible = "";
@@ -92,7 +93,16 @@ async function streamedProposal(
       ["response.incomplete", "response.failed", "error"].includes(
         String(event.type),
       )
-    ) throw new Error("La respuesta no se completó. Tu escena sigue intacta.");
+    ) {
+      const failed = event as { type: string; response?: { incomplete_details?: { reason?: unknown }; error?: { code?: unknown }; usage?: { output_tokens?: unknown } }; code?: unknown };
+      const reason = failed.response?.incomplete_details?.reason ?? failed.response?.error?.code ?? failed.code;
+      const safeReason = typeof reason === "string" && /^[a-z_]{1,80}$/.test(reason) ? reason : "unknown";
+      console.warn(JSON.stringify({ event: "canvas_provider_incomplete", request_id: requestId, type: failed.type, reason: safeReason,
+        output_tokens: typeof failed.response?.usage?.output_tokens === "number" ? failed.response.usage.output_tokens : null }));
+      throw new Error(safeReason === "max_output_tokens"
+        ? "La construcción superó el tamaño de respuesta. Divide la idea en menos elementos y vuelve a intentarlo."
+        : "La respuesta no se completó. Tu escena sigue intacta.");
+    }
   }
   throw new Error("La transmisión terminó antes de completar la propuesta.");
 }
@@ -376,6 +386,7 @@ export function createPrimitiveHandler(
               ? await streamedProposal(
                 response,
                 (text) => send({ type: "text", text }),
+                requestId,
               )
               : await response.json();
           const p = payload as {
