@@ -567,7 +567,7 @@ function Editor(
     p: Primitive,
     frameBounds?: DOMRect,
   ) {
-    if (p.locked || narrow) return;
+    if (p.locked || narrow || e.button !== 0) return;
     e.preventDefault();
     e.stopPropagation();
     e.currentTarget.setPointerCapture(e.pointerId);

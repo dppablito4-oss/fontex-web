@@ -1423,3 +1423,6 @@
   .pc-stage { overflow: visible!important; }
   .pc-board-space { transform: none!important; }
 }
+.pc-recovery-note { margin: 0; padding: 7px 16px; font-size: 12px; color: var(--pc-muted); background: var(--pc-surface); }
+.pc-writing > small { display: block; color: var(--pc-muted); font-size: 11px; margin-top: 4px; }
+.pc-plot-definition-content .pc-control { margin-block: 12px; }

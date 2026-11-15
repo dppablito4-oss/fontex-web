@@ -8,7 +8,7 @@ export function useWorkspaceViewport(stage: RefObject<HTMLDivElement | null>, na
   const drag = useRef<{ x: number; y: number; start: typeof offset } | null>(null);
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
-      if (e.code === "Space" && !(e.target as HTMLElement)?.closest("input,textarea,select,button,[contenteditable=true]")) {
+      if (e.code === "Space" && !(e.target as HTMLElement)?.closest("input,textarea,select,button,summary,a,[role=button],[contenteditable=true]")) {
         space.current = true;
         e.preventDefault();
       }
