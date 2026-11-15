@@ -16,7 +16,11 @@ const createPrimitiveHandler: typeof baseHandler = (
   env,
   provider,
   credits = fakeCredits,
-) => baseHandler(env, provider, credits, {reserve:()=>Promise.resolve({allowed:true,reason:"reserved"}),finish:()=>Promise.resolve()});
+) =>
+  baseHandler(env, provider, credits, {
+    reserve: () => Promise.resolve({ allowed: true, reason: "reserved" }),
+    finish: () => Promise.resolve(),
+  });
 const request = (
   question = "Explica una función",
   task: "chat" | "build" = "chat",
@@ -39,6 +43,95 @@ async function events(response: Response) {
   for await (const e of eventData(response.body)) out.push(e);
   return out;
 }
+Deno.test("build: a variable-only reply cannot charge an empty canvas", async () => {
+  const settled: boolean[] = [];
+  const credits = {
+    reserve: () =>
+      Promise.resolve({ allowed: true, balance: 4, reason: "reserved" }),
+    finish: (_id: string, success: boolean) => {
+      settled.push(success);
+      return Promise.resolve({
+        balance: success ? 4 : 5,
+        status: success ? "succeeded" as const : "refunded" as const,
+      });
+    },
+  };
+  const provider: typeof fetch = () =>
+    Promise.resolve(Response.json({
+      status: "completed",
+      output: [{
+        content: [{
+          type: "output_text",
+          text: JSON.stringify({
+            message: "He creado una explicación visual.",
+            actions: [{
+              kind: "upsert_variable",
+              variable: {
+                name: "a",
+                value: 2,
+                min: 0,
+                max: 10,
+                step: 1,
+                unit: "",
+              },
+            }],
+          }),
+        }],
+      }],
+    }));
+  const result = await events(
+    await createPrimitiveHandler(env, provider, credits)(
+      request("Crea fracciones", "build"),
+      { userClaims: { id: "user" } },
+    ),
+  );
+  assert(
+    result.some((value) =>
+      value && typeof value === "object" && "type" in value &&
+      value.type === "error"
+    ),
+  );
+  assert(
+    !result.some((value) =>
+      value && typeof value === "object" && "type" in value &&
+      value.type === "result"
+    ),
+  );
+  assert(settled.length === 1 && settled[0] === false);
+});
+
+Deno.test("build: cancelling the streamed response cancels the provider and refunds its credit", async () => {
+  let refunded!: () => void;
+  const refund = new Promise<void>((resolve) => {
+    refunded = resolve;
+  });
+  const credits = {
+    reserve: () =>
+      Promise.resolve({ allowed: true, balance: 4, reason: "reserved" }),
+    finish: (_id: string, success: boolean) => {
+      assert(!success, "a cancelled provider must not be charged");
+      refunded();
+      return Promise.resolve({ balance: 5, status: "refunded" as const });
+    },
+  };
+  const provider: typeof fetch = (_url, options) =>
+    new Promise<Response>((_resolve, reject) => {
+      options?.signal?.addEventListener(
+        "abort",
+        () => reject(new DOMException("Cancelled", "AbortError")),
+        { once: true },
+      );
+    });
+  const response = await createPrimitiveHandler(env, provider, credits)(
+    request("Crea fracciones", "build"),
+    { userClaims: { id: "user" } },
+  );
+  const reader = response.body!.getReader();
+  await reader.read();
+  await reader.cancel();
+  await refund;
+  reader.releaseLock();
+});
 Deno.test("primitives: authenticate and validate before calling provider", async () => {
   let calls = 0;
   const handler = createPrimitiveHandler(env, () => {

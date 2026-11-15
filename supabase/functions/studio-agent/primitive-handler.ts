@@ -206,8 +206,8 @@ export function createPrimitiveHandler(
           Object.keys(primitiveNames).join(", ")
         }. No generes código ni HTML/SVG ejecutable. Devuelve el JSON solicitado con message primero y actions después. ${
           input.task === "chat"
-            ? "CONVERSAR: explica y ayuda; actions debe estar vacío. Puedes proponer una construcción; el usuario tiene un botón Crear en el lienzo."
-            : "CONSTRUIR: devuelve acciones completas add_primitive, update_primitive, delete_primitive o upsert_variable. Conserva lo existente salvo que pidan cambiarlo. Una creación requiere acciones, nunca solo afirmar que ya la hiciste."
+            ? "CONVERSAR: explica y ayuda; actions debe estar vacío. No has modificado el lienzo: nunca afirmes que ya creaste, dibujaste o preparaste una construcción visual. Puedes proponerla y pedir que el usuario pulse Crear en el lienzo."
+            : "CONSTRUIR: devuelve acciones completas add_primitive, update_primitive, delete_primitive o upsert_variable. Conserva lo existente salvo que pidan cambiarlo. Una creación requiere elementos visibles, nunca solo afirmar que ya la hiciste. En un lienzo vacío crea una primera versión útil de hasta seis elementos, con textos breves y completos. Usa varias representaciones dentro de un mismo elemento antes de multiplicar paneles."
         } Una function_region usa curveMode cartesian por defecto, o parametric con xExpr(t),yExpr(t), o polar con rExpr(theta); los modos nuevos usan parameterFromExpr,parameterToExpr y opcional parameterValueExpr para un punto móvil. Son campos de texto, no funciones JavaScript. En parametric/polar fija expression="0", showArea/showDerivative/showTangent=false y pointXs=[]; el área y derivada actuales son sólo cartesianas. angleUnit rad/deg rige las trigonométricas y el parámetro polar. No añadas t/theta como variable si sólo es el parámetro local, pero declara una variable si la usas desde controles o como parameterValueExpr. Lógica: !,&&,||,->,<->; hasta 4 proposiciones, cada variable controlable vale 0/1, min0,max1,step1. control_slider admite toggle. data_chart truth_table usa logicVariables y logicExpression; geometric_shape venn_2/venn_3 usa esos campos más setLabels, canvasId null. node_graph relations contiene nodos/aristas editables; logic permite nodos input,and,or,not,output con referencias acíclicas: AND/OR 2–4 entradas, NOT/salida una, input sin aristas entrantes y con variableName booleana. Todos los nodos tienen id,label,type,variableName (null si no es entrada),x55..745,y35..565. Aristas from,to,label sin duplicados. data_chart matrix usa matrixName y matrixCells cuadrada2x2/3x3 de expresiones de variables, showInverse; sus nombres no coinciden con variables ni funciones. det(m) y inv(m,fila,columna) (índices1..3) producen escalares; {{inv(m)}} muestra la matriz inversa completa. No hay CAS ni solución simbólica universal. vector_segment o polígonos/triángulos pueden ligar transformMatrixId a una matriz2x2 y transformInverse; para ellos usa un plano equalScale true. Conserva schemaVersion2, format primitive-scene. Toda función cartesiana usa x y variables declaradas, sin/cos/tan/ln/exp/sqrt, pi/e, aritmética y potencias. Cada function_region debe referir a un coordinate_canvas existente o creado en el mismo lote. Nombres de funciones y resultados únicos; variables de usuario no se llaman x, pi, e ni como funciones. Interpolación de texto: {{a}}, {{round(area,3)}}; helpers round,abs,min,max,floor,ceil,deg,rad,gcd,lcm,atan2(y,x); en texto admite {{factors(n)}} para descomposición prima y evaluación de funciones con nombre. El resultado de una región está disponible con resultName cuando showArea es true. El motor calcula derivadas, tablas y raíces reales hasta grado 4. Integral numérica aproximada por Simpson con detección limitada de discontinuidades; no prometas exactitud universal. Para geometría con medidas usa equalScale true en el plano, para conservar la misma escala en ambos ejes. Dentro de un plano se anclan polígonos/triángulos; otras figuras geométricas son elementos independientes con canvasId null. Figuras 2D calculan medidas; prismas/cilindros/cuerpos físicos son diagramas esquemáticos sin simulación ni cálculo 3D. No inventes resultados numéricos: usa expresiones y variables. Coordenadas del editor en píxeles lógicos, ancho total 1200: plano x24 width1152 height500, explicación debajo o al lado si hay espacio. Y de elementos nuevos después del contenido existente, sin solapar. Hijos de un plano usan canvasId y se dibujan dentro de él. Unidades matemáticas separadas de píxeles. Para saltos en number_line usa vector_segment con arcHeight entre 1 y 120, start/end sobre y=0; 0 o null conserva el segmento recto. Los escalares trigonométricos usan radianes: sin(rad(theta)) para theta en grados. Hasta 80 primitivas por escena y 40 acciones por lote, normalmente bastan 3 a 6 primitivas. Plantillas: ${
           templates.map((t) => `${t.id}: ${t.name}`).join("; ")
         }. load_template sustituye todo el contenido de la escena: úsalo solo si está vacía o si piden explícitamente abrir esa plantilla. Completa todos los campos del contrato. No pidas datos personales.`,
@@ -320,7 +320,7 @@ export function createPrimitiveHandler(
       signal = AbortSignal.any([
         request.signal,
         abort.signal,
-        AbortSignal.timeout(50000),
+        AbortSignal.timeout(75000),
       ]),
       encoder = new TextEncoder();
     const body = new ReadableStream<Uint8Array>({
@@ -330,6 +330,7 @@ export function createPrimitiveHandler(
             encoder.encode(`data: ${JSON.stringify(value)}\n\n`),
           );
         try {
+          send({ type: "status", stage: input.task === "build" ? "building" : "chatting" });
           const response = await provider(
             "https://api.openai.com/v1/responses",
             {
@@ -384,7 +385,10 @@ export function createPrimitiveHandler(
               "La IA explicó la idea pero no devolvió una construcción. Intenta concretar la petición.",
             );
           }
-          applyPrimitivePatch(scene, reply, templateScene);
+          const patched = applyPrimitivePatch(scene, reply, templateScene);
+          if (input.task === "build" && !scene.primitives.length && !patched.primitives.length) {
+            throw Error("La IA no devolvió elementos para el lienzo. No se aplicaron cambios; vuelve a intentarlo con una petición concreta.");
+          }
           if (reservationId && credits) {
             const settled = await credits.finish(reservationId, true);
             if (settled.status !== "succeeded") {

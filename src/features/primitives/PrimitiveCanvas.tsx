@@ -48,6 +48,7 @@ import { PrimitiveVisual } from "./PrimitiveVisual";
 import { PrimitiveFields } from "./PrimitiveFields";
 import { CanvasDocumentTabs, CanvasToolMenu } from "./CanvasWorkspaceControls";
 import { canvasTabId } from "./canvas-tabs";
+import { agentTask } from "../../core/agent/conversation";
 import {
   applyPrimitivePatch,
   createPrimitive,
@@ -257,14 +258,17 @@ function Frame({
 export function PrimitiveCanvas() {
   const { user } = useAuth();
   const access = useBetaAccess();
-  const participant = !!user && access.status === "allowed";
+  // A failed refresh is not a revocation. Remounting as "guest" here aborted
+  // an in-flight generation and discarded its result after the server finished.
+  // The API continues checking actual membership on every protected request.
+  const participant = !!user && (access.status === "allowed" || access.lastVerifiedAllowed);
   if (user && access.status === "loading") return <AuthLoadingPage />;
   return (
     <Editor
       key={participant ? user.id : "guest"}
       owner={participant ? user.id : "guest"}
       authenticated={participant}
-      accessNote={user && !participant ? access.status === "loading" ? "Verificando tu invitación a la beta…" : "Esta cuenta no tiene acceso remoto disponible. Puedes seguir creando en el lienzo local o consultar al administrador." : ""}
+      accessNote={user && access.status === "error" ? "No se pudo actualizar la comprobación de acceso. Conservamos tu lienzo; reintenta si falla alguna acción." : user && !participant ? "Esta cuenta no tiene acceso remoto disponible. Puedes seguir creando en el lienzo local o consultar al administrador." : ""}
     />
   );
 }
@@ -295,9 +299,11 @@ function Editor(
     [step, setStep] = useState(1);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const prompt = drafts[scene.id] ?? "";
+  const promptTask = agentTask(prompt);
   const setPrompt = (value: string) => setDrafts((current) => ({ ...current, [scene.id]: value }));
-  const [busy, setBusy] = useState(false),
+  const [busyTask, setBusyTask] = useState<"chat" | "build" | null>(null),
     [streamText, setStreamText] = useState("");
+  const busy = busyTask !== null;
   const level = scene.level;
   const [variableName, setVariableName] = useState("b"),
     [templateFilter, setTemplateFilter] = useState("");
@@ -626,7 +632,7 @@ function Editor(
     }
     const before = live.current, controller = new AbortController();
     abort.current = controller;
-    setBusy(true);
+    setBusyTask(task);
     setStreamText("");
     setNotice("");
     setPrompt("");
@@ -638,7 +644,11 @@ function Editor(
           role: "user" as const,
           content: question.trim(),
         }]).slice(-78);
-    commit({ ...before, conversation: turns }, false);
+    if (!commit({ ...before, conversation: turns }, false)) {
+      setBusyTask(null);
+      setPrompt(question);
+      return;
+    }
     try {
       const reply = await requestPrimitiveAgent(
         { scene: before, question: question.trim(), task, level, selectedId },
@@ -659,26 +669,39 @@ function Editor(
       const patched = task === "build"
         ? applyPrimitivePatch(live.current, reply, templateScene)
         : live.current;
+      if (task === "build" && (!reply.actions.length || (!before.primitives.length && !patched.primitives.length))) {
+        throw Error("La respuesta no incluyó elementos para construir. Tu lienzo sigue intacto.");
+      }
       if (task === "chat" && reply.actions.length) {
         throw Error("La conversación devolvió cambios inesperados.");
       }
-      commit({
+      const applied = commit({
         ...(task === "build" && before.primitives.length === 0 ? organizePrimitiveScene(patched) : patched),
         conversation: [...turns, {
           role: "assistant" as const,
           content: reply.message,
         }].slice(-80),
       }, task === "build");
+      if (!applied) throw Error("La respuesta se recibió, pero no pudo guardarse en el lienzo. Conserva esta pestaña y revisa el aviso de guardado.");
+      if (task === "build") {
+        setNotice(`Construcción aplicada al lienzo: ${patched.primitives.length} elementos.`);
+        if (!before.primitives.length) {
+          setAutoZoom(true);
+          stage.current?.scrollTo({ top: 0, left: 0 });
+        }
+      }
     } catch (e) {
       setNotice(
-        e instanceof Error
+        controller.signal.aborted
+          ? "La generación se detuvo. Puedes volver a intentarlo."
+          : e instanceof Error
           ? e.message
           : "La respuesta no se completó. Tu lienzo sigue intacto.",
       );
       setPrompt(question);
     } finally {
       if (task === "build") creditsChanged();
-      setBusy(false);
+      setBusyTask(null);
       setStreamText("");
       abort.current = null;
     }
@@ -1332,6 +1355,11 @@ function Editor(
                             <Plus size={15} />Crear en el lienzo
                           </button>
                         )}
+                        {turn.role === "user" && i === scene.conversation.length - 1 && !busy && agentTask(turn.content) === "build" && (
+                          <button aria-label="Reintentar construcción" disabled={creditBlocked} onClick={() => void ask("build", turn.content)}>
+                            <Plus size={15} />Reintentar construcción · 1 crédito
+                          </button>
+                        )}
                       </div>
                     ))}
                     {busy && (
@@ -1340,7 +1368,7 @@ function Editor(
                         <AcademicMarkdown
                           content={streamText || "Preparando…"}
                         />
-                        <span className="pc-writing">Escribiendo…</span>
+                        <span className="pc-writing">{busyTask === "build" ? "Construyendo en el lienzo…" : "Escribiendo…"}</span>
                       </div>
                     )}
                     <div ref={messageEnd} />
@@ -1349,7 +1377,7 @@ function Editor(
                     className="pc-chat-composer"
                     onSubmit={(e) => {
                       e.preventDefault();
-                      void ask("chat");
+                      void ask(promptTask);
                     }}
                   >
                     <label>
@@ -1377,19 +1405,19 @@ function Editor(
                       rows={2}
                     />
                     <div>
-                      <button
+                      {promptTask === "chat" && <button
                         type="button"
                         disabled={busy || creditBlocked || !prompt.trim()}
                         onClick={() => void ask("build")}
                       >
                         <Plus size={16} />Crear con IA
-                      </button>
+                      </button>}
                       <button
                         type="submit"
                         className="pc-primary"
-                        disabled={busy || !prompt.trim()}
+                        disabled={busy || !prompt.trim() || (promptTask === "build" && creditBlocked)}
                       >
-                        <Send size={16} />Enviar
+                        <Send size={16} />{busyTask === "build" ? "Construyendo…" : promptTask === "build" ? "Crear en el lienzo" : "Enviar"}
                       </button>
                       {busy && (
                         <button
@@ -1400,6 +1428,7 @@ function Editor(
                         </button>
                       )}
                     </div>
+                    {promptTask === "build" && !busy && <small className="pc-generation-hint">Crear en el lienzo consume 1 crédito.</small>}
                   </form>
             </>)}
           </aside>

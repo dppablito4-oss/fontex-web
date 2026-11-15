@@ -1,0 +1,16 @@
+# Corrección de creación en el lienzo — 14 de noviembre de 2026
+
+La incidencia mostraba una explicación de la IA y una solicitud de construcción, pero cero elementos en el documento. La reserva de esa solicitud figuraba completada en el servidor y la escena seguía guardada antes de su finalización, sin respuesta aplicada. Se repuso una vez el crédito de esa generación, con evento de auditoría y comprobación de que no existiera ya la compensación. No se sustituyó el contenido del usuario.
+
+Se reprodujeron y corrigieron estos recorridos:
+
+1. El formulario enviaba siempre `task: chat`, incluso con una orden explícita de creación. Ahora utiliza el clasificador de órdenes existente; muestra «Crear en el lienzo» y el coste de un crédito antes de enviar una construcción. Las preguntas explicativas siguen siendo conversación sin edición. El botón «Crear con IA» conserva la creación explícita de una idea.
+2. Un error temporal en la comprobación de membresía podía cambiar la clave del editor a invitado, desmontarlo y perder una generación en curso. Se conserva la última verificación válida de la misma cuenta durante un error de actualización. Una denegación explícita y el cambio de cuenta invalidan esa continuidad; el servidor sigue verificando permisos en todas las operaciones protegidas.
+3. El timeout de `functions.invoke` terminaba al recibir las cabeceras SSE y retiraba su enlace de cancelación. El cliente usa ahora una señal compartida con plazo de 85 segundos durante toda la lectura del stream. Detener la petición cancela también su cuerpo; el servidor comunica progreso inicial y sus pruebas comprueban devolución del crédito al cancelar antes de completar. Una segunda reproducción llegó al límite de 50 segundos: el plazo del proveedor se ajustó a 75 segundos, por debajo de la reserva de uso de 90 segundos y la reserva de crédito de dos minutos. La creación inicial prioriza hasta seis elementos completos para reducir latencia.
+4. Una construcción de un lienzo vacío debe incluir elementos visibles: una respuesta que solo actualice variables no se acepta como construcción completada. El servidor devuelve el crédito cuando falla esa validación. La conversación ya no debe afirmar que dibujó o creó contenido.
+
+El cliente comprueba el resultado de guardar y confirma la aplicación con el número de elementos. Una construcción pendiente al final del historial puede reintentarse desde su propio mensaje, sin duplicarlo. El coste se muestra en el botón de reintento.
+
+La reproducción alojada utilizó una cuenta temporal invitada y el proveedor real: generó una propuesta de suma de fracciones con diez elementos, validada y organizada por el mismo código del editor. La cuenta temporal y su invitación se limpiaron. Las pruebas de regresión cubren aplicación en el editor, error transitorio de acceso, enrutamiento, cancelación SSE con el SDK real y reintento del mensaje guardado.
+
+No se presenta la prueba DOM como prueba visual de navegador. La recuperación duradera de una respuesta que se pierda por cerrar la pestaña o por una desconexión total después de completarse en el servidor sigue siendo una mejora pendiente; esta corrección evita desmontajes por errores de actualización y no promete recuperación ilimitada de conexiones perdidas.

@@ -4,8 +4,8 @@ import { useAuth } from "../auth/AuthProvider";
 export function useBetaAccess() {
   const { user } = useAuth(), owner = user?.id ?? "";
   const [value, setValue] = useState<
-    { owner: string; status: "allowed" | "denied" | "error" }
-  >({ owner: "", status: "denied" });
+    { owner: string; status: "allowed" | "denied" | "error"; lastVerifiedAllowed: boolean }
+  >({ owner: "", status: "denied", lastVerifiedAllowed: false });
   const sequence = useRef(0);
   const invalidate = useCallback(() => {
     sequence.current++;
@@ -27,17 +27,20 @@ export function useBetaAccess() {
           ? data.allowed
           : null;
       if (request === sequence.current) {
-        setValue({
+        setValue((current) => ({
           owner,
           status: error || allowed === null
             ? "error"
             : allowed
             ? "allowed"
             : "denied",
-        });
+          lastVerifiedAllowed: error || allowed === null
+            ? current.owner === owner && current.lastVerifiedAllowed
+            : allowed,
+        }));
       }
     } catch {
-      if (request === sequence.current) setValue({ owner, status: "error" });
+      if (request === sequence.current) setValue((current) => ({ owner, status: "error", lastVerifiedAllowed: current.owner === owner && current.lastVerifiedAllowed }));
     } finally {
       clearTimeout(timeout);
     }
@@ -64,5 +67,6 @@ export function useBetaAccess() {
       ? value.status
       : "loading" as const,
     refresh,
+    lastVerifiedAllowed: value.owner === owner && value.lastVerifiedAllowed,
   };
 }

@@ -6,6 +6,7 @@ Actualización del 14 de noviembre de 2026. El editor conserva la paleta clara y
 - **Archivo:** título, nuevo lienzo, importar/exportar JSON, PDF y eliminación con confirmación. La eliminación conserva las comprobaciones de guardado y de revisión del servidor.
 - **Elementos, Plantillas y Variables:** opciones desplegables bajo la barra superior, con iconos y nombres. Se cierra un menú al elegir una herramienta, pulsar Escape o salir de él; Escape devuelve el foco al botón que lo abrió.
 - **Panel derecho:** conversación con Fontex y su compositor, sin la biblioteca de archivos ni pestañas de herramientas. El saldo y su explicación se agrupan en un desplegable. Seleccionar un elemento abre sus propiedades en ese mismo panel; Chat y Propiedades permiten alternar sin añadir otra columna. La conversación y el borrador se conservan.
+- **Conversar o construir:** las preguntas explicativas usan «Enviar». Una orden de creación cambia el botón a «Crear en el lienzo» y muestra su coste de un crédito. «Crear con IA» permite construir explícitamente una idea redactada como pregunta. Una construcción sin respuesta aplicada puede reintentarse desde su mensaje.
 - **Presentación:** acceso directo naranja; archivos y herramientas quedan fuera de la vista presentada y de la impresión.
 - **Móvil:** pestañas desplazables, herramientas agrupadas y panel derecho superpuesto que puede cerrarse. El lienzo mantiene su representación móvil y sus controles actuales.
 

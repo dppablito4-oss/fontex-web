@@ -23,7 +23,9 @@ export async function requestPrimitiveAgent(
   }
   const result = await supabase.functions.invoke<unknown>(
     "studio-agent/primitives",
-    { body: input, signal, timeout: 55000 },
+    // Keep the same signal attached through the streamed body. The SDK's
+    // invoke timeout is cleared when headers arrive and detaches cancellation.
+    { body: input, signal: AbortSignal.any([signal, AbortSignal.timeout(85000)]) },
   );
   if (result.error) {
     const invocationError: unknown = result.error;
