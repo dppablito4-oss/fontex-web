@@ -62,6 +62,14 @@ function Coordinate(
   },
 ) {
   const clip = useId();
+  const definitionsPanel = useRef<HTMLDetailsElement>(null);
+  useEffect(() => {
+    let wasOpen = false;
+    const before = () => { if (definitionsPanel.current) { wasOpen = definitionsPanel.current.open; definitionsPanel.current.open = true; } };
+    const after = () => { if (definitionsPanel.current) definitionsPanel.current.open = wasOpen; };
+    window.addEventListener("beforeprint",before); window.addEventListener("afterprint",after);
+    return () => { window.removeEventListener("beforeprint",before); window.removeEventListener("afterprint",after); };
+  }, []);
   const svg = useRef<SVGSVGElement>(null),
     [pixelWidth, setPixelWidth] = useState(800);
   useEffect(() => {
@@ -145,7 +153,7 @@ function Coordinate(
   return (
     <div className="pc-coordinate">
       <div className="pc-plot-overlay" onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
-        <details className="pc-plot-definitions" open={editingChild ? true : undefined}>
+        <details ref={definitionsPanel} className="pc-plot-definitions" open={readOnly || editingChild ? true : undefined}>
           <summary>Definiciones y medidas <span>{children.length} figuras</span></summary>
           <div className="pc-plot-definition-content">
             {definitions.map((item) => <section key={item.id}>
