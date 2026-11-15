@@ -54,6 +54,13 @@ export function BetaInfoPage() {
             necesites para la actividad.
           </p>
           <p>
+            Para recuperar una construcción tras una desconexión, se conserva
+            una copia privada de su pregunta, escena de partida y propuesta.
+            Puedes recuperarla durante siete días, sin repetir el crédito.
+            Las copias vencidas se limpian cuando se admiten nuevas construcciones.
+            Se conservan hasta cien solicitudes recuperables por cuenta.
+          </p>
+          <p>
             La interfaz carga tipografías desde Google Fonts. Las condiciones de
             los servicios externos y la configuración de conservación deben
             revisarse antes de ampliar la beta.

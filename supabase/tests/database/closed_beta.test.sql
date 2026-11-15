@@ -43,7 +43,7 @@ select extensions.throws_ok($$select public.check_beta_request()$$,'42501','beta
 select set_config('request.headers','{}',true);
 select set_config('request.path','/rpc/get_beta_access_status',true);
 select extensions.lives_ok($$select public.check_beta_request()$$,'membership status remains accessible to a blocked account');
-select set_config('request.jwt.claims','{"sub":"be7a0000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+select set_config('request.jwt.claims','{"sub":"be7a0000-0000-4000-8000-000000000001","role":"authenticated","aal":"aal2"}',true);
 select public.admin_invite_beta('beta-user@example.invalid');
 reset role;
 select extensions.is((select active from fontex_beta.members where user_id='be7a0000-0000-4000-8000-000000000002'),true,'admin re-enables an existing account by UUID');
@@ -91,6 +91,6 @@ reset role;
 set local role anon;
 select set_config('request.path','/rpc/get_release_contract',true);
 select extensions.lives_ok($$select public.check_beta_request()$$,'public read-only release contract is available without a participant session');
-select extensions.is(public.get_release_contract(),'closed-beta-v1','release gate checks an explicit backend contract');
+select extensions.is(public.get_release_contract(),'closed-beta-v2','release gate checks an explicit backend contract');
 select * from extensions.finish();
 rollback;

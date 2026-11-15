@@ -18,6 +18,8 @@ import {
 } from "./service";
 import "./credits.css";
 import { BetaAdminPanel } from "../beta/BetaAdminPanel";
+import { AdminMfaGate } from "../auth/AdminMfaGate";
+import { CanvasDiagnostics } from "../beta/CanvasDiagnostics";
 const eventNames = {
   initial: "Créditos iniciales",
   grant: "Créditos asignados",
@@ -285,8 +287,7 @@ export function AiCreditPanel() {
         )}
         <a href="#/lienzo">Ir al lienzo</a>
       </Card>
-      {status?.is_admin && <CreditAdministration />}
-      {status?.is_admin && <BetaAdminPanel />}
+      {status?.is_admin && <AdminMfaGate><CreditAdministration /><BetaAdminPanel /><CanvasDiagnostics /></AdminMfaGate>}
     </div>
   );
 }

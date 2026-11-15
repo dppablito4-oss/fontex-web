@@ -12,6 +12,7 @@ export async function requestPrimitiveAgent(
     task: "chat" | "build";
     level: "inicial" | "primaria" | "secundaria" | "universidad";
     selectedId: string | null;
+    requestId?: string;
   },
   onText: (s: string) => void,
   signal: AbortSignal,

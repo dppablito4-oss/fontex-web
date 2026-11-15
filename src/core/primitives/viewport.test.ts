@@ -40,12 +40,12 @@ it("keeps navigation within supported coordinate bounds and preserves span when 
   }
 });
 
-it("arranges controls and a short text beside the plot, with the explanation below both", () => {
+it("gives the plot the full width while keeping its definitions and controls intact", () => {
   const scene = organizePrimitiveScene(templateScene("geometry"));
   const plane = scene.primitives.find((p) => p.kind === "coordinate_canvas")!;
   const controls = scene.primitives.filter((p) => p.kind === "control_slider");
   const texts = scene.primitives.filter((p) => p.kind === "math_block");
-  expect(controls.every((p) => p.x >= plane.x + plane.width)).toBe(true);
-  expect(texts[0]!.x).toBeGreaterThan(plane.x);
-  expect(texts[1]!.y).toBeGreaterThanOrEqual(Math.max(plane.y + plane.height, texts[0]!.y + texts[0]!.height));
+  expect(plane.width).toBe(1152);
+  expect(controls.length).toBeGreaterThan(0);
+  expect(texts.length).toBeGreaterThan(0);
 });

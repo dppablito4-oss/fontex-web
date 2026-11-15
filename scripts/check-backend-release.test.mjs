@@ -6,7 +6,7 @@ beforeEach(()=>{
   vi.stubEnv("VITE_SUPABASE_PUBLISHABLE_KEY","sb_publishable_test_only");
 });
 afterEach(()=>{vi.unstubAllEnvs();vi.unstubAllGlobals();});
-function backend({contract="closed-beta-v1",preflight=204,unauthenticated=401}={}){
+function backend({contract="closed-beta-v2",preflight=204,unauthenticated=401}={}){
   return vi.fn((url,options)=>Promise.resolve(String(url).includes("/rest/")
     ? Response.json(contract)
     : new Response(null,{status:options.method==="OPTIONS"?preflight:unauthenticated,headers:{"access-control-allow-origin":"*"}})));

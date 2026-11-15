@@ -1,7 +1,7 @@
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { loadEnv } from "vite";
-import { defineConfig } from "vitest/config";
+import { configDefaults, defineConfig } from "vitest/config";
 
 import { practiceTutorPlugin } from "./practiceTutorPlugin";
 import { resolveBasePath } from "./src/lib/base-path";
@@ -25,6 +25,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     test: {
+      exclude: [...configDefaults.exclude, "e2e/**"],
       environment: "jsdom",
       setupFiles: "./src/test/setup.ts",
     },

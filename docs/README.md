@@ -17,6 +17,7 @@ Actualizada el **14 de noviembre de 2026**: el editor principal utiliza diez pri
 | [Sistema de diseño](design/DESIGN_SYSTEM.md) | Tokens, temas y estilos propios de Studio |
 | [Organización del lienzo](interfaz-lienzo.md) | Pestañas superiores, herramientas desplegables y panel de chat/propiedades |
 | [Corrección de creación](correccion-creacion-lienzo-2026-11-14.md) | Órdenes que construyen, continuidad del editor y cancelación del streaming |
+| [Lienzo libre y recuperación](lienzo-libre-y-recuperacion.md) | Navegación con clic derecho, medidas integradas, resultados recuperables, MFA y copias |
 | [Dependencias](decisions/DEPENDENCIES.md) | Uso de paquetes, herramientas y estado de auditoría |
 | [Preparación de primitivas v0.7](plans/v0.7-primitivas-integracion.md) | Revisión de la propuesta, compatibilidad con el lienzo actual y orden de integración |
 | [Auditoría actual](AUDITORIA.md) | Estado de las diez correcciones, pruebas y requisitos de despliegue |

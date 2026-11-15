@@ -252,6 +252,7 @@ export const sceneSchema = z.object({
       content: z.string().min(1).max(4000),
     }).strict(),
   ).max(80),
+  appliedBuildIds: z.array(z.uuid()).max(100).optional(),
 }).strict();
 export type Primitive = z.infer<typeof primitiveSchema>;
 export type PrimitiveKind = Primitive["kind"];
