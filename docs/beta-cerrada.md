@@ -107,4 +107,4 @@ Resultado local al cerrar esta intervención:
 
 Las pruebas locales verifican propiedad/RLS, membresía, registro no invitado, revocación, cuotas, presupuestos, pausa, límites de PDF/HTTP, carreras de aulas y sincronización. También se probaron ocho conexiones PostgreSQL simultáneas: una reserva admitida para la misma cuenta; cuatro para ocho cuentas distintas, respetando el límite global.
 
-La verificación alojada y las limitaciones vigentes se registran en el acta de despliegue. La recuperación duradera de propuestas después de perder la conexión, MFA administrativo con enrolamiento/verificación y telemetría operativa más completa siguen siendo mejoras posteriores; no se consideran implementadas.
+La verificación alojada y las limitaciones vigentes se registran en el acta de despliegue. La actualización posterior de [lienzo libre y recuperación](lienzo-libre-y-recuperacion.md) incorpora recibos recuperables durante siete días, MFA administrativo con enrolamiento/verificación, diagnóstico y ensayo de restauración. El contrato nuevo es `closed-beta-v2`; las cifras de la tabla anterior describen la intervención inicial.

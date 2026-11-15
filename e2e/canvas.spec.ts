@@ -20,6 +20,10 @@ test("full-width transparent plot, inline measurements and save/reopen", async (
   await expect(page.locator(".pc-node-coordinate_canvas")).toHaveCount(1);
   await expect(page.locator(".pc-node-math_block")).toHaveCount(0);
   await page.screenshot({ path: test.info().outputPath(`plot-${info.project.name}.png`), fullPage: true });
+  if (info.project.name === "mobile") {
+    await page.setViewportSize({width:320,height:740});
+    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(1);
+  }
 });
 
 test("tabs retain the previous lesson and JSON round trip", async ({ page }) => {

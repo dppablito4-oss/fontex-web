@@ -560,7 +560,7 @@ function Coordinate(
           })}
         </g>
       </svg>
-      <p className="pc-plot-hint">Clic derecho + arrastrar para mover el plano. Ctrl + rueda para acercar o alejar.</p>
+      <p className="pc-plot-hint"><span className="pc-desktop-gesture">Clic derecho + arrastrar para mover el plano. Ctrl + rueda para acercar o alejar.</span><span className="pc-touch-gesture">Usa + y − para ampliar. Activa la mano y arrastra para mover el plano.</span></p>
       <div className="pc-plot-legend">
         {children.filter((child) => child.kind === "geometric_shape").map((child) => {
           const matrix = linkedMatrix(child, scene, scope);

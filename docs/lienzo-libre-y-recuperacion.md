@@ -32,4 +32,8 @@ El CI prueba además `pg_dump`/`pg_restore` en una base desechable y verifica hi
 
 Verificaciones realizadas durante la implementación: 380 pruebas frontend, tipos, lint y build; regresiones Deno de persistencia previa a entrega, duplicados y fallo de almacenamiento; 269 comprobaciones SQL. Chromium ejecutó diez recorridos correctos en escritorio claro/oscuro y móvil, con dos recorridos de ratón omitidos en móvil. Se creó una copia del lienzo alojado y se comprobó su restauración temporal idéntica. Supabase aceptó el correo de recuperación al destinatario autorizado y este confirmó su recepción. La prueba no cambia la contraseña del propietario.
 
-El despliegue y las comprobaciones alojadas se registrarán al completar esta publicación. La entrega real de confirmación a una cuenta nueva se distingue de la recepción ya confirmada del correo de recuperación.
+La migración `20261115013301` se aplicó al proyecto alojado tras pasar sus 269 pruebas SQL y el ensayo de restauración completa en CI. El asesor de seguridad conserva los nueve avisos anteriores y no añade ninguno.
+
+La comprobación alojada generó una propuesta real, confirmó su recibo y un saldo de cuatro créditos, rechazó su UUID duplicado y abrió el editor en Chromium sin aplicar la respuesta original. El editor recuperó y guardó cinco elementos; recargar mantuvo los cinco y el mismo saldo. La misma cuenta temporal comprobó denegación de administración a AAL1, enrolamiento TOTP desde la interfaz y carga del panel tras verificar el código. No hubo errores de página sin capturar; sus sesiones, cuenta e invitación se limpiaron.
+
+La entrega real de confirmación a una cuenta nueva se distingue de la recepción ya confirmada del correo de recuperación. Se envió una confirmación a un alias temporal del correo autorizado; su seguimiento se registra al cerrar la publicación.

@@ -1426,3 +1426,13 @@
 .pc-recovery-note { margin: 0; padding: 7px 16px; font-size: 12px; color: var(--pc-muted); background: var(--pc-surface); }
 .pc-writing > small { display: block; color: var(--pc-muted); font-size: 11px; margin-top: 4px; }
 .pc-plot-definition-content .pc-control { margin-block: 12px; }
+.pc-touch-gesture { display: none; }
+@media (max-width:760px) {
+  .pc-toolbar-menus { gap: 2px; }
+  .pc-tool-menu { min-width: 0; flex: 1; }
+  .pc-tool-menu > button { width: 100%; min-width: 0; gap: 4px; padding-inline: 4px; }
+  .pc-tool-menu > button > svg { width: 14px; flex: none; }
+  .pc-tool-menu > button > .pc-menu-chevron { display: none; }
+  .pc-desktop-gesture { display: none; }
+  .pc-touch-gesture { display: inline; }
+}
