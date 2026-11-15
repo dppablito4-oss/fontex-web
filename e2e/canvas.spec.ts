@@ -1,3 +1,5 @@
+import { readFile } from "node:fs/promises";
+import { createPrimitive, newPrimitiveScene } from "../src/core/primitives/schema";
 import { expect, test } from "@playwright/test";
 
 test.beforeEach(async ({ page }) => { await page.goto("/#/lienzo"); });
@@ -126,4 +128,43 @@ test("closes, cancels, reopens saved canvases and downloads a PDF without print"
   expect(file.suggestedFilename()).toMatch(/\.pdf$/);
   await file.saveAs(test.info().outputPath("fontex.pdf"));
   await expect(page.getByRole("dialog")).toHaveCount(0);
+});
+
+test("keeps each fraction explanation with a compact horizontal sum in the canvas and PDF", async ({ page }, info) => {
+  const scene = newPrimitiveScene("Suma de fracciones");
+  for (const step of [1,2]) {
+    const text = createPrimitive("math_block", scene);
+    text.presentationStep = step; text.y = 1600+step*200;
+    text.data.markdownContent = String.raw`## Paso ${step}: sumar partes iguales
+Sumamos los numeradores y conservamos el denominador.
+
+$$\frac{2}{7}+\frac{3}{7}=\frac{5}{7}$$`;
+    scene.primitives.push(text);
+    for (const numerator of [2,3,5]) {
+      const p = createPrimitive("geometric_shape",scene);
+      p.presentationStep = step; p.y = scene.primitives.length*400;
+      p.data = { ...p.data, shape:"circle_fraction", canvasId:null, divisions:7, shadedExpr:String(numerator) };
+      scene.primitives.push(p);
+    }
+  }
+  await page.locator('input[type="file"]').setInputFiles({ name:"sum.json",mimeType:"application/json",buffer:Buffer.from(JSON.stringify(scene)) });
+  if(info.project.name === "mobile") {
+    const rows = page.getByRole("group",{name:"Operación de fracciones"});
+    await expect(rows).toHaveCount(2);
+    const boxes = await rows.first().locator(".pc-fraction-term").evaluateAll(terms => terms.map(p => { const r=p.getBoundingClientRect(); return {y:r.y,left:r.left,right:r.right}; }));
+    expect(Math.max(...boxes.map(b=>b.y))-Math.min(...boxes.map(b=>b.y))).toBeLessThan(8);
+    expect(boxes[0].right).toBeLessThan(boxes[1].left);
+    expect(boxes[1].right).toBeLessThan(boxes[2].left);
+    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth-window.innerWidth)).toBeLessThanOrEqual(1);
+  } else {
+    await page.getByRole("button",{name:"Organizar lienzo",exact:true}).click();
+    const boxes = await page.locator(".pc-node-geometric_shape").evaluateAll(figures => figures.slice(0,3).map(p=>{const r=p.getBoundingClientRect();return {y:r.y};}));
+    expect(Math.max(...boxes.map(b=>b.y))-Math.min(...boxes.map(b=>b.y))).toBeLessThan(8);
+  }
+  await page.getByRole("button",{name:"PDF",exact:true}).click();
+  const download=page.waitForEvent("download");
+  await page.getByRole("button",{name:"Descargar PDF",exact:true}).click();
+  const pdf=await download;
+  const bytes=await readFile(await pdf.path());
+  expect(bytes.toString("latin1").match(/\/Type \/Page\b/g)).toHaveLength(1);
 });

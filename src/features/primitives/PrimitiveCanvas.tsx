@@ -70,6 +70,8 @@ import { sceneFunctions, sceneScope } from "../../core/primitives/math";
 import { templates, templateScene } from "../../core/primitives/templates";
 import { requestPrimitiveAgent } from "./agent";
 import { draggedRotation } from "./gestures";
+import { fractionLessons } from "../../core/primitives/fraction-lessons";
+import { FractionLesson } from "./FractionLesson";
 import { organizePrimitiveScene, workspaceRoots } from "../../core/primitives/layout";
 import { useWorkspaceViewport } from "./useWorkspaceViewport";
 import { DockResizeHandle } from "./DockResizeHandle";
@@ -872,6 +874,52 @@ function Editor(
     const next = newPrimitiveScene(`Lienzo ${library.scenes.length + 1}`);
     if (setScene(next)) { live.current = next; resetEditor(); closeTools(); }
   }
+  const lessons = fractionLessons(scene);
+  const lessonMembers = new Set(lessons.flatMap(l => [...l.texts, ...l.figures].map(p => p.id)));
+  const renderPrimitiveFrame = (p: Primitive, generated = false) => generated
+    ? <PrimitiveVisual p={p} scene={scene} scope={scope} functions={functions}
+        selected={false} readOnly onChange={() => {}} onVariable={() => {}} onSelect={() => {}} />
+    : (
+                    <Frame
+                      key={p.id}
+                      p={p}
+                      selected={p.id === selectedId}
+                      editing={!presenting}
+                      onSelect={() => {
+                        if (!presenting) selectPrimitive(p.id);
+                      }}
+                      onDrag={(e, kind, bounds) =>
+                        beginDrag(e, kind, p, bounds)}
+                      onFit={fit}
+                      narrow={narrow}
+                      scale={zoom}
+                    >
+                      <PrimitiveVisual
+                        p={p}
+                        scene={scene}
+                        visibleStep={presenting ? step : undefined}
+                        displayScale={narrow ? 1 : zoom}
+                        scope={scope}
+                        functions={functions}
+                        onChange={update}
+                        onViewportChange={navigatePlot}
+                        onVariable={variable}
+                        onSelect={selectPrimitive}
+                        selected={p.id === selectedId}
+                        selectedId={selectedId}
+                        readOnly={presenting}
+                      />
+                    </Frame>
+    );
+  const mobileLessons = [
+    ...lessons.filter(l => !presenting || l.step <= step).map(lesson => ({
+      id: lesson.id, step: lesson.step, y: Math.min(...lesson.texts.map(p => p.y),...lesson.figures.map(p => p.y)),
+      content: <FractionLesson lesson={lesson} renderPrimitive={renderPrimitiveFrame} />,
+    })),
+    ...roots.filter(p => !lessonMembers.has(p.id) && (!presenting || p.presentationStep <= step)).map(p => ({
+      id: p.id, step: p.presentationStep, y: p.y, content: renderPrimitiveFrame(p),
+    })),
+  ].sort((a,b) => a.step-b.step || a.y-b.y);
   function toggleTools(tool: Tab) { setTab((current) => current === tool ? null : tool); }
   const toolContent = (
                 <div className="pc-panel-content">
@@ -1226,40 +1274,22 @@ function Editor(
                     transform: narrow ? "none" : `scale(${zoom})`,
                   }}
                 >
-                  {roots.filter((p) =>
-                    !presenting || p.presentationStep <= step
-                  ).sort((a, b) => a.y - b.y || a.x - b.x).map((p) => (
-                    <Frame
-                      key={p.id}
-                      p={p}
-                      selected={p.id === selectedId}
-                      editing={!presenting}
-                      onSelect={() => {
-                        if (!presenting) selectPrimitive(p.id);
-                      }}
-                      onDrag={(e, kind, bounds) =>
-                        beginDrag(e, kind, p, bounds)}
-                      onFit={fit}
-                      narrow={narrow}
-                      scale={zoom}
-                    >
-                      <PrimitiveVisual
-                        p={p}
-                        scene={scene}
-                        visibleStep={presenting ? step : undefined}
-                        displayScale={narrow ? 1 : zoom}
-                        scope={scope}
-                        functions={functions}
-                        onChange={update}
-                        onViewportChange={navigatePlot}
-                        onVariable={variable}
-                        onSelect={selectPrimitive}
-                        selected={p.id === selectedId}
-                        selectedId={selectedId}
-                        readOnly={presenting}
-                      />
-                    </Frame>
-                  ))}
+                  {narrow && lessons.length
+                    ? mobileLessons.map(item => <div key={item.id}>{item.content}</div>)
+                    : roots.filter(p => !presenting || p.presentationStep <= step)
+                      .sort((a,b) => a.y-b.y || a.x-b.x).map(p => renderPrimitiveFrame(p))}
+                  {!narrow && lessons.flatMap(lesson => {
+                    const terms = lesson.equation?.terms;
+                    if (!terms || terms.some(t => t.generated) || (presenting && lesson.step > step)) return [];
+                    return [1,2].flatMap(index => {
+                      const left = terms[index-1]!.primitive, right = terms[index]!.primitive;
+                      if (Math.abs(left.y-right.y) > 20 || left.x >= right.x) return [];
+                      return [<span key={`${lesson.id}-operator-${index}`} className="pc-fraction-board-operator" aria-hidden="true"
+                        style={{ left: (left.x+left.width+right.x)/2-12, top: Math.max(left.y,right.y)+Math.min(left.height,right.height)/2 }}>
+                        {index === 1 ? lesson.equation!.operator : "="}
+                      </span>];
+                    });
+                  })}
                 </div>
               </div>
             )}

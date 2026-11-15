@@ -1487,3 +1487,32 @@ dialog.pc-dialog::backdrop { background: #0008; }
 .pc-reading-content .pc-plot-definition-content { width: auto; max-height: none; overflow: visible; }
 .pc-reading-content .pc-coordinate { display: flex; flex-direction: column; }
 .pc-reading-content .pc-control button { display: none; }
+
+.pc-circles > strong { display: block; font-size: 20px; margin-bottom: 6px; }
+.pc-circles > div { gap: 8px; }
+.pc-circles svg { width: min(100%,176px); max-width: 176px; flex: 0 1 176px; }
+.pc-fraction-section { margin-bottom: 26px; min-width: 0; }
+.pc-fraction-explanation { margin-bottom: 12px; }
+.pc-fraction-row { display: grid; grid-template-columns: minmax(0,1fr) 24px minmax(0,1fr) 24px minmax(0,1fr); align-items: center; gap: 8px; max-width: 760px; margin: 12px auto; }
+.pc-fraction-operator { font-size: 26px; text-align: center; }
+.pc-fraction-term { min-width: 0; }
+.pc-fraction-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 16px; max-width: 760px; margin: 12px auto; }
+.pc-fraction-section .pc-circles svg { width: 100%; min-height: 0; max-width: 160px; flex: 0 1 160px; }
+.pc-fraction-section .pc-object { margin-bottom: 0; }
+.pc-fraction-section .pc-object-heading { font-size: 11px; min-height: 18px; }
+@media (max-width:760px) {
+  .pc-app .pc-circles svg { min-height: 0; max-width: 176px; flex: 0 1 176px; }
+  .pc-fraction-row { grid-template-columns: minmax(0,1fr) 14px minmax(0,1fr) 14px minmax(0,1fr); gap: 2px; }
+  .pc-fraction-section .pc-circles > strong { font-size: 16px; }
+  .pc-fraction-section .pc-object-content { padding: 6px 0; }
+  .pc-fraction-operator { font-size: 22px; }
+  .pc-fraction-term .pc-object-heading { display: none; }
+  .pc-fraction-section .pc-circles svg { min-height: 0; max-width: 160px; flex: 0 1 160px; }
+}
+.pc-fraction-term .pc-circles > div { flex-wrap: nowrap; }
+.pc-fraction-term .pc-circles svg { min-width: 0; }
+.pc-export-sheet .pc-fraction-section { margin: 0; }
+.pc-export-sheet .pc-fraction-section .pc-math { font-size: 20px!important; padding: 16px; }
+.pc-export-sheet .pc-fraction-section .pc-circles svg { max-width: 140px; }
+.pc-export-sheet .pc-fraction-section .pc-fraction-row { margin-block: 8px; }
+.pc-fraction-board-operator { position: absolute; pointer-events: none; font-size: 28px; text-align: center; width: 24px; }

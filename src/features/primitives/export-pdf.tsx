@@ -24,6 +24,24 @@ export async function exportCanvasPdf(scene: PrimitiveScene, shareUrl?: string) 
     flushSync(() => root.render(<CanvasReading scene={scene} />));
     await document.fonts.ready;
     await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    for (const svg of host.querySelectorAll("svg")) {
+      const bounds = svg.getBoundingClientRect();
+      svg.style.width = `${bounds.width}px`;
+      svg.style.height = `${bounds.height}px`;
+      svg.style.flex = "none";
+      svg.setAttribute("width", String(bounds.width));
+      svg.setAttribute("height", String(bounds.height));
+      for (const node of [svg, ...svg.querySelectorAll<SVGElement>("*")]) {
+        for (const attribute of ["fill", "stroke"] as const) {
+          const value = node.getAttribute(attribute);
+          if (value && /var\(|currentColor/.test(value)) {
+            const color = getComputedStyle(node)[attribute];
+            node.setAttribute(attribute, color);
+            node.style[attribute] = color;
+          }
+        }
+      }
+    }
     const logo = await logoCanvas();
     const pdf = new jsPDF({ unit: "mm", format: "a4", compress: true });
     let page = 1, y = 32;
@@ -41,7 +59,7 @@ export async function exportCanvasPdf(scene: PrimitiveScene, shareUrl?: string) 
     header();
     for (const item of host.querySelectorAll<HTMLElement>(".pc-export-item")) {
       const pixelRatio = Math.min(1.5, 16000 / Math.max(1, item.scrollHeight), Math.sqrt(12000000 / Math.max(1, item.scrollWidth * item.scrollHeight)));
-      const canvas = await toCanvas(item, { pixelRatio, backgroundColor: "#ffffff", cacheBust: false });
+      const canvas = await toCanvas(item, { pixelRatio, backgroundColor: "#ffffff", cacheBust: false, style: { margin: "0" } });
       const mmPerPixel = 186 / canvas.width;
       const totalHeight = canvas.height * mmPerPixel;
       if (totalHeight <= 245 && y + totalHeight > 280) next();
@@ -66,15 +84,17 @@ export async function exportCanvasPdf(scene: PrimitiveScene, shareUrl?: string) 
       }
       y += 6;
     }
-    if(y > 222) next();
+    // Fit a readable QR in the remaining footer space instead of adding a QR-only page.
+    let qrSize = Math.min(36, 280 - y - 8);
+    if (qrSize < 30) { next(); qrSize = 36; }
     const qr = document.createElement("canvas");
     await QRCode.toCanvas(qr,shareUrl || site,{errorCorrectionLevel:"H",width:440,margin:4});
     const ctx = qr.getContext("2d")!;
     ctx.fillStyle = "white"; ctx.fillRect(178,178,84,84); ctx.drawImage(logo,184,184,72,72);
-    pdf.addImage(qr,"PNG",87,y+3,36,36);
+    pdf.addImage(qr,"PNG",105-qrSize/2,y+3,qrSize,qrSize);
     pdf.setFontSize(9); pdf.setTextColor(20,50,35);
-    pdf.text(shareUrl ? "Abre este lienzo en Fontex" : "Creado con Fontex",105,y+44,{align:"center"});
-    pdf.link(87,y+3,36,36,{url:shareUrl || site});
+    pdf.text(shareUrl ? "Abre este lienzo en Fontex" : "Creado con Fontex",105,y+qrSize+8,{align:"center"});
+    pdf.link(105-qrSize/2,y+3,qrSize,qrSize,{url:shareUrl || site});
     const filename = (scene.title || "Fontex").replace(/[<>:"/\\|?*]/g,"-");
     pdf.save(`${filename}.pdf`);
   } finally { root.unmount(); host.remove(); }
