@@ -1110,7 +1110,7 @@ function Editor(
     >
       {closeId && <CanvasDialog title="Cerrar lienzo" onClose={() => { if(!documentBusy) setCloseId(null); }}>
         <p>¿Guardar «{library.scenes.find(s => s.id === closeId)?.title || "Sin título"}» antes de cerrar?</p>
-        <p>El guardado automático conserva tu trabajo. «Sin guardar cambios» restaura la versión que abriste o guardaste manualmente; un lienzo nuevo se descarta.</p>
+        <p>El guardado automático conserva tu trabajo. «Sin guardar cambios» restaura la última versión abierta, guardada manualmente o recibida de otro dispositivo; un lienzo nuevo se descarta.</p>
         {documentError && <p role="alert">{documentError}</p>}
         <div className="pc-dialog-actions">
           <button disabled={documentBusy} onClick={() => void closeDocument(false)}>Guardar y cerrar</button>

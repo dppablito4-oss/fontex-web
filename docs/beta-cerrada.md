@@ -87,7 +87,7 @@ Los tutores académicos conservan además sus cuotas anteriores. El sistema no r
 7. Comprobar con cuentas de prueba invitadas: confirmación, ingreso, recuperación, acceso revocado, lectura privada, créditos, guardado y reapertura, carga/descarga de PDF y una consulta real cuando se autorice su consumo. Registrar el commit y las versiones desplegadas. El script anterior acredita contrato SQL y rutas protegidas, no el código exacto ni la disponibilidad real del proveedor.
 8. Verificar SMTP, límites de correo efectivos y URLs de retorno alojadas. `config.toml` no demuestra su aplicación remota. Revisar la cohorte del piloto, la conservación de datos y el responsable de soporte antes de invitar más personas.
 
-El workflow de Pages llama al mismo CI que los pull requests y espera sus tres jobs. Un fallo de SQL o Edge impide publicar. El contrato esperado es `closed-beta-v1`. No hay despliegue automático de funciones ni migraciones desde Pages.
+El workflow de Pages llama al mismo CI que los pull requests y espera sus tres jobs. Un fallo de SQL o Edge impide publicar. El contrato esperado es `closed-beta-v3`: acredita las capacidades SQL de enlaces públicos, comprueba su RPC de lectura sin consultar documentos y exige `primitive-agent-v3` en el preflight de `studio-agent`. No hay despliegue automático de funciones ni migraciones desde Pages; primero aplica las migraciones y despliega el agente de la misma versión.
 
 Para volver a una versión previa, conserva un frontend compatible con escenas v2 y estos controles del servidor. No restaures funciones antiguas que vuelvan a permitir consumo sin límite. La base habitual y sus datos no se resetean como mecanismo de retorno.
 

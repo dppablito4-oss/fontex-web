@@ -6,10 +6,12 @@ beforeEach(()=>{
   vi.stubEnv("VITE_SUPABASE_PUBLISHABLE_KEY","sb_publishable_test_only");
 });
 afterEach(()=>{vi.unstubAllEnvs();vi.unstubAllGlobals();});
-function backend({contract="closed-beta-v2",preflight=204,unauthenticated=401}={}){
-  return vi.fn((url,options)=>Promise.resolve(String(url).includes("/rest/")
+function backend({contract="closed-beta-v3",preflight=204,unauthenticated=401,sharedStatus=200,sharedBody=null,agentContract="primitive-agent-v3"}={}){
+  return vi.fn((url,options)=>Promise.resolve(String(url).endsWith("/rpc/get_release_contract")
     ? Response.json(contract)
-    : new Response(null,{status:options.method==="OPTIONS"?preflight:unauthenticated,headers:{"access-control-allow-origin":"*"}})));
+    : String(url).endsWith("/rpc/read_public_canvas")
+    ? Response.json(sharedBody,{status:sharedStatus})
+    : new Response(null,{status:options.method==="OPTIONS"?preflight:unauthenticated,headers:{"access-control-allow-origin":"*","x-fontex-agent-contract":agentContract}})));
 }
 it("refuses to fall back to a pilot project when target configuration is absent",async()=>{
   vi.stubEnv("VITE_SUPABASE_URL","");
@@ -21,6 +23,23 @@ it("blocks a backend with an incompatible schema contract",async()=>{
   vi.stubGlobal("fetch",backend({contract:"old-version"}));
   await expect(import("./check-backend-release.mjs")).rejects.toThrow("no acredita el contrato");
 });
+it("blocks the previous backend even when its existing endpoints are healthy",async()=>{
+  const fetch=backend({contract:"closed-beta-v2"});vi.stubGlobal("fetch",fetch);
+  await expect(import("./check-backend-release.mjs")).rejects.toThrow("closed-beta-v3");
+  expect(fetch).toHaveBeenCalledTimes(1);
+});
+it.each([404,403])("blocks an absent or membership-protected public RPC (%s)",async sharedStatus=>{
+  vi.stubGlobal("fetch",backend({sharedStatus}));
+  await expect(import("./check-backend-release.mjs")).rejects.toThrow("lectura pública");
+});
+it("rejects a public reader returning unexpected content for a null token",async()=>{
+  vi.stubGlobal("fetch",backend({sharedBody:{title:"Unexpected document"}}));
+  await expect(import("./check-backend-release.mjs")).rejects.toThrow("lectura pública");
+});
+it.each(["","primitive-agent-v2"])("blocks an agent without the practice contract (%s)",async agentContract=>{
+  vi.stubGlobal("fetch",backend({agentContract}));
+  await expect(import("./check-backend-release.mjs")).rejects.toThrow("primitive-agent-v3");
+});
 it("blocks missing routes and endpoints accepting unauthenticated calls",async()=>{
   vi.stubGlobal("fetch",backend({preflight:404}));
   await expect(import("./check-backend-release.mjs")).rejects.toThrow("preflight");
@@ -30,7 +49,9 @@ it("blocks missing routes and endpoints accepting unauthenticated calls",async()
 it("checks the SQL contract, CORS and authentication without credentials or AI calls",async()=>{
   const fetch=backend();vi.stubGlobal("fetch",fetch);
   await import("./check-backend-release.mjs");
-  expect(fetch).toHaveBeenCalledTimes(17);
+  expect(fetch).toHaveBeenCalledTimes(18);
   expect(fetch.mock.calls.every(([url])=>String(url).startsWith("https://backend.example.invalid/"))).toBe(true);
   expect(fetch.mock.calls.every(([,options])=>!options.headers.Authorization)).toBe(true);
+  const publicRead=fetch.mock.calls.find(([url])=>String(url).endsWith("/rpc/read_public_canvas"));
+  expect(JSON.parse(publicRead[1].body)).toEqual({p_token:null});
 });

@@ -1,6 +1,7 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import {
+  createPrimitive,
   newPrimitiveScene as expressionScene,
   type PrimitiveScene as Scene,
 } from "../../core/primitives/schema";
@@ -332,4 +333,75 @@ it("discards edits to the opened version while preserving the saved document", a
   await waitFor(() => expect(cloud.rows.get(scene.id)?.scene.title).toBe("Original"));
   act(() => result.current.open(scene.id));
   expect(result.current.scene.title).toBe("Original");
+});
+
+it.each(["account", "guest"])("keeps a restored chat-only document when discarding changes as %s", async (owner) => {
+  const scene = expressionScene("Saved conversation");
+  scene.conversation = [{ role: "user", content: "Keep this saved conversation" }];
+  localStorage.setItem(`fontex-primitives-v2:${owner}`, JSON.stringify({ activeId: scene.id, scenes: [scene] }));
+  if (owner === "account") cloud.rows.set(scene.id, { scene, revision: 1 });
+  const { result } = renderHook(() => useSceneStore(owner));
+  await waitFor(() => expect(result.current.status).toBe(owner === "account" ? "saved" : "local"));
+  act(() => { result.current.setScene(s => ({ ...s, title: "Discard this title" })); });
+  await act(async () => { expect(await result.current.close(scene.id, true)).toBe(true); });
+  expect(result.current.scenes.some(s => s.id === scene.id)).toBe(true);
+  act(() => { result.current.open(scene.id); });
+  expect(result.current.scene).toEqual(scene);
+  if (owner === "account") expect(cloud.rows.get(scene.id)?.scene).toEqual(scene);
+});
+
+it("still discards a new draft after it has been autosaved", async () => {
+  const { result } = renderHook(() => useSceneStore("account"));
+  await waitFor(() => expect(result.current.status).toBe("saved"));
+  const id = result.current.scene.id;
+  act(() => { result.current.setScene(s => ({ ...s, title: "New draft" })); });
+  await waitFor(() => expect(cloud.rows.get(id)?.scene.title).toBe("New draft"));
+  await act(async () => { expect(await result.current.close(id, true)).toBe(true); });
+  expect(cloud.rows.has(id)).toBe(false);
+});
+
+it("keeps the opened baseline after a local autosave", async () => {
+  const scene = expressionScene("Original");
+  cloud.rows.set(scene.id, { scene, revision: 1 });
+  const { result } = renderHook(() => useSceneStore("account"));
+  await waitFor(() => expect(result.current.status).toBe("saved"));
+  act(() => { result.current.setScene(s => ({ ...s, title: "Autosaved edit" })); });
+  await waitFor(() => expect(cloud.rows.get(scene.id)?.scene.title).toBe("Autosaved edit"));
+  act(() => { window.dispatchEvent(new Event("focus")); });
+  await waitFor(() => expect(result.current.status).toBe("saved"));
+  await act(async () => { expect(await result.current.close(scene.id, true)).toBe(true); });
+  expect(cloud.rows.get(scene.id)?.scene).toEqual(scene);
+});
+
+it("preserves the latest accepted remote content when discarding a local edit", async () => {
+  const scene = expressionScene("Original");
+  const note = createPrimitive("math_block", scene);
+  note.data.markdownContent = "Original derivation";
+  scene.primitives.push(note);
+  cloud.rows.set(scene.id, { scene, revision: 1 });
+  const { result } = renderHook(() => useSceneStore("account"));
+  await waitFor(() => expect(result.current.status).toBe("saved"));
+  const remote = { ...scene, title: "From device B", primitives: [{ ...note, data: { ...note.data, markdownContent: "New derivation from device B" } }] };
+  cloud.rows.set(scene.id, { scene: remote, revision: 2 });
+  act(() => { window.dispatchEvent(new Event("focus")); });
+  await waitFor(() => expect(result.current.scene.title).toBe(remote.title));
+  act(() => { result.current.setScene(s => ({ ...s, title: "Local title to discard" })); });
+  await act(async () => { expect(await result.current.close(scene.id, true)).toBe(true); });
+  expect(cloud.rows.get(scene.id)?.scene).toEqual(remote);
+});
+
+it("keeps a recovered conflict copy when closing it without changes", async () => {
+  const scene = expressionScene("Original");
+  cloud.rows.set(scene.id, { scene, revision: 1 });
+  const { result } = renderHook(() => useSceneStore("account"));
+  await waitFor(() => expect(result.current.status).toBe("saved"));
+  act(() => { result.current.setScene(s => ({ ...s, title: "Local work" })); });
+  cloud.rows.set(scene.id, { scene: { ...scene, title: "Remote work" }, revision: 2 });
+  act(() => { window.dispatchEvent(new Event("focus")); });
+  await waitFor(() => expect(result.current.scene.title).toBe("Local work (copia local)"));
+  await waitFor(() => expect(result.current.status).toBe("saved"));
+  const copy = result.current.scene;
+  await act(async () => { expect(await result.current.close(copy.id, true)).toBe(true); });
+  expect(cloud.rows.get(copy.id)?.scene).toEqual(copy);
+  expect(cloud.rows.get(scene.id)?.scene.title).toBe("Remote work");
 });

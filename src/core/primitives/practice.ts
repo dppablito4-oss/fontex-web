@@ -82,8 +82,9 @@ export function applyPracticeValue(scene: PrimitiveScene, id: string, key: strin
       if(p.kind==="answer_field" && key==="answer") {
         if(p.data.answerType==="expression") {
           if(/\bx\b/.test(String(value))) {
-            const expression=compile(String(value),sceneScope(scene));
-            if(![-2,-1,0,1,2].some(x=>Number.isFinite(expression.value(x)))) throw Error("La expresión no tiene valores definidos.");
+            // A response is syntax-checked, not graded. A finite sample cannot
+            // establish whether an expression has a nonempty real domain.
+            compile(String(value),sceneScope(scene));
           } else scalar(String(value),sceneScope(scene),sceneFunctions(scene));
         }
         p.data.answer=String(value);

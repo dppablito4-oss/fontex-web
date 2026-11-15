@@ -2,7 +2,7 @@
 
 Los JSON de las cuentas autorizadas continúan sincronizándose en `visual_scenes` con RLS y control de revisiones. Las pestañas representan los documentos cargados y abiertos; cerrar una pestaña no elimina un documento guardado. Archivo → Abrir mis lienzos y Biblioteca → Mis lienzos personales permiten volver a abrirlo por título.
 
-Al cerrar se puede guardar, cancelar o descartar los cambios desde la versión abierta/guardada manualmente. Descartar un lienzo nuevo elimina su borrador. Sin conexión o ante un fallo de guardado, una cuenta conserva la pestaña abierta. Los invitados guardan sólo en el navegador.
+Al cerrar se puede guardar, cancelar o descartar los cambios desde la versión abierta/guardada manualmente. Las revisiones recibidas de otro dispositivo actualizan esa versión de referencia; descartar una edición local conserva ese trabajo remoto. Los documentos recuperados de la caché, incluidas las conversaciones sin figuras, se consideran guardados. Descartar un lienzo creado durante la sesión elimina su borrador; las copias de recuperación de conflictos se conservan. Sin conexión o ante un fallo de guardado, una cuenta conserva la pestaña abierta. Los invitados guardan sólo en el navegador.
 
 Una construcción que conserva un título genérico recibe el primer encabezado generado, o un nombre derivado del pedido. Archivo permite editarlo manualmente; los títulos personales se conservan.
 

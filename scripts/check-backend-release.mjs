@@ -9,8 +9,17 @@ const contract = await fetch(`${base}/rest/v1/rpc/get_release_contract`, {
   method: "POST", headers: { apikey: key, "Content-Type": "application/json" },
   body: "{}", signal: AbortSignal.timeout(10000),
 });
-if (!contract.ok || await contract.json() !== "closed-beta-v2") {
-  throw Error("El backend no acredita el contrato closed-beta-v2. Aplica y verifica las migraciones antes de publicar.");
+if (!contract.ok || await contract.json() !== "closed-beta-v3") {
+  throw Error("El backend no acredita el contrato closed-beta-v3. Aplica y verifica las migraciones antes de publicar.");
+}
+// NULL cannot match a shared token: exercise the public read route without
+// reading user content, creating an account, or publishing a snapshot.
+const shared = await fetch(`${base}/rest/v1/rpc/read_public_canvas`, {
+  method: "POST", headers: { apikey: key, "Content-Type": "application/json" },
+  body: JSON.stringify({ p_token: null }), signal: AbortSignal.timeout(10000),
+});
+if (!shared.ok || await shared.json() !== null) {
+  throw Error("El backend no permite verificar la lectura pública de lienzos. Comprueba los RPC y la barrera beta antes de publicar.");
 }
 for (const endpoint of ["studio-agent", "scene-agent", "tutor-chat", "practice-tutor", "document-upload", "document-delete", "document-process", "document-search"]) {
   const preflight = await fetch(`${base}/functions/v1/${endpoint}`, {
@@ -20,10 +29,13 @@ for (const endpoint of ["studio-agent", "scene-agent", "tutor-chat", "practice-t
   if (![200, 204].includes(preflight.status) || !preflight.headers.get("access-control-allow-origin")) {
     throw Error(`No se pudo verificar el preflight de ${endpoint}. Despliega y comprueba las funciones antes de publicar.`);
   }
+  if (endpoint === "studio-agent" && preflight.headers.get("x-fontex-agent-contract") !== "primitive-agent-v3") {
+    throw Error("studio-agent no acredita primitive-agent-v3. Despliega el agente con soporte de práctica antes de publicar.");
+  }
   const response = await fetch(`${base}/functions/v1/${endpoint}`, {
     method: "POST", headers: { apikey: key, "Content-Type": "application/json" },
     body: "{}", signal: AbortSignal.timeout(10000),
   });
   if (response.status !== 401) throw Error(`El endpoint ${endpoint} debe existir y rechazar peticiones sin sesión (401). Recibido: ${response.status}`);
 }
-console.log("Backend compatible: contrato SQL y 8 rutas protegidas verificados. La prueba autenticada se registra por separado.");
+console.log("Backend compatible: contrato SQL v3, lectura pública, agente de práctica y 8 rutas protegidas verificados. La prueba autenticada se registra por separado.");

@@ -68,7 +68,8 @@ async function computeHash(scene: PrimitiveScene) {
 }
 export function usePrimitiveStore(owner: string) {
   const [collection, setCollection] = useState(() => initial(owner));
-  const checkpoints = useRef(new Map<string, PrimitiveScene | null>(collection.scenes.map(s => [s.id, s.primitives.length ? s : null])));
+  // A restored document is already saved, even when it contains only chat.
+  const checkpoints = useRef(new Map<string, PrimitiveScene | null>(collection.scenes.map(s => [s.id, collection.fresh ? null : s])));
   const [closedIds, setClosedIds] = useState<string[]>(() => {
     try { const ids: unknown = JSON.parse(localStorage.getItem(cacheKey(owner) + ":closed") ?? "[]"); return Array.isArray(ids) ? ids.filter((id: unknown): id is string => typeof id === "string") : []; } catch { return []; }
   });
@@ -301,6 +302,7 @@ export function usePrimitiveStore(owner: string) {
             }
           }
           const nextAck = { ...ack };
+          const nextCheckpoints = new Map(checkpoints.current);
           let scenes = [...current.current.scenes],
             activeId = current.current.activeId,
             copied = false;
@@ -313,7 +315,6 @@ export function usePrimitiveStore(owner: string) {
             try {
               const rawId = (row.scene as { id: string }).id;
               const scene = reused.get(rawId) ?? parsePrimitiveScene(row.scene);
-              if (!checkpoints.current.has(scene.id)) checkpoints.current.set(scene.id, scene);
               remote.set(scene.id, {
                 scene,
                 revision: row.revision,
@@ -342,20 +343,26 @@ export function usePrimitiveStore(owner: string) {
                 title: `${local.title.slice(0, 100)} (copia local)`,
               };
               scenes.push(copy);
+              nextCheckpoints.set(copy.id, copy);
               if (activeId === local.id) activeId = copy.id;
               copied = true;
             }
             delete nextAck[local.id];
+            nextCheckpoints.delete(local.id);
           }
           for (const [id, row] of remote) {
             const local = scenes.find((s) => s.id === id);
             if (!local) {
               scenes.push(row.scene);
+              nextCheckpoints.set(id, row.scene);
               nextAck[id] = { revision: row.revision, hash: row.hash };
               continue;
             }
             const localHash = await hash(local), base = ack[id];
             if (localHash === row.hash) {
+              // A real remote read becomes the new discard baseline. Reusing a
+              // local autosave must preserve the opened/manually saved version.
+              if (!reused.has(id)) nextCheckpoints.set(id, row.scene);
               nextAck[id] = { revision: row.revision, hash: row.hash };
               continue;
             }
@@ -367,10 +374,12 @@ export function usePrimitiveStore(owner: string) {
                 title: `${local.title.slice(0, 100)} (copia local)`,
               };
               scenes.push(copy);
+              nextCheckpoints.set(copy.id, copy);
               if (activeId === id) activeId = copy.id;
               copied = true;
             }
             scenes = scenes.map((s) => s.id === id ? row.scene : s);
+            nextCheckpoints.set(id, row.scene);
             nextAck[id] = { revision: row.revision, hash: row.hash };
           }
           if (!alive) return;
@@ -391,6 +400,7 @@ export function usePrimitiveStore(owner: string) {
           setCatalog(catalogRef.current);
           // A discarded merge must not advance the base used by the next attempt.
           ack = nextAck;
+          checkpoints.current = nextCheckpoints;
           const merged = { activeId, scenes };
           current.current = merged;
           setCollection(merged);

@@ -70,3 +70,16 @@ it("keeps definitions fixed and saves student answers on a separate attempt", ()
   expect(()=>applyPracticeValue(copy,answer.id,"prompt","Nueva consigna")).toThrow();
   expect(()=>applyPracticeValue(copy,answer.id,"answer","alert(1)")).toThrow();
 });
+
+it.each(["sqrt(x-10)", "ln(x-100)", "sqrt(0.01-(x-100)^2)"])("accepts the expression answer %s without assuming a domain", answer => {
+  const scene = templateScene("practice-line");
+  const field = scene.primitives.find(p => p.kind === "answer_field")!;
+  const next = applyPracticeValue(scene, field.id, "answer", answer);
+  expect(next.primitives.find(p => p.id === field.id)?.data).toMatchObject({ answer });
+});
+
+it.each(["sqrt(x-", "alert(x)", "x+unknown", "x;window.location=1"])("rejects invalid expression answer %s", answer => {
+  const scene = templateScene("practice-line");
+  const field = scene.primitives.find(p => p.kind === "answer_field")!;
+  expect(() => applyPracticeValue(scene, field.id, "answer", answer)).toThrow();
+});
