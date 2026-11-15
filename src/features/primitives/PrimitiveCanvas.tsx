@@ -1200,6 +1200,13 @@ function Editor(
             )}
         </main>
 
+        {sidebar && narrow && !presenting && !focused && (
+          <button
+            className="pc-dock-backdrop"
+            aria-label="Cerrar panel y volver al lienzo"
+            onClick={() => setSidebar(false)}
+          />
+        )}
         {sidebar && !presenting && !focused && (
           <aside className="pc-sidebar" style={narrow ? undefined : { width: dockWidth }} aria-label="Panel de Fontex">
             {!narrow && <DockResizeHandle width={dockWidth} onChange={resizeDock} />}

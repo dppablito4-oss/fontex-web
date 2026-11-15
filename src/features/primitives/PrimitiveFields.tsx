@@ -4,6 +4,8 @@ import {
   type PrimitiveScene,
 } from "../../core/primitives/schema";
 import { NumberField, Select, Text, Toggle } from "./FieldControls";
+import { AcademicMarkdown } from "../tutor/components/AcademicMarkdown";
+import { interpolate, sceneScope, sceneFunctions } from "../../core/primitives/math";
 import { AdvancedFields } from "./AdvancedFields";
 export function PrimitiveFields(
   { p, scene, onChange }: {
@@ -263,6 +265,19 @@ export function PrimitiveFields(
         )}
         {p.kind === "math_block" && (
           <>
+            <label className="pc-text-editor">
+              Texto y fórmula
+              <textarea
+                aria-label="Texto y fórmula"
+                value={p.data.markdownContent}
+                rows={8}
+                onChange={(e) => patch({ markdownContent: e.target.value })}
+              />
+              <small>Escribe texto, Markdown y fórmulas entre $…$ o $$…$$.</small>
+            </label>
+            <div className="pc-text-preview" aria-label="Vista previa del texto">
+              <AcademicMarkdown content={interpolate(p.data.markdownContent, sceneScope(scene), sceneFunctions(scene))} />
+            </div>
             <Select
               label="Estilo del texto"
               value={p.data.variant}

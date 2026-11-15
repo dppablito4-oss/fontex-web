@@ -83,7 +83,8 @@ describe('Acceso completo a Fontex', () => {
   });
   it('abre el acceso desde el lienzo y vuelve al lienzo con una sesión válida', async () => {
     renderFlow('/lienzo');
-    fireEvent.click(await screen.findByRole('link', { name: 'Entrar' }));
+    // The canvas route is lazy-loaded, including its math renderer.
+    fireEvent.click(await screen.findByRole('link', { name: 'Entrar' }, { timeout: 5000 }));
     await waitFor(() => expect(window.location.hash).toBe('#/ingresar'), { timeout: 5000 });
     await fillSignIn();
     fireEvent.click(screen.getByRole('button', { name: 'Entrar a Fontex' }));

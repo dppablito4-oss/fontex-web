@@ -166,7 +166,7 @@ function Coordinate(
               <span style={{ color: diagramColor(child.style.strokeColor) }}>●</span>{child.label}
             </button>)}
             {!definitions.length && !children.length && <p>Añade funciones o figuras desde Elementos.</p>}
-            {!readOnly && editingChild && <section aria-label="Edición sobre el plano">
+            {!readOnly && editingChild && editingChild.kind !== "math_block" && <section aria-label="Edición sobre el plano">
               <strong>{editingChild.label}</strong>
               <PrimitiveFields p={editingChild} scene={scene} onChange={onChange} />
             </section>}
@@ -1314,7 +1314,7 @@ function Annotation(
   );
 }
 function PrimitiveBody(props: Props) {
-  const { p, scope, functions, onChange, selected, readOnly } = props;
+  const { p, scope, functions } = props;
   if (p.kind === "coordinate_canvas") return <Coordinate {...props} p={p} />;
   if (p.kind === "geometric_shape") {
     return p.data.shape === "venn_2" || p.data.shape === "venn_3"
@@ -1330,28 +1330,7 @@ function PrimitiveBody(props: Props) {
   }
   if (p.kind === "annotation_stroke") return <Annotation {...props} p={p} />;
   if (p.kind === "math_block") {
-    return selected && !readOnly
-      ? (
-        <div>
-          <textarea
-            aria-label="Texto y fórmula"
-            className="pc-inline-text"
-            value={p.data.markdownContent}
-            rows={Math.max(3, p.data.markdownContent.split("\n").length + 1)}
-            onChange={(e) =>
-              onChange({
-                ...p,
-                data: { ...p.data, markdownContent: e.target.value },
-              })}
-          />
-          <div className="pc-text-preview">
-            <AcademicMarkdown
-              content={interpolate(p.data.markdownContent, scope, functions)}
-            />
-          </div>
-        </div>
-      )
-      : (
+    return (
         <div
           className={`pc-math pc-math-${p.data.variant}`}
           style={{ fontSize: p.style.fontSize }}

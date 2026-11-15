@@ -80,3 +80,26 @@ test("keyboard adjusts chat width and canvas focus restores", async ({ page }, i
   await page.keyboard.press("Escape");
   await expect(page.getByRole("complementary", { name: "Panel de Fontex" })).toBeVisible();
 });
+
+test("text edits stay in Properties with live KaTeX and mobile outside dismissal", async ({ page }, info) => {
+  await page.getByRole("button", { name: "Elementos", exact: true }).click();
+  await page.getByRole("region", { name: "Elementos", exact: true }).getByRole("button", { name: "Texto y fórmula", exact: true }).click();
+  const editor = page.getByRole("textbox", { name: "Texto y fórmula", exact: true });
+  await editor.fill("Fracción: $\\frac{2}{5}$");
+  await expect(page.locator(".pc-node-math_block .katex")).toHaveCount(1);
+  await expect(page.locator(".pc-node-math_block textarea")).toHaveCount(0);
+  await expect(page.getByLabel("Vista previa del texto").locator(".katex")).toHaveCount(1);
+  if (info.project.name === "mobile") {
+    const outside = page.getByRole("button", { name: "Cerrar panel y volver al lienzo" });
+    await outside.click({ position: { x: 5, y: 40 } });
+    await expect(editor).toHaveCount(0);
+    await page.locator(".pc-node-math_block").click();
+    await expect(editor).toHaveValue("Fracción: $\\frac{2}{5}$");
+    await outside.click({ position: { x: 5, y: 40 } });
+    await page.getByRole("button", { name: "Asistente", exact: true }).click();
+    await page.getByRole("textbox", { name: "Mensaje para Fontex AI" }).fill("Mi borrador");
+    await outside.click({ position: { x: 5, y: 40 } });
+    await page.getByRole("button", { name: "Asistente", exact: true }).click();
+    await expect(page.getByRole("textbox", { name: "Mensaje para Fontex AI" })).toHaveValue("Mi borrador");
+  }
+});
