@@ -56,6 +56,8 @@ export const baseFunctions = new Set([
   "ln",
   "exp",
   "sqrt",
+  "rad",
+  "deg",
 ]);
 export const helperFunctions = new Set([
   "round",
@@ -99,6 +101,10 @@ function substitute(source: string, scope: Scope) {
     },
   );
 }
+function explicitRadians(e: Expr): boolean {
+  if (e.kind === "call") return e.name === "rad";
+  return e.kind === "binary" && (explicitRadians(e.left) || explicitRadians(e.right));
+}
 function convertAngles(e: Expr, degrees: boolean): Expr {
   if (e.kind === "binary") {
     return {
@@ -111,7 +117,7 @@ function convertAngles(e: Expr, degrees: boolean): Expr {
   const argument = convertAngles(e.argument, degrees);
   return {
     ...e,
-    argument: degrees && ["sin", "cos", "tan"].includes(e.name)
+    argument: degrees && ["sin", "cos", "tan"].includes(e.name) && !explicitRadians(e.argument)
       ? {
         kind: "binary",
         op: "*",

@@ -1,3 +1,5 @@
+import { allowedPracticeFields } from "../../core/primitives/practice";
+import { PracticeValue } from "./PracticeFields";
 import { useId } from "react";
 import { diagramColor } from "./visual-colors";
 import type { PrimitiveVisualProps } from "./PrimitiveVisual";
@@ -10,7 +12,7 @@ import {
 } from "../../core/primitives/linear-algebra";
 import { graphValues, truthTable } from "../../core/primitives/logic";
 export function TruthMatrix(
-  { p, scope }: PrimitiveVisualProps & {
+  { p, scope, scene, practice, onPracticeChange, onChange }: PrimitiveVisualProps & {
     p: Extract<Primitive, { kind: "data_chart" }>;
   },
 ) {
@@ -18,12 +20,13 @@ export function TruthMatrix(
     const name = p.data.matrixName!,
       matrix = scopeMatrix(scope, name),
       inverted = inverse(matrix);
-    const table = (values: Matrix, label: string) => (
+    const table = (values: Matrix, label: string, editable = false) => (
       <table className="pc-matrix" aria-label={label}>
         <tbody>
           {values.map((row, i) => (
             <tr key={i}>
-              {row.map((cell, j) => <td key={j}>{num(cell)}</td>)}
+              {row.map((cell, j) => <td key={j}>{practice && editable ? <PracticeValue p={p} scene={scene} fieldKey={`matrixCells.${i}.${j}`} fallback={num(cell)}
+                onApply={onPracticeChange ?? (next=>onChange(next.primitives.find(item=>item.id===p.id)!))}/> : num(cell)}</td>)}
             </tr>
           ))}
         </tbody>
@@ -32,7 +35,7 @@ export function TruthMatrix(
     return (
       <div className="pc-chart pc-matrix-view">
         <strong>Matriz {name}</strong>
-        {table(matrix, `Matriz ${name}`)}
+        {table(matrix, `Matriz ${name}`, true)}
         <p>
           det({name}) = <strong>{num(determinant(matrix))}</strong>
         </p>
@@ -254,7 +257,7 @@ export function Venn(
   );
 }
 export function NodeGraph(
-  { p, scope, onVariable }: PrimitiveVisualProps & {
+  { p, scope, onVariable, readOnly, practice, scene }: PrimitiveVisualProps & {
     p: Extract<Primitive, { kind: "node_graph" }>;
   },
 ) {
@@ -317,7 +320,7 @@ export function NodeGraph(
         })}
         {p.data.nodes.map((node) => {
           const active = logic && values[node.id],
-            interactive = logic && node.type === "input";
+            interactive = logic && node.type === "input" && (!readOnly || !!practice && allowedPracticeFields(p,scene).some(f=>f.key===`var:${node.variableName}`));
           return (
             <g
               key={node.id}

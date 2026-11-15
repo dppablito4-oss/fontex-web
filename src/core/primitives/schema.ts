@@ -46,6 +46,7 @@ const base = {
   locked: z.boolean(),
   presentationStep: z.number().int().min(1).max(100),
   style,
+  interaction: z.object({ fields: z.array(z.string().regex(/^[a-zA-Z0-9_.:-]{1,100}$/)).max(100) }).strict().nullish(),
 };
 const graphNode = z.object({
   id,
@@ -56,6 +57,14 @@ const graphNode = z.object({
   y: finite.min(35).max(565),
 }).strict();
 export const primitiveSchema = z.discriminatedUnion("kind", [
+  z.object({
+    ...base, kind: z.literal("answer_field"),
+    data: z.object({
+      prompt: z.string().min(1).max(2000),
+      answerType: z.enum(["text", "number", "expression"]),
+      answer: z.string().max(4000),
+    }).strict(),
+  }).strict(),
   z.object({
     ...base,
     kind: z.literal("coordinate_canvas"),
@@ -653,6 +662,7 @@ export function createPrimitive<K extends PrimitiveKind>(
   ]);
   while (taken.has(`f${index}`) || taken.has(`area${index}`)) index++;
   const defaults = {
+    answer_field: { prompt: "Escribe tu respuesta y explica cómo la obtuviste.", answerType: "text", answer: "" },
     coordinate_canvas: {
       mode: "cartesian",
       autoFit: true,
@@ -772,7 +782,7 @@ export function createPrimitive<K extends PrimitiveKind>(
     x: 24,
     y,
     width: 1152,
-    height: kind === "math_block"
+    height: kind === "answer_field" ? 160 : kind === "math_block"
       ? 160
       : kind === "control_slider"
       ? 100

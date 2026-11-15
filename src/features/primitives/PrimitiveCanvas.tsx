@@ -70,6 +70,7 @@ import { sceneFunctions, sceneScope } from "../../core/primitives/math";
 import { templates, templateScene } from "../../core/primitives/templates";
 import { requestPrimitiveAgent } from "./agent";
 import { draggedRotation } from "./gestures";
+import { practiceAttempt } from "../../core/primitives/practice";
 import { fractionLessons } from "../../core/primitives/fraction-lessons";
 import { FractionLesson } from "./FractionLesson";
 import { organizePrimitiveScene, workspaceRoots } from "../../core/primitives/layout";
@@ -88,6 +89,7 @@ import { creditsChanged } from "../ai-credits/service";
 import "./primitives.css";
 type Tab = "file" | "elements" | "templates" | "variables";
 const primitiveIcons: Record<PrimitiveKind, LucideIcon> = {
+  answer_field: Pencil,
   coordinate_canvas: Grid2X2,
   function_region: ChartSpline,
   vector_segment: MoveUpRight,
@@ -288,6 +290,7 @@ function Editor(
   { owner, authenticated, accessNote }: { owner: string; authenticated: boolean; accessNote: string },
 ) {
   const library = usePrimitiveStore(owner), { scene, setScene } = library;
+  const [practice, setPractice] = useState(false);
   const [closeId, setCloseId] = useState<string | null>(null);
   const [pdfDialog, setPdfDialog] = useState(false), [publicQr, setPublicQr] = useState(false);
   const [documentBusy, setDocumentBusy] = useState(false), [documentError, setDocumentError] = useState("");
@@ -585,7 +588,7 @@ function Editor(
         if (e.shiftKey) redo();
         else undo();
       }
-      if (!presenting && e.key === "Delete" && !selected?.locked) remove();
+      if (!presenting && !practice && e.key === "Delete" && !selected?.locked) remove();
     };
     window.addEventListener("keydown", key);
     return () => window.removeEventListener("keydown", key);
@@ -666,6 +669,7 @@ function Editor(
     setFuture([]);
   }
   function selectPrimitive(id: string) {
+    if (practice) { setSelected(id); return; }
     setSelected(id);
     const item = live.current.primitives.find((p) => p.id === id);
     if (!(item && "canvasId" in item.data && item.data.canvasId)) {
@@ -699,7 +703,7 @@ function Editor(
     if (!question.trim() || busy) return;
     if (!authenticated) {
       setNotice(
-        "Inicia sesión para conversar con Fontex AI. Puedes crear con las plantillas y los diez elementos sin usar IA.",
+        "Inicia sesión para conversar con Fontex AI. Puedes crear con las plantillas y los elementos sin usar IA.",
       );
       return;
     }
@@ -863,6 +867,7 @@ function Editor(
     setSelected(null); setPast([]); setFuture([]); setStep(1); setDockView("chat");
   }
   function openScene(id: string) {
+    setPractice(false);
     if (id === scene.id) { closeTools(); return; }
     abort.current?.abort();
     library.open(id);
@@ -870,6 +875,7 @@ function Editor(
     closeTools();
   }
   function newScene() {
+    setPractice(false);
     abort.current?.abort();
     const next = newPrimitiveScene(`Lienzo ${library.scenes.length + 1}`);
     if (setScene(next)) { live.current = next; resetEditor(); closeTools(); }
@@ -884,7 +890,7 @@ function Editor(
                       key={p.id}
                       p={p}
                       selected={p.id === selectedId}
-                      editing={!presenting}
+                      editing={!presenting && !practice}
                       onSelect={() => {
                         if (!presenting) selectPrimitive(p.id);
                       }}
@@ -908,6 +914,8 @@ function Editor(
                         selected={p.id === selectedId}
                         selectedId={selectedId}
                         readOnly={presenting}
+                        practice={practice && !presenting}
+                        onPracticeChange={commit}
                       />
                     </Frame>
     );
@@ -926,7 +934,7 @@ function Editor(
                   {tab === "elements" && (
                     <>
                       <h2>Combina elementos</h2>
-                      <p>Diez elementos que puedes combinar.</p>
+                      <p>Elementos que puedes combinar.</p>
                       <div className="pc-element-list">
                         {(Object.keys(primitiveNames) as PrimitiveKind[]).map((kind) => {
                           const Icon = primitiveIcons[kind];
@@ -1119,9 +1127,10 @@ function Editor(
         <div className="pc-dialog-actions"><button disabled={documentBusy} onClick={() => void downloadPdf()}>{documentBusy ? "Preparando PDF…" : "Descargar PDF"}</button><button disabled={documentBusy} onClick={() => setPdfDialog(false)}>Cancelar</button></div>
       </CanvasDialog>}
       <SiteHeader />
-      <CanvasDocumentTabs scenes={library.tabs} activeId={scene.id} onOpen={openScene} onNew={newScene} onClose={id => { if(!busy) { setCloseId(id); setDocumentError(""); } }} />
+      <CanvasDocumentTabs scenes={library.tabs} activeId={scene.id} onOpen={openScene} onNew={newScene} onClose={id => { if(!busy && !practice) { setCloseId(id); setDocumentError(""); } }} />
+      {practice && <div className="pc-banner" role="status">Práctica personal: modifica solo los valores habilitados y escribe tus respuestas. El original se conserva.</div>}
       <header className="pc-topbar" aria-label="Herramientas del lienzo">
-        <div className="pc-toolbar-menus">
+        {!practice && <div className="pc-toolbar-menus">
           <CanvasToolMenu label="Archivo" icon={<FolderOpen size={16} />} open={tab === "file"} onToggle={() => toggleTools("file")} onClose={closeTools}>
             <div className="pc-file-menu">
               <label>Título del lienzo<input aria-label="Título del lienzo" value={scene.title} maxLength={160} onChange={(e) => commit({ ...scene, title: e.target.value })} /></label>
@@ -1147,7 +1156,7 @@ function Editor(
             icon={tool === "elements" ? <Plus size={16} /> : tool === "templates" ? <LayoutDashboard size={16} /> : <SlidersHorizontal size={16} />}
             open={tab === tool} onToggle={() => toggleTools(tool)} onClose={closeTools}
           >{toolContent}</CanvasToolMenu>)}
-        </div>
+        </div>}
         <div className="pc-history-actions">
           <button aria-label="Deshacer" title="Deshacer" disabled={!past.length} onClick={undo}><Undo2 size={16} /></button>
           <button aria-label="Rehacer" title="Rehacer" disabled={!future.length} onClick={redo}><Redo2 size={16} /></button>
@@ -1155,8 +1164,13 @@ function Editor(
         <span className="pc-save" role="status"><Check size={13} />{library.status === "saved" ? "Guardado en tu cuenta" : library.status === "local" ? "Guardado local" : library.status === "saving" || library.status === "loading" ? "Sincronizando…" : "Sincronización pendiente"}</span>
         <div className="pc-top-actions">
           <button aria-label={focused ? "Restaurar espacio de trabajo" : "Ampliar lienzo"} aria-pressed={focused} title="Ampliar lienzo · Escape para volver" onClick={() => setFocused(!focused)}>{focused ? <Minimize2 size={16} /> : <Maximize2 size={16} />}</button>
-          <button aria-pressed={sidebar && dockView === "chat"} onClick={() => { setDockView("chat"); setSidebar(!sidebar || dockView !== "chat"); closeTools(); }}><MessageCircle size={16} /><span>Asistente</span></button>
+          <button disabled={practice} aria-pressed={sidebar && dockView === "chat"} onClick={() => { setDockView("chat"); setSidebar(!sidebar || dockView !== "chat"); closeTools(); }}><MessageCircle size={16} /><span>Asistente</span></button>
           <button disabled={!scene.primitives.length || documentBusy} onClick={() => { setDocumentError(""); setPdfDialog(true); }}><Download size={16} /><span>PDF</span></button>
+          <button aria-pressed={practice} disabled={busy || !scene.primitives.length} onClick={()=>{
+            if(practice) {setPractice(false);resetEditor();return;}
+            const attempt=practiceAttempt(scene);
+            if(setScene(attempt)) {live.current=attempt;resetEditor();setSidebar(false);setPractice(true);closeTools();}
+          }}>{practice?"Finalizar práctica":"Practicar"}</button>
           <button className="pc-present-action" disabled={!scene.primitives.length} onClick={() => {
             closeTools(); setSelected(null); setStep(steps[0]!); setPresenting(true);
             void root.current?.requestFullscreen?.().catch(() => {});
@@ -1253,7 +1267,7 @@ function Editor(
                     setTab("elements");
                   }}
                 >
-                  <Plus size={17} />Explorar los diez elementos
+                  <Plus size={17} />Explorar los elementos
                 </button>
               </div>
             )
@@ -1295,14 +1309,14 @@ function Editor(
             )}
         </main>
 
-        {sidebar && narrow && !presenting && !focused && (
+        {sidebar && narrow && !presenting && !focused && !practice && (
           <button
             className="pc-dock-backdrop"
             aria-label="Cerrar panel y volver al lienzo"
             onClick={() => setSidebar(false)}
           />
         )}
-        {sidebar && !presenting && !focused && (
+        {sidebar && !presenting && !focused && !practice && (
           <aside className="pc-sidebar" style={narrow ? undefined : { width: dockWidth }} aria-label="Panel de Fontex">
             {!narrow && <DockResizeHandle width={dockWidth} onChange={resizeDock} />}
             <header>
@@ -1616,6 +1630,7 @@ function Editor(
           variables
         </span>
         <button
+          disabled={practice}
           onClick={() => {
             commit(organizePrimitiveScene(scene));
             setAutoZoom(true);
@@ -1650,7 +1665,7 @@ function Editor(
           )}
         </span>
       </footer>
-      {!presenting && (
+      {!presenting && !practice && (
         <button
           className="pc-chat-launcher"
           aria-label="Abrir chat de Fontex"

@@ -1516,3 +1516,29 @@ dialog.pc-dialog::backdrop { background: #0008; }
 .pc-export-sheet .pc-fraction-section .pc-circles svg { max-width: 140px; }
 .pc-export-sheet .pc-fraction-section .pc-fraction-row { margin-block: 8px; }
 .pc-fraction-board-operator { position: absolute; pointer-events: none; font-size: 28px; text-align: center; width: 24px; }
+.pc-practice-fields { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; padding: 8px; border-top: 1px solid var(--pc-line); }
+.pc-inline-value { min-width: 0; max-width: 100%; }
+.pc-app .pc-inline-value > button { min-height: 36px; padding: 6px 10px; gap: 6px; flex-wrap: wrap; font-size: 14px; background: var(--pc-surface); }
+.pc-inline-input { display: flex; align-items: end; gap: 4px; max-width: 100%; }
+.pc-inline-input label { min-width: 0; display: grid; font-size: 12px; gap: 4px; }
+.pc-inline-input input { max-width: 260px; width: 100%; min-height: 40px; font-size: 16px; }
+.pc-inline-value [role=alert] { display: block; max-width: 320px; color: var(--ui-error); }
+.pc-practice-permissions { border-top: 1px solid var(--pc-line); margin-top: 16px; padding-top: 12px; }
+.pc-practice-permissions label { display: flex; align-items: center; gap: 8px; margin: 8px 0; }
+.pc-practice-permissions input { width: 18px; height: 18px; }
+.pc-practice-permissions p { font-size: 12px; margin-block: 8px; color: var(--pc-muted); }
+.pc-answer-field { padding: 16px; border: 1px dashed var(--pc-line); border-radius: 10px; }
+.pc-answer-preview { white-space: pre-wrap; margin-top: 12px; }
+.pc-author-tools-hidden { display: none!important; }
+@media print { .pc-practice-fields, .pc-practice-permissions { display: none!important; } }
+.pc-inline-input textarea { width: min(420px,100%); min-height: 90px; font-size: 16px; resize: vertical; }
+.pc-chart td .pc-inline-value > button { border: 0; background: transparent; padding: 4px; }
+.pc-chart td .pc-inline-input input { max-width: 130px; }
+.pc-plot-definition-content .pc-practice-fields { padding-inline: 0; }
+@media (max-width:760px) { .pc-top-actions { max-width: 100%; flex-wrap: wrap; } }
+.pc-fraction-grid:has(> :only-child) { grid-template-columns: minmax(0,1fr); max-width: 360px; }
+.pc-fraction-grid:has(> :nth-child(2):last-child) { grid-template-columns: repeat(2,minmax(0,1fr)); max-width: 560px; }
+.pc-fraction-term .pc-practice-fields { padding-inline: 0; }
+.pc-fraction-term .pc-inline-value > button { padding-inline: 2px; font-size: 12px; overflow-wrap: normal; }
+.pc-fraction-term .pc-inline-input { flex-wrap: wrap; }
+.pc-fraction-term .pc-inline-input label { width: 100%; }

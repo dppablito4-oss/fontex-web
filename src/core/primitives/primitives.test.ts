@@ -30,14 +30,14 @@ describe("composable scene contract", () => {
       );
     },
   );
-  it("supports all ten families with a real coordinate parent", () => {
+  it("supports all eleven families with a real coordinate parent", () => {
     const scene = newPrimitiveScene();
     for (
       const kind of Object.keys(
         primitiveNames,
       ) as (keyof typeof primitiveNames)[]
     ) scene.primitives.push(createPrimitive(kind, scene));
-    expect(parsePrimitiveScene(scene).primitives).toHaveLength(10);
+    expect(parsePrimitiveScene(scene).primitives).toHaveLength(11);
   });
   it("rejects broken references and duplicate symbols", () => {
     const scene = templateScene("calculus");
@@ -194,9 +194,9 @@ it("uses concise responsive axis ticks without repeating decimal labels", () => 
 });
 
 describe("v0.7.1 curriculum compositions", () => {
-  it("has 36 distinct templates built from ten composable families", () => {
-    expect(templates).toHaveLength(36);
-    expect(new Set(templates.map((t) => t.id)).size).toBe(36);
+  it("has 40 distinct templates with guided practice", () => {
+    expect(templates).toHaveLength(40);
+    expect(new Set(templates.map((t) => t.id)).size).toBe(40);
   });
   it("keeps old v2 vectors compatible and validates optional jump heights", () => {
     const scene = templateScene("number-jumps");

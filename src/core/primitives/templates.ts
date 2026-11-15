@@ -7,6 +7,10 @@ import {
 } from "./schema.ts";
 import { organizePrimitiveScene } from "./layout.ts";
 export const templates = [
+  { id: "practice-line", name: "Practicar: construir una recta", group: "Práctica guiada" },
+  { id: "practice-fractions", name: "Practicar: denominador de una fracción", group: "Práctica guiada" },
+  { id: "practice-table", name: "Practicar: completar una tabla", group: "Práctica guiada" },
+  { id: "practice-trig", name: "Practicar: grados y radianes", group: "Práctica guiada" },
   { id: "ellipse", name: "Elipse paramétrica", group: "Geometría analítica" },
   {
     id: "hyperbola",
@@ -111,6 +115,32 @@ export function templateScene(id: string): PrimitiveScene {
       p.data.markdownContent = content;
     });
 
+  if (id.startsWith("practice-")) {
+    scene.level=["practice-fractions","practice-table"].includes(id)?"primaria":"secundaria";
+    scene.variables = [];
+    if(id==="practice-line") {
+      variable("m",1,-5,5);variable("b",0,-5,5);
+      text("## Construye una recta\nCambia m y b para que la recta pase por (0,1) y (2,5). Escribe después su ecuación. La definición de la consigna permanece fija.");
+      const plane=add("coordinate_canvas");
+      add("function_region",p=>{p.data.canvasId=plane.id;p.data.expression="m*x+b";p.data.showArea=false;p.data.pointXs=["0","2"];p.interaction={fields:["var:m","var:b"]};});
+      add("answer_field",p=>{p.data.prompt="¿Cuál es la expresión de la recta?";p.data.answerType="expression";});
+    } else if(id==="practice-fractions") {
+      text("## Encuentra el denominador\nConserva una parte coloreada. Cambia únicamente el denominador hasta que el dibujo represente media unidad. Explica tu elección.");
+      add("geometric_shape",p=>{p.data.shape="circle_fraction";p.data.divisions=4;p.data.shadedExpr="1";p.interaction={fields:["divisions"]};});
+      add("answer_field",p=>{p.data.prompt="¿Qué denominador elegiste y por qué?";});
+    } else if(id==="practice-table") {
+      text("## Completa la tabla\nLos valores siguen una sucesión: 2, ?, 6. Modifica únicamente la celda del segundo término y explica la regla.");
+      add("data_chart",p=>{p.data.chartType="bar";p.data.rows=[{label:"Primero",xExpr:"1",valueExpr:"2"},{label:"Segundo",xExpr:"2",valueExpr:"0"},{label:"Tercero",xExpr:"3",valueExpr:"6"}];p.interaction={fields:["rows.1.valueExpr"]};});
+      add("answer_field",p=>{p.data.prompt="Explica cómo encontraste el segundo valor.";});
+    } else {
+      variable("theta",15,0,90,1,"°");
+      text("## Grados y radianes\nBusca en el primer cuadrante el ángulo cuyo seno vale 0,5. Cambia theta y escribe ese ángulo en radianes, por ejemplo usando pi.\nSeno actual: **{{round(sin(rad(theta)),3)}}**.");
+      const plane=add("coordinate_canvas",p=>{p.data.domainX=["0","90"];p.data.rangeY=["-0.2","1.2"];p.data.angleUnit="deg";p.data.equalScale=false;});
+      add("function_region",p=>{p.data.canvasId=plane.id;p.data.expression="sin(x)";p.data.angleUnit="deg";p.data.showArea=false;p.data.pointXs=["theta"];p.interaction={fields:["var:theta"]};});
+      add("answer_field",p=>{p.data.prompt="Escribe el ángulo en radianes.";p.data.answerType="expression";});
+    }
+    return parsePrimitiveScene(scene);
+  }
   if (["ellipse", "hyperbola", "polar-rose", "projectile"].includes(id)) {
     scene.variables = [];
     const plane = add("coordinate_canvas", (p) => {

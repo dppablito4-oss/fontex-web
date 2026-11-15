@@ -6,6 +6,7 @@ import {
 import { NumberField, Select, Text, Toggle } from "./FieldControls";
 import { AcademicMarkdown } from "../tutor/components/AcademicMarkdown";
 import { interpolate, sceneScope, sceneFunctions } from "../../core/primitives/math";
+import { PracticePermissions } from "./PracticeFields";
 import { AdvancedFields } from "./AdvancedFields";
 export function PrimitiveFields(
   { p, scene, onChange }: {
@@ -20,6 +21,11 @@ export function PrimitiveFields(
   return (
     <div className="pc-fields" onPointerDown={(e) => e.stopPropagation()}>
       <div className="pc-field-row">
+        {p.kind === "answer_field" && <>
+          <label>Consigna<textarea aria-label="Consigna de respuesta" rows={3} value={p.data.prompt} onChange={e=>patch({prompt:e.target.value})} /></label>
+          <Select label="Tipo de respuesta" value={p.data.answerType} options={["text","number","expression"]} onChange={answerType=>patch({answerType,answer:""})}/>
+          <p>El alumno escribe sobre el lienzo. Esta respuesta se guarda para revisión; no se califica automáticamente.</p>
+        </>}
         {p.kind === "coordinate_canvas" && (
           <>
             <Toggle label="Ajustar automáticamente a las figuras" value={p.data.autoFit ?? true}
@@ -512,6 +518,7 @@ export function PrimitiveFields(
         )}
         <AdvancedFields p={p} scene={scene} onChange={onChange} />
       </div>
+      <PracticePermissions p={p} scene={scene} onChange={onChange} />
     </div>
   );
 }

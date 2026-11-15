@@ -1,6 +1,8 @@
 import { Component, type CSSProperties, useEffect, useId, useRef, useState } from "react";
 import { Hand, Maximize, Minus, Plus } from "lucide-react";
 import { VariableValueField } from "./VariableValueField";
+import { PracticeFields, PracticeValue } from "./PracticeFields";
+import { allowedPracticeFields, applyPracticeValue } from "../../core/primitives/practice";
 import { PrimitiveFields } from "./PrimitiveFields";
 import { plotCompanions } from "../../core/primitives/layout";
 import { diagramColor } from "./visual-colors";
@@ -48,6 +50,8 @@ type Props = {
   selected: boolean;
   selectedId?: string | null;
   readOnly?: boolean;
+  practice?: boolean;
+  onPracticeChange?: (scene: PrimitiveScene) => boolean | void;
   visibleStep?: number;
   displayScale?: number;
 };
@@ -57,7 +61,7 @@ const safe = (
   functions: Record<string, FunctionDefinition> = {},
 ) => scalar(source, scope, functions);
 function Coordinate(
-  { p, scene, scope, functions, onSelect, onChange, onVariable, onViewportChange, selectedId, readOnly, visibleStep, displayScale = 1 }: Props & {
+  { p, scene, scope, functions, onSelect, onChange, onVariable, onViewportChange, selectedId, readOnly, practice, onPracticeChange, visibleStep, displayScale = 1 }: Props & {
     p: Extract<Primitive, { kind: "coordinate_canvas" }>;
   },
 ) {
@@ -161,7 +165,7 @@ function Coordinate(
               {!readOnly && <button onClick={() => onSelect(item.id)}>Editar explicación</button>}
             </section>)}
             {controls.map((item) => <PrimitiveVisual key={item.id} p={item} scene={scene} scope={scope} functions={functions}
-              onChange={onChange} onVariable={onVariable} onSelect={onSelect} selected={item.id === selectedId} readOnly={readOnly} />)}
+              onChange={onChange} onVariable={onVariable} onSelect={onSelect} selected={item.id === selectedId} readOnly={readOnly} practice={practice} onPracticeChange={onPracticeChange} />)}
             {children.map((child) => <button key={child.id} className="pc-plot-definition-link" onClick={() => onSelect(child.id)}>
               <span style={{ color: diagramColor(child.style.strokeColor) }}>●</span>{child.label}
             </button>)}
@@ -966,30 +970,31 @@ function Shape(
   );
 }
 function Control(
-  { p, scene, onVariable }: Props & {
+  { p, scene, onVariable, readOnly, practice }: Props & {
     p: Extract<Primitive, { kind: "control_slider" }>;
   },
 ) {
   const variable = scene.variables.find((v) => v.name === p.data.variableName)!;
+  const editable=!readOnly || !!practice && allowedPracticeFields(p,scene).some(f=>f.key===`var:${variable.name}`);
   const [playing, setPlaying] = useState(false);
   const ref = useRef(variable);
   useEffect(() => {
     ref.current = variable;
   }, [variable]);
   useEffect(() => {
-    if (!playing || p.data.controlType !== "play_pause") return;
+    if (!editable || !playing || p.data.controlType !== "play_pause") return;
     const timer = setInterval(() => {
       const v = ref.current;
       const next = v.value + v.step * p.data.speed;
       onVariable(v.name, next > v.max ? v.min : Number(next.toPrecision(10)));
     }, 120);
     return () => clearInterval(timer);
-  }, [playing, onVariable, p.data.speed, p.data.controlType]);
+  }, [editable, playing, onVariable, p.data.speed, p.data.controlType]);
   return (
     <div className="pc-control">
       <div className="pc-control-main">
         <div className="pc-control-symbol">{variable.name}<small>{variable.unit || "valor"}</small></div>
-        {p.data.controlType !== "toggle" && <VariableValueField variable={variable} onChange={onVariable} />}
+        {p.data.controlType !== "toggle" && (editable && !practice ? <VariableValueField variable={variable} onChange={onVariable} /> : <strong>{num(variable.value)} {variable.unit}</strong>)}
       </div>
       <label className="pc-range-label">
         <span className="pc-sr-only">Ajustar {variable.name}</span>
@@ -998,6 +1003,7 @@ function Control(
             <button
               type="button"
               role="switch"
+              disabled={!editable}
               aria-checked={variable.value === 1}
               aria-label={`Proposición ${variable.name}`}
               onClick={() =>
@@ -1009,6 +1015,7 @@ function Control(
           : (
             <input
               type="range"
+              disabled={!editable}
               aria-label={`Variable ${variable.name}`}
               min={variable.min}
               max={variable.max}
@@ -1022,7 +1029,7 @@ function Control(
       {p.data.controlType !== "toggle" && <div className="pc-range-limits"><span>{num(variable.min)} {variable.unit}</span><span>{num(variable.max)} {variable.unit}</span></div>}
       {p.data.controlType === "play_pause"
         ? (
-          <button onClick={() => setPlaying(!playing)}>
+          <button disabled={!editable} onClick={() => setPlaying(!playing)}>
             {playing ? "Pausar" : "Animar"}
           </button>
         )
@@ -1031,7 +1038,7 @@ function Control(
           <>
             <button
               aria-label={`Reducir ${variable.name}`}
-              disabled={variable.value <= variable.min}
+              disabled={!editable || variable.value <= variable.min}
               onClick={() =>
                 onVariable(
                   variable.name,
@@ -1042,7 +1049,7 @@ function Control(
             </button>
             <button
               aria-label={`Aumentar ${variable.name}`}
-              disabled={variable.value >= variable.max}
+              disabled={!editable || variable.value >= variable.max}
               onClick={() =>
                 onVariable(
                   variable.name,
@@ -1058,7 +1065,7 @@ function Control(
   );
 }
 function Chart(
-  { p, scope, functions }: Props & {
+  { p, scope, functions, scene, practice, onPracticeChange, onChange }: Props & {
     p: Extract<Primitive, { kind: "data_chart" }>;
   },
 ) {
@@ -1226,7 +1233,8 @@ function Chart(
             {rows.map((r, i) => (
               <tr key={i}>
                 <td>{r.label}</td>
-                <td>{num(r.y)}</td>
+                <td>{practice ? <PracticeValue p={p} scene={scene} fieldKey={`rows.${i}.valueExpr`} fallback={num(r.y)}
+                  onApply={onPracticeChange ?? (next=>onChange(next.primitives.find(item=>item.id===p.id)!))}/> : num(r.y)}</td>
               </tr>
             ))}
           </tbody>
@@ -1315,6 +1323,7 @@ function Annotation(
 }
 function PrimitiveBody(props: Props) {
   const { p, scope, functions } = props;
+  if (p.kind === "answer_field") return <div className="pc-answer-field"><AcademicMarkdown content={p.data.prompt} />{!props.practice && <p className="pc-answer-preview">{p.data.answer || "Respuesta: ____________________"}</p>}</div>;
   if (p.kind === "coordinate_canvas") return <Coordinate {...props} p={p} />;
   if (p.kind === "geometric_shape") {
     return p.data.shape === "venn_2" || p.data.shape === "venn_3"
@@ -1451,12 +1460,31 @@ class Boundary extends Component<
   }
 }
 export function PrimitiveVisual(props: Props) {
-  return (
-    <Boundary
-      resetKey={JSON.stringify([props.p, props.scope, props.scene.updatedAt])}
-    >
-      <PrimitiveBody {...props} />
-    </Boundary>
-  );
+  const {p,scene}=props;
+  const apply=(next:PrimitiveScene) => {
+    if(props.onPracticeChange) return props.onPracticeChange(next);
+    const updated=next.primitives.find(n=>n.id===p.id)!;
+    props.onChange(updated);
+    for(const v of next.variables) if(scene.variables.find(old=>old.name===v.name)?.value!==v.value) props.onVariable(v.name,v.value);
+  };
+  const drawing=props.practice && p.kind==="annotation_stroke" && allowedPracticeFields(p,scene).some(f=>f.key==="points");
+  const bodyProps:Props=props.practice ? {...props,readOnly:!drawing,selected:drawing || props.selected,
+    onViewportChange:()=>{},
+    onChange:changed=>{
+      if(drawing && changed.kind==="annotation_stroke") apply(applyPracticeValue(scene,p.id,"points",changed.data.points));
+    },
+    onVariable:(name,value)=>{
+      const candidates=p.kind==="coordinate_canvas" ? [p,...scene.primitives.filter(child=>("canvasId" in child.data && child.data.canvasId===p.id) || plotCompanions(scene,p.id).some(item=>item.id===child.id))] : [p];
+      const owner=candidates.find(item=>allowedPracticeFields(item,scene).some(f=>f.key===`var:${name}`));
+      if(owner) {
+        try {apply(applyPracticeValue(scene,owner.id,`var:${name}`,String(value)));} catch { /* Preserve the validated attempt. */ }
+      }
+    }}:props;
+  return <Boundary resetKey={JSON.stringify([p,props.scope,scene.updatedAt])}>
+    <PrimitiveBody {...bodyProps} />
+    {props.practice && <PracticeFields p={p} scene={scene} onApply={apply}/>}
+    {props.practice && p.kind==="coordinate_canvas" && scene.primitives.filter(child=>"canvasId" in child.data && child.data.canvasId===p.id).map(child=>
+      <PracticeFields key={child.id} p={child} scene={scene} onApply={next=>props.onPracticeChange?.(next)}/>)}
+  </Boundary>;
 }
 export type { Props as PrimitiveVisualProps, SceneVariable };

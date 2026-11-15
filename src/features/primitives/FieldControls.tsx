@@ -69,6 +69,7 @@ export function Toggle(
   );
 }
 const optionLabels: Record<string, string> = {
+  text: "Texto y desarrollo", number: "Número", expression: "Expresión matemática",
   relations: "Relaciones y árboles",
   logic: "Circuito lógico",
   input: "Entrada",

@@ -1,4 +1,5 @@
 export const primitiveNames = {
+  answer_field: "Respuesta del alumno",
   coordinate_canvas: "Plano y cuadrícula",
   function_region: "Función y área",
   vector_segment: "Vector y segmento",

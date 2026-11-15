@@ -168,3 +168,69 @@ $$\frac{2}{7}+\frac{3}{7}=\frac{5}{7}$$`;
   const bytes=await readFile(await pdf.path());
   expect(bytes.toString("latin1").match(/\/Type \/Page\b/g)).toHaveLength(1);
 });
+
+test("practices on a personal copy with only the requested values and an inline answer", async ({ page }) => {
+  await page.getByRole("button",{name:"Plantillas",exact:true}).click();
+  await page.getByRole("region",{name:"Plantillas",exact:true}).getByRole("button",{name:/Practicar: denominador de una fracción/}).click();
+  const source=await page.getByRole("tab",{selected:true}).textContent();
+  await page.getByRole("button",{name:"Practicar",exact:true}).click();
+  await expect(page.getByRole("complementary",{name:"Panel de Fontex"})).toHaveCount(0);
+  await expect(page.getByRole("button",{name:"Cambiar Numerador",exact:true})).toHaveCount(0);
+  await page.getByRole("button",{name:"Cambiar Denominador",exact:true}).click();
+  const value=page.getByRole("spinbutton",{name:"Denominador",exact:true});
+  // Inline numeric inputs retain a text keyboard contract and validate on confirmation.
+  const input=await value.count() ? value : page.getByRole("textbox",{name:"Denominador",exact:true});
+  await input.fill("0");await input.press("Enter");
+  await expect(page.getByRole("alert")).toBeVisible();
+  await input.fill("2");await input.press("Enter");
+  await expect(page.getByRole("button",{name:"Cambiar Denominador",exact:true})).toContainText("2");
+  await page.getByRole("button",{name:"Cambiar Tu respuesta",exact:true}).click();
+  await page.getByRole("textbox",{name:"Tu respuesta",exact:true}).fill("Elegí dos partes iguales: una de dos es la mitad.");
+  await page.getByRole("button",{name:"Aplicar Tu respuesta",exact:true}).click();
+  await expect(page.getByRole("button",{name:"Cambiar Tu respuesta",exact:true})).toContainText("mitad");
+  await page.getByRole("button",{name:"Finalizar práctica",exact:true}).click();
+  await page.getByRole("tab",{name:source!,exact:true}).click();
+  await expect(page.locator(".pc-circles > strong")).toHaveText("1 / 4");
+});
+
+test("changes a requested table cell in place and handles a degree-mode practice curve", async ({ page }) => {
+  await page.getByRole("button",{name:"Plantillas",exact:true}).click();
+  await page.getByRole("region",{name:"Plantillas",exact:true}).getByRole("button",{name:/Practicar: completar una tabla/}).click();
+  await page.getByRole("button",{name:"Practicar",exact:true}).click();
+  const cell=page.locator(".pc-chart tbody tr").nth(1).locator("td").nth(1);
+  await expect(cell).toBeVisible();
+  await cell.getByRole("button").click();
+  await cell.getByRole("textbox",{name:"Segundo: valor",exact:true}).fill("4");
+  await cell.getByRole("button",{name:"Aplicar Segundo: valor",exact:true}).click();
+  await expect(cell).toContainText("4");
+  await expect(page.getByRole("button",{name:"Cambiar Primero: valor",exact:true})).toHaveCount(0);
+  await page.getByRole("button",{name:"Finalizar práctica",exact:true}).click();
+  await page.getByRole("button",{name:"Plantillas",exact:true}).click();
+  await page.getByRole("region",{name:"Plantillas",exact:true}).getByRole("button",{name:/Practicar: grados y radianes/}).click();
+  await page.getByRole("button",{name:"Practicar",exact:true}).click();
+  await page.getByRole("button",{name:"Cambiar Valor de theta (°)",exact:true}).click();
+  await page.getByRole("textbox",{name:"Valor de theta (°)",exact:true}).fill("30");
+  await page.getByRole("button",{name:"Aplicar Valor de theta (°)",exact:true}).click();
+  await expect(page.locator(".pc-error")).toHaveCount(0);
+  await page.getByRole("button",{name:"Cambiar Tu respuesta",exact:true}).click();
+  await page.getByRole("textbox",{name:"Tu respuesta",exact:true}).fill("pi/6");
+  await page.getByRole("button",{name:"Aplicar Tu respuesta",exact:true}).click();
+  await expect(page.getByRole("button",{name:"Cambiar Tu respuesta",exact:true})).toContainText("pi/6");
+});
+
+test("edits line parameters and a mathematical answer without changing the definition", async ({ page }) => {
+  await page.getByRole("button",{name:"Plantillas",exact:true}).click();
+  await page.getByRole("region",{name:"Plantillas",exact:true}).getByRole("button",{name:/Practicar: construir una recta/}).click();
+  await page.getByRole("button",{name:"Practicar",exact:true}).click();
+  for (const [name,value] of [["m","2"],["b","1"]]) {
+    await page.getByRole("button",{name:`Cambiar Valor de ${name}`,exact:true}).click();
+    await page.getByRole("textbox",{name:`Valor de ${name}`,exact:true}).fill(value);
+    await page.getByRole("button",{name:`Aplicar Valor de ${name}`,exact:true}).click();
+  }
+  await page.getByRole("button",{name:"Cambiar Tu respuesta",exact:true}).click();
+  await page.getByRole("textbox",{name:"Tu respuesta",exact:true}).fill("2*x+1");
+  await page.getByRole("button",{name:"Aplicar Tu respuesta",exact:true}).click();
+  await expect(page.locator(".pc-error")).toHaveCount(0);
+  await expect(page.getByRole("button",{name:"Cambiar Función f(x)",exact:true})).toHaveCount(0);
+  await expect(page.getByRole("button",{name:"Cambiar Tu respuesta",exact:true})).toContainText("2*x+1");
+});

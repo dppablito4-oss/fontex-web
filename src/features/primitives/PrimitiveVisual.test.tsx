@@ -120,7 +120,7 @@ it.each(Object.keys(primitiveNames) as (keyof typeof primitiveNames)[])("renders
   const parsed = parsePrimitiveScene(JSON.parse(JSON.stringify(scene)));
   const { container } = render(<PrimitiveVisual p={parsed.primitives[kind === "function_region" ? 0 : 1]!} scene={parsed} scope={sceneScope(parsed)} functions={sceneFunctions(parsed)} onSelect={() => {}} onChange={() => {}} onVariable={() => {}} selected />);
   expect(container.querySelector(".pc-error")).toBeNull();
-  expect(container.querySelector("svg, .pc-math, input, button")).not.toBeNull();
+  expect(container.querySelector("svg, .pc-math, .pc-answer-field, input, button")).not.toBeNull();
 });
 
 it.each([[2, 5, 1], [7, 4, 2], [8, 4, 2], [1, 2, 1], [2, 4, 1]])("renders %i/%i as %i real circular units", (numerator, denominator, units) => {

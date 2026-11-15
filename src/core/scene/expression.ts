@@ -6,7 +6,7 @@ export type Expr =
   | { kind: "binary"; op: "+" | "-" | "*" | "/" | "^"; left: Expr; right: Expr }
   | { kind: "call"; name: string; argument: Expr };
 export type Variables = { a: number; b: number; c: number };
-const functions = new Set(["sin", "cos", "tan", "exp", "ln", "sqrt"]);
+const functions = new Set(["sin", "cos", "tan", "exp", "ln", "sqrt", "rad", "deg"]);
 const num = (value: number): Expr => ({ kind: "number", value });
 const bin = (
   op: "+" | "-" | "*" | "/" | "^",
@@ -114,6 +114,8 @@ export function evaluate(expr: Expr, x: number, variables: Variables): number {
   if (expr.kind === "call") {
     const a = evaluate(expr.argument, x, variables);
     switch (expr.name) {
+      case "rad": return a * Math.PI / 180;
+      case "deg": return a * 180 / Math.PI;
       case "sin":
         return Math.sin(a);
       case "cos":
@@ -179,7 +181,9 @@ export function derivative(e: Expr, variables?: Variables): Expr {
     if (n.kind === "variable") return num(n.name === "x" ? 1 : 0);
     if (n.kind === "call") {
       const u = n.argument, du = d(u);
-      const outer = n.name === "sin"
+      const outer = n.name === "rad" ? num(Math.PI / 180)
+        : n.name === "deg" ? num(180 / Math.PI)
+        : n.name === "sin"
         ? call("cos", u)
         : n.name === "cos"
         ? bin("*", num(-1), call("sin", u))
