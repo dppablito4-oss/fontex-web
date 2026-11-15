@@ -6,7 +6,7 @@ Al cerrar se puede guardar, cancelar o descartar los cambios desde la versión a
 
 Una construcción que conserva un título genérico recibe el primer encabezado generado, o un nombre derivado del pedido. Archivo permite editarlo manualmente; los títulos personales se conservan.
 
-PDF genera el archivo en el navegador con jsPDF, captura del contenido matemático renderizado y paginación A4. El contenido del lienzo se rasteriza; se preservan las fórmulas y dibujos visualmente, pero su texto no es seleccionable. El encabezado contiene el símbolo y nombre Fontex, título y dominio; el QR final lleva el símbolo incrustado con corrección H. Las dependencias de exportación se cargan al descargar.
+PDF genera el archivo en el navegador con jsPDF, captura del contenido matemático renderizado y paginación A4. La captura utiliza la paleta clara completa, incluidos fondos de explicaciones, citas y fórmulas, aunque la interfaz esté en modo oscuro. El contenido del lienzo se rasteriza; se preservan las fórmulas y dibujos visualmente, pero su texto no es seleccionable. El encabezado contiene el símbolo y nombre Fontex, título y dominio; el QR final lleva el símbolo incrustado con corrección H. Las dependencias de exportación se cargan al descargar.
 
 «Compartir este lienzo mediante el QR» es opcional y requiere cuenta. Guarda una copia explícita en `canvas_public_shares` omitiendo la conversación y los identificadores de solicitudes IA. El enlace usa un UUID aleatorio y abre `#/compartido/:token` sin autenticación, en solo lectura. Una nueva exportación compartida actualiza la copia y conserva el enlace. Archivo → Desactivar enlace público lo revoca; eliminar el documento también elimina su copia pública.
 

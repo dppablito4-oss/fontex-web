@@ -42,6 +42,8 @@
   --font-mono: "DM Mono", ui-monospace, monospace;
 }
 
+/* Nested light scopes (including PDF capture) reset inherited dark tokens. */
+[data-theme="light"],
 :root {
   color-scheme: light;
   font-family: var(--font-sans);
