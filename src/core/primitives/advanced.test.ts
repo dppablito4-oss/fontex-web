@@ -189,6 +189,7 @@ describe("beta document boundaries and presentation", () => {
   });
   it("skips empty presentation groups and delays children until their parent exists", () => {
     const scene = templateScene("ellipse");
+    for (const p of scene.primitives) p.presentationStep = 7;
     scene.primitives[0]!.presentationStep = 5;
     scene.primitives.find((p) => p.kind === "function_region")!
       .presentationStep = 1;

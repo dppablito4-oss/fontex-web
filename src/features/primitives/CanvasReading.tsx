@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fractionLessons } from "../../core/primitives/fraction-lessons";
+import { lessonSequence } from "../../core/primitives/lesson-flow";
 import { FractionLesson } from "./FractionLesson";
 import type { Primitive } from "../../core/primitives/schema";
 import { PrimitiveVisual } from "./PrimitiveVisual";
@@ -11,18 +11,14 @@ import { SiteHeader } from "../../components/ProductNavigation";
 import "./primitives.css";
 
 export function CanvasReading({ scene }: { scene: PrimitiveScene }) {
-  const lessons = fractionLessons(scene);
-  const members = new Set(lessons.flatMap(l => [...l.texts, ...l.figures].map(p => p.id)));
-  const visual = (p: Primitive) => <PrimitiveVisual p={p} scene={scene} scope={sceneScope(scene)} functions={sceneFunctions(scene)} selected={false}
+  const scope = sceneScope(scene), functions = sceneFunctions(scene);
+  const visual = (p: Primitive) => <PrimitiveVisual p={p} scene={scene} scope={scope} functions={functions} selected={false}
     readOnly onChange={() => {}} onVariable={() => {}} onSelect={() => {}} />;
-  const items = [
-    ...lessons.map(lesson => ({ id: lesson.id, step: lesson.step, y: Math.min(...lesson.texts.map(p => p.y),...lesson.figures.map(p => p.y)),
-      content: <FractionLesson lesson={lesson} renderPrimitive={p => visual(p)} /> })),
-    ...workspaceRoots(scene).filter(p => !members.has(p.id)).map(p => ({ id: p.id, step: p.presentationStep, y: p.y,
-      content: <>{p.label && <h2>{p.label}</h2>}{visual(p)}</> })),
-  ].sort((a,b) => a.step-b.step || a.y-b.y);
-  return <div className="pc-reading-content">{items.map(item =>
-    <section className="pc-export-item" key={item.id}>{item.content}</section>)}</div>;
+  return <div className="pc-reading-content">{lessonSequence(scene, workspaceRoots(scene)).map(item =>
+    <section className="pc-export-item" key={item.id} data-lesson-step={item.step}>
+      {item.kind === "fraction" ? <FractionLesson lesson={item.lesson} renderPrimitive={visual} />
+        : <>{item.primitive.label && <h2>{item.primitive.label}</h2>}{visual(item.primitive)}</>}
+    </section>)}</div>;
 }
 export function SharedCanvasPage({ token }: { token: string }) {
   const [scene, setScene] = useState<PrimitiveScene | null>(null), [error,setError] = useState("");

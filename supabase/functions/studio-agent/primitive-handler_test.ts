@@ -4,6 +4,8 @@ import {
   newPrimitiveScene,
 } from "../../../src/core/primitives/schema.ts";
 import { eventData } from "../../../src/core/agent/event-stream.ts";
+import { lessonInstructions } from "./lesson-instructions.ts";
+import { replySchema } from "../../../src/core/primitives/schema.ts";
 function assert(value: unknown, message = "Assertion failed"): asserts value {
   if (!value) throw Error(message);
 }
@@ -349,6 +351,27 @@ Deno.test("primitives: stream safe text then validate a complete atomic patch", 
     ),
   );
   assert(model === "gpt-6.1-sol");
+});
+
+Deno.test("lessons: validates consecutive explanation and model stages without collapsing them", async () => {
+  const scene = newPrimitiveScene();
+  const intro = createPrimitive("math_block", scene), model = createPrimitive("stamp_grid", scene);
+  const explanation = createPrimitive("math_block", scene), fraction = createPrimitive("geometric_shape", scene);
+  explanation.presentationStep = fraction.presentationStep = 2;
+  fraction.data = { ...fraction.data, shape: "circle_fraction", canvasId: null, divisions: 4, shadedExpr: "3" };
+  const primitives = [intro, model, explanation, fraction];
+  const reply = { message: "Una explicación seguida de su modelo en cada etapa.",
+    actions: primitives.map(primitive => ({ kind: "add_primitive", primitive })) };
+  const provider: typeof fetch = (_url, options) => {
+    const body = JSON.parse(String(options?.body));
+    assert(body.instructions.includes(lessonInstructions));
+    return Promise.resolve(Response.json({ status: "completed", output: [{ content: [{ type: "output_text", text: JSON.stringify(reply) }] }] }));
+  };
+  const result = await events(await createPrimitiveHandler(env, provider)(request("Explicación, pictograma, siguiente explicación y otro pictograma", "build"), { userClaims: { id: "user" } }));
+  const event = result.find(v => v && typeof v === "object" && "type" in v && v.type === "result");
+  assert(event && typeof event === "object" && "reply" in event);
+  const actions = replySchema.parse(event.reply).actions;
+  assert(JSON.stringify(actions.filter(a => a.kind === "add_primitive").map(a => a.primitive.presentationStep)) === "[1,1,2,2]");
 });
 Deno.test("primitives: chat cannot perform hidden edits", async () => {
   const primitive = createPrimitive("math_block", newPrimitiveScene());

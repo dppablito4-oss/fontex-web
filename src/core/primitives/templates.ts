@@ -648,11 +648,36 @@ export function templateScene(id: string): PrimitiveScene {
     }
     text("### Dos figuras, la misma escala\nAzul: rectángulo de **{{b}} × {{h}} cm**. Verde: cuadrado de **{{l}} cm** de lado.\n\nEscribe las medidas o mueve los controles. El plano se adapta para mostrar ambas figuras.");
     text("## Del dibujo al cálculo\n### 1. Calcula la superficie\nEl rectángulo ocupa **base × altura**: $A=b\\cdot h$ = **{{round(b*h,2)}} cm²**. El cuadrado tiene lados iguales: $A=l^2$ = **{{round(l*l,2)}} cm²**.\n\n### 2. Recorre el borde\nEn el rectángulo sumamos dos bases y dos alturas: $P=2(b+h)$ = **{{round(2*(b+h),2)}} cm**. En el cuadrado: $P=4l$ = **{{round(4*l,2)}} cm**.\n\n### 3. Compara y explora\nLa diferencia de superficies es **{{round(abs(b*h-l*l),2)}} cm²**. Prueba una base de **100 cm**: el dibujo conserva sus proporciones y cada división del plano representa más centímetros. Acerca la vista para observar intervalos menores. El zoom cambia la vista; las medidas y los resultados se conservan.");
+  } else if (id === "sum") {
+    scene.variables = [];
+    variable("a", 1, 0, 4);
+    variable("b", 2, 0, 4);
+    const explanation = (step: number, content: string) => {
+      const p = text(content);
+      p.presentationStep = step;
+      p.data.variant = "callout_step";
+    };
+    const fraction = (step: number, label: string, numerator: string) => add("geometric_shape", p => {
+      p.presentationStep = step; p.label = label;
+      p.data = { ...p.data, shape: "circle_fraction", canvasId: null, divisions: 4, shadedExpr: numerator };
+    });
+    explanation(1, "## 1. Entendemos las partes\nUn cuarto es una de las cuatro partes iguales de una unidad. Observa las dos cantidades que vamos a reunir: $\\frac{ {{a}} }{4}$ y $\\frac{ {{b}} }{4}$. Cada círculo representa una unidad del mismo tamaño.");
+    fraction(1, "Primera cantidad", "a");
+    fraction(1, "Segunda cantidad", "b");
+    for (const name of ["a", "b"]) add("control_slider", p => {
+      p.data.variableName = name; p.presentationStep = 1;
+    });
+    explanation(2, "## 2. Reunimos partes iguales\nSumamos cuántos cuartos tenemos y conservamos el tamaño de cada parte.\n\n$$\\frac{ {{a}} }{4}+\\frac{ {{b}} }{4}=\\frac{ {{a+b}} }{4}$$\n\nEl último dibujo reúne las partes de los dos primeros.");
+    fraction(2, "Primer sumando", "a");
+    fraction(2, "Segundo sumando", "b");
+    fraction(2, "Suma", "a+b");
+    explanation(3, "## 3. Interpretamos el resultado\nTenemos **{{a+b}} cuartos**, equivalentes a **{{round((a+b)/4,2)}} unidades**. Si reunimos cuatro partes completamos una unidad; si quedan más, continuamos en otra.\n\nCambia las cantidades de arriba y observa cómo se actualizan los dibujos y la suma.");
+    return parsePrimitiveScene(organizePrimitiveScene(scene));
   } else if (
-    ["irregular", "circle", "fractions", "sum"].includes(id)
+    ["irregular", "circle", "fractions"].includes(id)
   ) {
     const shape = add("geometric_shape");
-    if (id === "fractions" || id === "sum") {
+    if (id === "fractions") {
       scene.variables[0] = {
         name: "n",
         value: 3,
@@ -668,9 +693,7 @@ export function templateScene(id: string): PrimitiveScene {
         p.data.variableName = "n";
       });
       text(
-        id === "sum"
-          ? "## Sumar partes iguales\nEjemplo: $1/4+2/4=3/4$. Conservamos el tamaño de cada parte y sumamos cuántas tenemos.\n\nModifica el numerador: **{{n}}/4 = {{round(n/4,2)}}**. Si superas cuatro partes, necesitas otra unidad. Para distintos denominadores, busca antes partes del mismo tamaño."
-          : "## Una unidad dividida en partes iguales\nColoreamos **{{n}}** cuartos: $\\frac{ {{n}} }{4}$ = **{{round(n/4,2)}}**.\n\nMover el control cambia las porciones, sin cambiar el valor de una unidad.",
+        "## Una unidad dividida en partes iguales\nColoreamos **{{n}}** cuartos: $\\frac{ {{n}} }{4}$ = **{{round(n/4,2)}}**.\n\nMover el control cambia las porciones, sin cambiar el valor de una unidad.",
       );
     } else if (id === "circle") {
       shape.data.shape = "sector";
@@ -789,14 +812,9 @@ export function templateScene(id: string): PrimitiveScene {
       "## Sucesión aritmética\nPartimos de 1 y sumamos **{{d}}** entre términos. El sexto término es **{{1+5*d}}**.",
     );
   } else text("# Tu lienzo\nAñade elementos y vincúlalos mediante variables.");
-  let presentationStep = 1;
+  const explanations = scene.primitives.filter(p => p.kind === "math_block");
   for (const p of scene.primitives) {
-    if ("canvasId" in p.data && p.data.canvasId) {
-      const parentId = p.data.canvasId;
-      p.presentationStep = scene.primitives.find((parent) =>
-        parent.id === parentId
-      )?.presentationStep ?? 1;
-    } else p.presentationStep = presentationStep++;
+    p.presentationStep = p.kind === "math_block" ? explanations.indexOf(p) + 1 : 1;
   }
   return parsePrimitiveScene(organizePrimitiveScene(scene));
 }

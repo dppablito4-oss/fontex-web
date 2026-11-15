@@ -71,9 +71,9 @@ import { templates, templateScene } from "../../core/primitives/templates";
 import { requestPrimitiveAgent } from "./agent";
 import { draggedRotation } from "./gestures";
 import { practiceAttempt } from "../../core/primitives/practice";
-import { fractionLessons } from "../../core/primitives/fraction-lessons";
+import { lessonSequence } from "../../core/primitives/lesson-flow";
 import { FractionLesson } from "./FractionLesson";
-import { organizePrimitiveScene, workspaceRoots } from "../../core/primitives/layout";
+import { fitPrimitiveHeight, organizePrimitiveScene, workspaceRoots } from "../../core/primitives/layout";
 import { useWorkspaceViewport } from "./useWorkspaceViewport";
 import { DockResizeHandle } from "./DockResizeHandle";
 import { buildContent, getCanvasBuild, readPendingBuild, recoveredScene, savePendingBuild, type BuildReceipt } from "./buildRecovery";
@@ -376,7 +376,7 @@ function Editor(
     abort = useRef<AbortController | null>(null),
     messageEnd = useRef<HTMLDivElement>(null);
   const viewport = useWorkspaceViewport(stage, narrow || presenting);
-  const roots = workspaceRoots(scene);
+  const roots = useMemo(() => workspaceRoots(scene), [scene]);
   const boardWidth = Math.max(1200, ...roots.map((p) => p.x + p.width + 24));
   useEffect(() => {
     live.current = scene;
@@ -463,24 +463,8 @@ function Editor(
     if (update(p, history)) viewportBatch.current = { id: p.id, time: now };
   }
   const fit = useCallback((id: string, height: number) => {
-    const current = live.current,
-      p = current.primitives.find((n) => n.id === id);
-    if (
-      !p || Math.abs(p.height - height) < 4 ||
-      (!p.autoHeight && height <= p.height)
-    ) return;
-    const delta = height - p.height,
-      next = {
-        ...current,
-        primitives: current.primitives.map((n) =>
-          n.id === id
-            ? { ...n, height }
-            : n.y >= p.y + p.height - 1 && n.x < p.x + p.width &&
-                n.x + n.width > p.x
-            ? { ...n, y: Math.max(0, n.y + delta) }
-            : n
-        ),
-      };
+    const current = live.current, next = fitPrimitiveHeight(current, id, height);
+    if (next === current) return;
     try {
       const valid = parsePrimitiveScene(next);
       live.current = valid;
@@ -880,8 +864,8 @@ function Editor(
     const next = newPrimitiveScene(`Lienzo ${library.scenes.length + 1}`);
     if (setScene(next)) { live.current = next; resetEditor(); closeTools(); }
   }
-  const lessons = fractionLessons(scene);
-  const lessonMembers = new Set(lessons.flatMap(l => [...l.texts, ...l.figures].map(p => p.id)));
+  const lessonItems = useMemo(() => lessonSequence(scene, roots), [scene, roots]);
+  const lessons = lessonItems.flatMap(item => item.kind === "fraction" ? [item.lesson] : []);
   const renderPrimitiveFrame = (p: Primitive, generated = false) => generated
     ? <PrimitiveVisual p={p} scene={scene} scope={scope} functions={functions}
         selected={false} readOnly onChange={() => {}} onVariable={() => {}} onSelect={() => {}} />
@@ -919,15 +903,11 @@ function Editor(
                       />
                     </Frame>
     );
-  const mobileLessons = [
-    ...lessons.filter(l => !presenting || l.step <= step).map(lesson => ({
-      id: lesson.id, step: lesson.step, y: Math.min(...lesson.texts.map(p => p.y),...lesson.figures.map(p => p.y)),
-      content: <FractionLesson lesson={lesson} renderPrimitive={renderPrimitiveFrame} />,
-    })),
-    ...roots.filter(p => !lessonMembers.has(p.id) && (!presenting || p.presentationStep <= step)).map(p => ({
-      id: p.id, step: p.presentationStep, y: p.y, content: renderPrimitiveFrame(p),
-    })),
-  ].sort((a,b) => a.step-b.step || a.y-b.y);
+  const mobileLessons = lessonItems.filter(item => !presenting || item.step <= step).map(item => ({
+    id: item.id, content: item.kind === "fraction"
+      ? <FractionLesson lesson={item.lesson} renderPrimitive={renderPrimitiveFrame} />
+      : renderPrimitiveFrame(item.primitive),
+  }));
   function toggleTools(tool: Tab) { setTab((current) => current === tool ? null : tool); }
   const toolContent = (
                 <div className="pc-panel-content">
@@ -1288,7 +1268,7 @@ function Editor(
                     transform: narrow ? "none" : `scale(${zoom})`,
                   }}
                 >
-                  {narrow && lessons.length
+                  {narrow
                     ? mobileLessons.map(item => <div key={item.id}>{item.content}</div>)
                     : roots.filter(p => !presenting || p.presentationStep <= step)
                       .sort((a,b) => a.y-b.y || a.x-b.x).map(p => renderPrimitiveFrame(p))}
