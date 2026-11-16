@@ -12,7 +12,7 @@ async function logoCanvas() {
   canvas.getContext("2d")!.drawImage(img, 0, 0, 256, 256);
   return canvas;
 }
-export async function exportCanvasPdf(scene: PrimitiveScene, shareUrl?: string) {
+export async function exportCanvasPdf(scene: PrimitiveScene, shareUrl?: string, options: { download?: boolean } = {}) {
   const [{ jsPDF }, { toCanvas }, QRCode] = await Promise.all([import("jspdf"), import("html-to-image"), import("qrcode")]);
   const host = document.createElement("div");
   host.style.cssText = "position:fixed;left:-12000px;top:0;width:1000px;pointer-events:none;";
@@ -96,6 +96,7 @@ export async function exportCanvasPdf(scene: PrimitiveScene, shareUrl?: string) 
     pdf.text(shareUrl ? "Abre este lienzo en Fontex" : "Creado con Fontex",105,y+qrSize+8,{align:"center"});
     pdf.link(105-qrSize/2,y+3,qrSize,qrSize,{url:shareUrl || site});
     const filename = (scene.title || "Fontex").replace(/[<>:"/\\|?*]/g,"-");
-    pdf.save(`${filename}.pdf`);
+    if (options.download !== false) pdf.save(`${filename}.pdf`);
+    return pdf.output("blob");
   } finally { root.unmount(); host.remove(); }
 }

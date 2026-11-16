@@ -1,3 +1,4 @@
+import { readClassroomGuest } from "../classrooms/classroom-access";
 import { z } from "zod";
 import { supabase } from "../../lib/supabase/client";
 import { applyPrimitivePatch, parsePrimitiveScene, replySchema, type PrimitiveScene } from "../../core/primitives/schema";
@@ -13,13 +14,13 @@ export type BuildSummary = z.infer<typeof buildSummarySchema>;
 export type BuildReceipt = Omit<z.infer<typeof receiptSchema>, "source"> & { source: PrimitiveScene };
 export async function listCanvasBuilds(sceneId: string): Promise<BuildSummary[]> {
   if (!supabase) return [];
-  const { data, error } = await supabase.rpc("list_canvas_builds", { p_scene_id: sceneId });
+  const { data, error } = await (readClassroomGuest() ? supabase.rpc("guest_canvas_receipts", {p_token:readClassroomGuest()!.token,p_scene:sceneId}) : supabase.rpc("list_canvas_builds", { p_scene_id: sceneId }));
   if (error) throw Error("No se pudieron consultar las construcciones pendientes.");
   return z.array(buildSummarySchema).parse(data);
 }
 export async function getCanvasBuild(id: string): Promise<BuildReceipt | null> {
   if (!supabase) return null;
-  const { data, error } = await supabase.rpc("get_canvas_build", { p_request_id: id });
+  const { data, error } = await (readClassroomGuest() ? supabase.rpc("guest_canvas_receipts", {p_token:readClassroomGuest()!.token,p_request:id}) : supabase.rpc("get_canvas_build", { p_request_id: id }));
   if (error) throw Error("No se pudo comprobar la construcción. Recupera la conexión antes de generar otra vez.");
   if (!data) return null;
   const parsed = receiptSchema.parse(data);
@@ -27,7 +28,7 @@ export async function getCanvasBuild(id: string): Promise<BuildReceipt | null> {
 }
 export async function acknowledgeCanvasBuild(id: string) {
   if (supabase) {
-    const { error } = await supabase.rpc("ack_canvas_build", { p_request_id: id });
+    const { error } = await (readClassroomGuest() ? supabase.rpc("guest_canvas_receipts", {p_token:readClassroomGuest()!.token,p_request:id,p_ack:true}) : supabase.rpc("ack_canvas_build", { p_request_id: id }));
     if (error) throw Error("No se pudo confirmar la aplicación.");
   }
 }

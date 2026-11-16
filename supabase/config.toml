@@ -483,3 +483,9 @@ content_path = "./supabase/templates/identity_unlinked_notification.html"
 
 [functions.scene-agent]
 verify_jwt = true
+
+# These functions validate the classroom invitation token or Auth JWT internally.
+[functions.classroom-api]
+verify_jwt = false
+[functions.classroom-agent]
+verify_jwt = false

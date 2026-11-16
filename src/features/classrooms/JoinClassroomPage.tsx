@@ -5,7 +5,7 @@ import { Button } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
 import { useAuth } from "../auth/AuthProvider";
 import { useClassroomGuest } from "./classroom-guest-context";
-import { adoptClassroomCanvases, classroomAccessError, classroomClient, guestSchema, inviteValue, storeClassroomGuest } from "./classroom-access";
+import { adoptClassroomCanvases, saveClassroomCanvases, classroomAccessError, classroomClient, guestSchema, inviteValue, storeClassroomGuest } from "./classroom-access";
 
 export function JoinClassroomPage() {
   const [params] = useSearchParams(), navigate = useNavigate();
@@ -74,11 +74,12 @@ export function JoinClassroomPage() {
     try {
       const { data, error: problem } = await classroomClient().rpc("complete_classroom_guest", { p_token: guest.token });
       if (problem) throw Error(problem.message);
-      adoptClassroomCanvases(guest, user.id);
+      const copies=adoptClassroomCanvases(guest,user.id);
+      await saveClassroomCanvases(user.id,copies);
       sessionStorage.setItem("fontex-active-classroom", String(data));
       storeClassroomGuest(null);
-      void navigate("/lienzo", { replace: true });
-    } catch (problem) { setError(problem instanceof Error && problem.message.includes("biblioteca") ? problem.message : classroomAccessError(problem)); }
+      void navigate("/aula", { replace: true });
+    } catch (problem) { setError(problem instanceof Error && /biblioteca|copia|subir|guardado/.test(problem.message) ? problem.message : classroomAccessError(problem)); }
     finally { setPending(false); }
   }
 
@@ -106,7 +107,7 @@ export function JoinClassroomPage() {
         {message && <p role="status" className="text-sm text-success">{message}</p>}
         {status === "loading" && <p role="status">Comprobando tu sesión…</p>}
         {title && !user && status !== "loading" && <form className="space-y-5" onSubmit={event => { void enter(event); }}>
-          <p>Participa en la clase escribiendo solo tu nombre. Tu acceso temporal dura hasta 8 horas. Al terminar puedes crear tu cuenta para guardar y permanecer en el aula.</p>
+          <p>Participa en la clase escribiendo solo tu nombre. Tu acceso temporal dura hasta 8 horas e incluye 5 créditos de IA para crear lienzos. Al terminar puedes crear tu cuenta para guardar y permanecer en el aula.</p>
           <label className="form-field"><span>Tu nombre</span><input autoComplete="name" required minLength={1} maxLength={80} value={name} onChange={e => setName(e.target.value)} /></label>
           <Button type="submit" disabled={pending || !name.trim()}>Entrar a la clase</Button>
           <a className="block text-sm text-primary underline" href={`#/ingresar?volver=${encodeURIComponent(`/unirse?invite=${encodeURIComponent(resolved)}`)}`}>Ya tengo cuenta: iniciar sesión</a>
@@ -114,7 +115,7 @@ export function JoinClassroomPage() {
         {title && user && <p role="status">{pending ? "Uniendo tu cuenta al aula…" : "No se completó la incorporación."}{!pending && <Button onClick={() => { setTitle(""); setPending(true); setAttempt(value => value + 1); }}>Reintentar</Button>}</p>}
         {!title && guest && <>
           <p><strong>{guest.display_name}</strong> · {checking ? "Comprobando acceso…" : active ? "Estás en el aula temporalmente." : "Tu participación temporal finalizó."}</p>
-          <p className="text-sm text-muted-foreground">El trabajo temporal se conserva en este navegador. Completa tu cuenta para guardarlo en ella y seguir en el aula.</p>
+          <p className="text-sm text-muted-foreground">Vincula tu correo y confírmalo para conservar tus actividades, tus lienzos y el saldo restante. Recibirás 5 créditos adicionales una sola vez y permanecerás en el aula.</p>
           <a className="inline-block font-semibold text-primary underline" href="#/lienzo">{active ? "Abrir mi lienzo" : "Recuperar mi copia local"}</a>
           {!upgrading && !user && <Button onClick={() => setUpgrading(true)}>Guardar y permanecer en el aula</Button>}
           {(upgrading || !!user) && (user ? <Button disabled={pending} onClick={() => void finish()}>Conservar mis lienzos y mi matrícula</Button> : <form className="space-y-4" onSubmit={event => { void account(event); }}>

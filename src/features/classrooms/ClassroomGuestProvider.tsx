@@ -36,8 +36,9 @@ export function ClassroomGuestBanner() {
   const { guest, active, checking } = useClassroomGuest();
   if (!guest) return null;
   return <div className="pc-guest-banner">
-    <span><strong>{guest.display_name}</strong> · {guest.title} · {checking ? "Comprobando acceso…" : active ? "Participación temporal" : "Acceso temporal finalizado"}</span>
-    <a href="#/unirse?conservar=1">Guardar y permanecer en el aula</a>
+    <span><strong>{guest.display_name}</strong> · {guest.title} · {checking ? "Comprobando acceso…" : active ? "Acceso de 8 horas · 5 créditos de IA" : "Acceso temporal finalizado"}</span>
+    <span>Vincula y confirma tu correo para conservar tu trabajo, seguir en el aula y recibir 5 créditos más.</span>
+    <a href="#/aula">Mi aula</a><a href="#/unirse?conservar=1">Guardar y permanecer en el aula</a>
     <button aria-label="Salir del aula temporal" onClick={() => { storeClassroomGuest(null); window.location.hash = "/unirse"; }}>Salir</button>
   </div>;
 }

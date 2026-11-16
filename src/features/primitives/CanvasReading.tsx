@@ -10,10 +10,10 @@ import { readPublicCanvas } from "./sharing";
 import { SiteHeader } from "../../components/ProductNavigation";
 import "./primitives.css";
 
-export function CanvasReading({ scene }: { scene: PrimitiveScene }) {
+export function CanvasReading({ scene, practice = false, onPracticeChange }: { scene: PrimitiveScene; practice?: boolean; onPracticeChange?: (scene: PrimitiveScene) => void }) {
   const scope = sceneScope(scene), functions = sceneFunctions(scene);
   const visual = (p: Primitive) => <PrimitiveVisual p={p} scene={scene} scope={scope} functions={functions} selected={false}
-    readOnly onChange={() => {}} onVariable={() => {}} onSelect={() => {}} />;
+    readOnly practice={practice} onPracticeChange={onPracticeChange} onChange={() => {}} onVariable={() => {}} onSelect={() => {}} />;
   return <div className="pc-reading-content">{lessonSequence(scene, workspaceRoots(scene)).map(item =>
     <section className="pc-export-item" key={item.id} data-lesson-step={item.step}>
       {item.kind === "fraction" ? <FractionLesson lesson={item.lesson} renderPrimitive={visual} />

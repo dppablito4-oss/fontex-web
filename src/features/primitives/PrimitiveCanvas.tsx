@@ -40,6 +40,7 @@ import {
   X,
 } from "lucide-react";
 import { createPortal } from "react-dom";
+import { PublishLessonDialog } from "../classrooms/PublishLessonDialog";
 import { SiteHeader } from "../../components/ProductNavigation";
 import { useAuth } from "../auth/AuthProvider";
 import { ClassroomGuestBanner } from "../classrooms/ClassroomGuestProvider";
@@ -286,14 +287,17 @@ export function PrimitiveCanvas() {
       key={guest ? guestOwner(guest.id) : participant ? user.id : "guest"}
       owner={guest ? guestOwner(guest.id) : participant ? user.id : "guest"}
       authenticated={participant && !guest}
+      aiAllowed={!!guest || participant}
       accessNote={user && access.status === "error" ? "No se pudo actualizar la comprobación de acceso. Conservamos tu lienzo; reintenta si falla alguna acción." : user && !participant ? "Esta cuenta no tiene acceso remoto disponible. Puedes seguir creando en el lienzo local o consultar al administrador." : ""}
     />
   );
 }
 function Editor(
-  { owner, authenticated, accessNote }: { owner: string; authenticated: boolean; accessNote: string },
+  { owner, authenticated, aiAllowed, accessNote }: { owner: string; authenticated: boolean; aiAllowed: boolean; accessNote: string },
 ) {
   const library = usePrimitiveStore(owner), { scene, setScene } = library;
+  const [publishDialog,setPublishDialog]=useState(false);
+  const classroomId=new URLSearchParams(window.location.hash.split("?")[1]).get("aula")??undefined;
   const [practice, setPractice] = useState(false);
   const [closeId, setCloseId] = useState<string | null>(null);
   const [pdfDialog, setPdfDialog] = useState(false), [publicQr, setPublicQr] = useState(false);
@@ -331,7 +335,7 @@ function Editor(
     finally { setDocumentBusy(false); }
   }
   const credits = useAiCredits();
-  const creditBlocked = authenticated &&
+  const creditBlocked = aiAllowed &&
     (!credits.status || credits.status.balance < 1 ||
       credits.status.active_generation);
   const [selectedId, setSelected] = useState<string | null>(null),
@@ -449,7 +453,7 @@ function Editor(
       return true;
     } catch (error) { setNotice(error instanceof Error ? error.message : "No se pudo recuperar la construcción."); return false; }
   }
-  const recovery = useBuildRecovery({ authenticated, scene, status: library.status, busy,
+  const recovery = useBuildRecovery({ authenticated: aiAllowed, scene, status: library.status, busy,
     current: () => live.current, apply: recoverBuild });
   function update(p: Primitive, history = true) {
     return commit({
@@ -696,7 +700,7 @@ function Editor(
   }
   async function ask(task: "chat" | "build", question = prompt) {
     if (!question.trim() || busy) return;
-    if (!authenticated) {
+    if (!aiAllowed) {
       setNotice(
         "Inicia sesión para conversar con Fontex AI. Puedes crear con las plantillas y los elementos sin usar IA.",
       );
@@ -875,6 +879,17 @@ function Editor(
     const next = newPrimitiveScene(`Lienzo ${library.scenes.length + 1}`);
     if (setScene(next)) { live.current = next; resetEditor(); closeTools(); }
   }
+  const createdForClass = useRef(false);
+  useEffect(()=>{
+    if(createdForClass.current || library.status==="loading" || library.status==="saving")return;
+    const parameters=new URLSearchParams(window.location.hash.split("?")[1]);
+    if(parameters.get("nuevo")!=="1" || !parameters.get("aula"))return;
+    createdForClass.current=true;
+    const next=newPrimitiveScene(`Lienzo ${library.scenes.length+1}`);
+    setScene(next);
+    parameters.delete("nuevo");
+    history.replaceState(null,"",`${location.pathname}${location.search}#/lienzo?${parameters}`);
+  },[library.status,library.scenes.length,setScene]);
   const lessonItems = useMemo(() => lessonSequence(scene, roots), [scene, roots]);
   const lessons = lessonItems.flatMap(item => item.kind === "fraction" ? [item.lesson] : []);
   const renderPrimitiveFrame = (p: Primitive, generated = false) => generated
@@ -1117,6 +1132,7 @@ function Editor(
         {documentError && <p role="alert">{documentError}</p>}
         <div className="pc-dialog-actions"><button disabled={documentBusy} onClick={() => void downloadPdf()}>{documentBusy ? "Preparando PDF…" : "Descargar PDF"}</button><button disabled={documentBusy} onClick={() => setPdfDialog(false)}>Cancelar</button></div>
       </CanvasDialog>}
+      {publishDialog && <PublishLessonDialog scene={scene} classroomId={classroomId} onClose={()=>setPublishDialog(false)}/>}
       <SiteHeader />
       <ClassroomGuestBanner />
       <CanvasDocumentTabs scenes={library.tabs} activeId={scene.id} onOpen={openScene} onNew={newScene} onClose={id => { if(!busy && !practice) { setCloseId(id); setDocumentError(""); } }} />
@@ -1135,6 +1151,7 @@ function Editor(
               <button onClick={() => { closeTools(); file.current?.click(); }}><FolderOpen size={16} />Abrir JSON</button>
               <button onClick={() => { download(); closeTools(); }}><Download size={16} />Guardar JSON</button>
               <button onClick={() => { closeTools(); setDocumentError(""); setPdfDialog(true); }}><Download size={16} />Exportar PDF</button>
+              {authenticated && <button disabled={busy || documentBusy} onClick={()=>{void library.save().then(ok=>{if(ok)setPublishDialog(true);else setNotice("Guarda el lienzo en tu cuenta antes de publicarlo.");});}}>Publicar en un aula</button>}
               {authenticated && <button onClick={() => void revokeCanvas(scene.id, owner).then(() => { setShareLink(""); setNotice("Enlace público desactivado."); }).catch((e: unknown) => setNotice(e instanceof Error ? e.message : "No se pudo desactivar el enlace."))}>Desactivar enlace público</button>}
               <button className="pc-delete-document" disabled={busy || library.status === "saving" || library.status === "loading"} onClick={() => {
                 if (!window.confirm(`¿Eliminar el lienzo «${scene.title || "Sin título"}»? Guarda un JSON si necesitas conservar una copia.`)) return;
@@ -1157,6 +1174,7 @@ function Editor(
         <div className="pc-top-actions">
           <button aria-label={focused ? "Restaurar espacio de trabajo" : "Ampliar lienzo"} aria-pressed={focused} title="Ampliar lienzo · Escape para volver" onClick={() => setFocused(!focused)}>{focused ? <Minimize2 size={16} /> : <Maximize2 size={16} />}</button>
           <button aria-label="Asistente" title="Asistente" disabled={practice} aria-pressed={sidebar && dockView === "chat"} onClick={() => { setDockView("chat"); setSidebar(!sidebar || dockView !== "chat"); closeTools(); }}><MessageCircle size={16} /><span>Asistente</span></button>
+          {authenticated && classroomId && <button disabled={busy || documentBusy} onClick={()=>{void library.save().then(ok=>{if(ok)setPublishDialog(true);else setNotice("No se pudo guardar el lienzo para publicarlo.");});}}>Publicar en aula</button>}
           <button aria-label="PDF" disabled={!scene.primitives.length || documentBusy} onClick={() => { setDocumentError(""); setPdfDialog(true); }}><Download size={16} /><span>PDF</span></button>
           <button aria-pressed={practice} disabled={busy || !scene.primitives.length} onClick={()=>{
             if(practice) {setPractice(false);resetEditor();return;}

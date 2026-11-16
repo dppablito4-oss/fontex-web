@@ -1,3 +1,4 @@
+import { readClassroomGuest } from "../classrooms/classroom-access";
 import { supabase } from "../../lib/supabase/client";
 import { eventData } from "../../core/agent/event-stream";
 import {
@@ -22,11 +23,12 @@ export async function requestPrimitiveAgent(
       "Inicia sesión para conversar con Fontex AI. Los elementos y las plantillas funcionan sin IA.",
     );
   }
+  const guest = readClassroomGuest();
   const result = await supabase.functions.invoke<unknown>(
-    "studio-agent/primitives",
+    guest ? "classroom-agent" : "studio-agent/primitives",
     // Keep the same signal attached through the streamed body. The SDK's
     // invoke timeout is cleared when headers arrive and detaches cancellation.
-    { body: input, signal: AbortSignal.any([signal, AbortSignal.timeout(85000)]) },
+    { body: input, ...(guest ? {headers:{"x-classroom-guest":guest.token}} : {}), signal: AbortSignal.any([signal, AbortSignal.timeout(85000)]) },
   );
   if (result.error) {
     const invocationError: unknown = result.error;

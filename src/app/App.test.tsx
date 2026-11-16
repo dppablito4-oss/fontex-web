@@ -54,9 +54,9 @@ describe("Fontex shell", () => {
     ["/grupo", /horizonte/i],
     ["/biblioteca", /biblioteca/i],
     ["/administracion", /administración/i],
-  ])("renderiza la ruta %s", (route, heading) => {
+  ])("renderiza la ruta %s", async (route, heading) => {
     renderRoute(route);
-    expect(screen.getByRole("heading", { name: heading, level: 1 })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: heading, level: 1 })).toBeInTheDocument();
   });
 
   it("navega con HashRouter desde el menú móvil", async () => {

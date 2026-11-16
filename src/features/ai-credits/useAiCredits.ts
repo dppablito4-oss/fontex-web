@@ -1,8 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "../auth/AuthProvider";
+import { useClassroomGuest } from "../classrooms/classroom-guest-context";
+import { classroomClient } from "../classrooms/classroom-access";
+import { creditStatusSchema } from "./service";
 import { type CreditStatus, getCreditStatus } from "./service";
 export function useAiCredits() {
-  const { user } = useAuth(), owner = user?.id ?? "";
+  const { user } = useAuth();
+  const { guest } = useClassroomGuest();
+  const token = guest?.token;
+  const owner = guest ? `guest:${guest.id}` : user?.id ?? "";
   const [value, setValue] = useState<
     { owner: string; status: CreditStatus | null; error: string | null }
   >({ owner: "", status: null, error: null });
@@ -10,7 +16,8 @@ export function useAiCredits() {
   const refresh = useCallback(() => {
     if (!owner) return Promise.resolve();
     const request = ++sequence.current;
-    return getCreditStatus().then((status) => {
+    const requestStatus = token ? classroomClient().rpc("get_guest_ai_status", {p_token:token}).then(r => { if(r.error) throw r.error; return creditStatusSchema.parse(r.data); }) : getCreditStatus();
+    return Promise.resolve(requestStatus).then((status) => {
       if (request === sequence.current) {
         setValue({ owner, status, error: null });
       }
@@ -23,7 +30,7 @@ export function useAiCredits() {
         });
       }
     });
-  }, [owner]);
+  }, [owner, token]);
   useEffect(() => {
     if (!owner) return;
     void refresh();

@@ -25,6 +25,8 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Test real browser canvas flows
         run: npm run test:e2e
+      - name: Test classroom publication and guest participation
+        run: npm run test:e2e:classrooms
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
@@ -72,6 +74,10 @@ jobs:
         run: deno check --config supabase/functions/tutor-chat/deno.json supabase/functions/tutor-chat/index.ts
       - name: Check math practice tutor
         run: deno check --config supabase/functions/practice-tutor/deno.json supabase/functions/practice-tutor/index.ts
+      - name: Check classroom activities and guest agent
+        run: |
+          deno check --config supabase/functions/classroom-api/deno.json supabase/functions/classroom-api/index.ts
+          deno check --config supabase/functions/classroom-agent/deno.json supabase/functions/classroom-agent/index.ts
       - name: Check Studio agent
         run: deno check --config supabase/functions/studio-agent/deno.json supabase/functions/studio-agent/index.ts
       - name: Test composable primitive agent

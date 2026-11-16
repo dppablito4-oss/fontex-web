@@ -1,6 +1,6 @@
 import { expect, it } from "vitest";
 import { createPrimitive, newPrimitiveScene, parsePrimitiveScene, type PrimitiveKind } from "./schema";
-import { applyPracticeValue, practiceAttempt, practiceFields } from "./practice";
+import { applyPracticeValue, practiceAttempt, practiceFields, validatePracticeAttempt } from "./practice";
 import { templateScene } from "./templates";
 
 const cases: [PrimitiveKind,string,unknown][] = [
@@ -82,4 +82,27 @@ it.each(["sqrt(x-", "alert(x)", "x+unknown", "x;window.location=1"])("rejects in
   const scene = templateScene("practice-line");
   const field = scene.primitives.find(p => p.kind === "answer_field")!;
   expect(() => applyPracticeValue(scene, field.id, "answer", answer)).toThrow();
+});
+
+it.each(cases)("accepts an authorized submission and rejects protected changes in %s", (kind,key,raw)=>{
+  const scene=newPrimitiveScene();
+  if(kind==="function_region")scene.primitives.push(createPrimitive("coordinate_canvas",scene));
+  const p=createPrimitive(kind,scene);
+  if(p.kind==="node_graph")p.data.edges[0]!.label="1/2";
+  p.interaction={fields:[key]};scene.primitives.push(p);
+  const answer=applyPracticeValue(scene,p.id,key,raw);
+  expect(validatePracticeAttempt(scene,answer)).toEqual(answer);
+  const forged=structuredClone(answer);forged.primitives[0]!.label="Otra definición";
+  expect(()=>validatePracticeAttempt(scene,forged)).toThrow(/Solo puedes/);
+  const extra=structuredClone(answer);extra.primitives.push(createPrimitive("math_block",scene));
+  expect(()=>validatePracticeAttempt(scene,extra)).toThrow();
+});
+it("rejects changed permissions, scene identity, layout and fixed variable ranges",()=>{
+  const source=templateScene("practice-line");
+  for(const mutate of [
+    (s:typeof source)=>{s.id=crypto.randomUUID();},
+    (s:typeof source)=>{s.primitives[0]!.interaction={fields:["label"]};},
+    (s:typeof source)=>{s.primitives[0]!.x+=50;},
+    (s:typeof source)=>{s.variables[0]!.max+=10;},
+  ]){const forged=structuredClone(source);mutate(forged);expect(()=>validatePracticeAttempt(source,forged)).toThrow();}
 });

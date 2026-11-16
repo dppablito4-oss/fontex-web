@@ -149,32 +149,21 @@ function CreditAdministration() {
       {loading
         ? <p role="status">Cargando cuentas…</p>
         : (
-          <div className="ai-account-list">
-            {accounts.map((account) => (
-              <button
-                key={account.user_id}
-                type="button"
-                className="ai-account-row"
-                disabled={pending}
-                aria-pressed={selected?.user_id === account.user_id}
-                onClick={() => {
-                  setSelected(account);
-                  setEvents([]);
-                  setHistoryError("");
-                  setMessage("");
-                }}
-              >
-                <span>
-                  <strong>{account.display_name}</strong>
-                  <small>
-                    {account.email ?? "Cuenta sin correo"}
-                    {account.is_admin ? " · Administrador" : ""}
-                  </small>
-                </span>
-                <span>{account.credits} créditos</span>
-              </button>
-            ))}
-            {!accounts.length && <p>No hay cuentas que coincidan.</p>}
+          <div className="ai-account-table-wrap">
+            <table className="ai-account-table">
+              <caption>Cuentas y saldo de IA · página {offset / 25 + 1}</caption>
+              <thead><tr><th scope="col">Usuario</th><th scope="col">Rol</th><th scope="col">Créditos</th><th scope="col">Registro</th><th scope="col">Acciones</th></tr></thead>
+              <tbody>{accounts.map(account => <tr key={account.user_id} data-selected={selected?.user_id===account.user_id}>
+                <td><strong>{account.display_name}</strong><small>{account.email ?? "Cuenta sin correo"}</small></td>
+                <td><span className="ai-role-badge">{account.is_admin?"Administrador":"Participante"}</span></td>
+                <td><strong className="ai-table-balance">{account.credits}</strong></td>
+                <td>{new Date(account.created_at).toLocaleDateString("es")}</td>
+                <td><Button type="button" variant="secondary" size="sm" disabled={pending} aria-pressed={selected?.user_id===account.user_id}
+                  aria-label={`Administrar ${account.display_name} · ${account.email ?? "Cuenta sin correo"}`}
+                  onClick={()=>{setSelected(account);setEvents([]);setHistoryError("");setMessage("");}}>Gestionar créditos</Button></td>
+              </tr>)}</tbody>
+            </table>
+            {!accounts.length && <p className="p-4">No hay cuentas que coincidan.</p>}
           </div>
         )}
       <div className="ai-account-pagination">
@@ -237,23 +226,11 @@ function CreditAdministration() {
           </form>
           <h3>Últimos movimientos</h3>
           {historyError && <p role="alert">{historyError}</p>}
-          <ul className="ai-credit-history">
-            {events.map((event) => (
-              <li key={event.id}>
-                <span>
-                  {eventNames[event.kind]}
-                  <small>
-                    {event.reason} ·{" "}
-                    {new Date(event.created_at).toLocaleString("es-PE")}
-                  </small>
-                </span>
-                <strong>
-                  {event.delta > 0 ? "+" : ""}
-                  {event.delta} · saldo {event.balance_after}
-                </strong>
-              </li>
-            ))}
-          </ul>
+          <div className="ai-account-table-wrap"><table className="ai-account-table">
+            <caption>Movimientos de la cuenta seleccionada</caption>
+            <thead><tr><th scope="col">Movimiento</th><th scope="col">Fecha</th><th scope="col">Cambio</th><th scope="col">Saldo</th></tr></thead>
+            <tbody>{events.map(event=><tr key={event.id}><td>{eventNames[event.kind]}<small>{event.reason}</small></td><td>{new Date(event.created_at).toLocaleString("es-PE")}</td><td>{event.delta>0?"+":""}{event.delta}</td><td>{event.balance_after}</td></tr>)}</tbody>
+          </table>{!events.length && !historyError && <p className="p-4 text-sm">Esta cuenta no tiene movimientos para mostrar.</p>}</div>
         </section>
       )}
     </Card>
@@ -287,7 +264,7 @@ export function AiCreditPanel() {
         )}
         <a href="#/lienzo">Ir al lienzo</a>
       </Card>
-      {status?.is_admin && <AdminMfaGate><CreditAdministration /><BetaAdminPanel /><CanvasDiagnostics /></AdminMfaGate>}
+      {status?.is_admin && <AdminMfaGate><CreditAdministration /><details className="ai-admin-detail"><summary>Acceso a la beta e invitaciones</summary><BetaAdminPanel /></details><details className="ai-admin-detail"><summary>Diagnóstico de construcciones</summary><CanvasDiagnostics /></details></AdminMfaGate>}
     </div>
   );
 }

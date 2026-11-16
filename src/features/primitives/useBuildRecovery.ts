@@ -48,7 +48,7 @@ export function useBuildRecovery({ authenticated, scene, status, busy, current, 
     };
   }, [authenticated, scene.id, loading, busy]);
   useEffect(() => {
-    if (!authenticated || status !== "saved") return;
+    if (!authenticated || (status !== "saved" && status !== "local")) return;
     for (const id of scene.appliedBuildIds ?? []) {
       if (acked.current.has(id)) continue;
       acked.current.add(id);

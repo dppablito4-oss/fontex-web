@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { supabase } from "../../lib/supabase/client";
-import { parsePrimitiveScene } from "../../core/primitives/schema";
+import { parsePrimitiveScene, type PrimitiveScene } from "../../core/primitives/schema";
 
 export const guestSchema = z.object({
   id: z.string().uuid(), token: z.string().regex(/^[a-f0-9]{64}$/),
@@ -47,9 +47,15 @@ export function classroomClient() {
 export function adoptClassroomCanvases(guest: ClassroomGuest, userId: string) {
   const targetKey = `fontex-primitives-v2:${userId}`;
   const marker = `${targetKey}:classroom-import:${guest.id}`;
-  if (localStorage.getItem(marker)) return;
+  const recorded=localStorage.getItem(marker);
+  if(recorded) {
+    if(recorded==="1")return [];
+    const ids=z.array(z.string().uuid()).parse(JSON.parse(recorded));
+    const saved=JSON.parse(localStorage.getItem(targetKey)??"null") as {scenes?:unknown[]}|null;
+    return (saved?.scenes??[]).map(parsePrimitiveScene).filter(s=>ids.includes(s.id));
+  }
   const source = JSON.parse(localStorage.getItem(`fontex-primitives-v2:${guestOwner(guest.id)}`) ?? "null") as { scenes?: unknown[]; activeId?: string } | null;
-  if (!source?.scenes?.length) return;
+  if (!source?.scenes?.length) return [];
   const target = JSON.parse(localStorage.getItem(targetKey) ?? "null") as { scenes?: unknown[]; activeId?: string } | null;
   const existing = (target?.scenes ?? []).map(parsePrimitiveScene);
   const ids = new Map<string, string>();
@@ -60,5 +66,21 @@ export function adoptClassroomCanvases(guest: ClassroomGuest, userId: string) {
   });
   if (copies.length + existing.length > 100) throw Error("Tu biblioteca está llena. Exporta tus lienzos temporales como JSON antes de continuar.");
   localStorage.setItem(targetKey, JSON.stringify({ scenes: [...existing, ...copies], activeId: ids.get(source.activeId ?? "") ?? copies[0]!.id }));
-  localStorage.setItem(marker, "1");
+  localStorage.setItem(marker, JSON.stringify(copies.map(s=>s.id)));
+  return copies;
+}
+
+/** Upload imported documents before finishing the account handover. Existing
+ * cloud IDs are never overwritten, including after a lost success response. */
+export async function saveClassroomCanvases(userId:string,scenes:PrimitiveScene[]) {
+  if(!scenes.length)return;
+  const client=classroomClient();
+  const {data,error}=await client.from("visual_scenes").select("id").eq("user_id",userId).in("id",scenes.map(s=>s.id));
+  if(error)throw Error("No se pudo comprobar el guardado. Tu copia temporal sigue disponible; vuelve a intentar conservarla.");
+  const existing=new Set(data.map(s=>s.id));
+  for(const scene of scenes) {
+    if(existing.has(scene.id))continue;
+    const {error}=await client.from("visual_scenes").insert({user_id:userId,id:scene.id,scene:JSON.parse(JSON.stringify(scene)) as import("../../lib/supabase/database.types").Json,revision:1});
+    if(error && error.code!=="23505")throw Error("No se pudieron subir todos tus lienzos. Conservamos la copia local; vuelve a intentar para completar el guardado.");
+  }
 }

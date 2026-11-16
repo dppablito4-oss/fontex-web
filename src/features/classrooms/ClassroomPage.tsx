@@ -9,6 +9,7 @@ import type { ClassroomRole } from "../../lib/supabase/database.types";
 import { useAuth } from "../auth/AuthProvider";
 import { PageHeader } from "../shared/PageHeader";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
+import { ClassroomLearning } from "./ClassroomLearning";
 import { ClassroomJoinPanel } from "./ClassroomJoinPanel";
 
 function DemoClassroomPage() {
@@ -124,7 +125,7 @@ export function ClassroomPage() {
         eyebrow={activeClassroom?.term ?? "Identidad, aulas y RLS"}
         title={activeClassroom?.title ?? "Tu aula"}
         description={activeClassroom
-          ? "Matrícula, roles e invitaciones protegidos por políticas de base de datos."
+          ? "Tus clases, lienzos y actividades, organizados por semana y fecha."
           : "Crea un aula para docencia o acepta una invitación enviada a tu correo."}
         action={activeRole && <Badge tone="green"><ShieldCheck className="size-3" /> {activeRole === "teacher" ? "Docente" : "Estudiante"}</Badge>}
       />
@@ -132,6 +133,8 @@ export function ClassroomPage() {
       {(localError ?? error) && <p className="mt-6 rounded-xl border border-error-border bg-error-surface p-3 text-sm text-error" role="alert">{localError ?? error}</p>}
       {message && <p className="mt-6 rounded-xl border border-success-border bg-success-surface p-3 text-sm text-success" role="status">{message}</p>}
       {loading && <p className="mt-6 text-sm text-muted-foreground" role="status">Cargando aula…</p>}
+
+      {activeClassroom && <ClassroomLearning key={activeClassroom.id} classroomId={activeClassroom.id} teacher={activeRole === "teacher"}/>}
 
       {!activeClassroom ? (
         <div className="mt-8 grid gap-5 lg:grid-cols-2">

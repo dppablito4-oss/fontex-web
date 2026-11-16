@@ -100,3 +100,31 @@ export function applyPracticeValue(scene: PrimitiveScene, id: string, key: strin
 export function practiceAttempt(scene: PrimitiveScene): PrimitiveScene {
   return parsePrimitiveScene({...structuredClone(scene),id:crypto.randomUUID(),title:`Práctica · ${scene.title.replace(/^Práctica · /,"").replace(/^Practicar: /,"")}`.slice(0,160),conversation:[],appliedBuildIds:[],primitives:scene.primitives.map(p=>p.kind==="answer_field"?{...structuredClone(p),data:{...p.data,answer:""}}:structuredClone(p))});
 }
+
+/** Rebuild a submission from its allowed inputs. Any other change is rejected. */
+export function validatePracticeAttempt(source: PrimitiveScene, input: unknown): PrimitiveScene {
+  const candidate = parsePrimitiveScene(input);
+  let expected = structuredClone(source);
+  const at = (value: unknown, path: string): unknown => path.split(".").reduce<unknown>((v,k) => v && typeof v === "object" ? (v as Record<string, unknown>)[k] : undefined, value);
+  for (const primitive of source.primitives) {
+    const changed = candidate.primitives.find(p => p.id === primitive.id);
+    if (!changed || changed.kind !== primitive.kind) throw Error("No puedes reemplazar los elementos del ejercicio.");
+    for (const field of allowedPracticeFields(primitive, source)) {
+      const value = field.key.startsWith("var:")
+        ? candidate.variables.find(v => v.name === field.key.slice(4))?.value
+        : at(changed.data, field.key);
+      const before = field.key.startsWith("var:")
+        ? source.variables.find(v => v.name === field.key.slice(4))?.value
+        : at(primitive.data, field.key);
+      if (JSON.stringify(value) !== JSON.stringify(before)) {
+        if (primitive.kind === "answer_field" && field.key === "answer" && value === "") {
+          const target = expected.primitives.find(p => p.id === primitive.id)!;
+          if (target.kind === "answer_field") target.data.answer = "";
+        } else expected = applyPracticeValue(expected, primitive.id, field.key, field.type === "drawing" ? value : String(value));
+      }
+    }
+  }
+  expected.updatedAt = candidate.updatedAt;
+  if (JSON.stringify(parsePrimitiveScene(expected)) !== JSON.stringify(candidate)) throw Error("Solo puedes modificar las respuestas y los valores habilitados por el docente.");
+  return expected;
+}
