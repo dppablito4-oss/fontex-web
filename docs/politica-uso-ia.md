@@ -8,7 +8,7 @@ Una solicitud de **Crear lienzo / Crear en el lienzo** consume un crédito cuand
 
 Si el proveedor falla, la respuesta queda incompleta o la propuesta no supera la validación, se devuelve el crédito reservado. Una interrupción anterior a completar la generación también libera su reserva. Si el servidor se corta antes de poder confirmarla, la reserva vence a los dos minutos y se recupera al consultar el saldo o iniciar otra generación. La interfaz actualiza el saldo al terminar, al recuperar el foco y periódicamente mientras está visible.
 
-Con cero créditos se puede seguir conversando y usar todas las herramientas locales. Los botones de generación se desactivan; el servidor rechaza también las llamadas directas sin saldo, antes de consultar al proveedor. El modelo de chat sigue configurado con `FONTEX_CHAT_MODEL` (por defecto gpt-6-luna); la construcción con `FONTEX_AGENT_MODEL` (por defecto gpt-6.1-sol). Cambiar el nombre de modelo no evita el cobro del modo build ni permite realizar acciones mediante el modo chat.
+Con cero créditos se puede seguir conversando y usar todas las herramientas locales. Los botones de generación se desactivan; el servidor rechaza también las llamadas directas sin saldo, antes de consultar al proveedor. El modelo de chat sigue configurado con `FONTEX_CHAT_MODEL` (por defecto gpt-6-luna); la construcción con `FONTEX_AGENT_MODEL` (por defecto gpt-6.1-terra). Una configuración anterior de gpt-6.1-sol se redirige a Terra para aplicar el cambio también a los despliegues existentes. El modo estudio del tutor de práctica usa igualmente gpt-6.1-terra. Cambiar el nombre de modelo no evita el cobro del modo build ni permite realizar acciones mediante el modo chat.
 
 ## Administración desde la interfaz
 

@@ -350,7 +350,7 @@ Deno.test("primitives: stream safe text then validate a complete atomic patch", 
       v && typeof v === "object" && "type" in v && v.type === "result"
     ),
   );
-  assert(model === "gpt-6.1-sol");
+  assert(model === "gpt-6.1-terra");
 });
 
 Deno.test("lessons: validates consecutive explanation and model stages without collapsing them", async () => {

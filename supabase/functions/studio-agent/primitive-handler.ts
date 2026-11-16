@@ -172,6 +172,10 @@ export function createPrimitiveHandler(
       }, 503);
     }
     const initialBuild = input.task === "build" && scene.primitives.length === 0;
+    const configuredAgentModel = env("FONTEX_AGENT_MODEL")?.trim();
+    const agentModel = !configuredAgentModel || configuredAgentModel === "gpt-6.1-sol"
+      ? "gpt-6.1-terra"
+      : configuredAgentModel;
     const limits = generationLimits[input.task];
     const outputLimit = limits.outputTokens;
     const schema = input.task === "chat"
@@ -222,7 +226,7 @@ export function createPrimitiveHandler(
     const providerBody = JSON.stringify({
       model: input.task === "chat"
         ? (env("FONTEX_CHAT_MODEL") || "gpt-6-luna")
-        : (env("FONTEX_AGENT_MODEL") || "gpt-6.1-sol"),
+        : agentModel,
       store: false,
       stream: true,
       max_output_tokens: outputLimit,

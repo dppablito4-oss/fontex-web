@@ -1,6 +1,6 @@
 export const tutorModels = {
   chat: { name: "GPT-6 Luna", id: "gpt-6-luna" },
-  study: { name: "GPT-6.1 Sol", id: "gpt-6.1-sol" },
+  study: { name: "GPT-6.1 Terra", id: "gpt-6.1-terra" },
 } as const;
 
 export const trustedDomains = ["minedu.gob.pe", "khanacademy.org", "openstax.org"];

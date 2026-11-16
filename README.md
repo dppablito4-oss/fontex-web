@@ -58,7 +58,7 @@ VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 
 La plantilla contiene la URL del piloto. Las credenciales de servidor, `service_role`, `sb_secret_*` y base de datos nunca deben llevar prefijo `VITE_`. `VITE_SUPABASE_ANON_KEY` sigue aceptándose por compatibilidad. Auth debe permitir las URLs de retorno del entorno y puede requerir confirmar el correo.
 
-La Edge Function `studio-agent` utiliza `OPENAI_API_KEY` en el servidor. `FONTEX_CHAT_MODEL` configura conversación y `FONTEX_AGENT_MODEL` construcción; los modelos deben admitir Responses y Structured Outputs. El chat del editor usa la ruta `studio-agent/primitives`. Las operaciones se validan de nuevo en el navegador antes de aplicarse.
+La Edge Function `studio-agent` utiliza `OPENAI_API_KEY` en el servidor. `FONTEX_CHAT_MODEL` configura conversación (Luna) y `FONTEX_AGENT_MODEL` construcción (Terra 6.1); los modelos deben admitir Responses y Structured Outputs. La configuración anterior de Sol 6.1 se redirige a Terra. El chat del editor usa la ruta `studio-agent/primitives`. Las operaciones se validan de nuevo en el navegador antes de aplicarse.
 
 El tutor del aula de práctica local admite `OPENAI_API_KEY` en `.env.local`, sin prefijo `VITE_`, para su endpoint de Vite. En GitHub Pages utiliza `practice-tutor`. El tutor documental usa `tutor-chat` y necesita aulas y documentos indexados. Son flujos independientes del editor.
 
