@@ -42,6 +42,9 @@ import {
 import { createPortal } from "react-dom";
 import { SiteHeader } from "../../components/ProductNavigation";
 import { useAuth } from "../auth/AuthProvider";
+import { ClassroomGuestBanner } from "../classrooms/ClassroomGuestProvider";
+import { useClassroomGuest } from "../classrooms/classroom-guest-context";
+import { guestOwner } from "../classrooms/classroom-access";
 import { AuthLoadingPage } from "../auth/AuthPage";
 import { useBetaAccess } from "../beta/useBetaAccess";
 import { AcademicMarkdown } from "../tutor/components/AcademicMarkdown";
@@ -271,6 +274,7 @@ function Frame({
 }
 export function PrimitiveCanvas() {
   const { user } = useAuth();
+  const { guest } = useClassroomGuest();
   const access = useBetaAccess();
   // A failed refresh is not a revocation. Remounting as "guest" here aborted
   // an in-flight generation and discarded its result after the server finished.
@@ -279,9 +283,9 @@ export function PrimitiveCanvas() {
   if (user && access.status === "loading") return <AuthLoadingPage />;
   return (
     <Editor
-      key={participant ? user.id : "guest"}
-      owner={participant ? user.id : "guest"}
-      authenticated={participant}
+      key={guest ? guestOwner(guest.id) : participant ? user.id : "guest"}
+      owner={guest ? guestOwner(guest.id) : participant ? user.id : "guest"}
+      authenticated={participant && !guest}
       accessNote={user && access.status === "error" ? "No se pudo actualizar la comprobación de acceso. Conservamos tu lienzo; reintenta si falla alguna acción." : user && !participant ? "Esta cuenta no tiene acceso remoto disponible. Puedes seguir creando en el lienzo local o consultar al administrador." : ""}
     />
   );
@@ -333,7 +337,7 @@ function Editor(
   const [selectedId, setSelected] = useState<string | null>(null),
     [tab, setTab] = useState<Tab | null>(null),
     [sidebar, setSidebar] = useState(() =>
-      !window.matchMedia("(max-width:760px)").matches
+      !window.matchMedia("(max-width:1100px)").matches
     );
   const [dockView, setDockView] = useState<"chat" | "properties">("chat");
   const [focused, setFocused] = useState(false);
@@ -347,10 +351,11 @@ function Editor(
   };
   const closeTools = useCallback(() => setTab(null), []);
   const [narrow, setNarrow] = useState(() =>
-      window.matchMedia("(max-width:760px)").matches
+      window.matchMedia("(max-width:900px)").matches
     ),
     [zoom, setZoom] = useState(1),
     [autoZoom, setAutoZoom] = useState(true);
+  const [overlayDock, setOverlayDock] = useState(() => window.matchMedia("(max-width:1100px)").matches);
   const [past, setPast] = useState<PrimitiveScene[]>([]),
     [future, setFuture] = useState<PrimitiveScene[]>([]),
     [notice, setNotice] = useState(""),
@@ -386,8 +391,14 @@ function Editor(
     messageEnd.current?.scrollIntoView({ block: "nearest" });
   }, [scene.conversation.length, streamText, sidebar, dockView]);
   useEffect(() => {
-    const query = window.matchMedia("(max-width:760px)");
+    const query = window.matchMedia("(max-width:900px)");
     const change = () => setNarrow(query.matches);
+    query.addEventListener("change", change);
+    return () => query.removeEventListener("change", change);
+  }, []);
+  useEffect(() => {
+    const query = window.matchMedia("(max-width:1100px)");
+    const change = () => { setOverlayDock(query.matches); if (query.matches) setSidebar(false); };
     query.addEventListener("change", change);
     return () => query.removeEventListener("change", change);
   }, []);
@@ -396,7 +407,7 @@ function Editor(
     if (!node) return;
     const observer = new ResizeObserver(() => {
       if (autoZoom && !narrow) {
-        setZoom(Math.min(1.5, (node.clientWidth - 32) / boardWidth));
+        setZoom(Math.max(0.1, Math.min(1.5, (node.clientWidth - 32) / boardWidth)));
       }
     });
     observer.observe(node);
@@ -1107,6 +1118,7 @@ function Editor(
         <div className="pc-dialog-actions"><button disabled={documentBusy} onClick={() => void downloadPdf()}>{documentBusy ? "Preparando PDF…" : "Descargar PDF"}</button><button disabled={documentBusy} onClick={() => setPdfDialog(false)}>Cancelar</button></div>
       </CanvasDialog>}
       <SiteHeader />
+      <ClassroomGuestBanner />
       <CanvasDocumentTabs scenes={library.tabs} activeId={scene.id} onOpen={openScene} onNew={newScene} onClose={id => { if(!busy && !practice) { setCloseId(id); setDocumentError(""); } }} />
       {practice && <div className="pc-banner" role="status">Práctica personal: modifica solo los valores habilitados y escribe tus respuestas. El original se conserva.</div>}
       <header className="pc-topbar" aria-label="Herramientas del lienzo">
@@ -1114,7 +1126,7 @@ function Editor(
           <CanvasToolMenu label="Archivo" icon={<FolderOpen size={16} />} open={tab === "file"} onToggle={() => toggleTools("file")} onClose={closeTools}>
             <div className="pc-file-menu">
               <label>Título del lienzo<input aria-label="Título del lienzo" value={scene.title} maxLength={160} onChange={(e) => commit({ ...scene, title: e.target.value })} /></label>
-              <button onClick={() => void library.save().then(ok => setNotice(ok ? authenticated ? "Guardado en tu cuenta." : "Guardado en este navegador." : "No se pudo guardar en tu cuenta."))}>Guardar lienzo</button>
+              <button onClick={() => { if (owner.startsWith("guest:")) { window.location.hash = "/unirse?conservar=1"; return; } void library.save().then(ok => setNotice(ok ? authenticated ? "Guardado en tu cuenta." : "Guardado en este navegador." : "No se pudo guardar en tu cuenta.")); }}>Guardar lienzo</button>
               <details><summary>Abrir mis lienzos</summary><div className="pc-saved-list">
                 {library.scenes.map(s => <button key={s.id} onClick={() => openScene(s.id)}>{s.title || "Sin título"}</button>)}
               </div></details>
@@ -1144,14 +1156,14 @@ function Editor(
         <span className="pc-save" role="status"><Check size={13} />{library.status === "saved" ? "Guardado en tu cuenta" : library.status === "local" ? "Guardado local" : library.status === "saving" || library.status === "loading" ? "Sincronizando…" : "Sincronización pendiente"}</span>
         <div className="pc-top-actions">
           <button aria-label={focused ? "Restaurar espacio de trabajo" : "Ampliar lienzo"} aria-pressed={focused} title="Ampliar lienzo · Escape para volver" onClick={() => setFocused(!focused)}>{focused ? <Minimize2 size={16} /> : <Maximize2 size={16} />}</button>
-          <button disabled={practice} aria-pressed={sidebar && dockView === "chat"} onClick={() => { setDockView("chat"); setSidebar(!sidebar || dockView !== "chat"); closeTools(); }}><MessageCircle size={16} /><span>Asistente</span></button>
-          <button disabled={!scene.primitives.length || documentBusy} onClick={() => { setDocumentError(""); setPdfDialog(true); }}><Download size={16} /><span>PDF</span></button>
+          <button aria-label="Asistente" title="Asistente" disabled={practice} aria-pressed={sidebar && dockView === "chat"} onClick={() => { setDockView("chat"); setSidebar(!sidebar || dockView !== "chat"); closeTools(); }}><MessageCircle size={16} /><span>Asistente</span></button>
+          <button aria-label="PDF" disabled={!scene.primitives.length || documentBusy} onClick={() => { setDocumentError(""); setPdfDialog(true); }}><Download size={16} /><span>PDF</span></button>
           <button aria-pressed={practice} disabled={busy || !scene.primitives.length} onClick={()=>{
             if(practice) {setPractice(false);resetEditor();return;}
             const attempt=practiceAttempt(scene);
             if(setScene(attempt)) {live.current=attempt;resetEditor();setSidebar(false);setPractice(true);closeTools();}
           }}>{practice?"Finalizar práctica":"Practicar"}</button>
-          <button className="pc-present-action" disabled={!scene.primitives.length} onClick={() => {
+          <button aria-label="Presentar" title="Presentar" className="pc-present-action" disabled={!scene.primitives.length} onClick={() => {
             closeTools(); setSelected(null); setStep(steps[0]!); setPresenting(true);
             void root.current?.requestFullscreen?.().catch(() => {});
           }}><Expand size={16} /><span>Presentar</span></button>
@@ -1289,7 +1301,7 @@ function Editor(
             )}
         </main>
 
-        {sidebar && narrow && !presenting && !focused && !practice && (
+        {sidebar && overlayDock && !presenting && !focused && !practice && (
           <button
             className="pc-dock-backdrop"
             aria-label="Cerrar panel y volver al lienzo"
@@ -1297,8 +1309,8 @@ function Editor(
           />
         )}
         {sidebar && !presenting && !focused && !practice && (
-          <aside className="pc-sidebar" style={narrow ? undefined : { width: dockWidth }} aria-label="Panel de Fontex">
-            {!narrow && <DockResizeHandle width={dockWidth} onChange={resizeDock} />}
+          <aside className="pc-sidebar" style={overlayDock ? undefined : { width: dockWidth }} aria-label="Panel de Fontex">
+            {!overlayDock && <DockResizeHandle width={dockWidth} onChange={resizeDock} />}
             <header>
               <strong><MessageCircle size={17} />{dockView === "properties" && selected ? "Propiedades" : "Fontex Agente"}</strong>
               <button aria-label="Cerrar panel" onClick={() => setSidebar(false)}><X size={17} /></button>

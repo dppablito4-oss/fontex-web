@@ -9,6 +9,7 @@ import type { ClassroomRole } from "../../lib/supabase/database.types";
 import { useAuth } from "../auth/AuthProvider";
 import { PageHeader } from "../shared/PageHeader";
 import { useWorkspace } from "../workspace/WorkspaceProvider";
+import { ClassroomJoinPanel } from "./ClassroomJoinPanel";
 
 function DemoClassroomPage() {
   return (
@@ -175,6 +176,7 @@ export function ClassroomPage() {
           </Card>
 
           <div className="space-y-5">
+            {activeRole === "teacher" && <ClassroomJoinPanel key={activeClassroom.id} classroomId={activeClassroom.id} />}
             {activeRole === "teacher" && (
               <Card className="p-5 sm:p-6">
                 <MailPlus className="size-5 text-primary" />
@@ -215,6 +217,7 @@ function AcceptInvitationCard({
     <Card className="p-5 sm:p-7">
       <p className="eyebrow">Matrícula por invitación</p>
       <h2 className="mt-2 text-xl font-semibold">Unirme a un aula</h2>
+      <a className="mt-3 block text-sm font-semibold text-primary underline" href="#/unirse">Entrar con código o enlace de clase</a>
       <p className="mt-2 text-sm leading-6 text-muted-foreground">El correo de tu sesión debe coincidir con el correo invitado.</p>
       <form className="mt-6 space-y-4" onSubmit={onSubmit}>
         <label className="form-field"><span>Token de invitación</span><input minLength={64} required value={token} onChange={(event) => onTokenChange(event.target.value)} /></label>

@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { Navigate, Route, Routes, useMatch } from "react-router-dom";
+import { Navigate, Route, Routes, useMatch, useLocation } from "react-router-dom";
 
 import { LandingPage } from "../features/landing/LandingPage";
 import { BetaGate } from "../features/beta/BetaGate";
@@ -11,6 +11,8 @@ import { AuthLoadingPage, AuthPage } from "../features/auth/AuthPage";
 import { useAuth } from "../features/auth/AuthProvider";
 import { PasswordRecoveryPage } from "../features/auth/PasswordRecoveryPage";
 import { ClassroomPage } from "../features/classrooms/ClassroomPage";
+import { JoinClassroomPage } from "../features/classrooms/JoinClassroomPage";
+import { useClassroomGuest } from "../features/classrooms/classroom-guest-context";
 import { GroupPage } from "../features/groups/GroupPage";
 import { HomePage } from "../features/home/HomePage";
 import { LibraryPage } from "../features/library/LibraryPage";
@@ -34,6 +36,10 @@ const DemoPage = lazy(() =>
 
 export function App() {
   const { status } = useAuth();
+  const { guest } = useClassroomGuest();
+  const location = useLocation();
+  const joinRoute = useMatch("/unirse");
+  const classroomRoute = useMatch("/aula");
   const sharedRoute = useMatch("/compartido/:token");
   const generalRoute = useMatch("/laboratorio");
   const demoRoute = useMatch("/demo");
@@ -49,6 +55,11 @@ export function App() {
   const passwordRoute = useMatch("/nueva-contrasena");
   const authRoute = tutorSignIn || signInRoute || signUpRoute;
 
+  // Existing email/role invitations retain their authenticated acceptance flow.
+  const legacyInvitation = new URLSearchParams(location.search).has("invite");
+  if (joinRoute || (classroomRoute && (!!guest || (status === "anonymous" && !legacyInvitation)))) return <JoinClassroomPage key={location.search} />;
+  if (landingRoute && guest && status === "authenticated") return <Navigate to="/unirse?conservar=1" replace />;
+
   if (sharedRoute) return <Suspense fallback={<div>Abriendo lienzo…</div>}><SharedCanvasPage token={sharedRoute.params.token!} /></Suspense>;
 
   if (recoveryRoute || passwordRoute) {
@@ -62,8 +73,10 @@ export function App() {
 
   if (authRoute) {
     if (status === "loading") return <AuthLoadingPage />;
-    if (status === "authenticated")
-      return <Navigate to={tutorSignIn ? "/demo" : "/lienzo"} replace />;
+    if (status === "authenticated") {
+      const returnTo = new URLSearchParams(location.search).get("volver");
+      return <Navigate to={returnTo?.startsWith("/unirse?") ? returnTo : guest ? "/unirse?conservar=1" : tutorSignIn ? "/demo" : "/lienzo"} replace />;
+    }
     return (
       <AuthPage
         key={signUpRoute ? "signup" : "signin"}

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { BrandMark } from "./BrandMark";
 import { ThemeToggle } from "../features/theme/ThemeToggle";
 import { useAuth } from "../features/auth/AuthProvider";
+import { useClassroomGuest } from "../features/classrooms/classroom-guest-context";
 import "./product-navigation.css";
 
 type Area = "lienzo" | "aprender" | "espacio";
@@ -12,7 +13,8 @@ const areas = [
   { id: "espacio", href: "#/inicio", label: "Mi espacio", icon: LayoutDashboard },
 ] as const;
 export function ProductLinks({ current }: { current?: Area }) {
-  return <nav className="fx-product-links" aria-label="Áreas de Fontex">{areas.map(({ id, href, label, icon: Icon }) => <a key={id} href={href} aria-current={id === current ? "page" : undefined}><Icon size={16} aria-hidden="true" />{label}</a>)}</nav>;
+  const { guest } = useClassroomGuest();
+  return <nav className="fx-product-links" aria-label="Áreas de Fontex">{areas.map(({ id, href, label, icon: Icon }) => <a key={id} href={guest && id === "espacio" ? "#/aula" : href} aria-current={id === current ? "page" : undefined}><Icon size={16} aria-hidden="true" />{guest && id === "espacio" ? "Mi aula" : label}</a>)}</nav>;
 }
 export function SiteHeader({ current, onNavigate, onSignOut }: { current?: Area; onNavigate?: () => boolean; onSignOut?: () => Promise<void> }) {
   const { status, signOut } = useAuth();

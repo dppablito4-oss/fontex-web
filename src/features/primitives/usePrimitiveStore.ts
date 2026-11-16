@@ -67,6 +67,7 @@ async function computeHash(scene: PrimitiveScene) {
   ).join("");
 }
 export function usePrimitiveStore(owner: string) {
+  const localOnly = owner === "guest" || owner.startsWith("guest:");
   const [collection, setCollection] = useState(() => initial(owner));
   // A restored document is already saved, even when it contains only chat.
   const checkpoints = useRef(new Map<string, PrimitiveScene | null>(collection.scenes.map(s => [s.id, collection.fresh ? null : s])));
@@ -88,7 +89,7 @@ export function usePrimitiveStore(owner: string) {
   const current = useRef(collection),
     version = useRef(0),
     wake = useRef<() => void>(() => {});
-  const [status, setStatus] = useState(owner === "guest" ? "local" : "loading"),
+  const [status, setStatus] = useState(localOnly ? "local" : "loading"),
     [notice, setNotice] = useState("");
   function store(next: Collection) {
     current.current = next;
@@ -100,10 +101,10 @@ export function usePrimitiveStore(owner: string) {
     const persist = () => {
       try {
         localStorage.setItem(cacheKey(owner), JSON.stringify(current.current));
-        if (owner === "guest") setStatus("local");
+        if (localOnly) setStatus("local");
         return true;
       } catch {
-        if (owner === "guest") setStatus("error");
+        if (localOnly) setStatus("error");
         setNotice(
           "No se pudo guardar la copia local. Exporta tu trabajo antes de cerrar esta pestaña.",
         );
@@ -117,7 +118,7 @@ export function usePrimitiveStore(owner: string) {
       persist();
       window.removeEventListener("pagehide", persist);
     };
-  }, [owner]);
+  }, [owner, localOnly]);
 
   function setScene(change: SetStateAction<PrimitiveScene>) {
     if (deleting.current) {
@@ -155,7 +156,7 @@ export function usePrimitiveStore(owner: string) {
     if (!checkpoints.current.has(scene.id)) checkpoints.current.set(scene.id, null);
     setClosedIds(ids => ids.filter(id => id !== scene.id));
     version.current++;
-    if (owner === "guest") setStatus("saving");
+    if (localOnly) setStatus("saving");
     store({
       activeId: scene.id,
       scenes: [
@@ -182,7 +183,7 @@ export function usePrimitiveStore(owner: string) {
     }
   }
   async function remove(id: string) {
-    if (owner !== "guest") return removeAction.current(id);
+    if (!localOnly) return removeAction.current(id);
     const scenes = current.current.scenes.filter((s) => s.id !== id);
     if (!scenes.length) scenes.push(newPrimitiveScene());
     version.current++;
@@ -195,7 +196,7 @@ export function usePrimitiveStore(owner: string) {
     return true;
   }
   useEffect(() => {
-    if (owner === "guest" || !supabase) return;
+    if (localOnly || !supabase) return;
     const client = supabase, ackKey = `${cacheKey(owner)}:ack`;
     let ack: Ack = {};
     try {
@@ -563,10 +564,10 @@ export function usePrimitiveStore(owner: string) {
       window.removeEventListener("focus", refresh);
       document.removeEventListener("visibilitychange", refresh);
     };
-  }, [owner]);
+  }, [owner, localOnly]);
   async function save() {
     const localOk = persistAction.current();
-    const ok = owner === "guest" ? localOk : await saveAction.current();
+    const ok = localOnly ? localOk : await saveAction.current();
     if (ok) {
       const active = current.current.scenes.find(s => s.id === current.current.activeId)!;
       checkpoints.current.set(active.id, active);
@@ -576,7 +577,7 @@ export function usePrimitiveStore(owner: string) {
   async function close(id: string, discard: boolean) {
     const baseline = checkpoints.current.get(id);
     if (discard && !baseline) {
-      if (owner !== "guest" && !await saveAction.current()) return false;
+      if (!localOnly && !await saveAction.current()) return false;
       if (!await remove(id)) return false;
     } else {
       if (discard && baseline) {

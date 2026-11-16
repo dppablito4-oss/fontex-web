@@ -25,7 +25,7 @@ type AuthContextValue = {
   profile: Profile | null;
   error: string | null;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (displayName: string, email: string, password: string) => Promise<boolean>;
+  signUp: (displayName: string, email: string, password: string, classroomGuestToken?: string) => Promise<boolean>;
   resendConfirmation: (email: string) => Promise<void>;
   clearError: () => void;
   signOut: () => Promise<void>;
@@ -159,19 +159,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(data.session);
         setStatus(data.session ? "authenticated" : "anonymous");
       },
-      async signUp(displayName, email, password) {
+      async signUp(displayName, email, password, classroomGuestToken) {
         if (!supabase) return unavailable();
         if (!displayName.trim()) throw new Error("Escribe tu nombre visible.");
         setError(null);
         const { data, error: signUpError } = await supabase.auth.signUp({
           email: email.trim(),
           password,
-          options: { data: { display_name: displayName.trim() }, emailRedirectTo: confirmationRedirectUrl() },
+          options: { data: { display_name: displayName.trim(), ...(classroomGuestToken ? { classroom_guest_token: classroomGuestToken } : {}) }, emailRedirectTo: confirmationRedirectUrl() },
         });
         if (signUpError) {
           const message = readableAuthError(signUpError);
           setError(message);
           throw new Error(message);
+        }
+        if (classroomGuestToken && data.user?.identities?.length === 0) {
+          throw new Error("Ese correo ya está registrado. Elige «Ya tengo una cuenta» e inicia sesión.");
         }
         if (data.session) { setSession(data.session); setStatus("authenticated"); }
         return data.session === null;

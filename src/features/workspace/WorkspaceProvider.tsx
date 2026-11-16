@@ -130,7 +130,7 @@ function WorkspaceSession({ children }: { children: ReactNode }) {
     [],
   );
   const detailsSequence = useRef(0), refreshSequence = useRef(0);
-  const selectedClassroom = useRef<string | null>(null);
+  const selectedClassroom = useRef<string | null>(sessionStorage.getItem("fontex-active-classroom"));
   useEffect(() => () => {
     detailsSequence.current++;
     refreshSequence.current++;

@@ -445,6 +445,14 @@ export type Database = {
     };
     Views: Record<string, never>;
     Functions: {
+      create_classroom_join_link: { Args: { p_classroom_id: string }; Returns: Json };
+      revoke_classroom_join_link: { Args: { p_classroom_id: string }; Returns: undefined };
+      get_classroom_join_info: { Args: { p_invite: string }; Returns: Json };
+      start_classroom_guest: { Args: { p_invite: string; p_name: string }; Returns: Json };
+      get_classroom_guest: { Args: { p_token: string }; Returns: Json };
+      join_classroom_by_invite: { Args: { p_invite: string }; Returns: string };
+      complete_classroom_guest: { Args: { p_token: string }; Returns: string };
+      list_classroom_guests: { Args: { p_classroom_id: string }; Returns: Json };
       publish_canvas: { Args: { p_scene_id: string }; Returns: string };
       read_public_canvas: { Args: { p_token: string }; Returns: Json };
       get_canvas_build: { Args: {p_request_id:string}; Returns: Json };

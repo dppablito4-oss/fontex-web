@@ -6,11 +6,13 @@ beforeEach(()=>{
   vi.stubEnv("VITE_SUPABASE_PUBLISHABLE_KEY","sb_publishable_test_only");
 });
 afterEach(()=>{vi.unstubAllEnvs();vi.unstubAllGlobals();});
-function backend({contract="closed-beta-v3",preflight=204,unauthenticated=401,sharedStatus=200,sharedBody=null,agentContract="primitive-agent-v3"}={}){
+function backend({contract="closed-beta-v3",preflight=204,unauthenticated=401,sharedStatus=200,sharedBody=null,guestStatus=200,agentContract="primitive-agent-v3"}={}){
   return vi.fn((url,options)=>Promise.resolve(String(url).endsWith("/rpc/get_release_contract")
     ? Response.json(contract)
     : String(url).endsWith("/rpc/read_public_canvas")
     ? Response.json(sharedBody,{status:sharedStatus})
+    : /\/rpc\/(get_classroom_join_info|get_classroom_guest)$/.test(String(url))
+    ? Response.json(null,{status:guestStatus})
     : new Response(null,{status:options.method==="OPTIONS"?preflight:unauthenticated,headers:{"access-control-allow-origin":"*","x-fontex-agent-contract":agentContract}})));
 }
 it("refuses to fall back to a pilot project when target configuration is absent",async()=>{
@@ -40,6 +42,10 @@ it.each(["","primitive-agent-v2"])("blocks an agent without the practice contrac
   vi.stubGlobal("fetch",backend({agentContract}));
   await expect(import("./check-backend-release.mjs")).rejects.toThrow("primitive-agent-v3");
 });
+it("blocks publication until the guest classroom migration is installed",async()=>{
+  vi.stubGlobal("fetch",backend({guestStatus:404}));
+  await expect(import("./check-backend-release.mjs")).rejects.toThrow("acceso temporal de aulas");
+});
 it("blocks missing routes and endpoints accepting unauthenticated calls",async()=>{
   vi.stubGlobal("fetch",backend({preflight:404}));
   await expect(import("./check-backend-release.mjs")).rejects.toThrow("preflight");
@@ -49,7 +55,7 @@ it("blocks missing routes and endpoints accepting unauthenticated calls",async()
 it("checks the SQL contract, CORS and authentication without credentials or AI calls",async()=>{
   const fetch=backend();vi.stubGlobal("fetch",fetch);
   await import("./check-backend-release.mjs");
-  expect(fetch).toHaveBeenCalledTimes(18);
+  expect(fetch).toHaveBeenCalledTimes(20);
   expect(fetch.mock.calls.every(([url])=>String(url).startsWith("https://backend.example.invalid/"))).toBe(true);
   expect(fetch.mock.calls.every(([,options])=>!options.headers.Authorization)).toBe(true);
   const publicRead=fetch.mock.calls.find(([url])=>String(url).endsWith("/rpc/read_public_canvas"));

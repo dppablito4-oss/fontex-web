@@ -1,4 +1,7 @@
 .pc-app {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
   --pc-bg: var(--ui-background);
   --pc-surface: var(--ui-surface);
   --pc-soft: var(--ui-subtle);
@@ -12,7 +15,7 @@
   display: flex;
   flex-direction: column;
   height: 100dvh;
-  min-height: 500px;
+  min-height: 0;
   background: var(--pc-bg);
   color: var(--pc-ink);
   font: 15px/1.5 var(--font-sans,system-ui);
@@ -380,6 +383,7 @@
   margin: 16px 0;
 }
 .pc-stage {
+  min-height: 0;
   flex: 1;
   min-width: 0;
   overflow: auto;
@@ -664,7 +668,7 @@
   margin-top: 10px;
 }
 .pc-empty {
-  max-width: 760px;
+  max-width: 900px;
   margin: 8vh auto;
   padding: 20px;
   text-align: center;
@@ -799,7 +803,7 @@
   font-size: 16px;
   color: var(--pc-ink);
 }
-@media (max-width:760px) {
+@media (max-width:900px) {
   .pc-app {
     font-size: 14px;
   }
@@ -1077,7 +1081,7 @@
   margin-top: 5px;
 }
 
-@media (max-width:760px) {
+@media (max-width:900px) {
   .pc-coordinate svg text {
     font-size: 28px;
   }
@@ -1133,7 +1137,7 @@
 .pc-rotate:active {
   cursor: grabbing;
 }
-@media (max-width: 760px) {
+@media (max-width: 900px) {
   .pc-rotate {
     display: none;
   }
@@ -1222,7 +1226,7 @@
 .pc-graph-editor select {
   max-width: 180px;
 }
-@media (max-width:760px) {
+@media (max-width:900px) {
   .pc-node-graph svg text,
   .pc-venn svg text {
     font-size: 25px;
@@ -1320,10 +1324,10 @@
 .pc-app .pc-node-math_block .academic-markdown h3 { font-size: 1em; }
 .pc-zoom > span { font-size: 11px; color: var(--pc-muted); }
 
-@media (max-width: 1000px) and (min-width: 761px) {
+@media (max-width: 1000px) and (min-width: 901px) {
   .pc-inspector { flex-basis: 280px; }
 }
-@media (max-width: 760px) {
+@media (max-width: 900px) {
   .pc-object-content { padding: 12px; }
   .pc-object-heading { padding: 8px 12px; }
   .pc-plot-toolbar { flex-wrap: wrap; }
@@ -1367,7 +1371,7 @@
   .pc-topbar > .pc-save > svg { width: 14px; }
   .pc-tool-menu > button { padding-inline: 7px; }
 }
-@media (max-width: 760px) {
+@media (max-width: 900px) {
   .pc-document-strip { padding: 5px 8px 0; }
   .pc-app .pc-document-tabs .pc-document-tab > [role=tab] { min-width: 108px; max-width: 165px; padding: 7px 12px; font-size: 11px; }
   .pc-topbar { flex-wrap: wrap; gap: 6px; padding: 6px 8px; }
@@ -1404,11 +1408,11 @@
 .pc-plot-definition-content .pc-field-row > label { flex-basis: 100%; max-width: 100%; }
 .pc-plot-definition-content .pc-pair { flex-basis: 100%; }
 .pc-app .pc-plot-definition-link { justify-content: start; width: 100%; border: 0; padding: 6px; font-size: 12px; background: transparent; }
-@media (min-width:761px) {
+@media (min-width:901px) {
   .pc-stage:not(.pc-presenting .pc-stage) { overflow: hidden; }
   .pc-board-space { margin: 0; }
 }
-@media (max-width:760px) {
+@media (max-width:900px) {
   .pc-plot-overlay { top: 92px; left: 4px; max-width: calc(100% - 8px); }
   .pc-plot-toolbar { min-height: 82px; }
   .pc-plot-definitions { max-width: min(340px,100%); }
@@ -1427,7 +1431,7 @@
 .pc-writing > small { display: block; color: var(--pc-muted); font-size: 11px; margin-top: 4px; }
 .pc-plot-definition-content .pc-control { margin-block: 12px; }
 .pc-touch-gesture { display: none; }
-@media (max-width:760px) {
+@media (max-width:900px) {
   .pc-toolbar-menus { gap: 2px; }
   .pc-tool-menu { min-width: 0; flex: 1; }
   .pc-tool-menu > button { width: 100%; min-width: 0; gap: 4px; padding-inline: 4px; }
@@ -1441,7 +1445,7 @@
 .pc-text-editor { width: 100%; }
 .pc-text-editor textarea { width: 100%; min-height: 160px; resize: vertical; font: inherit; }
 .pc-inspector .pc-text-preview { width: 100%; overflow-wrap: anywhere; }
-@media (max-width: 760px) {
+@media (max-width: 900px) {
   .pc-shell > .pc-dock-backdrop {
     position: absolute; inset: 0; z-index: 19;
     width: 100%; height: 100%; border: 0; border-radius: 0;
@@ -1493,14 +1497,14 @@ dialog.pc-dialog::backdrop { background: #0008; }
 .pc-circles svg { width: min(100%,176px); max-width: 176px; flex: 0 1 176px; }
 .pc-fraction-section { margin-bottom: 26px; min-width: 0; }
 .pc-fraction-explanation { margin-bottom: 12px; }
-.pc-fraction-row { display: grid; grid-template-columns: minmax(0,1fr) 24px minmax(0,1fr) 24px minmax(0,1fr); align-items: center; gap: 8px; max-width: 760px; margin: 12px auto; }
+.pc-fraction-row { display: grid; grid-template-columns: minmax(0,1fr) 24px minmax(0,1fr) 24px minmax(0,1fr); align-items: center; gap: 8px; max-width: 900px; margin: 12px auto; }
 .pc-fraction-operator { font-size: 26px; text-align: center; }
 .pc-fraction-term { min-width: 0; }
-.pc-fraction-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 16px; max-width: 760px; margin: 12px auto; }
+.pc-fraction-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 16px; max-width: 900px; margin: 12px auto; }
 .pc-fraction-section .pc-circles svg { width: 100%; min-height: 0; max-width: 160px; flex: 0 1 160px; }
 .pc-fraction-section .pc-object { margin-bottom: 0; }
 .pc-fraction-section .pc-object-heading { font-size: 11px; min-height: 18px; }
-@media (max-width:760px) {
+@media (max-width:900px) {
   .pc-app .pc-circles svg { min-height: 0; max-width: 176px; flex: 0 1 176px; }
   .pc-fraction-row { grid-template-columns: minmax(0,1fr) 14px minmax(0,1fr) 14px minmax(0,1fr); gap: 2px; }
   .pc-fraction-section .pc-circles > strong { font-size: 16px; }
@@ -1535,10 +1539,46 @@ dialog.pc-dialog::backdrop { background: #0008; }
 .pc-chart td .pc-inline-value > button { border: 0; background: transparent; padding: 4px; }
 .pc-chart td .pc-inline-input input { max-width: 130px; }
 .pc-plot-definition-content .pc-practice-fields { padding-inline: 0; }
-@media (max-width:760px) { .pc-top-actions { max-width: 100%; flex-wrap: wrap; } }
+@media (max-width:900px) { .pc-top-actions { max-width: 100%; flex-wrap: wrap; } }
 .pc-fraction-grid:has(> :only-child) { grid-template-columns: minmax(0,1fr); max-width: 360px; }
 .pc-fraction-grid:has(> :nth-child(2):last-child) { grid-template-columns: repeat(2,minmax(0,1fr)); max-width: 560px; }
 .pc-fraction-term .pc-practice-fields { padding-inline: 0; }
 .pc-fraction-term .pc-inline-value > button { padding-inline: 2px; font-size: 12px; overflow-wrap: normal; }
 .pc-fraction-term .pc-inline-input { flex-wrap: wrap; }
 .pc-fraction-term .pc-inline-input label { width: 100%; }
+
+/* Compact screens keep a readable lesson and open the assistant over it. */
+@media (max-width:1100px) {
+  .pc-shell > .pc-sidebar { position: absolute; inset: 0 0 0 auto; width: min(88%,390px); border-right: 0; z-index: 20; box-shadow: -10px 0 36px rgb(0 0 0 / .18); }
+  .pc-shell > .pc-dock-backdrop { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 19; border: 0; border-radius: 0; padding: 0; background: rgb(0 0 0 / .08); }
+  .pc-sidebar > .pc-inspector { position: static; max-height: none; }
+}
+@media (max-width:900px) {
+  .pc-app :is(input,textarea,select) { font-size: 16px; }
+  .pc-topbar > .pc-top-actions { flex: 1 1 auto; flex-wrap: wrap; }
+  .pc-bottom { flex-wrap: wrap; gap: 4px; }
+  .pc-empty { margin-block: 12px; padding: 12px; }
+  .pc-empty-symbol { font-size: 42px; margin-bottom: 12px; }
+}
+@media (max-height:500px) {
+  .pc-app > .fx-site-header { min-height: 40px; padding-block: 2px; }
+  .pc-app > .fx-site-header > .fx-product-links { display: none; }
+  .pc-app > .fx-site-header .brand-mark { max-height: 30px; }
+  .pc-sidebar > header { padding-block: 6px; }
+  .pc-sidebar .pc-chat-composer { padding-block: 6px; }
+  .pc-sidebar .pc-chat-composer textarea { min-height: 40px; max-height: 70px; }
+}
+.pc-guest-banner { display: flex; flex: none; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px 12px; padding: 6px 14px; background: var(--pc-soft); border-bottom: 1px solid var(--pc-line); font-size: 12px; }
+.pc-guest-banner > span { min-width: 0; overflow-wrap: anywhere; }
+.pc-guest-banner a { color: var(--pc-accent); text-decoration: underline; font-weight: 600; }
+.pc-guest-banner > button { min-height: 28px; padding: 2px 8px; }
+@media (max-width:900px) {
+  .pc-guest-banner > span { flex-basis: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+}
+@media (max-width:480px) {
+  .pc-top-actions > :is([aria-label="Asistente"],[aria-label="Presentar"]) > span { display: none; }
+  .pc-topbar > .pc-top-actions { gap: 4px; }
+  .pc-top-actions > button { padding-inline: 7px; }
+  .pc-history-actions > button { width: 28px; padding: 5px; }
+}
+@media print { .pc-guest-banner { display: none!important; } }

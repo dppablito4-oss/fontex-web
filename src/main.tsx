@@ -5,6 +5,7 @@ import { HashRouter } from "react-router-dom";
 import { App } from "./app/App";
 import { AppErrorBoundary } from "./app/AppErrorBoundary";
 import { AuthProvider } from "./features/auth/AuthProvider";
+import { ClassroomGuestProvider } from "./features/classrooms/ClassroomGuestProvider";
 import { ThemeProvider } from "./features/theme/ThemeProvider";
 import "./styles/globals.css";
 
@@ -18,9 +19,9 @@ createRoot(root).render(
   <StrictMode>
     <ThemeProvider>
       <AuthProvider>
-        <AppErrorBoundary><HashRouter>
+        <ClassroomGuestProvider><AppErrorBoundary><HashRouter>
           <App />
-        </HashRouter></AppErrorBoundary>
+        </HashRouter></AppErrorBoundary></ClassroomGuestProvider>
       </AuthProvider>
     </ThemeProvider>
   </StrictMode>,

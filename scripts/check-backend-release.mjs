@@ -21,6 +21,15 @@ const shared = await fetch(`${base}/rest/v1/rpc/read_public_canvas`, {
 if (!shared.ok || await shared.json() !== null) {
   throw Error("El backend no permite verificar la lectura pública de lienzos. Comprueba los RPC y la barrera beta antes de publicar.");
 }
+// Invalid credentials exercise the invitation routes without creating visitors
+// or reading a real classroom. The frontend must not precede its migration.
+for (const [rpc, args] of [["get_classroom_join_info", { p_invite: null }], ["get_classroom_guest", { p_token: null }]]) {
+  const probe = await fetch(`${base}/rest/v1/rpc/${rpc}`, {
+    method: "POST", headers: { apikey: key, "Content-Type": "application/json" },
+    body: JSON.stringify(args), signal: AbortSignal.timeout(10000),
+  });
+  if (!probe.ok || await probe.json() !== null) throw Error(`Falta el acceso temporal de aulas (${rpc}). Aplica y verifica su migración antes de publicar.`);
+}
 for (const endpoint of ["studio-agent", "scene-agent", "tutor-chat", "practice-tutor", "document-upload", "document-delete", "document-process", "document-search"]) {
   const preflight = await fetch(`${base}/functions/v1/${endpoint}`, {
     method: "OPTIONS", headers: { Origin: "https://fontex-release-check.invalid", "Access-Control-Request-Method": "POST" },
@@ -38,4 +47,4 @@ for (const endpoint of ["studio-agent", "scene-agent", "tutor-chat", "practice-t
   });
   if (response.status !== 401) throw Error(`El endpoint ${endpoint} debe existir y rechazar peticiones sin sesión (401). Recibido: ${response.status}`);
 }
-console.log("Backend compatible: contrato SQL v3, lectura pública, agente de práctica y 8 rutas protegidas verificados. La prueba autenticada se registra por separado.");
+console.log("Backend compatible: contrato SQL v3, lectura pública, invitaciones de aula, agente de práctica y 8 rutas protegidas verificados. La prueba autenticada se registra por separado.");
