@@ -34,7 +34,7 @@ export function PracticeValue({p,scene,fieldKey,onApply,fallback}: {
   }}/> : <>{fallback}</>;
 }
 export function PracticeFields({p,scene,onApply}: {p:Primitive;scene:PrimitiveScene;onApply:(next:PrimitiveScene)=>boolean|void}) {
-  const fields=allowedPracticeFields(p,scene).filter(f=>f.type!=="drawing" && !(p.kind==="data_chart" && (/^rows\.\d+\.valueExpr$/.test(f.key) || f.key.startsWith("matrixCells."))));
+  const fields=allowedPracticeFields(p,scene).filter(f=>f.type!=="drawing" && !(p.kind==="data_chart" && (/^rows\.\d+\.valueExpr$/.test(f.key) || p.data.headers.length===3 && /^rows\.\d+\.xExpr$/.test(f.key) || f.key.startsWith("matrixCells."))));
   if(!fields.length) return null;
   return <div className="pc-practice-fields" aria-label={`Valores del ejercicio: ${p.label}`}
     onClick={e=>e.stopPropagation()} onPointerDown={e=>e.stopPropagation()}>

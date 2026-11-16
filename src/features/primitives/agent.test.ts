@@ -31,3 +31,29 @@ it("keeps cancellation attached after the SDK has returned streaming headers", a
     await observed;
   }
 });
+
+it("keeps a large build alive beyond the former 85-second browser timeout",async()=>{
+  vi.useFakeTimers();
+  const timeout=vi.spyOn(AbortSignal,"timeout").mockImplementation(delay=>{
+    const controller=new AbortController();setTimeout(()=>controller.abort(new DOMException("Tiempo agotado","TimeoutError")),delay);return controller.signal;
+  });
+  let streamController!:ReadableStreamDefaultController<Uint8Array>;
+  let signal:AbortSignal|undefined;
+  mock.fetch.mockImplementation((_url:unknown,options:RequestInit)=>{
+    signal=options.signal??undefined;
+    const stream=new ReadableStream<Uint8Array>({start(c){streamController=c;}});
+    signal?.addEventListener("abort",()=>streamController.error(signal?.reason),{once:true});
+    return Promise.resolve(new Response(stream,{headers:{"Content-Type":"text/event-stream"}}));
+  });
+  const controller=new AbortController();
+  const request=requestPrimitiveAgent({scene:newPrimitiveScene(),question:"Construye un ejercicio de cinemática",task:"build",level:"secundaria",selectedId:null},()=>{},controller.signal);
+  const observed=request.catch(()=>undefined);
+  try{
+    await vi.advanceTimersByTimeAsync(90000);
+    expect(signal?.aborted).toBe(false);
+    expect(timeout).toHaveBeenCalledWith(140000);
+    streamController.enqueue(new TextEncoder().encode('data: {"type":"result","reply":{"message":"Completo","actions":[]}}\n\n'));
+    streamController.close();
+    expect(await request).toMatchObject({message:"Completo"});
+  }finally{controller.abort();await observed;timeout.mockRestore();vi.useRealTimers();}
+});

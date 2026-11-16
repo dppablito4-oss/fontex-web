@@ -1,3 +1,7 @@
+import {
+  generationLimits,
+  generationTokenBudget,
+} from "../../../src/core/agent/generation-limits.ts";
 import { strict as assert } from "node:assert";
 import { createPrimitiveHandler } from "./primitive-handler.ts";
 import {
@@ -78,7 +82,10 @@ Deno.test("provider requests have a fixed output budget and release leases after
       const payload = JSON.parse(String(init?.body));
       assert.equal(payload.max_output_tokens, 2048);
       assert.equal(
-        new TextEncoder().encode(String(init?.body)).byteLength + 2048,
+        generationTokenBudget(
+          new TextEncoder().encode(String(init?.body)).byteLength,
+          2048,
+        ),
         reserved,
       );
       return Promise.resolve(new Response("offline", { status: 503 }));
@@ -98,4 +105,49 @@ Deno.test("provider requests have a fixed output budget and release leases after
   await (await h(request(), context)).text();
   assert.equal(finished, 1);
   assert.ok(reserved > 2048 && reserved <= 150000);
+});
+
+Deno.test("complex builds receive 32000 output tokens within the expanded lease budget", async () => {
+  let reserved = 0;
+  const scene = newPrimitiveScene();
+  const h = createPrimitiveHandler(env, (_url, init) => {
+    const payload = JSON.parse(String(init?.body));
+    assert.equal(payload.max_output_tokens, 32000);
+    assert.equal(
+      reserved,
+      generationTokenBudget(
+        new TextEncoder().encode(String(init?.body)).byteLength,
+        32000,
+      ),
+    );
+    assert.ok(reserved <= 150000);
+    return Promise.resolve(new Response("offline", { status: 503 }));
+  }, {
+    reserve: () =>
+      Promise.resolve({ allowed: true, balance: 5, reason: "reserved" }),
+    finish: () => Promise.resolve({ balance: 5, status: "refunded" }),
+  }, {
+    reserve: (_u, _id, _task, tokens) => {
+      reserved = tokens;
+      return Promise.resolve({ allowed: true, reason: "reserved" });
+    },
+    finish: () => Promise.resolve(),
+  });
+  await (await h(
+    new Request("http://local", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        scene,
+        task: "build",
+        question: "Construye un ejercicio completo",
+        level: "secundaria",
+        selectedId: null,
+      }),
+    }),
+    context,
+  )).text();
+  assert.ok(generationLimits.build.serverMs > 75000);
+  assert.ok(generationLimits.build.clientMs > generationLimits.build.serverMs);
+  assert.ok(generationLimits.build.clientMs < 180000);
 });

@@ -31,7 +31,7 @@ export function practiceFields(p: Primitive, scene: PrimitiveScene): PracticeFie
     case "data_chart":
       if(p.data.chartType==="matrix") p.data.matrixCells?.forEach((row,i)=>row.forEach((v,j)=>add(`matrixCells.${i}.${j}`,`Celda ${i+1}, ${j+1}`,v)));
       else if(p.data.chartType!=="truth_table") p.data.rows.forEach((r,i)=>{
-        if(["scatter","histogram"].includes(p.data.chartType)) add(`rows.${i}.xExpr`,`${r.label}: x`,r.xExpr);
+        if(["scatter","histogram"].includes(p.data.chartType) || p.data.headers.length===3) add(`rows.${i}.xExpr`,`${r.label}: x`,r.xExpr);
         add(`rows.${i}.valueExpr`,`${r.label || "Fila "+(i+1)}: valor`,r.valueExpr);
       });
       break;

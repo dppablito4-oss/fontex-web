@@ -53,3 +53,18 @@ it("can retry the unfinished creation already saved in the conversation", async 
   expect(await screen.findByRole("article", { name: "Suma de fracciones creada" })).toBeInTheDocument();
   expect(screen.getAllByText(scene.conversation[0]!.content)).toHaveLength(1);
 });
+
+it("does not claim a streamed construction is ready before its elements are validated and applied",async()=>{
+  let complete!:(reply:PrimitiveReply)=>void;
+  mock.request.mockImplementation((_input:unknown,onText:(s:string)=>void)=>{
+    onText("He creado todos los elementos.");return new Promise<PrimitiveReply>(resolve=>{complete=resolve;});
+  });
+  render(tree());
+  fireEvent.change(screen.getByRole("textbox",{name:"Mensaje para Fontex AI"}),{target:{value:"Crea un ejercicio completo"}});
+  fireEvent.submit(screen.getByRole("textbox",{name:"Mensaje para Fontex AI"}).closest("form")!);
+  expect(screen.queryByText("He creado todos los elementos.")).not.toBeInTheDocument();
+  expect(screen.getByText("Generando y validando los elementos del ejercicio…")).toBeInTheDocument();
+  const input=mock.request.mock.calls[0]![0] as {scene:PrimitiveScene};
+  await act(async()=>{complete(construction(input.scene));await Promise.resolve();});
+  expect(await screen.findByRole("article",{name:"Suma de fracciones creada"})).toBeInTheDocument();
+});

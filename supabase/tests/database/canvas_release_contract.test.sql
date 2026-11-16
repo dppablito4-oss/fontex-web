@@ -5,7 +5,7 @@ select extensions.no_plan();
 set local role anon;
 select set_config('request.path', '/rpc/get_release_contract', true);
 select extensions.lives_ok($$select public.check_beta_request()$$, 'release metadata stays public without granting beta access');
-select extensions.is(public.get_release_contract(), 'closed-beta-v3', 'release v3 includes canvas sharing');
+select extensions.is(public.get_release_contract(), 'closed-beta-v4', 'release v3 includes canvas sharing');
 select set_config('request.path', '/rpc/read_public_canvas', true);
 select extensions.lives_ok($$select public.check_beta_request()$$, 'the release probe can reach the public reader');
 select extensions.is(public.read_public_canvas(null), null::jsonb, 'a null-token probe reads no shared document');

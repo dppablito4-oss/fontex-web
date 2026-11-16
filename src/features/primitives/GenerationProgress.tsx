@@ -7,6 +7,6 @@ export function GenerationProgress({ building }: { building: boolean }) {
     return () => clearInterval(timer);
   }, []);
   return <span className="pc-writing" role="status">{building ? "Construyendo en el lienzo…" : "Escribiendo…"} {seconds > 0 && `${seconds} s`}
-    {building && seconds >= 20 && <small>La construcción continúa. Puedes detenerla desde este panel.</small>}
+    {building && seconds >= 20 && <small>Un ejercicio grande puede tardar unos 2 minutos. Aparecerá al completar la validación; puedes detenerlo desde este panel.</small>}
   </span>;
 }

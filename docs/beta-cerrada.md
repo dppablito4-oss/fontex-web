@@ -58,14 +58,14 @@ Estos ejemplos son tareas del operador, no se ejecutan desde el navegador. La au
 | Presupuesto global conservador | 2.000.000 unidades reservadas / 24 horas móviles |
 | Contexto de pregunta/escena | 48.000 bytes UTF-8 |
 | Payload completo del proveedor | 131.072 bytes UTF-8 |
-| Salida máxima | 2.048 tokens en chat; 8.000 en construcción |
-| Reserva de uso interrumpida | Libera su plaza al vencer a los 90 segundos |
+| Salida máxima | 2.048 tokens en chat; 32.000 en construcción |
+| Reserva de uso interrumpida | Libera su plaza al vencer a los 180 segundos |
 | Biblioteca de escenas | 100 lienzos / 20 MiB por cuenta; 1 MiB por escena |
 | Catálogo de escenas | Páginas de 25; el contenido se obtiene al abrir una escena o cambiar su revisión |
 | Multipart PDF | 5 MiB de archivo + 256 KiB de sobre, medidos sobre bytes recibidos |
 | Extracción PDF | Máximo 100 páginas; presupuesto de 20 segundos para carga/extracción |
 
-La reserva global usa los bytes del payload completo más el máximo de salida como cota conservadora. No es un tokenizer, una medición de coste monetario ni la cuota del proveedor. Los intentos admitidos siguen contando ante errores para evitar reintentos ilimitados. Finalizar una petición libera concurrencia, sin reiniciar frecuencia o presupuesto. Las reservas de uso son independientes de los cinco créditos de generación y sus reembolsos.
+La reserva global estima la entrada como la mitad de los bytes UTF-8 del payload completo y añade el máximo de tokens de salida. No es un tokenizer, una medición de coste monetario ni la cuota del proveedor. Los intentos admitidos siguen contando ante errores para evitar reintentos ilimitados. Finalizar una petición libera concurrencia, sin reiniciar frecuencia o presupuesto. Las reservas de uso son independientes de los cinco créditos de generación y sus reembolsos.
 
 `fontex_beta.runtime_limits` contiene los controles operativos. Solo el operador de base de datos puede cambiar sus valores; el administrador de aplicación puede pausar/reanudar IA mediante RPC. La pausa afecta nuevas solicitudes en los cinco flujos que consultan al proveedor: lienzo, tutor documental, práctica, búsqueda y procesamiento documental. No cancela una llamada ya admitida.
 

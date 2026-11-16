@@ -134,3 +134,16 @@ it.each([[2, 5, 1], [7, 4, 2], [8, 4, 2], [1, 2, 1], [2, 4, 1]])("renders %i/%i 
   expect(container.querySelectorAll(".pc-circles svg > g")).toHaveLength(units * denominator);
   expect([...container.querySelectorAll(".pc-circles path")].filter((path) => path.getAttribute("fill") !== "var(--pc-empty)")).toHaveLength(numerator);
 });
+
+it("renders time, velocity and displacement in one linked three-column table",()=>{
+  const scene=newPrimitiveScene();scene.variables=[{name:"v0",value:4,min:0,max:20,step:.5,unit:"m/s"},{name:"a",value:2,min:-5,max:10,step:.5,unit:"m/s²"},{name:"t",value:5,min:1,max:15,step:1,unit:"s"}];
+  const p=createPrimitive("data_chart",scene);p.data.chartType="table_only";
+  p.data.headers=["Tiempo","Velocidad","Desplazamiento"];
+  p.data.rows=[{label:"T",xExpr:"v0+a*t",valueExpr:"v0*t+0.5*a*t^2"}];scene.primitives.push(p);
+  const draw=()=> <PrimitiveVisual p={p} scene={scene} scope={sceneScope(scene)} functions={sceneFunctions(scene)} onChange={()=>{}} onVariable={()=>{}} onSelect={()=>{}} selected={false} readOnly/>;
+  const view=render(draw());
+  expect(screen.getAllByRole("columnheader").map(c=>c.textContent)).toEqual(["Tiempo","Velocidad","Desplazamiento"]);
+  expect(screen.getAllByRole("cell").map(c=>c.textContent)).toEqual(["T","14","45"]);
+  scene.variables[1]!.value=-2;view.rerender(draw());
+  expect(screen.getAllByRole("cell").map(c=>c.textContent)).toEqual(["T","-6","-5"]);
+});

@@ -1,3 +1,4 @@
+import { generationLimits } from "../../core/agent/generation-limits";
 import { readClassroomGuest } from "../classrooms/classroom-access";
 import { supabase } from "../../lib/supabase/client";
 import { eventData } from "../../core/agent/event-stream";
@@ -28,7 +29,7 @@ export async function requestPrimitiveAgent(
     guest ? "classroom-agent" : "studio-agent/primitives",
     // Keep the same signal attached through the streamed body. The SDK's
     // invoke timeout is cleared when headers arrive and detaches cancellation.
-    { body: input, ...(guest ? {headers:{"x-classroom-guest":guest.token}} : {}), signal: AbortSignal.any([signal, AbortSignal.timeout(85000)]) },
+    { body: input, ...(guest ? {headers:{"x-classroom-guest":guest.token}} : {}), signal: AbortSignal.any([signal, AbortSignal.timeout(generationLimits[input.task].clientMs)]) },
   );
   if (result.error) {
     const invocationError: unknown = result.error;

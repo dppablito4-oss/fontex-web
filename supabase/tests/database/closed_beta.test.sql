@@ -91,6 +91,6 @@ reset role;
 set local role anon;
 select set_config('request.path','/rpc/get_release_contract',true);
 select extensions.lives_ok($$select public.check_beta_request()$$,'public read-only release contract is available without a participant session');
-select extensions.is(public.get_release_contract(),'closed-beta-v3','release gate checks an explicit backend contract');
+select extensions.is(public.get_release_contract(),'closed-beta-v4','release gate checks an explicit backend contract');
 select * from extensions.finish();
 rollback;

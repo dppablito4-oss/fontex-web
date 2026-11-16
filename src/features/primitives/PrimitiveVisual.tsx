@@ -1225,14 +1225,15 @@ function Chart(
         <table>
           <thead>
             <tr>
-              <th>{p.data.headers[0]}</th>
-              <th>{p.data.headers[1]}</th>
+              {p.data.headers.map((header,index)=><th key={index}>{header}</th>)}
             </tr>
           </thead>
           <tbody>
             {rows.map((r, i) => (
               <tr key={i}>
                 <td>{r.label}</td>
+                {p.data.headers.length===3 && <td>{practice ? <PracticeValue p={p} scene={scene} fieldKey={`rows.${i}.xExpr`} fallback={num(r.x)}
+                  onApply={onPracticeChange ?? (next=>onChange(next.primitives.find(item=>item.id===p.id)!))}/> : num(r.x)}</td>}
                 <td>{practice ? <PracticeValue p={p} scene={scene} fieldKey={`rows.${i}.valueExpr`} fallback={num(r.y)}
                   onApply={onPracticeChange ?? (next=>onChange(next.primitives.find(item=>item.id===p.id)!))}/> : num(r.y)}</td>
               </tr>

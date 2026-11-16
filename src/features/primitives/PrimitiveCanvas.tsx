@@ -757,7 +757,7 @@ function Editor(
     try {
       const reply = await requestPrimitiveAgent(
         { scene: before, question: question.trim(), task, level, selectedId, ...(requestId ? { requestId } : {}) },
-        setStreamText,
+        text => { if (task === "chat") setStreamText(text); },
         controller.signal,
       );
       if (
@@ -1564,7 +1564,7 @@ function Editor(
                       <div className="pc-message">
                         <small>Fontex AI</small>
                         <AcademicMarkdown
-                          content={streamText || "Preparando…"}
+                          content={busyTask === "build" ? "Generando y validando los elementos del ejercicio…" : streamText || "Preparando…"}
                         />
                         <GenerationProgress building={busyTask === "build"} />
                       </div>

@@ -207,7 +207,7 @@ export const primitiveSchema = z.discriminatedUnion("kind", [
         "truth_table",
         "matrix",
       ]),
-      headers: z.tuple([z.string().max(60), z.string().max(60)]),
+      headers: z.union([z.tuple([z.string().max(60), z.string().max(60)]), z.tuple([z.string().max(60), z.string().max(60), z.string().max(60)])]),
       rows: z.array(
         z.object({ label: z.string().max(60), xExpr: expr, valueExpr: expr })
           .strict(),

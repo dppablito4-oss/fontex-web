@@ -1,0 +1,1124 @@
+{
+  "schemaVersion": 2,
+  "format": "primitive-scene",
+  "id": "407c0a69-e112-492f-b4a1-8a5131451d5b",
+  "title": "Cinemática y áreas",
+  "level": "secundaria",
+  "updatedAt": "2026-11-16T17:21:07.137Z",
+  "variables": [
+    {
+      "name": "v0",
+      "value": 6,
+      "min": 0,
+      "max": 20,
+      "step": 0.5,
+      "unit": "m/s"
+    },
+    {
+      "name": "a",
+      "value": 1,
+      "min": -5,
+      "max": 10,
+      "step": 0.5,
+      "unit": "m/s²"
+    },
+    {
+      "name": "ho",
+      "value": 4,
+      "min": 1,
+      "max": 15,
+      "step": 1,
+      "unit": "s"
+    }
+  ],
+  "primitives": [
+    {
+      "id": "intro",
+      "autoHeight": true,
+      "label": "1. Explora los parámetros",
+      "x": 24,
+      "y": 24,
+      "width": 1152,
+      "height": 180,
+      "rotation": 0,
+      "zIndex": 1,
+      "locked": false,
+      "presentationStep": 1,
+      "style": {
+        "strokeColor": "#334155",
+        "fillColor": "#eff6ff",
+        "strokeWidth": 1,
+        "opacity": 1,
+        "dashed": false,
+        "fontSize": 19
+      },
+      "interaction": null,
+      "kind": "math_block",
+      "data": {
+        "markdownContent": "## Cinemática: de la velocidad al desplazamiento\nSuponemos aceleración constante y posición inicial $x(0)=0$. Cambia los tres deslizadores y observa todas las representaciones.\n\n$$v(t)=v_0+at,\\qquad \\Delta x=\\int_0^T v(t)\\,dt.$$\nEl control **T** usa internamente la variable `ho`.",
+        "variant": "callout_info",
+        "autoHeight": true
+      }
+    },
+    {
+      "id": "sv",
+      "autoHeight": true,
+      "label": "Velocidad inicial v0 (m/s)",
+      "x": 24,
+      "y": 228,
+      "width": 1152,
+      "height": 150,
+      "rotation": 0,
+      "zIndex": 1,
+      "locked": false,
+      "presentationStep": 1,
+      "style": {
+        "strokeColor": "#2563eb",
+        "fillColor": "#ffffff",
+        "strokeWidth": 1,
+        "opacity": 1,
+        "dashed": false,
+        "fontSize": 16
+      },
+      "interaction": {
+        "fields": [
+          "var:v0"
+        ]
+      },
+      "kind": "control_slider",
+      "data": {
+        "variableName": "v0",
+        "controlType": "slider",
+        "speed": 1
+      }
+    },
+    {
+      "id": "sa",
+      "autoHeight": true,
+      "label": "Aceleración a (m/s²)",
+      "x": 24,
+      "y": 402,
+      "width": 1152,
+      "height": 150,
+      "rotation": 0,
+      "zIndex": 1,
+      "locked": false,
+      "presentationStep": 1,
+      "style": {
+        "strokeColor": "#dc2626",
+        "fillColor": "#ffffff",
+        "strokeWidth": 1,
+        "opacity": 1,
+        "dashed": false,
+        "fontSize": 16
+      },
+      "interaction": {
+        "fields": [
+          "var:a"
+        ]
+      },
+      "kind": "control_slider",
+      "data": {
+        "variableName": "a",
+        "controlType": "slider",
+        "speed": 1
+      }
+    },
+    {
+      "id": "st",
+      "autoHeight": true,
+      "label": "Tiempo límite T (s)",
+      "x": 24,
+      "y": 576,
+      "width": 1152,
+      "height": 150,
+      "rotation": 0,
+      "zIndex": 1,
+      "locked": false,
+      "presentationStep": 1,
+      "style": {
+        "strokeColor": "#059669",
+        "fillColor": "#ffffff",
+        "strokeWidth": 1,
+        "opacity": 1,
+        "dashed": false,
+        "fontSize": 16
+      },
+      "interaction": {
+        "fields": [
+          "var:ho"
+        ]
+      },
+      "kind": "control_slider",
+      "data": {
+        "variableName": "ho",
+        "controlType": "slider",
+        "speed": 1
+      }
+    },
+    {
+      "id": "area-intro",
+      "autoHeight": true,
+      "label": "2. Interpreta el área",
+      "x": 24,
+      "y": 750,
+      "width": 1152,
+      "height": 198,
+      "rotation": 0,
+      "zIndex": 1,
+      "locked": false,
+      "presentationStep": 2,
+      "style": {
+        "strokeColor": "#334155",
+        "fillColor": "#ffffff",
+        "strokeWidth": 1,
+        "opacity": 1,
+        "dashed": false,
+        "fontSize": 18
+      },
+      "interaction": null,
+      "kind": "math_block",
+      "data": {
+        "markdownContent": "## Área firmada en el gráfico velocidad–tiempo\nEl eje horizontal representa **tiempo t (s)**; el vertical, **velocidad (m/s)**. El editor llama $x$ a la coordenada horizontal: por eso la curva se introduce como `v0+a*x`.\n\nLa región sobre el eje aporta desplazamiento positivo y la región inferior, negativo. **Desplazamiento no es lo mismo que distancia recorrida.**",
+        "variant": "card",
+        "autoHeight": true
+      }
+    },
+    {
+      "id": "vt-plane",
+      "autoHeight": true,
+      "label": "Velocidad frente al tiempo",
+      "x": 24,
+      "y": 972,
+      "width": 1152,
+      "height": 790,
+      "rotation": 0,
+      "zIndex": 0,
+      "locked": false,
+      "presentationStep": 2,
+      "style": {
+        "strokeColor": "#64748b",
+        "fillColor": "#ffffff",
+        "strokeWidth": 1,
+        "opacity": 1,
+        "dashed": false,
+        "fontSize": 16
+      },
+      "interaction": null,
+      "kind": "coordinate_canvas",
+      "data": {
+        "mode": "cartesian",
+        "domainX": [
+          "0",
+          "ho+1"
+        ],
+        "rangeY": [
+          "min(-10,v0+a*ho-5)",
+          "max(25,v0+a*ho+5)"
+        ],
+        "angleUnit": "rad",
+        "equalScale": false,
+        "autoFit": false,
+        "referenceWindow": null,
+        "showGrid": true,
+        "showAxisLabels": true,
+        "subdivisions": 5
+      }
+    },
+    {
+      "id": "velocity",
+      "autoHeight": false,
+      "label": "v(t) y desplazamiento firmado",
+      "x": 24,
+      "y": 495,
+      "width": 1152,
+      "height": 500,
+      "rotation": 0,
+      "zIndex": 2,
+      "locked": false,
+      "presentationStep": 2,
+      "style": {
+        "strokeColor": "#2563eb",
+        "fillColor": "#93c5fd",
+        "strokeWidth": 3,
+        "opacity": 0.85,
+        "dashed": false,
+        "fontSize": 16
+      },
+      "interaction": null,
+      "kind": "function_region",
+      "data": {
+        "canvasId": "vt-plane",
+        "name": "vel",
+        "expression": "v0+a*x",
+        "curveMode": "cartesian",
+        "xExpr": null,
+        "yExpr": null,
+        "rExpr": null,
+        "parameterFromExpr": null,
+        "parameterToExpr": null,
+        "parameterValueExpr": null,
+        "secondaryExpression": "0",
+        "angleUnit": "rad",
+        "showDerivative": false,
+        "showTangent": false,
+        "tangentAt": "0",
+        "pointXs": [
+          "0",
+          "ho"
+        ],
+        "showArea": true,
+        "fromExpr": "0",
+        "toExpr": "ho",
+        "areaMode": "signed",
+        "resultName": "desplazamiento"
+      }
+    },
+    {
+      "id": "formula",
+      "autoHeight": true,
+      "label": "3. Del área a la fórmula",
+      "x": 24,
+      "y": 1786,
+      "width": 1152,
+      "height": 198,
+      "rotation": 0,
+      "zIndex": 1,
+      "locked": false,
+      "presentationStep": 3,
+      "style": {
+        "strokeColor": "#059669",
+        "fillColor": "#ecfdf5",
+        "strokeWidth": 1,
+        "opacity": 1,
+        "dashed": false,
+        "fontSize": 20
+      },
+      "interaction": null,
+      "kind": "math_block",
+      "data": {
+        "markdownContent": "## Cálculo exacto para esta función lineal\n$$\\Delta x=v_0T+\\tfrac12aT^2=({{v0}})({{ho}})+\\tfrac12({{a}})({{ho}})^2={{v0*ho+0.5*a*ho^2}}\\ \\mathrm{m}.$$\n$$v(T)={{v0}}+({{a}})({{ho}})={{v0+a*ho}}\\ \\mathrm{m/s}.$$\nLa integral del gráfico se calcula numéricamente; la expresión algebraica anterior da el valor exacto para los parámetros permitidos.",
+        "variant": "callout_step",
+        "autoHeight": true
+      }
+    },
+    {
+      "id": "motion-intro",
+      "autoHeight": true,
+      "label": "4. Posición y vectores",
+      "x": 24,
+      "y": 2008,
+      "width": 1152,
+      "height": 258,
+      "rotation": 0,
+      "zIndex": 1,
+      "locked": false,
+      "presentationStep": 4,
+      "style": {
+        "strokeColor": "#334155",
+        "fillColor": "#ffffff",
+        "strokeWidth": 1,
+        "opacity": 1,
+        "dashed": false,
+        "fontSize": 18
+      },
+      "interaction": null,
+      "kind": "math_block",
+      "data": {
+        "markdownContent": "## El móvil al finalizar el intervalo\nEl centro horizontal está en $x(T)=\\Delta x={{v0*ho+0.5*a*ho^2}}$ m. La ventana sigue al móvil; consulta las coordenadas del eje para leer su posición.\n\nAmbos vectores nacen del centro del vehículo: **azul, velocidad** (escala gráfica: 1 unidad por 4 m/s); **rojo discontinuo, aceleración** (1 unidad por 1 m/s²). No compares sus longitudes como si tuvieran las mismas unidades. Un vector nulo no tiene flecha visible.",
+        "variant": "card",
+        "autoHeight": true
+      }
+    },
+    {
+      "id": "road",
+      "autoHeight": true,
+      "label": "Posición horizontal (m); altura esquemática",
+      "x": 24,
+      "y": 2290,
+      "width": 1152,
+      "height": 790,
+      "rotation": 0,
+      "zIndex": 0,
+      "locked": false,
+      "presentationStep": 4,
+      "style": {
+        "strokeColor": "#64748b",
+        "fillColor": "#f8fafc",
+        "strokeWidth": 1,
+        "opacity": 1,
+        "dashed": false,
+        "fontSize": 16
+      },
+      "interaction": null,
+      "kind": "coordinate_canvas",
+      "data": {
+        "mode": "cartesian",
+        "domainX": [
+          "v0*ho+0.5*a*ho^2-25",
+          "v0*ho+0.5*a*ho^2+25"
+        ],
+        "rangeY": [
+          "-7",
+          "7"
+        ],
+        "angleUnit": "rad",
+        "equalScale": true,
+        "autoFit": false,
+        "referenceWindow": null,
+        "showGrid": true,
+        "showAxisLabels": true,
+        "subdivisions": 19
+      }
+    },
+    {
+      "id": "car",
+      "autoHeight": false,
+      "label": "Carrocería",
+      "x": 24,
+      "y": 1430,
+      "width": 1152,
+      "height": 420,
+      "rotation": 0,
+      "zIndex": 2,
+      "locked": false,
+      "presentationStep": 4,
+      "style": {
+        "strokeColor": "#475569",
+        "fillColor": "#cbd5e1",
+        "strokeWidth": 2,
+        "opacity": 1,
+        "dashed": false,
+        "fontSize": 14
+      },
+      "interaction": null,
+      "kind": "geometric_shape",
+      "data": {
+        "canvasId": "road",
+        "shape": "polygon",
+        "regular": false,
+        "sides": 4,
+        "sideExpr": "4",
+        "radiusExpr": "1",
+        "divisions": 1,
+        "shadedExpr": "1",
+        "verticesExpr": [
+          [
+            "v0*ho+0.5*a*ho^2-2",
+            "0"
+          ],
+          [
+            "v0*ho+0.5*a*ho^2+2",
+            "0"
+          ],
+          [
+            "v0*ho+0.5*a*ho^2+2",
+            "2"
+          ],
+          [
+            "v0*ho+0.5*a*ho^2-2",
+            "2"
+          ]
+        ],
+        "unit": "m",
+        "showAngles": false,
+        "showSideLengths": false,
+        "showCenterOfMass": true,
+        "logicVariables": null,
+        "logicExpression": null,
+        "setLabels": null,
+        "transformMatrixId": null,
+        "transformInverse": false
+      }
+    },
+    {
+      "id": "wheel-left",
+      "autoHeight": false,
+      "label": "Rueda izquierda esquemática",
+      "x": 24,
+      "y": 1430,
+      "width": 1152,
+      "height": 420,
+      "rotation": 0,
+      "zIndex": 3,
+      "locked": false,
+      "presentationStep": 4,
+      "style": {
+        "strokeColor": "#0f172a",
+        "fillColor": "#334155",
+        "strokeWidth": 2,
+        "opacity": 1,
+        "dashed": false,
+        "fontSize": 14
+      },
+      "interaction": null,
+      "kind": "geometric_shape",
+      "data": {
+        "canvasId": "road",
+        "shape": "polygon",
+        "regular": false,
+        "sides": 6,
+        "sideExpr": "1",
+        "radiusExpr": "0.5",
+        "divisions": 1,
+        "shadedExpr": "1",
+        "verticesExpr": [
+          [
+            "v0*ho+0.5*a*ho^2-0.7",
+            "0"
+          ],
+          [
+            "v0*ho+0.5*a*ho^2-0.95",
+            "0.43"
+          ],
+          [
+            "v0*ho+0.5*a*ho^2-1.45",
+            "0.43"
+          ],
+          [
+            "v0*ho+0.5*a*ho^2-1.7",
+            "0"
+          ],
+          [
+            "v0*ho+0.5*a*ho^2-1.45",
+            "-0.43"
+          ],
+          [
+            "v0*ho+0.5*a*ho^2-0.95",
+            "-0.43"
+          ]
+        ],
+        "unit": "m",
+        "showAngles": false,
+        "showSideLengths": false,
+        "showCenterOfMass": false,
+        "logicVariables": null,
+        "logicExpression": null,
+        "setLabels": null,
+        "transformMatrixId": null,
+        "transformInverse": false
+      }
+    },
+    {
+      "id": "wheel-right",
+      "autoHeight": false,
+      "label": "Rueda derecha esquemática",
+      "x": 24,
+      "y": 1430,
+      "width": 1152,
+      "height": 420,
+      "rotation": 0,
+      "zIndex": 3,
+      "locked": false,
+      "presentationStep": 4,
+      "style": {
+        "strokeColor": "#0f172a",
+        "fillColor": "#334155",
+        "strokeWidth": 2,
+        "opacity": 1,
+        "dashed": false,
+        "fontSize": 14
+      },
+      "interaction": null,
+      "kind": "geometric_shape",
+      "data": {
+        "canvasId": "road",
+        "shape": "polygon",
+        "regular": false,
+        "sides": 6,
+        "sideExpr": "1",
+        "radiusExpr": "0.5",
+        "divisions": 1,
+        "shadedExpr": "1",
+        "verticesExpr": [
+          [
+            "v0*ho+0.5*a*ho^2+1.7",
+            "0"
+          ],
+          [
+            "v0*ho+0.5*a*ho^2+1.45",
+            "0.43"
+          ],
+          [
+            "v0*ho+0.5*a*ho^2+0.95",
+            "0.43"
+          ],
+          [
+            "v0*ho+0.5*a*ho^2+0.7",
+            "0"
+          ],
+          [
+            "v0*ho+0.5*a*ho^2+0.95",
+            "-0.43"
+          ],
+          [
+            "v0*ho+0.5*a*ho^2+1.45",
+            "-0.43"
+          ]
+        ],
+        "unit": "m",
+        "showAngles": false,
+        "showSideLengths": false,
+        "showCenterOfMass": false,
+        "logicVariables": null,
+        "logicExpression": null,
+        "setLabels": null,
+        "transformMatrixId": null,
+        "transformInverse": false
+      }
+    },
+    {
+      "id": "vel-arrow",
+      "autoHeight": false,
+      "label": "Velocidad: azul",
+      "x": 24,
+      "y": 1430,
+      "width": 1152,
+      "height": 420,
+      "rotation": 0,
+      "zIndex": 4,
+      "locked": false,
+      "presentationStep": 4,
+      "style": {
+        "strokeColor": "#2563eb",
+        "fillColor": "#2563eb",
+        "strokeWidth": 5,
+        "opacity": 1,
+        "dashed": false,
+        "fontSize": 14
+      },
+      "interaction": null,
+      "kind": "vector_segment",
+      "data": {
+        "canvasId": "road",
+        "start": [
+          "v0*ho+0.5*a*ho^2",
+          "1"
+        ],
+        "end": [
+          "v0*ho+0.5*a*ho^2+(v0+a*ho)/4",
+          "1"
+        ],
+        "headStart": "dot",
+        "headEnd": "arrow",
+        "showMagnitude": false,
+        "showAngleArc": false,
+        "arcHeight": null,
+        "transformMatrixId": null,
+        "transformInverse": false
+      }
+    },
+    {
+      "id": "acc-arrow",
+      "autoHeight": false,
+      "label": "Aceleración: rojo",
+      "x": 24,
+      "y": 1430,
+      "width": 1152,
+      "height": 420,
+      "rotation": 0,
+      "zIndex": 5,
+      "locked": false,
+      "presentationStep": 4,
+      "style": {
+        "strokeColor": "#dc2626",
+        "fillColor": "#dc2626",
+        "strokeWidth": 2,
+        "opacity": 1,
+        "dashed": true,
+        "fontSize": 14
+      },
+      "interaction": null,
+      "kind": "vector_segment",
+      "data": {
+        "canvasId": "road",
+        "start": [
+          "v0*ho+0.5*a*ho^2",
+          "1"
+        ],
+        "end": [
+          "v0*ho+0.5*a*ho^2+a",
+          "1"
+        ],
+        "headStart": "dot",
+        "headEnd": "arrow",
+        "showMagnitude": false,
+        "showAngleArc": false,
+        "arcHeight": null,
+        "transformMatrixId": null,
+        "transformInverse": false
+      }
+    },
+    {
+      "id": "table-intro",
+      "autoHeight": true,
+      "label": "5. Compara seis instantes",
+      "x": 24,
+      "y": 3104,
+      "width": 1152,
+      "height": 180,
+      "rotation": 0,
+      "zIndex": 1,
+      "locked": false,
+      "presentationStep": 5,
+      "style": {
+        "strokeColor": "#334155",
+        "fillColor": "#ffffff",
+        "strokeWidth": 1,
+        "opacity": 1,
+        "dashed": false,
+        "fontSize": 18
+      },
+      "interaction": null,
+      "kind": "math_block",
+      "data": {
+        "markdownContent": "## Tabla y barras vinculadas\n$T={{ho}}$ s. En cada instante usamos $v(t)=v_0+at$ y $x(t)=v_0t+\\tfrac12at^2$. La primera columna identifica el tiempo como fracción de T; las barras comparan el desplazamiento acumulado en esos mismos instantes.",
+        "variant": "card",
+        "autoHeight": true
+      }
+    },
+    {
+      "id": "samples",
+      "autoHeight": true,
+      "label": "Tabulación automática de seis instantes",
+      "x": 24,
+      "y": 3308,
+      "width": 1152,
+      "height": 380,
+      "rotation": 0,
+      "zIndex": 1,
+      "locked": false,
+      "presentationStep": 5,
+      "style": {
+        "strokeColor": "#475569",
+        "fillColor": "#ffffff",
+        "strokeWidth": 1,
+        "opacity": 1,
+        "dashed": false,
+        "fontSize": 17
+      },
+      "interaction": null,
+      "kind": "data_chart",
+      "data": {
+        "chartType": "table_only",
+        "headers": [
+          "Tiempo t",
+          "Velocidad (m/s)",
+          "Desplazamiento (m)"
+        ],
+        "rows": [
+          {
+            "label": "0",
+            "xExpr": "v0",
+            "valueExpr": "0"
+          },
+          {
+            "label": "T/5",
+            "xExpr": "v0+a*ho/5",
+            "valueExpr": "v0*ho/5+0.5*a*(ho/5)^2"
+          },
+          {
+            "label": "2T/5",
+            "xExpr": "v0+2*a*ho/5",
+            "valueExpr": "2*v0*ho/5+0.5*a*(2*ho/5)^2"
+          },
+          {
+            "label": "3T/5",
+            "xExpr": "v0+3*a*ho/5",
+            "valueExpr": "3*v0*ho/5+0.5*a*(3*ho/5)^2"
+          },
+          {
+            "label": "4T/5",
+            "xExpr": "v0+4*a*ho/5",
+            "valueExpr": "4*v0*ho/5+0.5*a*(4*ho/5)^2"
+          },
+          {
+            "label": "T",
+            "xExpr": "v0+a*ho",
+            "valueExpr": "v0*ho+0.5*a*ho^2"
+          }
+        ],
+        "showLinearRegression": false,
+        "logicVariables": null,
+        "logicExpression": null,
+        "matrixName": null,
+        "matrixCells": null,
+        "showInverse": false
+      }
+    },
+    {
+      "id": "bars",
+      "autoHeight": true,
+      "label": "Desplazamiento acumulado (m)",
+      "x": 24,
+      "y": 3712,
+      "width": 1152,
+      "height": 380,
+      "rotation": 0,
+      "zIndex": 1,
+      "locked": false,
+      "presentationStep": 5,
+      "style": {
+        "strokeColor": "#059669",
+        "fillColor": "#6ee7b7",
+        "strokeWidth": 2,
+        "opacity": 1,
+        "dashed": false,
+        "fontSize": 16
+      },
+      "interaction": null,
+      "kind": "data_chart",
+      "data": {
+        "chartType": "bar",
+        "headers": [
+          "Instante",
+          "t (s) / desplazamiento (m)"
+        ],
+        "rows": [
+          {
+            "label": "0",
+            "xExpr": "0",
+            "valueExpr": "0"
+          },
+          {
+            "label": "T/5",
+            "xExpr": "ho/5",
+            "valueExpr": "v0*ho/5+0.5*a*(ho/5)^2"
+          },
+          {
+            "label": "2T/5",
+            "xExpr": "2*ho/5",
+            "valueExpr": "2*v0*ho/5+0.5*a*(2*ho/5)^2"
+          },
+          {
+            "label": "3T/5",
+            "xExpr": "3*ho/5",
+            "valueExpr": "3*v0*ho/5+0.5*a*(3*ho/5)^2"
+          },
+          {
+            "label": "4T/5",
+            "xExpr": "4*ho/5",
+            "valueExpr": "4*v0*ho/5+0.5*a*(4*ho/5)^2"
+          },
+          {
+            "label": "T",
+            "xExpr": "ho",
+            "valueExpr": "v0*ho+0.5*a*ho^2"
+          }
+        ],
+        "showLinearRegression": false,
+        "logicVariables": null,
+        "logicExpression": null,
+        "matrixName": null,
+        "matrixCells": null,
+        "showInverse": false
+      }
+    },
+    {
+      "id": "process-intro",
+      "autoHeight": true,
+      "label": "6. Relaciona las representaciones",
+      "x": 24,
+      "y": 4116,
+      "width": 1152,
+      "height": 240,
+      "rotation": 0,
+      "zIndex": 1,
+      "locked": false,
+      "presentationStep": 6,
+      "style": {
+        "strokeColor": "#334155",
+        "fillColor": "#eff6ff",
+        "strokeWidth": 1,
+        "opacity": 1,
+        "dashed": false,
+        "fontSize": 18
+      },
+      "interaction": null,
+      "kind": "math_block",
+      "data": {
+        "markdownContent": "## Parámetros → integración → desplazamiento\nEstado actual: $a={{a}}$ m/s²; $v(T)={{v0+a*ho}}$ m/s; $\\Delta x={{v0*ho+0.5*a*ho^2}}$ m.\n\n$a>0$: la velocidad algebraica aumenta; $a=0$: movimiento uniforme; $a<0$: la velocidad algebraica disminuye. **La rapidez disminuye cuando velocidad y aceleración tienen signos opuestos.**\nLos enlaces siguientes son fijos: este editor no permite colorearlos según una condición.",
+        "variant": "callout_info",
+        "autoHeight": true
+      }
+    },
+    {
+      "id": "flow",
+      "autoHeight": true,
+      "label": "Flujo conceptual de cálculo",
+      "x": 24,
+      "y": 4380,
+      "width": 1152,
+      "height": 420,
+      "rotation": 0,
+      "zIndex": 1,
+      "locked": false,
+      "presentationStep": 6,
+      "style": {
+        "strokeColor": "#64748b",
+        "fillColor": "#eff6ff",
+        "strokeWidth": 2,
+        "opacity": 1,
+        "dashed": false,
+        "fontSize": 18
+      },
+      "interaction": null,
+      "kind": "node_graph",
+      "data": {
+        "graphType": "relations",
+        "nodes": [
+          {
+            "id": "params",
+            "label": "Input: parámetros v0, a, T",
+            "type": "relation",
+            "variableName": null,
+            "x": 135,
+            "y": 240
+          },
+          {
+            "id": "integrate",
+            "label": "Proceso: integración de v(t)",
+            "type": "relation",
+            "variableName": null,
+            "x": 400,
+            "y": 240
+          },
+          {
+            "id": "output",
+            "label": "Output: desplazamiento Δx",
+            "type": "relation",
+            "variableName": null,
+            "x": 665,
+            "y": 240
+          }
+        ],
+        "edges": [
+          {
+            "from": "params",
+            "to": "integrate",
+            "label": "v(t) = v0 + at"
+          },
+          {
+            "from": "integrate",
+            "to": "output",
+            "label": "Integral entre 0 y T"
+          }
+        ]
+      }
+    },
+    {
+      "id": "practice",
+      "autoHeight": true,
+      "label": "7. Resuelve antes de comprobar",
+      "x": 24,
+      "y": 4824,
+      "width": 1152,
+      "height": 198,
+      "rotation": 0,
+      "zIndex": 1,
+      "locked": false,
+      "presentationStep": 7,
+      "style": {
+        "strokeColor": "#7c3aed",
+        "fillColor": "#f5f3ff",
+        "strokeWidth": 1,
+        "opacity": 1,
+        "dashed": false,
+        "fontSize": 19
+      },
+      "interaction": null,
+      "kind": "math_block",
+      "data": {
+        "markdownContent": "## Tu turno: caso fijo\nPara **$v_0=4$ m/s, $a=2$ m/s² y $T=5$ s**, calcula la velocidad final y el desplazamiento. Escribe solo el número en cada caja.\n\nPrimero trabaja a mano alzada en la cuadrícula: datos → fórmula → sustitución → resultado con unidades. Después ajusta los tres deslizadores a esos valores y compara. Las cajas no califican automáticamente.",
+        "variant": "callout_step",
+        "autoHeight": true
+      }
+    },
+    {
+      "id": "answer-v",
+      "autoHeight": true,
+      "label": "Respuesta: velocidad final",
+      "x": 24,
+      "y": 5046,
+      "width": 1152,
+      "height": 180,
+      "rotation": 0,
+      "zIndex": 1,
+      "locked": false,
+      "presentationStep": 7,
+      "style": {
+        "strokeColor": "#2563eb",
+        "fillColor": "#ffffff",
+        "strokeWidth": 1,
+        "opacity": 1,
+        "dashed": false,
+        "fontSize": 18
+      },
+      "interaction": null,
+      "kind": "answer_field",
+      "data": {
+        "prompt": "Con v0 = 4, a = 2 y T = 5: ¿cuánto vale v(T), en m/s?",
+        "answerType": "number",
+        "answer": ""
+      }
+    },
+    {
+      "id": "answer-d",
+      "autoHeight": true,
+      "label": "Respuesta: desplazamiento",
+      "x": 24,
+      "y": 5250,
+      "width": 1152,
+      "height": 180,
+      "rotation": 0,
+      "zIndex": 1,
+      "locked": false,
+      "presentationStep": 7,
+      "style": {
+        "strokeColor": "#059669",
+        "fillColor": "#ffffff",
+        "strokeWidth": 1,
+        "opacity": 1,
+        "dashed": false,
+        "fontSize": 18
+      },
+      "interaction": null,
+      "kind": "answer_field",
+      "data": {
+        "prompt": "Con v0 = 4, a = 2 y T = 5: ¿cuánto vale Δx, en m?",
+        "answerType": "number",
+        "answer": ""
+      }
+    },
+    {
+      "id": "hand-grid",
+      "autoHeight": true,
+      "label": "Espacio de procedimiento manuscrito",
+      "x": 24,
+      "y": 5454,
+      "width": 1152,
+      "height": 790,
+      "rotation": 0,
+      "zIndex": 0,
+      "locked": false,
+      "presentationStep": 7,
+      "style": {
+        "strokeColor": "#94a3b8",
+        "fillColor": "#ffffff",
+        "strokeWidth": 1,
+        "opacity": 0.75,
+        "dashed": true,
+        "fontSize": 15
+      },
+      "interaction": null,
+      "kind": "coordinate_canvas",
+      "data": {
+        "mode": "blank_grid",
+        "domainX": [
+          "0",
+          "24"
+        ],
+        "rangeY": [
+          "0",
+          "10"
+        ],
+        "angleUnit": "rad",
+        "equalScale": true,
+        "autoFit": false,
+        "referenceWindow": null,
+        "showGrid": true,
+        "showAxisLabels": false,
+        "subdivisions": 19
+      }
+    },
+    {
+      "id": "hand-guide",
+      "autoHeight": true,
+      "label": "Guía de escritura: datos, fórmula, sustitución y unidades",
+      "x": 24,
+      "y": 6268,
+      "width": 1152,
+      "height": 380,
+      "rotation": 0,
+      "zIndex": 2,
+      "locked": false,
+      "presentationStep": 7,
+      "style": {
+        "strokeColor": "#7c3aed",
+        "fillColor": "#f5f3ff",
+        "strokeWidth": 1,
+        "opacity": 1,
+        "dashed": false,
+        "fontSize": 16
+      },
+      "interaction": null,
+      "kind": "annotation_stroke",
+      "data": {
+        "mode": "callout_bubble",
+        "points": [],
+        "calloutText": "Dibuja debajo: datos → fórmula → sustitución → resultado con unidades."
+      }
+    },
+    {
+      "id": "handwriting",
+      "autoHeight": true,
+      "label": "Traza aquí tu procedimiento a mano alzada",
+      "x": 24,
+      "y": 6672,
+      "width": 1152,
+      "height": 380,
+      "rotation": 0,
+      "zIndex": 3,
+      "locked": false,
+      "presentationStep": 7,
+      "style": {
+        "strokeColor": "#1e293b",
+        "fillColor": "#ffffff",
+        "strokeWidth": 2,
+        "opacity": 1,
+        "dashed": false,
+        "fontSize": 16
+      },
+      "interaction": {
+        "fields": [
+          "points"
+        ]
+      },
+      "kind": "annotation_stroke",
+      "data": {
+        "mode": "freehand",
+        "points": [],
+        "calloutText": ""
+      }
+    },
+    {
+      "id": "conclusion",
+      "autoHeight": true,
+      "label": "8. Conclusión",
+      "x": 24,
+      "y": 7076,
+      "width": 1152,
+      "height": 228,
+      "rotation": 0,
+      "zIndex": 1,
+      "locked": false,
+      "presentationStep": 8,
+      "style": {
+        "strokeColor": "#059669",
+        "fillColor": "#ecfdf5",
+        "strokeWidth": 1,
+        "opacity": 1,
+        "dashed": false,
+        "fontSize": 18
+      },
+      "interaction": null,
+      "kind": "math_block",
+      "data": {
+        "markdownContent": "## Una misma idea, varias representaciones\nEl área firmada del gráfico $v$–$t$, la fórmula $v_0T+\\tfrac12aT^2$, la posición horizontal del móvil y la última barra representan **el mismo desplazamiento** desde $x(0)=0$.\n\nPara investigar: prueba $a=0$ y luego un valor negativo. ¿Puede el móvil cambiar de sentido antes de T? Busca dónde la recta de velocidad cruza el eje horizontal.",
+        "variant": "callout_info",
+        "autoHeight": true
+      }
+    }
+  ],
+  "conversation": []
+}
