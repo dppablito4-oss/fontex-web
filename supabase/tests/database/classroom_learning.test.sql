@@ -6,11 +6,11 @@ insert into auth.users(id,email) values
 ('c0920000-0000-4000-8000-000000000001','learning-teacher@example.invalid'),
 ('c0920000-0000-4000-8000-000000000002','learning-student@example.invalid'),
 ('c0920000-0000-4000-8000-000000000003','learning-outsider@example.invalid');
-update auth.users set email_confirmed_at=now() where id::text like 'c0920000%';
+update auth.users set email_confirmed_at=now(),created_at=now() where id::text like 'c0920000%';
 insert into public.organizations(id,name,created_by) values('c0920001-0000-4000-8000-000000000001','Prueba de aprendizaje','c0920000-0000-4000-8000-000000000001');
 insert into public.classrooms(id,organization_id,title,owner_id) values('c0920002-0000-4000-8000-000000000001','c0920001-0000-4000-8000-000000000001','Clase modelo','c0920000-0000-4000-8000-000000000001');
 insert into public.class_members(classroom_id,user_id,role) values('c0920002-0000-4000-8000-000000000001','c0920000-0000-4000-8000-000000000002','student');
-insert into public.visual_scenes(user_id,id,scene) values('c0920000-0000-4000-8000-000000000001','learning-test','{"id":"learning-test","format":"primitive-scene","title":"Fracciones","primitives":[],"conversation":[{"role":"user","content":"Conversación privada"}]}');
+insert into public.visual_scenes(user_id,id,scene) values('c0920000-0000-4000-8000-000000000001','learning-test','{"id":"learning-test","schemaVersion":2,"format":"primitive-scene","title":"Fracciones","level":"primaria","updatedAt":"2026-11-16T00:00:00Z","variables":[],"primitives":[],"conversation":[{"role":"user","content":"Conversación privada"}]}');
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"c0920000-0000-4000-8000-000000000001","role":"authenticated"}',true);
 select set_config('test.learning_invite',public.create_classroom_join_link('c0920002-0000-4000-8000-000000000001')::text,true);
@@ -62,7 +62,7 @@ set local role anon;
 select set_config('request.jwt.claims','{"role":"anon"}',true);
 select set_config('test.learning_new_guest',public.start_classroom_guest(current_setting('test.learning_invite')::jsonb->>'token','Nueva cuenta')::text,true);
 reset role;
-insert into auth.users(id,email,raw_user_meta_data) values('c0920000-0000-4000-8000-000000000004','learning-new@example.invalid',jsonb_build_object('classroom_guest_token',current_setting('test.learning_new_guest')::jsonb->>'token'));
+insert into auth.users(id,email,created_at,raw_user_meta_data) values('c0920000-0000-4000-8000-000000000004','learning-new@example.invalid',now(),jsonb_build_object('classroom_guest_token',current_setting('test.learning_new_guest')::jsonb->>'token'));
 do $$begin
  assert not exists(select 1 from private.guest_credit_promotions where user_id='c0920000-0000-4000-8000-000000000004'),'Unverified accounts receive no guest transfer';
 end$$;
