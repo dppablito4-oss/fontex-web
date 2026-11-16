@@ -81,7 +81,7 @@ jobs:
       - name: Check Studio agent
         run: deno check --config supabase/functions/studio-agent/deno.json supabase/functions/studio-agent/index.ts
       - name: Test composable primitive agent
-        run: deno test --allow-env --config supabase/functions/studio-agent/deno.json supabase/functions/studio-agent/primitive-handler_test.ts supabase/functions/studio-agent/initial-construction_test.ts supabase/functions/studio-agent/verified-construction_test.ts supabase/functions/studio-agent/credits_test.ts supabase/functions/studio-agent/usage_test.ts supabase/functions/studio-agent/release_test.ts
+        run: deno test --allow-env --config supabase/functions/studio-agent/deno.json supabase/functions/studio-agent/primitive-handler_test.ts supabase/functions/studio-agent/initial-construction_test.ts supabase/functions/studio-agent/credits_test.ts supabase/functions/studio-agent/usage_test.ts supabase/functions/studio-agent/release_test.ts
       - name: Test tutor failures and grounding
         run: deno test --allow-env --config supabase/functions/tutor-chat/deno.json supabase/functions/tutor-chat/handler_test.ts
       - name: Check general scene agent

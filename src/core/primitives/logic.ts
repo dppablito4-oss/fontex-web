@@ -116,6 +116,7 @@ export function truthTable(source: string, variables: string[]) {
 export type GraphNode = {
   id: string;
   label: string;
+  formula?: string | null;
   type: "relation" | "input" | "and" | "or" | "not" | "output";
   variableName: string | null;
   x: number;

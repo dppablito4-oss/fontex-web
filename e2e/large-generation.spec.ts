@@ -20,14 +20,3 @@ test("renders a complete linked kinematics exercise and recalculates the fixed s
  expect(saved?.scenes.find(s=>s.primitives.length===scene.primitives.length)).toBeTruthy();
  await expect(page.locator('.pc-board .katex-error')).toHaveCount(0);
 });
-
-test("opens the integrated kinematics template immediately without an AI request",async({page})=>{
- let aiCalls=0;await page.route("**/functions/v1/**",route=>{aiCalls++;return route.abort();});
- await page.goto("/#/lienzo");
- await page.getByRole("button",{name:"Plantillas",exact:true}).click();
- await page.getByRole("textbox",{name:"Buscar plantilla"}).fill("Cinemática");
- await page.getByRole("button",{name:/Cinemática: área y movimiento/}).click();
- const table=page.getByRole("article",{name:"Tabulación automática de seis instantes",exact:true}).getByRole("table");
- await expect(table.getByRole("columnheader")).toHaveCount(3);
- expect(aiCalls).toBe(0);
-});

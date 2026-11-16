@@ -1,5 +1,8 @@
 # Construcción de lienzos v0.9.4
 
+Nota: v0.9.5 retira la plantilla integrada y la reutilización de peticiones descritas
+aquí. Véase [Primitivas v0.9.5](PRIMITIVAS-V095.md) para el comportamiento vigente.
+
 La petición completa de cinemática podía terminar con acciones que solo creaban
 variables y dejaban el lienzo vacío. El intento reportado falló a los 23,6 segundos;
 ampliar tokens y tiempo en v0.9.3 no solucionaba esa respuesta incompleta.

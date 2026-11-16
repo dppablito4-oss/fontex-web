@@ -1,4 +1,3 @@
-import kinematics from "./presets/kinematics.json" with { type: "json" };
 import {
   createPrimitive,
   newPrimitiveScene,
@@ -8,7 +7,6 @@ import {
 } from "./schema.ts";
 import { organizePrimitiveScene } from "./layout.ts";
 export const templates = [
-  { id: "kinematics-integrated", name: "Cinemática: área y movimiento", group: "Física" },
   { id: "practice-line", name: "Practicar: construir una recta", group: "Práctica guiada" },
   { id: "practice-fractions", name: "Practicar: denominador de una fracción", group: "Práctica guiada" },
   { id: "practice-table", name: "Practicar: completar una tabla", group: "Práctica guiada" },
@@ -85,7 +83,6 @@ export function templateScene(id: string): PrimitiveScene {
   const scene = newPrimitiveScene(
     templates.find((t) => t.id === id)?.name ?? "Mi lienzo",
   );
-  if(id === "kinematics-integrated") return parsePrimitiveScene({...kinematics,id:scene.id,updatedAt:scene.updatedAt,conversation:[],appliedBuildIds:[]});
   const group = templates.find((t) => t.id === id)!.group;
   scene.level = id === "count"
     ? "inicial"

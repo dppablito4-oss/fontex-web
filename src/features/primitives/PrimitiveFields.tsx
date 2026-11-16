@@ -393,6 +393,8 @@ export function PrimitiveFields(
                               value={p.data.sides}
                               onChange={(sides) => patch({ sides })}
                             />
+                            <Text label="Lados (expresión opcional)" value={p.data.sidesExpr ?? ""} onChange={sidesExpr => patch({ sidesExpr: sidesExpr || null })} />
+                            <Text label="Rotación de vértices (grados)" value={p.data.rotationExpr ?? ""} onChange={rotationExpr => patch({ rotationExpr: rotationExpr || null })} />
                             <Text
                               label="Medida de cada lado"
                               value={p.data.sideExpr}
@@ -443,6 +445,7 @@ export function PrimitiveFields(
                 "histogram",
                 "pie",
                 "scatter",
+                "line",
                 "truth_table",
                 "matrix",
               ]}

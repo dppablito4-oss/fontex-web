@@ -14,11 +14,13 @@ export function shapeVertices(
   if (!p.data.regular) {
     return p.data.verticesExpr.map(([x, y]) => [scalar(x, scope), scalar(y, scope)]);
   }
-  const n = p.data.shape === "triangle" ? 3 : p.data.sides;
+  const n = p.data.shape === "triangle" ? 3 : scalar(p.data.sidesExpr ?? String(p.data.sides), scope);
+  if (!Number.isInteger(n) || n < 3 || n > 24) throw Error("El polígono requiere entre 3 y 24 lados enteros.");
+  const angle = p.data.rotationExpr ? scalar(p.data.rotationExpr, scope) * Math.PI / 180 : -Math.PI / 2;
   const radius = scalar(p.data.sideExpr, scope) / (2 * Math.sin(Math.PI / n));
   return Array.from({ length: n }, (_, i) => [
-    radius * Math.cos(2 * Math.PI * i / n - Math.PI / 2),
-    radius * Math.sin(2 * Math.PI * i / n - Math.PI / 2),
+    radius * Math.cos(2 * Math.PI * i / n + angle),
+    radius * Math.sin(2 * Math.PI * i / n + angle),
   ]);
 }
 

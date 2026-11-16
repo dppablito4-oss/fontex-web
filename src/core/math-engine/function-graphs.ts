@@ -33,10 +33,10 @@ function angles(e: Expr, degrees: boolean): Expr {
   if (e.kind === "binary") return { ...e, left: angles(e.left, degrees), right: angles(e.right, degrees) };
   if (e.kind !== "call") return e;
   const argument = angles(e.argument, degrees);
-  return { ...e, argument: degrees && trig.has(e.name) ? { kind: "binary", op: "*", left: argument, right: { kind: "number", value: Math.PI / 180 } } : argument };
+  return { ...e, ...(e.extraArguments ? { extraArguments: e.extraArguments.map(arg => angles(arg, degrees)) } : {}), argument: degrees && trig.has(e.name) ? { kind: "binary", op: "*", left: argument, right: { kind: "number", value: Math.PI / 180 } } : argument };
 }
 function hasTrig(e: Expr): boolean {
-  return e.kind === "call" ? trig.has(e.name) || hasTrig(e.argument) : e.kind === "binary" && (hasTrig(e.left) || hasTrig(e.right));
+  return e.kind === "call" ? trig.has(e.name) || hasTrig(e.argument) || (e.extraArguments ?? []).some(hasTrig) : e.kind === "binary" && (hasTrig(e.left) || hasTrig(e.right));
 }
 export function compileFunctionGraph(data: FunctionGraphData) {
   const original = parseExpression(data.source);

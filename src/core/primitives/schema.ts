@@ -52,6 +52,7 @@ const base = {
 const graphNode = z.object({
   id,
   label: z.string().max(60),
+  formula: z.string().max(500).nullish(),
   type: z.enum(["relation", "input", "and", "or", "not", "output"]),
   variableName: variableSymbol.nullable(),
   x: finite.min(55).max(745),
@@ -179,6 +180,8 @@ export const primitiveSchema = z.discriminatedUnion("kind", [
       ]),
       regular: z.boolean(),
       sides: z.number().int().min(3).max(24),
+      sidesExpr: expr.nullish(),
+      rotationExpr: expr.nullish(),
       sideExpr: expr,
       radiusExpr: expr,
       divisions: z.number().int().min(1).max(48),
@@ -205,6 +208,7 @@ export const primitiveSchema = z.discriminatedUnion("kind", [
         "histogram",
         "pie",
         "scatter",
+        "line",
         "truth_table",
         "matrix",
       ]),
@@ -500,6 +504,11 @@ export function parsePrimitiveScene(value: unknown): PrimitiveScene {
       );
     }
     if (p.kind === "geometric_shape") {
+      if (p.data.regular && ["polygon", "triangle"].includes(p.data.shape)) {
+        const sides = p.data.shape === "triangle" ? 3 : scalar(p.data.sidesExpr ?? String(p.data.sides), scope);
+        if (!Number.isInteger(sides) || sides < 3 || sides > 24) throw Error("El polígono requiere entre 3 y 24 lados enteros.");
+        if (p.data.rotationExpr) scalar(p.data.rotationExpr, scope);
+      }
       const side = scalar(p.data.sideExpr, scope),
         r = scalar(p.data.radiusExpr, scope),
         slices = scalar(p.data.shadedExpr, scope);

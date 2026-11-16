@@ -194,9 +194,9 @@ it("uses concise responsive axis ticks without repeating decimal labels", () => 
 });
 
 describe("v0.7.1 curriculum compositions", () => {
-  it("has 41 distinct templates with guided practice", () => {
-    expect(templates).toHaveLength(41);
-    expect(new Set(templates.map((t) => t.id)).size).toBe(41);
+  it("has 40 distinct templates with guided practice", () => {
+    expect(templates).toHaveLength(40);
+    expect(new Set(templates.map((t) => t.id)).size).toBe(40);
   });
   it("keeps old v2 vectors compatible and validates optional jump heights", () => {
     const scene = templateScene("number-jumps");

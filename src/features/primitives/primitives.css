@@ -1584,3 +1584,7 @@ dialog.pc-dialog::backdrop { background: #0008; }
 @media print { .pc-guest-banner { display: none!important; } }
 
 .pc-dialog { --pc-surface:var(--ui-surface); --pc-ink:var(--ui-foreground); --pc-line:var(--ui-border); --pc-muted:var(--ui-muted-foreground); --pc-accent:var(--ui-primary); }
+
+.pc-node-formula { height: 100%; overflow: auto; text-align: center; color: var(--pc-ink); }
+.pc-node-formula .academic-markdown { font-size: 11px; }
+.pc-node-formula .academic-markdown p { margin: 0; }

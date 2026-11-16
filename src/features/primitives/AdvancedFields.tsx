@@ -46,6 +46,7 @@ function GraphEditor(
               onChange={(type) =>
                 change(node.id, { type: type as GraphNode["type"] })}
             />
+            <Text label={`Fórmula del nodo ${i + 1}`} value={node.formula ?? ""} onChange={formula => change(node.id, { formula })} />
             {graphType === "logic" && node.type === "input" && (
               <Select
                 label={`Proposición del nodo ${i + 1}`}

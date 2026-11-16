@@ -1,5 +1,7 @@
 import {
   derivative,
+  evaluateHelper,
+  numericHelpers,
   evaluate,
   type Expr,
   parseExpression,
@@ -59,19 +61,7 @@ export const baseFunctions = new Set([
   "rad",
   "deg",
 ]);
-export const helperFunctions = new Set([
-  "round",
-  "abs",
-  "deg",
-  "rad",
-  "floor",
-  "ceil",
-  "min",
-  "max",
-  "gcd",
-  "lcm",
-  "atan2",
-]);
+export const helperFunctions = new Set([...numericHelpers, "deg", "rad"]);
 export const reservedNames = new Set([
   "x",
   "pi",
@@ -86,14 +76,17 @@ export const displayNumber = (n: number) =>
   Number.isFinite(n)
     ? String(Object.is(n, -0) ? 0 : Number(n.toPrecision(8)))
     : "No definido";
+function normalizeSymbols(source: string) {
+  return source.replace(/θ/g, "theta").replace(/π/g, "pi").replace(/\bsen\b/g, "sin").replace(/\blog\b/g, "ln");
+}
 function substitute(source: string, scope: Scope) {
   return source.replace(
     /(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?|[a-z_][a-z0-9_]*/gi,
     (token) => {
       if (
         /^[\d.]/.test(token) || token === "x" || token === "pi" ||
-        token === "e" || baseFunctions.has(token)
-      ) return token;
+        token === "e" || baseFunctions.has(token.toLowerCase()) || helperFunctions.has(token.toLowerCase())
+      ) return token.toLowerCase();
       if (
         !Object.hasOwn(scope, token) || !Number.isFinite(scope[token])
       ) throw new Error(`Variable no definida: ${token}`);
@@ -117,6 +110,7 @@ function convertAngles(e: Expr, degrees: boolean): Expr {
   const argument = convertAngles(e.argument, degrees);
   return {
     ...e,
+    ...(e.extraArguments ? { extraArguments: e.extraArguments.map(arg => convertAngles(arg, degrees)) } : {}),
     argument: degrees && ["sin", "cos", "tan"].includes(e.name) && !explicitRadians(e.argument)
       ? {
         kind: "binary",
@@ -136,7 +130,7 @@ export function compile(
     throw new Error("La expresión supera 500 caracteres.");
   }
   const expression = convertAngles(
-    parseExpression(substitute(matrixCalls(source, scope), scope)),
+    parseExpression(substitute(matrixCalls(normalizeSymbols(source), scope), scope)),
     unit === "deg",
   );
   const derived = derivative(expression);
@@ -156,7 +150,7 @@ export function scalar(
   if (depth > 16 || source.length > 500) {
     throw Error("Expresión demasiado compleja.");
   }
-  const text = matrixCalls(source, scope),
+  const text = matrixCalls(normalizeSymbols(source), scope),
     pattern = /\b([a-z_][a-z0-9_]*)\s*\(/g;
   let output = "", previous = 0, match: RegExpExecArray | null;
   while ((match = pattern.exec(text))) {
@@ -190,8 +184,7 @@ export function scalar(
     const variadic=name==="min" || name==="max";
     if (variadic ? args.length<1 || args.length>32 : args.length !== arity) throw Error(`Revisa los argumentos de ${name}.`);
     const values = args.map((arg) => scalar(arg, scope, functions, depth + 1)),
-      a = values[0]!,
-      b = values[1] ?? 0;
+      a = values[0]!;
     let result: number;
     if (baseFunctions.has(name)) {
       result = compile(`${name}(${a})`, scope).value(0);
@@ -201,33 +194,7 @@ export function scalar(
         scope,
         functions[name]!.angleUnit,
       ).value(a);
-    } else if (name === "round") {
-      if (!Number.isInteger(b) || b < 0 || b > 10) {
-        throw Error("Decimales entre 0 y 10.");
-      }
-      result = Math.round(a * 10 ** b) / 10 ** b;
-    } else if (name === "abs") result = Math.abs(a);
-    else if (name === "deg") result = a * 180 / Math.PI;
-    else if (name === "rad") result = a * Math.PI / 180;
-    else if (name === "atan2") result = Math.atan2(a, b);
-    else if (name === "floor") result = Math.floor(a);
-    else if (name === "ceil") result = Math.ceil(a);
-    else if (name === "min") result = Math.min(...values);
-    else if (name === "max") result = Math.max(...values);
-    else {
-      if (![a, b].every((n) => Number.isSafeInteger(n) && Math.abs(n) <= 1e9)) {
-        throw Error("MCD y MCM requieren enteros acotados.");
-      }
-      let left = Math.abs(a), right = Math.abs(b);
-      for (let i = 0; right && i < 128; i++) {
-        [left, right] = [right, left % right];
-      }
-      result = name === "gcd"
-        ? left
-        : a === 0 || b === 0
-        ? 0
-        : Math.abs(a / left * b);
-    }
+    } else result = evaluateHelper(name, values);
     if (!Number.isFinite(result)) {
       throw Error("Valor no definido en este punto.");
     }

@@ -1,10 +1,11 @@
 import { allowedPracticeFields } from "../../core/primitives/practice";
 import { PracticeValue } from "./PracticeFields";
 import { useId } from "react";
+import { AcademicMarkdown } from "../tutor/components/AcademicMarkdown";
 import { diagramColor } from "./visual-colors";
 import type { PrimitiveVisualProps } from "./PrimitiveVisual";
 import type { Primitive } from "../../core/primitives/schema";
-import { displayNumber as num, scopeMatrix } from "../../core/primitives/math";
+import { displayNumber as num, interpolate, sceneFunctions, scopeMatrix } from "../../core/primitives/math";
 import {
   determinant,
   inverse,
@@ -350,9 +351,9 @@ export function NodeGraph(
               <title>{node.label}</title>
               <rect
                 x={node.x - 55}
-                y={node.y - 30}
+                y={node.y - (node.formula ? 50 : 30)}
                 width="110"
-                height="60"
+                height={node.formula ? 100 : 60}
                 rx={node.type === "output" ? 28 : 8}
                 fill={active ? "var(--pc-accent)" : "var(--pc-surface)"}
                 stroke={diagramColor(p.style.strokeColor)}
@@ -360,13 +361,14 @@ export function NodeGraph(
               />
               <text
                 x={node.x}
-                y={node.y - 2}
+                y={node.y - (node.formula ? 25 : 2)}
                 textAnchor="middle"
                 fill={active ? "var(--pc-on)" : "var(--pc-ink)"}
                 fontSize="18"
               >
-                {node.label.slice(0, 15)}
+                {interpolate(node.label, scope, sceneFunctions(scene)).slice(0, 15)}
               </text>
+              {node.formula && <foreignObject x={node.x - 53} y={node.y - 18} width="106" height="62"><div className="pc-node-formula"><AcademicMarkdown content={interpolate(node.formula, scope, sceneFunctions(scene))} /></div></foreignObject>}
               {logic && (
                 <text
                   x={node.x}

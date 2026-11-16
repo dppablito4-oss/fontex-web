@@ -30,6 +30,21 @@ function draw(id: string, value?: number) {
     onChange,
   };
 }
+it("recalculates line charts and LaTeX formulas inside nodes from the same variables", () => {
+  const scene=newPrimitiveScene();
+  const chart=createPrimitive("data_chart",scene);chart.data.chartType="line";chart.data.rows=[{label:"A",xExpr:"1",valueExpr:"floor(a)"},{label:"B",xExpr:"2",valueExpr:"4"}];scene.primitives.push(chart);
+  const nodes=createPrimitive("node_graph",scene);nodes.data.nodes[0]!.formula="$q={{floor(a)}}$";scene.primitives.push(nodes);
+  const props={scene,scope:sceneScope(scene),functions:sceneFunctions(scene),onSelect:vi.fn(),onChange:vi.fn(),onVariable:vi.fn(),selected:false};
+  const view=render(<><PrimitiveVisual {...props} p={chart}/><PrimitiveVisual {...props} p={nodes}/></>);
+  const before=view.container.querySelector('polyline[aria-label="Línea de datos"]')!.getAttribute("points");
+  expect(view.container.querySelector("foreignObject .katex")).not.toBeNull();
+  expect(view.container.querySelector("foreignObject")!.textContent).toContain("q=1");
+  scene.variables[0]!.value=3;props.scope=sceneScope(scene);
+  view.rerender(<><PrimitiveVisual {...props} p={chart}/><PrimitiveVisual {...props} p={nodes}/></>);
+  expect(view.container.querySelector('polyline[aria-label="Línea de datos"]')!.getAttribute("points")).not.toBe(before);
+  expect(view.container.querySelector("foreignObject")!.textContent).toContain("q=3");
+  expect(view.container.querySelector(".katex-error")).toBeNull();
+});
 it("draws two number-line jumps, including the signed negative displacement, with editable selection", () => {
   const { container, scene, onSelect } = draw("number-jumps", -4);
   const arcs = container.querySelectorAll(".pc-number-jump");

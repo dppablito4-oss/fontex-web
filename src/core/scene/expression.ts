@@ -4,9 +4,34 @@ export type Expr =
   | { kind: "number"; value: number }
   | { kind: "variable"; name: string }
   | { kind: "binary"; op: "+" | "-" | "*" | "/" | "^"; left: Expr; right: Expr }
-  | { kind: "call"; name: string; argument: Expr };
+  | { kind: "call"; name: string; argument: Expr; extraArguments?: Expr[] };
 export type Variables = { a: number; b: number; c: number };
-const functions = new Set(["sin", "cos", "tan", "exp", "ln", "sqrt", "rad", "deg"]);
+export const numericHelpers = new Set(["abs", "floor", "ceil", "round", "min", "max", "gcd", "lcm", "atan2"]);
+const functions = new Set(["sin", "cos", "tan", "exp", "ln", "sqrt", "rad", "deg", ...numericHelpers]);
+export function evaluateHelper(name: string, values: number[]): number {
+  const [a = NaN, b = NaN] = values;
+  const arity = ["round", "gcd", "lcm", "atan2"].includes(name) ? 2 : 1;
+  if (["min", "max"].includes(name) ? values.length < 1 || values.length > 32 : values.length !== arity) throw Error(`Revisa los argumentos de ${name}.`);
+  if (!values.every(Number.isFinite)) return NaN;
+  switch (name) {
+    case "abs": return Math.abs(a);
+    case "floor": return Math.floor(a);
+    case "ceil": return Math.ceil(a);
+    case "min": return Math.min(...values);
+    case "max": return Math.max(...values);
+    case "atan2": return Math.atan2(a, b);
+    case "round":
+      if (!Number.isInteger(b) || b < 0 || b > 10) throw Error("Decimales entre 0 y 10.");
+      return Math.round(a * 10 ** b) / 10 ** b;
+    case "gcd": case "lcm": {
+      if (![a, b].every(n => Number.isSafeInteger(n) && Math.abs(n) <= 1e9)) throw Error("MCD y MCM requieren enteros acotados.");
+      let left = Math.abs(a), right = Math.abs(b);
+      for (let i = 0; right && i < 128; i++) [left, right] = [right, left % right];
+      return name === "gcd" ? left : a === 0 || b === 0 ? 0 : Math.abs(a / left * b);
+    }
+  }
+  throw Error(`Función no admitida: ${name}`);
+}
 const num = (value: number): Expr => ({ kind: "number", value });
 const bin = (
   op: "+" | "-" | "*" | "/" | "^",
@@ -35,7 +60,7 @@ export function parseExpression(source: string): Expr {
     text = `(${sides[0]})-(${sides[1]})`;
   }
   const tokens =
-    text.match(/(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?|[a-z]+|[^\s]/g) ?? [];
+    text.match(/(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?|[a-z][a-z0-9_]*|[^\s]/g) ?? [];
   if (tokens.length > 250) {
     throw new Error("La expresión es demasiado extensa.");
   }
@@ -58,7 +83,15 @@ export function parseExpression(source: string): Expr {
       result = { kind: "variable", name: token };
     } else if (token && functions.has(token)) {
       if (tokens[at++] !== "(") throw new Error(`Usa ${token}(…).`);
-      result = call(token, sum());
+      const args = [sum()];
+      while (peek() === ",") {
+        at++;
+        if (args.length >= 32) throw Error("Demasiados argumentos.");
+        args.push(sum());
+      }
+      if (numericHelpers.has(token)) evaluateHelper(token, args.map(() => 1));
+      else if (args.length !== 1) throw Error(`Revisa los argumentos de ${token}.`);
+      result = { ...call(token, args[0]!), ...(args.length > 1 ? { extraArguments: args.slice(1) } : {}) };
       if (tokens[at++] !== ")") throw new Error("Falta cerrar la función.");
     } else {throw new Error(
         `Símbolo no admitido: ${
@@ -86,7 +119,7 @@ export function parseExpression(source: string): Expr {
   function product(): Expr {
     let left = unary();
     while (
-      peek() === "*" || peek() === "/" || !!peek()?.match(/^(?:[a-z]+|\()$/)
+      peek() === "*" || peek() === "/" || !!peek()?.match(/^(?:[a-z][a-z0-9_]*|\()$/)
     ) {
       const op = peek() === "/" ? "/" : "*";
       if (peek() === "*" || peek() === "/") at++;
@@ -113,6 +146,7 @@ export function evaluate(expr: Expr, x: number, variables: Variables): number {
   }
   if (expr.kind === "call") {
     const a = evaluate(expr.argument, x, variables);
+    if (numericHelpers.has(expr.name)) return evaluateHelper(expr.name, [a, ...(expr.extraArguments ?? []).map(arg => evaluate(arg, x, variables))]);
     switch (expr.name) {
       case "rad": return a * Math.PI / 180;
       case "deg": return a * 180 / Math.PI;
@@ -147,7 +181,7 @@ export function evaluate(expr: Expr, x: number, variables: Variables): number {
   }
 }
 export function simplify(e: Expr): Expr {
-  if (e.kind === "call") return call(e.name, simplify(e.argument));
+  if (e.kind === "call") return { ...e, argument: simplify(e.argument), ...(e.extraArguments ? { extraArguments: e.extraArguments.map(simplify) } : {}) };
   if (e.kind !== "binary") return e;
   const l = simplify(e.left), r = simplify(e.right);
   if (l.kind === "number" && r.kind === "number") {
@@ -166,20 +200,22 @@ export function simplify(e: Expr): Expr {
 function dependsOnX(e: Expr): boolean {
   if (e.kind === "variable") return e.name === "x";
   if (e.kind === "number") return false;
-  if (e.kind === "call") return dependsOnX(e.argument);
+  if (e.kind === "call") return dependsOnX(e.argument) || (e.extraArguments ?? []).some(dependsOnX);
   return dependsOnX(e.left) || dependsOnX(e.right);
 }
 export function derivative(e: Expr, variables?: Variables): Expr {
   function parameters(n: Expr): Expr {
     if (n.kind === "variable" && n.name !== "x" && variables) return num(variables[n.name as keyof Variables]);
     if (n.kind === "binary") return bin(n.op, parameters(n.left), parameters(n.right));
-    if (n.kind === "call") return call(n.name, parameters(n.argument));
+    if (n.kind === "call") return { ...n, argument: parameters(n.argument), ...(n.extraArguments ? { extraArguments: n.extraArguments.map(parameters) } : {}) };
     return n;
   }
   function d(n: Expr): Expr {
     if (n.kind === "number") return num(0);
     if (n.kind === "variable") return num(n.name === "x" ? 1 : 0);
     if (n.kind === "call") {
+      // These helpers are piecewise or discrete. Do not invent a symbolic derivative.
+      if (numericHelpers.has(n.name)) return num(dependsOnX(n) ? NaN : 0);
       const u = n.argument, du = d(u);
       const outer = n.name === "rad" ? num(Math.PI / 180)
         : n.name === "deg" ? num(180 / Math.PI)
@@ -224,7 +260,7 @@ export function expressionText(e: Expr): string {
       : String(Number(e.value.toPrecision(6)));
   }
   if (e.kind === "variable") return e.name;
-  if (e.kind === "call") return `${e.name}(${expressionText(e.argument)})`;
+  if (e.kind === "call") return `${e.name}(${[e.argument, ...(e.extraArguments ?? [])].map(expressionText).join(",")})`;
   return `(${expressionText(e.left)} ${e.op} ${expressionText(e.right)})`;
 }
 export function polynomial(e: Expr, vars: Variables): number[] | null {

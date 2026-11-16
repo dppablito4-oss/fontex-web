@@ -167,7 +167,7 @@ function Coordinate(
             {controls.map((item) => <PrimitiveVisual key={item.id} p={item} scene={scene} scope={scope} functions={functions}
               onChange={onChange} onVariable={onVariable} onSelect={onSelect} selected={item.id === selectedId} readOnly={readOnly} practice={practice} onPracticeChange={onPracticeChange} />)}
             {children.map((child) => <button key={child.id} className="pc-plot-definition-link" onClick={() => onSelect(child.id)}>
-              <span style={{ color: diagramColor(child.style.strokeColor) }}>●</span>{child.label}
+              <span style={{ color: diagramColor(child.style.strokeColor) }}>●</span>{interpolate(child.label, scope, functions)}
             </button>)}
             {!definitions.length && !children.length && <p>Añade funciones o figuras desde Elementos.</p>}
             {!readOnly && editingChild && editingChild.kind !== "math_block" && <section aria-label="Edición sobre el plano">
@@ -576,7 +576,7 @@ function Coordinate(
           } catch { /* A singular forward transform can collapse a valid polygon. */ }
           return <button key={child.id} className="pc-shape-summary" onClick={(e) => { e.stopPropagation(); onSelect(child.id); }}>
             <span style={{ background: diagramColor(child.style.strokeColor) }} />
-            <strong>{child.label}</strong>
+            <strong>{interpolate(child.label, scope, functions)}</strong>
             <span>{metrics
               ? `Área ${num(Number(metrics.area.toFixed(2)))} ${child.data.unit}² · Perímetro ${num(Number(metrics.perimeter.toFixed(2)))} ${child.data.unit}`
               : "Figura colapsada por la transformación"}</span>
@@ -738,7 +738,7 @@ function Vector({
           ? <path key={i} d={`M${px(q.x) - 5},${py(q.y) - 8}l10,16`} />
           : null
       )}
-      {p.data.showMagnitude && (
+      {(p.data.showMagnitude || p.label.includes("{{")) && (
         <text
           className={arc ? "pc-jump-label" : undefined}
           textAnchor="middle"
@@ -748,7 +748,7 @@ function Vector({
           stroke="none"
           fill="currentColor"
         >
-          {arc
+          {p.label.includes("{{") ? interpolate(p.label, scope, functions) : arc
             ? `${displacement > 0 ? "+" : ""}${num(displacement)}`
             : `|v| ≈ ${num(Number(Math.hypot(c - a, d - b).toFixed(3)))}`}
         </text>
@@ -1156,8 +1156,9 @@ function Chart(
                   fill="none"
                   stroke="currentColor"
                 />
+                {p.data.chartType === "line" && <polyline aria-label="Línea de datos" points={data.map(r => `${px(r.x)},${py(r.y)}`).join(" ")} fill="none" stroke={diagramColor(p.style.strokeColor)} strokeWidth="3" />}
                 {data.map((r, i) =>
-                  p.data.chartType === "scatter"
+                  ["scatter", "line"].includes(p.data.chartType)
                     ? (
                       <circle
                         key={i}

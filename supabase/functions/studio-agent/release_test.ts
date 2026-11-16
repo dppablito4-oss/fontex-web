@@ -13,7 +13,7 @@ Deno.test("the deployed preflight advertises a validator that accepts practice s
     },
   }));
   assert.ok([200, 204].includes(response.status));
-  assert.equal(response.headers.get("x-fontex-agent-contract"), "primitive-agent-v5");
+  assert.equal(response.headers.get("x-fontex-agent-contract"), "primitive-agent-v6");
   assert.ok(response.headers.get("access-control-allow-origin"));
   const scene = parsePrimitiveScene(templateScene("practice-line"));
   assert.ok(scene.primitives.some(p => p.kind === "answer_field"));
