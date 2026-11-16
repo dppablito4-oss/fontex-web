@@ -187,7 +187,8 @@ export function scalar(
     const arity = ["round", "min", "max", "gcd", "lcm", "atan2"].includes(name)
       ? 2
       : 1;
-    if (args.length !== arity) throw Error(`Revisa los argumentos de ${name}.`);
+    const variadic=name==="min" || name==="max";
+    if (variadic ? args.length<1 || args.length>32 : args.length !== arity) throw Error(`Revisa los argumentos de ${name}.`);
     const values = args.map((arg) => scalar(arg, scope, functions, depth + 1)),
       a = values[0]!,
       b = values[1] ?? 0;
@@ -211,8 +212,8 @@ export function scalar(
     else if (name === "atan2") result = Math.atan2(a, b);
     else if (name === "floor") result = Math.floor(a);
     else if (name === "ceil") result = Math.ceil(a);
-    else if (name === "min") result = Math.min(a, b);
-    else if (name === "max") result = Math.max(a, b);
+    else if (name === "min") result = Math.min(...values);
+    else if (name === "max") result = Math.max(...values);
     else {
       if (![a, b].every((n) => Number.isSafeInteger(n) && Math.abs(n) <= 1e9)) {
         throw Error("MCD y MCM requieren enteros acotados.");

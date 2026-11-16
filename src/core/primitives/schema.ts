@@ -7,7 +7,7 @@ import {
   reservedNames,
   scalar,
   sceneFunctions,
-  userScope,
+  sceneScope,
 } from "./math.ts";
 import { graphValues, logic, truthTable } from "./logic.ts";
 import { checkMatrix } from "./linear-algebra.ts";
@@ -15,10 +15,11 @@ const finite = z.number().finite();
 const expr = z.string().trim().min(1).max(500);
 const id = z.string().regex(/^[a-zA-Z0-9_-]{1,100}$/);
 const symbol = z.string().regex(/^[a-z][a-z0-9_]{0,31}$/);
+const variableSymbol = z.string().regex(/^[a-zA-Z][a-zA-Z0-9_]{0,31}$/);
 const color = z.string().regex(/^#[0-9a-fA-F]{6}$/);
 const pair = z.tuple([expr, expr]);
 export const variableSchema = z.object({
-  name: symbol,
+  name: variableSymbol,
   value: finite.min(-1e6).max(1e6),
   min: finite.min(-1e6).max(1e6),
   max: finite.min(-1e6).max(1e6),
@@ -52,7 +53,7 @@ const graphNode = z.object({
   id,
   label: z.string().max(60),
   type: z.enum(["relation", "input", "and", "or", "not", "output"]),
-  variableName: symbol.nullable(),
+  variableName: variableSymbol.nullable(),
   x: finite.min(55).max(745),
   y: finite.min(35).max(565),
 }).strict();
@@ -154,7 +155,7 @@ export const primitiveSchema = z.discriminatedUnion("kind", [
     ...base,
     kind: z.literal("control_slider"),
     data: z.object({
-      variableName: symbol,
+      variableName: variableSymbol,
       controlType: z.enum(["slider", "stepper", "play_pause", "toggle"]),
       speed: finite.min(.05).max(20),
     }).strict(),
@@ -286,7 +287,7 @@ export function parsePrimitiveScene(value: unknown): PrimitiveScene {
   ) throw new Error("Identificadores o variables repetidos.");
   for (const v of scene.variables) {
     if (
-      reservedNames.has(v.name) || v.min > v.max || v.value < v.min ||
+      reservedNames.has(v.name.toLowerCase()) || v.min > v.max || v.value < v.min ||
       v.value > v.max
     ) throw new Error(`Revisa el rango o el nombre de ${v.name}.`);
   }
@@ -317,7 +318,7 @@ export function parsePrimitiveScene(value: unknown): PrimitiveScene {
       outputs.add(name);
     }
   }
-  const scope = userScope(scene), defs = sceneFunctions(scene);
+  const scope = sceneScope(scene), defs = sceneFunctions(scene);
   for (const p of scene.primitives) {
     if ("canvasId" in p.data && p.data.canvasId !== null) {
       const parentId = p.data.canvasId;
@@ -551,7 +552,7 @@ export const actionSchema = z.discriminatedUnion("kind", [
 ]);
 export const replySchema = z.object({
   message: z.string().min(1).max(4000),
-  actions: z.array(actionSchema).max(40),
+  actions: z.array(actionSchema).max(64),
 }).strict();
 export type PrimitiveReply = z.infer<typeof replySchema>;
 export function applyPrimitivePatch(
