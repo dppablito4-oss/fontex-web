@@ -42,8 +42,8 @@ for (const endpoint of ["studio-agent", "scene-agent", "tutor-chat", "practice-t
   if (![200, 204].includes(preflight.status) || !preflight.headers.get("access-control-allow-origin")) {
     throw Error(`No se pudo verificar el preflight de ${endpoint}. Despliega y comprueba las funciones antes de publicar.`);
   }
-  if (endpoint === "studio-agent" && preflight.headers.get("x-fontex-agent-contract") !== "primitive-agent-v6") {
-    throw Error("studio-agent no acredita primitive-agent-v6. Despliega el agente con soporte de práctica antes de publicar.");
+  if (endpoint === "studio-agent" && preflight.headers.get("x-fontex-agent-contract") !== "primitive-agent-v7") {
+    throw Error("studio-agent no acredita primitive-agent-v7. Despliega el agente con soporte de práctica antes de publicar.");
   }
   if (endpoint.startsWith("classroom-") && preflight.headers.get("x-fontex-classroom-contract") !== "classroom-learning-v092") throw Error(`Falta el contrato de actividades en ${endpoint}.`);
   const response = await fetch(`${base}/functions/v1/${endpoint}`, {

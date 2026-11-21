@@ -37,6 +37,20 @@ const usage = {
   reserve: () => Promise.resolve({ allowed: true, reason: "reserved" }),
   finish: () => Promise.resolve(),
 };
+Deno.test("construction exposes the 3D contract and validates linked bodies without calling a real provider",async()=>{
+  const source=newPrimitiveScene(),solid=createPrimitive("solid_3d",source);solid.data.solid="sphere";solid.data.radiusExpr="a";
+  const handler=createPrimitiveHandler(env,(_url,init)=>{
+    const body=JSON.parse(String(init?.body));
+    assert.ok(JSON.stringify(body.text.format.schema).includes('"solid_3d"'));
+    assert.ok(body.instructions.includes("No sustituyas una esfera por un círculo"));
+    return Promise.resolve(payload({message:"Cuerpo creado",variables:[],primitives:[solid]}));
+  },{reserve:()=>Promise.resolve({allowed:true,balance:4,reason:"reserved"}),finish:()=>Promise.resolve({balance:4,status:"succeeded"})},usage);
+  const response=await handler(request(source),{userClaims:{id:"user"}}),events=[];
+  for await(const event of eventData(response.body!))events.push(event);
+  const reply=replySchema.parse(results(events)[0]?.reply);
+  assert.equal(reply.actions[0]?.kind,"add_primitive");
+  assert.ok(JSON.stringify(reply).includes('"sphere"'));
+});
 Deno.test("empty canvases require a nonempty primitive list in the provider contract", async () => {
   const primitive = createPrimitive("math_block", scene);
   const settlements: boolean[] = [];

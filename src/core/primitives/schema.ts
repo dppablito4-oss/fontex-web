@@ -11,6 +11,7 @@ import {
 } from "./math.ts";
 import { graphValues, logic, truthTable } from "./logic.ts";
 import { checkMatrix } from "./linear-algebra.ts";
+import { solidDimensions, solidTypes } from "./solid-geometry.ts";
 const finite = z.number().finite();
 const expr = z.string().trim().min(1).max(500);
 const id = z.string().regex(/^[a-zA-Z0-9_-]{1,100}$/);
@@ -59,6 +60,17 @@ const graphNode = z.object({
   y: finite.min(35).max(565),
 }).strict();
 export const primitiveSchema = z.discriminatedUnion("kind", [
+  z.object({
+    ...base, kind: z.literal("solid_3d"),
+    data: z.object({
+      solid: z.enum(solidTypes),
+      widthExpr: expr, heightExpr: expr, depthExpr: expr, radiusExpr: expr,
+      unit: z.enum(["u", "mm", "cm", "m", "km"]),
+      camera: z.object({ yaw: finite.min(-180).max(180), pitch: finite.min(-85).max(85), zoom: finite.min(.4).max(2.5) }).strict(),
+      showEdges: z.boolean(), showMeasures: z.boolean(),
+      areaName: symbol, volumeName: symbol,
+    }).strict(),
+  }).strict(),
   z.object({
     ...base, kind: z.literal("answer_field"),
     data: z.object({
@@ -314,6 +326,12 @@ export function parsePrimitiveScene(value: unknown): PrimitiveScene {
     }
   }
   for (const p of scene.primitives) {
+    if (p.kind === "solid_3d") {
+      for (const name of [p.data.areaName,p.data.volumeName]) {
+        if (reservedNames.has(name) || names.has(name) || outputs.has(name)) throw Error("Nombre de resultado 3D repetido o reservado.");
+        outputs.add(name);
+      }
+    }
     if (p.kind === "data_chart" && p.data.chartType === "matrix") {
       const name = p.data.matrixName;
       if (
@@ -323,6 +341,8 @@ export function parsePrimitiveScene(value: unknown): PrimitiveScene {
     }
   }
   const scope = sceneScope(scene), defs = sceneFunctions(scene);
+  // Report an invalid body's own dimensions before any dependent table/curve.
+  for (const p of scene.primitives) if (p.kind === "solid_3d") solidDimensions(p.data, scope, defs);
   for (const p of scene.primitives) {
     if ("canvasId" in p.data && p.data.canvasId !== null) {
       const parentId = p.data.canvasId;
@@ -644,7 +664,7 @@ export function nextSymbol(
         : p.kind === "data_chart" && p.data.chartType === "matrix" &&
             p.data.matrixName
         ? [p.data.matrixName]
-        : []
+        : p.kind === "solid_3d" ? [p.data.areaName,p.data.volumeName] : []
     ),
   ]);
   const base = preferred.slice(0, 24);
@@ -667,11 +687,13 @@ export function createPrimitive<K extends PrimitiveKind>(
         : p.kind === "data_chart" && p.data.chartType === "matrix" &&
             p.data.matrixName
         ? [p.data.matrixName]
-        : []
+        : p.kind === "solid_3d" ? [p.data.areaName,p.data.volumeName] : []
     ),
   ]);
-  while (taken.has(`f${index}`) || taken.has(`area${index}`)) index++;
+  while ([`f${index}`,`area${index}`,`surface${index}`,`volume${index}`].some(n=>taken.has(n))) index++;
   const defaults = {
+    solid_3d: { solid: "cube", widthExpr: "2", heightExpr: "3", depthExpr: "2", radiusExpr: "1", unit: "cm",
+      camera: {yaw:35,pitch:20,zoom:1}, showEdges:true, showMeasures:true, areaName:`surface${index}`,volumeName:`volume${index}` },
     answer_field: { prompt: "Escribe tu respuesta y explica cómo la obtuviste.", answerType: "text", answer: "" },
     coordinate_canvas: {
       mode: "cartesian",
@@ -792,7 +814,7 @@ export function createPrimitive<K extends PrimitiveKind>(
     x: 24,
     y,
     width: 1152,
-    height: kind === "answer_field" ? 160 : kind === "math_block"
+    height: kind === "solid_3d" ? 540 : kind === "answer_field" ? 160 : kind === "math_block"
       ? 160
       : kind === "control_slider"
       ? 100
