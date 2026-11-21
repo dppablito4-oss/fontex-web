@@ -21,6 +21,7 @@ Actualizada el **14 de noviembre de 2026**: el editor principal utiliza diez pri
 | [Dependencias](decisions/DEPENDENCIES.md) | Uso de paquetes, herramientas y estado de auditoría |
 | [Preparación de primitivas v0.7](plans/v0.7-primitivas-integracion.md) | Revisión de la propuesta, compatibilidad con el lienzo actual y orden de integración |
 | [Auditoría actual](AUDITORIA.md) | Estado de las diez correcciones, pruebas y requisitos de despliegue |
+| [Cuerpos 3D v1.0](CUERPOS-3D-V100.md) | Rama de desarrollo: geometría espacial, cámara, medidas, PDF y contrato del agente |
 | [Reportes](REPORTES.md) | Historial de intervenciones; sus resultados corresponden a cada fecha |
 
 La implementación actual incluye el lienzo libre con IA lateral, el laboratorio de expresiones, el aula de práctica y el espacio académico con biblioteca/tutor documental. Los reportes distinguen el retiro de datos de la conservación de las herramientas de Studio.

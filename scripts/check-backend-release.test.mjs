@@ -6,7 +6,7 @@ beforeEach(()=>{
   vi.stubEnv("VITE_SUPABASE_PUBLISHABLE_KEY","sb_publishable_test_only");
 });
 afterEach(()=>{vi.unstubAllEnvs();vi.unstubAllGlobals();});
-function backend({contract="closed-beta-v4",preflight=204,unauthenticated=401,sharedStatus=200,sharedBody=null,guestStatus=200,agentContract="primitive-agent-v6",learningContract="classroom-learning-v092"}={}){
+function backend({contract="closed-beta-v4",preflight=204,unauthenticated=401,sharedStatus=200,sharedBody=null,guestStatus=200,agentContract="primitive-agent-v7",learningContract="classroom-learning-v092"}={}){
   return vi.fn((url,options)=>Promise.resolve(String(url).endsWith("/rpc/get_release_contract")
     ? Response.json(contract)
     : String(url).endsWith("/rpc/class_learning_contract")
@@ -42,7 +42,7 @@ it("rejects a public reader returning unexpected content for a null token",async
 });
 it.each(["","primitive-agent-v2"])("blocks an agent without the practice contract (%s)",async agentContract=>{
   vi.stubGlobal("fetch",backend({agentContract}));
-  await expect(import("./check-backend-release.mjs")).rejects.toThrow("primitive-agent-v6");
+  await expect(import("./check-backend-release.mjs")).rejects.toThrow("primitive-agent-v7");
 });
 it("blocks publication until the guest classroom migration is installed",async()=>{
   vi.stubGlobal("fetch",backend({guestStatus:404}));

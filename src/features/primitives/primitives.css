@@ -1588,3 +1588,15 @@ dialog.pc-dialog::backdrop { background: #0008; }
 .pc-node-formula { height: 100%; overflow: auto; text-align: center; color: var(--pc-ink); }
 .pc-node-formula .academic-markdown { font-size: 11px; }
 .pc-node-formula .academic-markdown p { margin: 0; }
+
+.pc-solid { outline-offset: 4px; }
+.pc-solid > svg { display: block; width: 100%; height: auto; max-height: 480px; touch-action: none; cursor: grab; user-select: none; }
+.pc-solid > svg:active { cursor: grabbing; }
+.pc-solid-controls { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin: 4px 0 10px; }
+.pc-solid-controls button { min-width: 42px; min-height: 42px; padding: 6px 12px; border: 1px solid var(--pc-line); border-radius: 8px; background: var(--pc-surface); color: var(--pc-ink); }
+.pc-solid-controls button:disabled { opacity: .4; }
+.pc-solid-hint { text-align: center; color: var(--pc-muted); font-size: 13px; }
+.pc-solid-measures { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 20px; padding: 12px; font-size: 16px; }
+.pc-solid-measures strong { color: var(--pc-ink); }
+.pc-export-sheet .pc-solid-controls, .pc-export-sheet .pc-solid-hint { display: none; }
+@media print { .pc-solid-controls, .pc-solid-hint { display: none; } }

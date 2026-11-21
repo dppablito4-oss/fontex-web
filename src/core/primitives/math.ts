@@ -7,6 +7,7 @@ import {
   parseExpression,
 } from "../scene/expression.ts";
 import type { Primitive, PrimitiveScene } from "./schema.ts";
+import { solidDimensions, solidMetrics } from "./solid-geometry.ts";
 import {
   checkMatrix,
   determinant,
@@ -355,13 +356,25 @@ export function regionResult(
 }
 export function sceneScope(scene: PrimitiveScene): Scope {
   const scope = userScope(scene);
-  for (const p of scene.primitives) {
-    if (p.kind === "function_region" && p.data.showArea) {
+  const functions=sceneFunctions(scene);
+  let pending=scene.primitives.filter(p=>p.kind==="solid_3d"||p.kind==="function_region"&&p.data.showArea);
+  // Resolve derived measures regardless of drawing order. Each successful pass
+  // removes at least one object; cyclic/missing references never loop forever.
+  for(let pass=0;pending.length&&pass<scene.primitives.length;pass++) {
+    let progress=false;
+    pending=pending.filter(p=>{
       try {
-        const result = regionResult(p, scope);
-        if (result.status === "finite") scope[p.data.resultName] = result.value;
-      } catch { /* Undefined quantities remain unavailable. */ }
-    }
+        if(p.kind==="solid_3d") {
+          const result=solidMetrics(p.data.solid,solidDimensions(p.data,scope,functions));
+          scope[p.data.areaName]=result.area;scope[p.data.volumeName]=result.volume;
+        } else if(p.kind==="function_region") {
+          const result=regionResult(p,scope);
+          if(result.status==="finite")scope[p.data.resultName]=result.value;
+        }
+        progress=true;return false;
+      } catch { return true; }
+    });
+    if(!progress)break;
   }
   return scope;
 }

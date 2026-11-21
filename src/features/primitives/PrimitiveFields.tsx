@@ -8,6 +8,7 @@ import { AcademicMarkdown } from "../tutor/components/AcademicMarkdown";
 import { interpolate, sceneScope, sceneFunctions } from "../../core/primitives/math";
 import { PracticePermissions } from "./PracticeFields";
 import { AdvancedFields } from "./AdvancedFields";
+import { solidTypes } from "../../core/primitives/solid-geometry";
 export function PrimitiveFields(
   { p, scene, onChange }: {
     p: Primitive;
@@ -21,6 +22,15 @@ export function PrimitiveFields(
   return (
     <div className="pc-fields" onPointerDown={(e) => e.stopPropagation()}>
       <div className="pc-field-row">
+        {p.kind === "solid_3d" && <>
+          <Select label="Cuerpo geométrico" value={p.data.solid} options={[...solidTypes]} onChange={solid=>patch({solid})}/>
+          {(["sphere","cylinder","cone"].includes(p.data.solid)?["radiusExpr"]:p.data.solid==="cube"?["widthExpr"]:["widthExpr","depthExpr"]).map(key=><Text key={key} label={key==="radiusExpr"?"Radio":key==="widthExpr"?"Ancho / arista":"Profundidad"} value={p.data[key as "radiusExpr"|"widthExpr"|"depthExpr"]} onChange={v=>patch({[key]:v})}/>)}
+          {!["cube","sphere"].includes(p.data.solid)&&<Text label="Altura" value={p.data.heightExpr} onChange={heightExpr=>patch({heightExpr})}/>}
+          <Select label="Unidad" value={p.data.unit} options={["u","mm","cm","m","km"]} onChange={unit=>patch({unit})}/>
+          <Toggle label="Mostrar aristas" value={p.data.showEdges} onChange={showEdges=>patch({showEdges})}/>
+          <Toggle label="Mostrar medidas y resultados" value={p.data.showMeasures} onChange={showMeasures=>patch({showMeasures})}/>
+          <p>Gira el cuerpo con el dedo o el ratón. Usa variables en sus medidas para vincularlo a controles.</p>
+        </>}
         {p.kind === "answer_field" && <>
           <label>Consigna<textarea aria-label="Consigna de respuesta" rows={3} value={p.data.prompt} onChange={e=>patch({prompt:e.target.value})} /></label>
           <Select label="Tipo de respuesta" value={p.data.answerType} options={["text","number","expression"]} onChange={answerType=>patch({answerType,answer:""})}/>

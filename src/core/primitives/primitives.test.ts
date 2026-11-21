@@ -30,14 +30,14 @@ describe("composable scene contract", () => {
       );
     },
   );
-  it("supports all eleven families with a real coordinate parent", () => {
+  it("supports all twelve families with a real coordinate parent", () => {
     const scene = newPrimitiveScene();
     for (
       const kind of Object.keys(
         primitiveNames,
       ) as (keyof typeof primitiveNames)[]
     ) scene.primitives.push(createPrimitive(kind, scene));
-    expect(parsePrimitiveScene(scene).primitives).toHaveLength(11);
+    expect(parsePrimitiveScene(scene).primitives).toHaveLength(12);
   });
   it("rejects broken references and duplicate symbols", () => {
     const scene = templateScene("calculus");

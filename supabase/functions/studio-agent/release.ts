@@ -1,4 +1,4 @@
-export const primitiveAgentContract = "primitive-agent-v6";
+export const primitiveAgentContract = "primitive-agent-v7";
 
 /** Advertise the deployed validator through the existing CORS preflight. */
 export function withPrimitiveContract(

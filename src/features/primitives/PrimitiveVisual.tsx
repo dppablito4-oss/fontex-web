@@ -32,6 +32,7 @@ import {
   type SceneVariable,
 } from "../../core/primitives/schema";
 import { NodeGraph, TruthMatrix, Venn } from "./AdvancedVisual";
+import { SolidVisual } from "./SolidVisual";
 import { linkedMatrix } from "../../core/primitives/transforms";
 import { curvePoint, sampleCurve } from "../../core/primitives/curves";
 import {
@@ -1327,6 +1328,7 @@ function PrimitiveBody(props: Props) {
   const { p, scope, functions } = props;
   if (p.kind === "answer_field") return <div className="pc-answer-field"><AcademicMarkdown content={p.data.prompt} />{!props.practice && <p className="pc-answer-preview">{p.data.answer || "Respuesta: ____________________"}</p>}</div>;
   if (p.kind === "coordinate_canvas") return <Coordinate {...props} p={p} />;
+  if (p.kind === "solid_3d") return <SolidVisual {...props} p={p} />;
   if (p.kind === "geometric_shape") {
     return p.data.shape === "venn_2" || p.data.shape === "venn_3"
       ? <Venn {...props} p={p} />

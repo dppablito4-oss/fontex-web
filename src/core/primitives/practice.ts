@@ -20,6 +20,11 @@ export function practiceFields(p: Primitive, scene: PrimitiveScene): PracticeFie
       break;
     case "vector_segment": pair("start","Inicio",p.data.start);pair("end","Final",p.data.end);break;
     case "stamp_grid": add("rowsExpr","Filas",p.data.rowsExpr);add("colsExpr","Columnas",p.data.colsExpr);add("activeCountExpr","Cantidad activa",p.data.activeCountExpr);break;
+    case "solid_3d":
+      if(["sphere","cylinder","cone"].includes(p.data.solid)) add("radiusExpr","Radio",p.data.radiusExpr);
+      else {add("widthExpr","Ancho / lado",p.data.widthExpr);if(p.data.solid!=="cube") add("depthExpr","Profundidad",p.data.depthExpr);}
+      if(!["cube","sphere"].includes(p.data.solid)) add("heightExpr","Altura",p.data.heightExpr);
+      break;
     case "geometric_shape":
       if(["circle_fraction","sector"].includes(p.data.shape)) {add("divisions","Denominador",p.data.divisions,"number");add("shadedExpr","Numerador",p.data.shadedExpr);}
       if(!p.data.shape.startsWith("venn")) {

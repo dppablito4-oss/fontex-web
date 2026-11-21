@@ -56,7 +56,7 @@ export function organizePrimitiveScene(scene: PrimitiveScene): PrimitiveScene {
       y += Math.ceil(ordered.length / 3) * 244 + 16;
     } else {
       const p = item.primitive;
-      const height = p.kind === "coordinate_canvas" ? 790 : p.kind === "math_block"
+      const height = p.kind === "solid_3d" ? 540 : p.kind === "coordinate_canvas" ? 790 : p.kind === "math_block"
         ? Math.max(180, Math.ceil(p.data.markdownContent.length / 75) * 30 + p.data.markdownContent.split("\n").length * 12)
         : p.kind === "control_slider" ? 150 : p.kind === "answer_field" ? 180 : p.kind === "node_graph" ? 420 : 380;
       positions.set(p.id, { x: 24, y, width: 1152, height, autoHeight: true, rotation: 0 });
