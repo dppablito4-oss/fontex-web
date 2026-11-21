@@ -1,10 +1,10 @@
-# Fontex 1.0 · rama de desarrollo
+# Fontex 1.0
 
 **Un lienzo matemático componible y acompañamiento académico con fuentes documentales.**
 
 El editor principal en `/#/lienzo` combina doce familias de elementos: planos, funciones y regiones, vectores, pictogramas, texto matemático, controles, figuras 2D, cuerpos 3D, gráficos de datos, anotaciones, nodos/circuitos y respuestas del alumno. Las 40 plantillas son escenas editables hechas con esas primitivas. La IA propone JSON validado; el motor calcula localmente y no ejecuta código generado.
 
-**Cuerpo 3D** permite crear y girar cubos, prismas rectangulares, pirámides, esferas, cilindros y conos, con medidas dinámicas, área total y volumen. La vista guardada se exporta a PDF. Consulta [el contrato y los límites de la 1.0](docs/CUERPOS-3D-V100.md). Este trabajo permanece en `feature/v1.0-solid-3d`; el respaldo del main original es `backup/main-v0.9.5-2026-11-20`.
+**Cuerpo 3D** permite crear y girar cubos, prismas rectangulares, pirámides, esferas, cilindros y conos, con medidas dinámicas, área total y volumen. La vista guardada se exporta a PDF. Consulta [el contrato y los límites de la 1.0](docs/CUERPOS-3D-V100.md). La versión se integró desde `feature/v1.0-solid-3d`; el respaldo del main anterior es `backup/main-v0.9.5-2026-11-20`.
 
 Una variable compartida puede actualizar a la vez una figura, una curva y su explicación. El editor ofrece selección, movimiento, giro por arrastre y tamaño en escritorio, edición contextual, historial, presentación por pasos y PDF. En móvil conserva una lectura vertical legible y un botón flotante de chat. Fontex AI transmite sus respuestas y permite pasar de conversar a construir mediante el botón **Crear en el lienzo**.
 

@@ -1,10 +1,10 @@
 # Fontex 1.0: Cuerpo 3D
 
-Rama: `feature/v1.0-solid-3d`. Respaldo del main original:
+Desarrollado en `feature/v1.0-solid-3d` e integrado mediante el PR #6. Respaldo del main anterior:
 `backup/main-v0.9.5-2026-11-20`, commit
 `05c12332d9d03ecd602d64a652fa78c6d9882643`. El repositorio indicaba v0.9.5; el
-respaldo conserva exactamente ese estado. Este trabajo no publica sobre main ni
-despliega funciones de producción.
+respaldo conserva exactamente ese estado. La integración en main fue autorizada
+el 21 de noviembre de 2026.
 
 ## Uso
 
@@ -59,13 +59,13 @@ vértices 3D. Los antiguos `geometric_shape` de prismas/cilindros conservan sus
 esquemas compatibles; un pedido tridimensional nuevo debe usar `solid_3d`. No se
 añaden ejercicios incrustados ni cambios de PostgreSQL.
 
-## Publicación posterior
+## Publicación
 
 La versión del paquete es 1.0.0. El agente anuncia `primitive-agent-v7`; se
-conserva `closed-beta-v4` en SQL. Antes de publicar el frontend de esta rama,
+conserva `closed-beta-v4` en SQL. Antes de publicar un frontend con este contrato,
 hay que desplegar `studio-agent`, `classroom-agent` y `classroom-api` con sus
 dependencias compartidas actualizadas. El chequeo de publicación del frontend
-rechaza un agente antiguo. Esta rama no despliega funciones de producción.
+rechaza un agente antiguo. Las tres funciones se actualizaron al integrar la 1.0.
 
 Las pruebas del generador usan respuestas simuladas del proveedor. Los tests
 comprueban cierre de mallas, volumen, cámara, dependencias y permisos. Los del
