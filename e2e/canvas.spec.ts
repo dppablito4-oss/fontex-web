@@ -22,14 +22,13 @@ test("full-width transparent plot, inline measurements and save/reopen", async (
   const box = (await plot.boundingBox())!;
   expect(box.width / stageBox.width).toBeGreaterThan(.85);
   expect(await plot.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe("rgba(0, 0, 0, 0)");
-  await page.getByText("Definiciones y medidas", { exact: false }).click();
-  await expect(page.locator(".pc-plot-definition-content .academic-markdown").first()).toBeVisible();
+  await expect(page.locator(".pc-node-math_block .academic-markdown").first()).toBeVisible();
   const value = page.getByRole("textbox", { name: "Valor de a", exact: true });
   if (await value.count()) { await value.fill("6"); await value.press("Enter"); await expect(value).toHaveValue("6"); }
   await page.waitForTimeout(250); // The local snapshot is intentionally debounced 180 ms.
   await page.reload();
   await expect(page.locator(".pc-node-coordinate_canvas")).toHaveCount(1);
-  await expect(page.locator(".pc-node-math_block")).toHaveCount(0);
+  await expect(page.locator(".pc-node-math_block")).toHaveCount(2);
   await page.screenshot({ path: test.info().outputPath(`plot-${info.project.name}.png`), fullPage: true });
   if (info.project.name === "mobile") {
     await page.setViewportSize({width:320,height:740});
@@ -70,13 +69,79 @@ test("right drag moves the plot and workspace independently", async ({ page }, i
   await expect(page.locator(".pc-plot-scale")).not.toHaveText(before!);
   expect(await plot.locator('path[stroke="currentColor"]').first().getAttribute("d")).not.toBe(pointBefore);
   const stage = (await page.locator(".pc-stage").boundingBox())!;
-  await page.mouse.move(stage.x + 5, stage.y + 10);
+  await page.mouse.move(stage.x + 5, stage.y + 100);
   await page.mouse.down({ button: "right" });
-  await page.mouse.move(stage.x + 85, stage.y + 70, { steps: 8 });
+  await page.mouse.move(stage.x + 5, stage.y + 20, { steps: 8 });
   await page.mouse.up({ button: "right" });
-  await expect(page.locator(".pc-board-space")).toHaveCSS("transform", "matrix(1, 0, 0, 1, 80, 60)");
+  await expect.poll(() => page.locator(".pc-stage").evaluate(el => el.scrollTop)).toBeGreaterThan(0);
   await page.getByRole("button", { name: "Ajustar ancho" }).click();
-  await expect(page.locator(".pc-board-space")).toHaveCSS("transform", "matrix(1, 0, 0, 1, 0, 0)");
+  await expect.poll(() => page.locator(".pc-stage").evaluate(el => el.scrollTop)).toBe(0);
+});
+
+test("desktop zoom scales the entire lesson and wheel scrolling stays within its content", async ({ page }, info) => {
+  test.skip(info.project.name === "mobile", "Mobile uses the reading layout and touch scrolling.");
+  const scene = newPrimitiveScene("Recorrido visual");
+  const intro = createPrimitive("math_block", scene);
+  intro.y = 2400; intro.width = 1152; intro.data.markdownContent = "## Observa la figura\nIdentifica las partes antes de calcular.";
+  scene.primitives.push(intro);
+  const plot = createPrimitive("coordinate_canvas", scene);
+  plot.y = 2680; plot.width = 1152; plot.height = 790; plot.presentationStep = 2;
+  scene.primitives.push(plot);
+  const vector = createPrimitive("vector_segment", scene);
+  vector.data.canvasId = plot.id; vector.label = "Radio"; vector.data.showMagnitude = false;
+  vector.presentationStep = 2; scene.primitives.push(vector);
+  const end = createPrimitive("math_block", scene);
+  end.y = 3500; end.width = 1152; end.presentationStep = 3; end.data.markdownContent = "## Interpreta el resultado";
+  scene.primitives.push(end);
+  await page.locator('input[type="file"]').setInputFiles({ name: "recorrido.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(scene)) });
+  await page.getByRole("button", { name: "Cerrar panel", exact: true }).click();
+  const stage = page.locator(".pc-stage"), board = page.locator(".pc-board");
+  await expect.poll(async () => {
+    const first = (await page.locator(".pc-node-math_block").first().boundingBox())!;
+    return first.y - (await stage.boundingBox())!.y;
+  }).toBeLessThan(48);
+  expect((await page.getByRole("heading", { name: "Observa la figura" }).boundingBox())!.y - (await stage.boundingBox())!.y).toBeLessThan(70);
+  const before = await board.evaluate(el => getComputedStyle(el).transform);
+  await page.getByRole("button", { name: "Acercar", exact: true }).click();
+  await expect(board).not.toHaveCSS("transform", before);
+  await page.getByRole("button", { name: "Alejar", exact: true }).click();
+  await expect(board).toHaveCSS("transform", before);
+  const bounds = (await page.locator(".pc-plot-scale").textContent())!;
+  await page.locator(".pc-coordinate > svg").scrollIntoViewIfNeeded();
+  const box = (await page.locator(".pc-coordinate > svg").boundingBox())!;
+  const stageBox = (await stage.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, Math.max(stageBox.y+60, Math.min(box.y + box.height / 2, stageBox.y + stageBox.height-40)));
+  await page.keyboard.down("Control");
+  await page.mouse.wheel(0, -220);
+  await page.keyboard.up("Control");
+  await expect(board).not.toHaveCSS("transform", before);
+  await expect(page.locator(".pc-plot-scale")).toHaveText(bounds);
+  await page.mouse.wheel(0, 100000);
+  await expect.poll(() => stage.evaluate(el => el.scrollHeight-el.clientHeight-el.scrollTop)).toBeLessThan(2);
+  await expect(page.locator(".pc-node-math_block").last()).toBeInViewport();
+  await page.mouse.wheel(0, -100000);
+  await expect.poll(() => stage.evaluate(el => el.scrollTop)).toBe(0);
+  await expect(page.locator(".pc-node-math_block").first()).toBeInViewport();
+  const zoomed = await board.evaluate(el => getComputedStyle(el).transform);
+  await stage.focus();
+  await page.keyboard.press("Control+-");
+  await expect(board).not.toHaveCSS("transform", zoomed);
+});
+
+test("chat keyboard sends on desktop Enter and retains Shift Enter and mobile newlines", async ({ page }, info) => {
+  if (info.project.name === "mobile") await page.getByRole("button", { name: "Asistente", exact: true }).click();
+  const message = page.getByRole("textbox", { name: "Mensaje para Fontex AI" });
+  await message.fill("Explica una idea");
+  await message.press("Shift+Enter");
+  await expect(message).toHaveValue("Explica una idea\n");
+  await message.fill("Explica una idea");
+  await message.press("Enter");
+  if (info.project.name === "mobile") {
+    await expect(message).toHaveValue("Explica una idea\n");
+  } else {
+    await expect(message).toHaveValue("Explica una idea");
+    await expect(page.locator(".pc-banner")).toContainText("Inicia sesión");
+  }
 });
 
 test("keyboard adjusts chat width and canvas focus restores", async ({ page }, info) => {

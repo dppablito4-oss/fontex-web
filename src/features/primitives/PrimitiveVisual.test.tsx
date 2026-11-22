@@ -30,6 +30,27 @@ function draw(id: string, value?: number) {
     onChange,
   };
 }
+
+it("draws fixed and dynamic geometry labels in their segment colors and respects the current step", () => {
+  const scene = newPrimitiveScene();
+  const plane = createPrimitive("coordinate_canvas", scene);
+  scene.primitives.push(plane);
+  const side = createPrimitive("vector_segment", scene), apothem = createPrimitive("vector_segment", scene);
+  side.data.canvasId = apothem.data.canvasId = plane.id;
+  side.label = "Lado"; side.style.strokeColor = "#2563eb";
+  apothem.label = "Apotema: {{a}}"; apothem.style.strokeColor = "#dc2626"; apothem.presentationStep = 2;
+  for (const segment of [side, apothem]) { segment.data.showMagnitude = false; segment.data.headStart = segment.data.headEnd = "none"; }
+  scene.primitives.push(side, apothem);
+  const props = { p: plane, scene, functions: sceneFunctions(scene), onSelect: vi.fn(), onChange: vi.fn(), onVariable: vi.fn(), selected: false };
+  const view = render(<PrimitiveVisual {...props} scope={sceneScope(scene)} visibleStep={1} />);
+  expect(screen.getByText("Lado", { selector: "svg text" })).toHaveAttribute("fill", "#2563eb");
+  expect(screen.queryByText(/^Apotema:/)).not.toBeInTheDocument();
+  view.rerender(<PrimitiveVisual {...props} scope={sceneScope(scene)} visibleStep={2} />);
+  expect(screen.getByText(`Apotema: ${scene.variables[0]!.value}`, { selector: "svg text" })).toHaveAttribute("fill", "#dc2626");
+  scene.variables[0]!.value = 7;
+  view.rerender(<PrimitiveVisual {...props} scope={sceneScope(scene)} visibleStep={2} />);
+  expect(screen.getByText("Apotema: 7", { selector: "svg text" })).toBeInTheDocument();
+});
 it("recalculates line charts and LaTeX formulas inside nodes from the same variables", () => {
   const scene=newPrimitiveScene();
   const chart=createPrimitive("data_chart",scene);chart.data.chartType="line";chart.data.rows=[{label:"A",xExpr:"1",valueExpr:"floor(a)"},{label:"B",xExpr:"2",valueExpr:"4"}];scene.primitives.push(chart);

@@ -4,9 +4,17 @@ Implementación iniciada el 14 de noviembre de 2026. Complementa la corrección 
 
 ## Uso del lienzo
 
-Los marcos de los elementos quedan transparentes; la selección conserva un contorno y sus controles. El espacio se desplaza con clic derecho, botón central o Espacio y arrastre. La cámara es local: moverla no altera coordenadas de las figuras ni crea entradas de historial. La rueda recorre el espacio; «Ajustar ancho» centra de nuevo su vista. Los objetos pueden desplazarse horizontalmente más allá del antiguo ancho de 1200, dentro de los límites del contrato.
+Los marcos de los elementos quedan transparentes; la selección conserva un contorno y sus controles. El espacio se desplaza con clic derecho, botón central o Espacio y arrastre. La cámara es local: moverla no altera coordenadas de las figuras ni crea entradas de historial. La rueda y el arrastre recorren el contenido con los límites del desplazamiento nativo, sin perderlo fuera de pantalla. «Ajustar ancho» vuelve al inicio y encuadra el ancho. Los botones del pie y Ctrl/Cmd + rueda amplían o reducen todo el lienzo (10–300 %), conservando el punto observado. Con el foco dentro del lienzo también funcionan Ctrl/Cmd + +, − y 0 (100 %). Los botones del plano mantienen su ventana matemática independiente. Al abrir un documento se omite el margen vacío anterior al primer elemento, sin modificar sus coordenadas guardadas; al moverlo, el encuadre inicial permanece fijo. Los objetos pueden desplazarse horizontalmente más allá del antiguo ancho de 1200, dentro de los límites del contrato.
 
-El plano utiliza todo el ancho de las plantillas. Las definiciones y controles de una lección con un único plano se muestran encima, en un desplegable. Siguen existiendo en el JSON; las lecciones con varios planos o visualizaciones mantienen sus bloques independientes. Las figuras ancladas se editan sobre su plano, incluidas sus unidades. Esto no convierte píxeles en centímetros físicos de la pantalla.
+El plano utiliza todo el ancho de las plantillas. Las definiciones y controles de una exploración con un único plano y un único paso pueden mostrarse en su desplegable. Si la explicación tiene pasos distintos, sus textos siguen visibles en el flujo de lectura antes de sus modelos, también en móvil y PDF. Las etiquetas fijas o interpoladas de segmentos se dibujan con el color del segmento; los saltos de recta numérica conservan su desplazamiento con signo. Las figuras ancladas se editan sobre su plano, incluidas sus unidades. Esto no convierte píxeles en centímetros físicos de la pantalla.
+
+## Secuencias de explicación
+
+El generador distingue una introducción general, un caso concreto y una petición de desarrollar subtemas. Cada etapa combina una explicación de qué se observa, una representación que señala esa parte y la razón del paso siguiente. Para geometría se reutilizan figuras vinculadas a segmentos de color y etiquetas: la apotema une centro y punto medio de un lado; el radio une centro y vértice. Se conserva la misma escala y figura entre etapas y se evita acumular todas las marcas en un solo plano. La regla se extiende a fracciones, funciones, vectores, cantidades, tablas, relaciones y sólidos con las capacidades existentes de cada primitiva.
+
+Estas son instrucciones generales de generación; no incorporan ejercicios predeterminados ni garantizan todas las decisiones de un modelo externo. Las pruebas locales validan contrato, lectura por pasos, etiquetas, interacción y navegación sin llamadas de pago. Para cambiar la generación publicada hay que desplegar `studio-agent` y el frontend de esta revisión; no requiere migración de datos ni cambio de contrato.
+
+En el chat, Enter envía desde un ordenador con puntero; Shift + Enter conserva el salto de línea. En pantalla táctil Enter sigue insertando una línea. No se muestra una leyenda de teclado y no se envía durante composición IME ni con una tecla mantenida.
 
 ## Recuperación y crédito
 

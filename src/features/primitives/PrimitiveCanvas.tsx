@@ -79,7 +79,7 @@ import { practiceAttempt } from "../../core/primitives/practice";
 import { lessonSequence } from "../../core/primitives/lesson-flow";
 import { FractionLesson } from "./FractionLesson";
 import { fitPrimitiveHeight, organizePrimitiveScene, workspaceRoots } from "../../core/primitives/layout";
-import { useWorkspaceViewport } from "./useWorkspaceViewport";
+import { MAX_CANVAS_ZOOM, MIN_CANVAS_ZOOM, useWorkspaceViewport } from "./useWorkspaceViewport";
 import { DockResizeHandle } from "./DockResizeHandle";
 import { buildContent, getCanvasBuild, readPendingBuild, recoveredScene, savePendingBuild, type BuildReceipt } from "./buildRecovery";
 import { useBuildRecovery } from "./useBuildRecovery";
@@ -128,6 +128,7 @@ function Frame({
   onFit,
   narrow,
   scale,
+  origin,
 }: {
   p: Primitive;
   children: React.ReactNode;
@@ -142,6 +143,7 @@ function Frame({
   onFit: (id: string, height: number) => void;
   narrow: boolean;
   scale: number;
+  origin: { x: number; y: number };
 }) {
   const content = useRef<HTMLDivElement>(null);
   const frame = useRef<HTMLElement>(null);
@@ -208,8 +210,8 @@ function Frame({
       ref={frame}
       className={`pc-object pc-node-${p.kind}${selected ? " pc-selected" : ""}`}
       style={{
-        left: p.x,
-        top: p.y,
+        left: p.x - origin.x,
+        top: p.y - origin.y,
         width: p.width,
         height: p.autoHeight ? "auto" : p.height,
         minHeight: p.autoHeight ? p.height : undefined,
@@ -386,9 +388,19 @@ function Editor(
     live = useRef(scene),
     abort = useRef<AbortController | null>(null),
     messageEnd = useRef<HTMLDivElement>(null);
-  const viewport = useWorkspaceViewport(stage, narrow || presenting);
+  const manualZoom = useCallback((value: number) => { setAutoZoom(false); setZoom(value); }, [setAutoZoom, setZoom]);
+  const viewport = useWorkspaceViewport(stage, narrow, zoom, manualZoom);
   const roots = useMemo(() => workspaceRoots(scene), [scene]);
-  const boardWidth = Math.max(1200, ...roots.map((p) => p.x + p.width + 24));
+  // Frame imported padding once; dragging an element must not move the camera.
+  const [framing, setFraming] = useState({ id: scene.id, hasContent: false, origin: { x: 0, y: 0 } });
+  if (framing.id !== scene.id || framing.hasContent !== Boolean(roots.length)) {
+    setFraming({ id: scene.id, hasContent: Boolean(roots.length), origin: roots.length ? {
+      x: Math.max(0, Math.min(...roots.map(p => p.x)) - 24),
+      y: Math.max(0, Math.min(...roots.map(p => p.y)) - 24),
+    } : { x: 0, y: 0 } });
+  }
+  const origin = framing.origin;
+  const boardWidth = Math.max(1200, ...roots.map((p) => p.x + p.width - origin.x + 24));
   useEffect(() => {
     live.current = scene;
   }, [scene]);
@@ -683,6 +695,7 @@ function Editor(
     const template = templateScene(id);
     if (!live.current.primitives.length && !live.current.conversation.length) template.id = live.current.id;
     if (commit(template)) {
+      viewport.reset(); setAutoZoom(true);
       setSelected(null);
       setStep(1);
       setDockView("chat");
@@ -862,9 +875,10 @@ function Editor(
       })
     );
   }, [presenting, step]);
-  const height = Math.max(700, ...roots.map((p) => p.y + p.height + 40));
+  const height = Math.max(0, ...roots.map((p) => p.y + p.height - origin.y + 16));
   function resetEditor() {
     viewport.reset();
+    setAutoZoom(true);
     setSelected(null); setPast([]); setFuture([]); setStep(1); setDockView("chat");
   }
   function openScene(id: string) {
@@ -911,6 +925,7 @@ function Editor(
                       onFit={fit}
                       narrow={narrow}
                       scale={zoom}
+                      origin={origin}
                     >
                       <PrimitiveVisual
                         p={p}
@@ -1240,6 +1255,7 @@ function Editor(
       <div className="pc-shell" id="canvas-workspace" role="tabpanel" aria-labelledby={canvasTabId(scene.id)}>
         <main
           aria-label="Lienzo matemático"
+          tabIndex={0}
           className={`pc-stage${viewport.moving ? " pc-camera-moving" : ""}`}
           ref={stage}
           {...viewport.events}
@@ -1289,7 +1305,6 @@ function Editor(
                 style={{
                   width: narrow ? "100%" : boardWidth * zoom,
                   height: narrow ? "auto" : height * zoom,
-                  transform: narrow || presenting ? undefined : `translate(${viewport.offset.x}px, ${viewport.offset.y}px)`,
                 }}
               >
                 <div
@@ -1311,7 +1326,7 @@ function Editor(
                       const left = terms[index-1]!.primitive, right = terms[index]!.primitive;
                       if (Math.abs(left.y-right.y) > 20 || left.x >= right.x) return [];
                       return [<span key={`${lesson.id}-operator-${index}`} className="pc-fraction-board-operator" aria-hidden="true"
-                        style={{ left: (left.x+left.width+right.x)/2-12, top: Math.max(left.y,right.y)+Math.min(left.height,right.height)/2 }}>
+                        style={{ left: (left.x+left.width+right.x)/2-12-origin.x, top: Math.max(left.y,right.y)+Math.min(left.height,right.height)/2-origin.y }}>
                         {index === 1 ? lesson.equation!.operator : "="}
                       </span>];
                     });
@@ -1601,6 +1616,13 @@ function Editor(
                       value={prompt}
                       onChange={(e) =>
                         setPrompt(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing &&
+                          window.matchMedia("(hover:hover) and (pointer:fine)").matches) {
+                          e.preventDefault();
+                          if (!e.repeat && !busy && prompt.trim() && !(promptTask === "build" && creditBlocked)) e.currentTarget.form?.requestSubmit();
+                        }
+                      }}
                       maxLength={4000}
                       rows={2}
                     />
@@ -1656,19 +1678,15 @@ function Editor(
             <>
               <button
                 aria-label="Alejar"
-                onClick={() => {
-                  setAutoZoom(false);
-                  setZoom((z) => Math.max(.4, z - .1));
-                }}
+                disabled={zoom <= MIN_CANVAS_ZOOM}
+                onClick={() => viewport.zoomTo(zoom / 1.2)}
               >
                 −
               </button>
               {Math.round(zoom * 100)}%<button
                 aria-label="Acercar"
-                onClick={() => {
-                  setAutoZoom(false);
-                  setZoom((z) => Math.min(1.5, z + .1));
-                }}
+                disabled={zoom >= MAX_CANVAS_ZOOM}
+                onClick={() => viewport.zoomTo(zoom * 1.2)}
               >
                 +
               </button>

@@ -8,7 +8,11 @@ export function plotCompanions(scene: PrimitiveScene, canvasId: string): Primiti
   if (plots.length !== 1 || plots[0]!.id !== canvasId || roots.some((p) =>
     !["coordinate_canvas", "math_block", "control_slider"].includes(p.kind)
   )) return [];
-  return roots.filter((p) => p.kind === "math_block" || p.kind === "control_slider");
+  const companions = roots.filter((p) => p.kind === "math_block" || p.kind === "control_slider");
+  // Explanations for successive stages belong in the reading flow, not in a
+  // collapsed panel over the diagram. Single-stage explorations keep their tools.
+  if (companions.some(p => p.presentationStep !== plots[0]!.presentationStep)) return [];
+  return companions;
 }
 
 export function workspaceRoots(scene: PrimitiveScene): Primitive[] {
