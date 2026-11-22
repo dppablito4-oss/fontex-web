@@ -1,41 +1,81 @@
-import { useEffect, useRef, useState, type PointerEvent, type RefObject } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type PointerEvent, type RefObject } from "react";
 
-/** The camera is local to the view; navigating never edits a lesson or costs a credit. */
-export function useWorkspaceViewport(stage: RefObject<HTMLDivElement | null>, narrow: boolean) {
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
+export const MIN_CANVAS_ZOOM = .1;
+export const MAX_CANVAS_ZOOM = 3;
+const editable = "input,textarea,select,[contenteditable=true]";
+
+/** Native scrolling bounds the camera; navigation never changes a lesson. */
+export function useWorkspaceViewport(
+  stageRef: RefObject<HTMLDivElement | null>,
+  disabled: boolean,
+  zoom: number,
+  onZoom: (zoom: number) => void,
+) {
   const [moving, setMoving] = useState(false);
   const space = useRef(false);
-  const drag = useRef<{ x: number; y: number; start: typeof offset } | null>(null);
+  const drag = useRef<{ x: number; y: number; left: number; top: number } | null>(null);
+  const pending = useRef<{ left: number; top: number } | null>(null);
+  const zoomTo = useCallback((value: number, anchor?: { x: number; y: number }) => {
+    const node = stageRef.current;
+    const next = Math.max(MIN_CANVAS_ZOOM, Math.min(MAX_CANVAS_ZOOM, value));
+    if (!node || disabled || next === zoom) return;
+    const padding = getComputedStyle(node);
+    const x = (anchor?.x ?? node.clientWidth / 2) - (parseFloat(padding.paddingLeft) || 0),
+      y = (anchor?.y ?? node.clientHeight / 2) - (parseFloat(padding.paddingTop) || 0);
+    pending.current = {
+      left: (node.scrollLeft + x) * next / zoom - x,
+      top: (node.scrollTop + y) * next / zoom - y,
+    };
+    onZoom(next);
+  }, [stageRef, disabled, zoom, onZoom]);
+  useLayoutEffect(() => {
+    const node = stageRef.current, position = pending.current;
+    if (node && position) node.scrollTo(position);
+    pending.current = null;
+  }, [stageRef, zoom]);
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
-      if (e.code === "Space" && !(e.target as HTMLElement)?.closest("input,textarea,select,button,summary,a,[role=button],[contenteditable=true]")) {
+      if ((e.target as HTMLElement)?.closest(editable)) return;
+      if (e.code === "Space" && !(e.target as HTMLElement)?.closest("button,summary,a,[role=button]")) {
         space.current = true;
-        e.preventDefault();
+        if (!disabled && stageRef.current?.contains(e.target as Node)) e.preventDefault();
+      }
+      if (!disabled && (e.ctrlKey || e.metaKey) && stageRef.current?.contains(e.target as Node)) {
+        if (["+", "=", "-", "0"].includes(e.key)) {
+          e.preventDefault();
+          zoomTo(e.key === "0" ? 1 : zoom * (e.key === "-" ? 1 / 1.2 : 1.2));
+        }
       }
     };
-    const up = () => { space.current = false; };
+    const up = (e: KeyboardEvent) => { if (e.code === "Space") space.current = false; };
+    const blur = () => { space.current = false; drag.current = null; setMoving(false); };
     window.addEventListener("keydown", down);
     window.addEventListener("keyup", up);
-    window.addEventListener("blur", up);
+    window.addEventListener("blur", blur);
     return () => {
       window.removeEventListener("keydown", down);
       window.removeEventListener("keyup", up);
-      window.removeEventListener("blur", up);
+      window.removeEventListener("blur", blur);
     };
-  }, []);
+  }, [stageRef, disabled, zoom, zoomTo]);
   useEffect(() => {
-    const node = stage.current;
-    if (!node || narrow) return;
+    const node = stageRef.current;
+    if (!node || disabled) return;
     const wheel = (e: WheelEvent) => {
-      if (e.defaultPrevented || e.ctrlKey || e.metaKey || !(e.target as Element).closest(".pc-board-space") ||
-        (e.target as Element).closest("input,textarea,select,.pc-plot-overlay")) return;
+      if ((!e.ctrlKey && !e.metaKey) || (e.target as Element).closest(editable)) return;
       e.preventDefault();
+      e.stopPropagation();
+      const box = node.getBoundingClientRect();
       const factor = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? node.clientHeight : 1;
-      setOffset((p) => ({ x: p.x - e.deltaX * factor, y: p.y - e.deltaY * factor }));
+      zoomTo(zoom * Math.exp(Math.max(-1, Math.min(1, -e.deltaY * factor * .002))), {
+        x: e.clientX - box.left - node.clientLeft,
+        y: e.clientY - box.top - node.clientTop,
+      });
     };
-    node.addEventListener("wheel", wheel, { passive: false });
-    return () => node.removeEventListener("wheel", wheel);
-  }, [stage, narrow]);
+    // Capture before nested plots: this gesture always scales the whole canvas.
+    node.addEventListener("wheel", wheel, { passive: false, capture: true });
+    return () => node.removeEventListener("wheel", wheel, true);
+  }, [stageRef, disabled, zoom, zoomTo]);
   function finish(e: PointerEvent<HTMLDivElement>) {
     if (!drag.current) return;
     drag.current = null;
@@ -43,23 +83,23 @@ export function useWorkspaceViewport(stage: RefObject<HTMLDivElement | null>, na
     if (e.currentTarget.hasPointerCapture?.(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId);
   }
   return {
-    offset, moving,
-    reset: () => setOffset({ x: 0, y: 0 }),
+    moving, zoomTo,
+    reset: () => { pending.current = null; stageRef.current?.scrollTo({ left: 0, top: 0 }); },
     events: {
       onPointerDown: (e: PointerEvent<HTMLDivElement>) => {
-        if (narrow || ![1, 2].includes(e.button) && !(space.current && e.button === 0) ||
-          (e.target as Element).closest("input,textarea,select,button,a,.pc-plot-overlay")) return;
+        if (disabled || ![1, 2].includes(e.button) && !(space.current && e.button === 0) ||
+          (e.target as Element).closest(`${editable},button,a,.pc-plot-overlay`)) return;
         e.preventDefault();
         e.stopPropagation();
         e.currentTarget.setPointerCapture(e.pointerId);
-        drag.current = { x: e.clientX, y: e.clientY, start: offset };
+        drag.current = { x: e.clientX, y: e.clientY, left: e.currentTarget.scrollLeft, top: e.currentTarget.scrollTop };
         setMoving(true);
       },
       onPointerMove: (e: PointerEvent<HTMLDivElement>) => {
         const d = drag.current;
         if (!d) return;
         e.stopPropagation();
-        setOffset({ x: d.start.x + e.clientX - d.x, y: d.start.y + e.clientY - d.y });
+        e.currentTarget.scrollTo({ left: d.left + d.x - e.clientX, top: d.top + d.y - e.clientY });
       },
       onPointerUp: finish,
       onPointerCancel: finish,

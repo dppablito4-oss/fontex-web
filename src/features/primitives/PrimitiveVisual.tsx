@@ -27,6 +27,7 @@ import {
 } from "../../core/primitives/math";
 import { polynomial, realRoots } from "../../core/scene/expression";
 import {
+  primitiveNames,
   type Primitive,
   type PrimitiveScene,
   type SceneVariable,
@@ -565,7 +566,7 @@ function Coordinate(
           })}
         </g>
       </svg>
-      <p className="pc-plot-hint"><span className="pc-desktop-gesture">Clic derecho + arrastrar para mover el plano. Ctrl + rueda para acercar o alejar.</span><span className="pc-touch-gesture">Usa + y − para ampliar. Activa la mano y arrastra para mover el plano.</span></p>
+      <p className="pc-plot-hint"><span className="pc-desktop-gesture">Clic derecho + arrastrar para mover el plano.</span><span className="pc-touch-gesture">Usa + y − para ampliar. Activa la mano y arrastra para mover el plano.</span></p>
       <div className="pc-plot-legend">
         {children.filter((child) => child.kind === "geometric_shape").map((child) => {
           const matrix = linkedMatrix(child, scene, scope);
@@ -689,6 +690,8 @@ function Vector({
   const rawAngle = Math.atan2(d - b, c - a) * 180 / Math.PI;
   const angle = positiveAngle && rawAngle < 0 ? rawAngle + 360 : rawAngle;
   const arc = numberLine && (p.data.arcHeight ?? 0) > 0;
+  const named = Boolean(p.label.trim() && p.label !== primitiveNames.vector_segment &&
+    (p.label.includes("{{") || !arc || !p.data.showMagnitude));
   const height = p.data.arcHeight ?? 0;
   const path = arc
     ? `M${px(a)},${py(0)}Q${(px(a) + px(c)) / 2},${py(0) - 2 * height} ${
@@ -739,17 +742,20 @@ function Vector({
           ? <path key={i} d={`M${px(q.x) - 5},${py(q.y) - 8}l10,16`} />
           : null
       )}
-      {(p.data.showMagnitude || p.label.includes("{{")) && (
+      {(p.data.showMagnitude || named) && (
         <text
           className={arc ? "pc-jump-label" : undefined}
           textAnchor="middle"
           x={(px(a) + px(c)) / 2}
           y={arc ? py(0) - height - 12 : (py(b) + py(d)) / 2 - 12}
           fontSize="18"
-          stroke="none"
-          fill="currentColor"
+          stroke="var(--pc-bg)"
+          strokeWidth="4"
+          strokeLinejoin="round"
+          paintOrder="stroke"
+          fill={diagramColor(p.style.strokeColor)}
         >
-          {p.label.includes("{{") ? interpolate(p.label, scope, functions) : arc
+          {named ? interpolate(p.label, scope, functions) : arc
             ? `${displacement > 0 ? "+" : ""}${num(displacement)}`
             : `|v| ≈ ${num(Number(Math.hypot(c - a, d - b).toFixed(3)))}`}
         </text>

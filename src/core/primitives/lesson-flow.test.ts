@@ -2,8 +2,33 @@ import { expect, it } from "vitest";
 import { createPrimitive, newPrimitiveScene, parsePrimitiveScene } from "./schema";
 import { fractionLessons } from "./fraction-lessons";
 import { lessonSequence } from "./lesson-flow";
-import { fitPrimitiveHeight, organizePrimitiveScene } from "./layout";
+import { fitPrimitiveHeight, organizePrimitiveScene, plotCompanions, workspaceRoots } from "./layout";
 import { templateScene } from "./templates";
+
+it("keeps successive explanations above their models instead of hiding them in definitions", () => {
+  const scene = newPrimitiveScene();
+  const plane = createPrimitive("coordinate_canvas", scene);
+  const intro = createPrimitive("math_block", scene), next = createPrimitive("math_block", scene);
+  next.presentationStep = 2;
+  scene.primitives.push(plane, intro, next);
+  const side = createPrimitive("vector_segment", scene);
+  side.data.canvasId = plane.id; side.presentationStep = 2;
+  scene.primitives.push(side);
+  expect(plotCompanions(scene, plane.id)).toEqual([]);
+  expect(workspaceRoots(scene).map(p => p.id)).toEqual([plane.id, intro.id, next.id]);
+  expect(lessonSequence(scene).map(p => p.id)).toEqual([intro.id, plane.id, next.id]);
+  const arranged = organizePrimitiveScene(scene);
+  expect(arranged.primitives.find(p => p.id === intro.id)!.y).toBeLessThan(arranged.primitives[0]!.y);
+  expect(arranged.primitives.find(p => p.id === side.id)).toEqual(side);
+});
+
+it("retains embedded tools for a single-stage exploration", () => {
+  const scene = newPrimitiveScene();
+  const plane = createPrimitive("coordinate_canvas", scene);
+  scene.primitives.push(plane, createPrimitive("math_block", scene), createPrimitive("control_slider", scene));
+  expect(plotCompanions(scene, plane.id).some(p => p.kind === "math_block")).toBe(true);
+  expect(plotCompanions(scene, plane.id).some(p => p.kind === "control_slider")).toBe(true);
+});
 
 it("puts the operation's models before its conclusion in old texts-first scenes", () => {
   const scene = newPrimitiveScene();

@@ -390,6 +390,7 @@
   padding: 16px;
   position: relative;
   overscroll-behavior: contain;
+  overflow-anchor: none;
   background: var(--pc-bg);
 }
 .pc-board-space {
@@ -1322,6 +1323,7 @@
 .pc-node-math_block .pc-object-content { padding: 18px 24px 22px; }
 .pc-app .pc-node-math_block .academic-markdown h2 { font-size: 1.2em; margin-top: 0; }
 .pc-app .pc-node-math_block .academic-markdown h3 { font-size: 1em; }
+.pc-node-math_block .academic-markdown > :first-child { margin-top: 0; }
 .pc-zoom > span { font-size: 11px; color: var(--pc-muted); }
 
 @media (max-width: 1000px) and (min-width: 901px) {
@@ -1409,8 +1411,10 @@
 .pc-plot-definition-content .pc-pair { flex-basis: 100%; }
 .pc-app .pc-plot-definition-link { justify-content: start; width: 100%; border: 0; padding: 6px; font-size: 12px; background: transparent; }
 @media (min-width:901px) {
-  .pc-stage:not(.pc-presenting .pc-stage) { overflow: hidden; }
-  .pc-board-space { margin: 0; }
+  .pc-stage { overflow: auto; }
+  .pc-board-space { margin: 0; overflow: clip; }
+  .pc-stage .pc-node-math_block > .pc-object-heading { position: absolute; inset: -24px 0 auto; }
+  .pc-stage .pc-node-math_block .pc-object-content { padding-top: 8px; }
 }
 @media (max-width:900px) {
   .pc-plot-overlay { top: 92px; left: 4px; max-width: calc(100% - 8px); }

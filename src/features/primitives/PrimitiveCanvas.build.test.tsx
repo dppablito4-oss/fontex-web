@@ -18,6 +18,32 @@ function construction(scene: PrimitiveScene): PrimitiveReply {
 }
 beforeEach(() => { mock.access = "allowed"; mock.request.mockReset(); });
 
+it("submits a desktop Enter once, preserves Shift Enter and ignores IME composition and held Enter", async () => {
+  const original = Object.getOwnPropertyDescriptor(window, "matchMedia")!;
+  const media = window.matchMedia("");
+  Object.defineProperty(window, "matchMedia", { configurable: true, value: vi.fn((query: string) => ({
+    ...media, media: query, matches: query === "(hover:hover) and (pointer:fine)",
+  })) });
+  let complete!: (reply: PrimitiveReply) => void;
+  mock.request.mockImplementation(() => new Promise<PrimitiveReply>(resolve => { complete = resolve; }));
+  try {
+    render(tree());
+    const message = screen.getByRole("textbox", { name: "Mensaje para Fontex AI" });
+    fireEvent.change(message, { target: { value: "Crea una explicación visual" } });
+    fireEvent.keyDown(message, { key: "Enter", shiftKey: true });
+    fireEvent.keyDown(message, { key: "Enter", isComposing: true });
+    fireEvent.keyDown(message, { key: "Enter", repeat: true });
+    expect(mock.request).not.toHaveBeenCalled();
+    fireEvent.keyDown(message, { key: "Enter" });
+    fireEvent.keyDown(message, { key: "Enter" });
+    expect(mock.request).toHaveBeenCalledTimes(1);
+    const input = mock.request.mock.calls[0]![0] as { scene: PrimitiveScene };
+    expect(input).toMatchObject({ task: "build", question: "Crea una explicación visual" });
+    await act(async () => { complete(construction(input.scene)); await Promise.resolve(); });
+    expect(await screen.findByRole("article", { name: "Suma de fracciones creada" })).toBeInTheDocument();
+  } finally { Object.defineProperty(window, "matchMedia", original); }
+});
+
 it("applies a construction even if a background membership check temporarily fails", async () => {
   let complete!: (reply: PrimitiveReply) => void;
   mock.request.mockImplementation(() => new Promise<PrimitiveReply>((resolve) => { complete = resolve; }));
