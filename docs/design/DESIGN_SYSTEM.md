@@ -1,14 +1,14 @@
 # Sistema de diseño de Fontex
 
-**Revisión documental:** 14 de noviembre de 2026; paleta verde/naranja y oscuro AMOLED, aplicación `0.8.1`.
+**Revisión documental:** 22 de noviembre de 2026; paleta verde/naranja y oscuro AMOLED, serie `1.0`.
 
-**Estado:** Temas claro/oscuro compartidos por Studio, Fracciones, Práctica y las vistas académicas.
+**Estado:** Temas claro/oscuro compartidos por el lienzo de primitivas, Aprender y las vistas académicas.
 
 ## Principios
 
 La interfaz expresa la idea de *fuentes puestas en contexto* con superficies sobrias, jerarquía legible y acentos geométricos. El verde identifica acciones y estados positivos, el naranja destaca presentación y fracciones, y los errores conservan su rojo semántico.
 
-Los componentes nuevos deben consumir tokens. La portada, el lienzo, el laboratorio, Fracciones y Práctica usan alias `--lp-*`, `--pc-*`, `--gc-*`, `--fc-*` y `--fd-*` que referencian las variables globales; las superficies y los controles cambian de tema sin paletas independientes.
+Los componentes nuevos deben consumir tokens. La portada, el lienzo y Aprender usan alias `--lp-*`, `--pc-*` y `--fd-*` que referencian las variables globales; las superficies y los controles cambian de tema sin paletas independientes.
 
 ## Superficies actuales
 
@@ -17,7 +17,7 @@ Los componentes nuevos deben consumir tokens. La portada, el lienzo, el laborato
 | Espacio académico y autenticación | `src/styles/globals.css` | Claro y oscuro mediante `ThemeProvider` |
 | Aula de práctica | `src/features/demo/demo.css` | Claro y oscuro, con alias de los tokens globales |
 | Lienzo de primitivas | `src/features/primitives/primitives.css` | Claro y oscuro, incluidos tablero, pestañas, menús y panel derecho |
-| Fracciones | `src/features/canvas/canvas.css` | Claro y oscuro, incluidas figuras y notas |
+| Cuerpos 3D | `src/features/primitives/primitives.css` | Cámara táctil/teclado, medidas y vista clara de exportación |
 
 El lienzo usa pestañas de documentos sobre la barra de herramientas. Archivo, Elementos, Plantillas y Variables se despliegan desde arriba. El panel derecho reserva su espacio al chat y alterna a propiedades al seleccionar un objeto; no añade una segunda columna de inspección. El saldo se pliega, los iconos de herramientas comparten estilo y las etiquetas permanecen visibles. Véase [Organización del lienzo](../interfaz-lienzo.md).
 
@@ -74,7 +74,7 @@ Los colores predeterminados de los diagramas se resuelven al renderizar mediante
 - Si el almacenamiento está bloqueado, la preferencia continúa funcionando durante la sesión.
 - `data-theme` y `color-scheme` se aplican al elemento `<html>`.
 - Un script mínimo en `index.html` resuelve el tema antes del arranque de React para evitar un destello significativo.
-- El botón muestra luna cuando activa oscuro y sol cuando activa claro, con etiqueta accesible descriptiva. Está disponible en Studio, Fracciones, Práctica y las vistas académicas.
+- El botón muestra luna cuando activa oscuro y sol cuando activa claro, con etiqueta accesible descriptiva. Está disponible en el lienzo, Aprender y las vistas académicas.
 
 ## Reglas para componentes
 
@@ -89,7 +89,7 @@ Los colores predeterminados de los diagramas se resuelven al renderizar mediante
 
 ## Tutor académico
 
-La conversación usa `background` como plano de lectura, `surface` para respuestas del tutor, `primary` para mensajes y envío del estudiante, y `sidebar` para las fuentes activas. El degradado del compositor, sus bordes y los controles se derivan de tokens para impedir superficies claras residuales en modo oscuro.
+El tutor actual se compone de `ChatArea`, `ConversationList` y `SourceSelectorPanel`. La conversación, sus mensajes, fuentes y compositor usan tokens semánticos y controles accesibles en ambos temas. Los componentes assistant-ui y las clases `.aui-*` anteriores se retiraron al no tener consumidores.
 
 ## Biblioteca documental
 

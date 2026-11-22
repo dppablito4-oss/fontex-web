@@ -40,7 +40,12 @@ class TutorError extends Error {
     super(message);
   }
 }
-const DEFAULT_MODEL = "gpt-6-astra";
+const DEFAULT_MODEL = "gpt-6.1-terra";
+function tutorModel(configured: string | undefined, stored: string | undefined): string {
+  if (configured?.trim()) return configured.trim();
+  const model=stored?.trim();
+  return model && !["gpt-6-astra","gpt-6.1-sol"].includes(model) ? model : DEFAULT_MODEL;
+}
 const jsonError = (message: string, code: string, status: number) =>
   Response.json({ message, code }, { status });
 
@@ -91,8 +96,7 @@ export function createTutorHandler(env: (name: string) => string | undefined) {
       }
       return Response.json({
         ready: true,
-        model: env("OPENAI_MODEL")?.trim() || data.default_model ||
-          DEFAULT_MODEL,
+        model: tutorModel(env("OPENAI_MODEL"),data.default_model),
         maxTokens: data.max_output_tokens,
       });
     }
@@ -286,8 +290,7 @@ export function createTutorHandler(env: (name: string) => string | undefined) {
       let model = "system-abstain";
       let citations: VerifiedCitation[] = [];
       if (mode !== "strict" || chunks.length) {
-        model = env("OPENAI_MODEL")?.trim() || reservation.default_model ||
-          DEFAULT_MODEL;
+        model = tutorModel(env("OPENAI_MODEL"),reservation.default_model);
         let upstream: Response;
         try {
           upstream = await fetch("https://api.openai.com/v1/responses", {

@@ -1,29 +1,38 @@
 # Documentación de Fontex
 
-Actualizada el **14 de noviembre de 2026**: el editor principal utiliza diez primitivas componibles, variables compartidas y escenas v2. La biblioteca académica y el aula de práctica mantienen sus flujos propios.
+Actualizada el **22 de noviembre de 2026** para la serie 1.0. El editor vigente usa doce primitivas y escenas v2; los antiguos editores Studio, FractionCanvas y GeneralCanvas no son la arquitectura actual.
 
-| Documento | Qué resuelve |
-|---|---|
-| [README principal](../README.md) | Instalación, capacidades, rutas y despliegue del frontend |
-| [Preparación de beta cerrada](beta-cerrada.md) | Correcciones de auditoría, invitaciones, límites, despliegue y pendientes |
-| [Integración en producción](DESPLIEGUE-BETA-2026-11-14.md) | Supabase desplegado, limpieza autorizada, pruebas alojadas y publicación de Pages |
-| [Primitivas v0.7](primitivas-v0.7.md) | Contrato, editor, IA, guardado, alcance y límites del lienzo actual |
-| [Laboratorio anterior](general-canvas-prototype.md) | Expresiones, escenas privadas, sincronización, formato y límites actuales |
-| [Corrección del 13 de noviembre](AUDITORIA-2026-11-13.md) | Regresiones de sincronización y matemáticas, dependencias y retiro de datos de prueba |
-| [Arquitectura](architecture/overview.md) | Componentes, flujos y separación entre datos locales y remotos |
-| [Fontex Studio](architecture/studio.md) | Objetos matemáticos, JSON versión 1, guardado y límites del editor |
-| [Fontex Agent](architecture/fontex-agent.md) | Tres fases, acciones, backend, pedagogía, pruebas y límites reales |
-| [Supabase](../supabase/README.md) | Migraciones, tablas, funciones, secretos y pruebas de backend |
-| [Sistema de diseño](design/DESIGN_SYSTEM.md) | Tokens, temas y estilos propios de Studio |
-| [Organización del lienzo](interfaz-lienzo.md) | Pestañas superiores, herramientas desplegables y panel de chat/propiedades |
-| [Corrección de creación](correccion-creacion-lienzo-2026-11-14.md) | Órdenes que construyen, continuidad del editor y cancelación del streaming |
-| [Lienzo libre y recuperación](lienzo-libre-y-recuperacion.md) | Navegación con clic derecho, medidas integradas, resultados recuperables, MFA y copias |
-| [Dependencias](decisions/DEPENDENCIES.md) | Uso de paquetes, herramientas y estado de auditoría |
-| [Preparación de primitivas v0.7](plans/v0.7-primitivas-integracion.md) | Revisión de la propuesta, compatibilidad con el lienzo actual y orden de integración |
-| [Auditoría actual](AUDITORIA.md) | Estado de las diez correcciones, pruebas y requisitos de despliegue |
-| [Cuerpos 3D v1.0](CUERPOS-3D-V100.md) | Rama de desarrollo: geometría espacial, cámara, medidas, PDF y contrato del agente |
-| [Reportes](REPORTES.md) | Historial de intervenciones; sus resultados corresponden a cada fecha |
+## Guías vigentes
 
-La implementación actual incluye el lienzo libre con IA lateral, el laboratorio de expresiones, el aula de práctica y el espacio académico con biblioteca/tutor documental. Los reportes distinguen el retiro de datos de la conservación de las herramientas de Studio.
+| Documento | Alcance |
+| --- | --- |
+| [README principal](../README.md) | Capacidades, instalación, rutas, pruebas y publicación |
+| [Arquitectura](architecture/overview.md) | Entradas activas, componentes y fronteras de datos |
+| [Editor de primitivas](architecture/studio.md) | Escenas v2, persistencia, interacción, recuperación y PDF |
+| [Agente del lienzo](architecture/fontex-agent.md) | Chat/construcción, JSON, límites, modelos y créditos |
+| [Supabase](../supabase/README.md) | Funciones, permisos, secretos, pruebas y respaldos |
+| [Cuerpos 3D](CUERPOS-3D-V100.md) | Contrato, cámara, cálculos y límites de los sólidos |
+| [Auditoría del 22 de noviembre](AUDITORIA-2026-11-22.md) | Limpieza, evidencias, observaciones y trabajo pendiente |
+| [Política de IA](politica-uso-ia.md) | Conversación, construcciones y créditos |
+| [Aulas y actividades](AULAS-V092.md) | Publicación, adjuntos, participación temporal y SMTP |
+| [Práctica en el lienzo](PRACTICA-EN-LIENZO.md) | Respuestas y campos habilitados por el docente |
+| [Lienzos y PDF](LIENZOS-Y-PDF.md) | Cierre, guardado, enlaces públicos y descarga |
+| [Sistema de diseño](design/DESIGN_SYSTEM.md) | Tokens y componentes visuales |
 
-Para mantener esta documentación, comprueba primero `src/app/App.tsx`, `package.json`, las migraciones y los workflows. Registra resultados ejecutados y distingue pruebas omitidas, revisión estática y comprobaciones remotas. Una compilación correcta no demuestra que una migración esté aplicada en un proyecto desplegado.
+## Historial
+
+Los reportes fechados, planes y documentos de versiones 0.x conservan lo observado en su fecha. Cuando contradicen el comportamiento actual, prevalecen el código y las guías vigentes. No debe aplicarse una migración, retirar una tabla o desplegar un endpoint siguiendo un reporte antiguo sin revisar su estado actual.
+
+- [Arquitectura anterior a 1.0](archive/overview-pre-v1.md)
+- [Studio anterior](archive/studio-pre-v1.md)
+- [Agente anterior](archive/fontex-agent-pre-v1.md)
+- [Integración anterior de Mathigon](archive/mathigon-modules-pre-v1.md)
+- [Guía anterior de Supabase](archive/supabase-pre-v1.md)
+- [Reportes](REPORTES.md), auditorías fechadas y [beta cerrada](beta-cerrada.md)
+- Contratos históricos: [v0.7](primitivas-v0.7.md), [v0.7.1](primitivas-v0.7.1.md), [v0.8](primitivas-v0.8.md)
+
+## Mantenimiento
+
+Comprueba rutas en `src/app/App.tsx`, formato en `src/core/primitives/schema.ts`, versiones en `package.json`, funciones en `supabase/functions` y reglas de publicación en `.github/workflows`. `npm run audit:modules` genera un inventario de módulos sin consumidores activos; no borra nada automáticamente ni sustituye la revisión de compatibilidad.
+
+Una rama de Git no es un respaldo de datos. Una compilación correcta no acredita despliegue de funciones, aplicación de migraciones, entrega de correos ni una respuesta real del proveedor de IA. Registra qué comprobaciones se ejecutaron y cuáles requieren un entorno específico.

@@ -19,10 +19,10 @@
     "test:e2e:classrooms": "FONTEX_CLASSROOM_E2E=1 playwright test e2e/classroom.spec.ts",
     "test:remote": "node scripts/check-remote-env.mjs && vitest run src/test/block1.remote.test.ts src/test/block2.remote.test.ts src/test/block3.remote.test.ts src/test/block4.remote.test.ts",
     "test:agent:remote": "node --experimental-strip-types scripts/check-primitive-agent.mjs",
-    "test:agent:beta": "node --experimental-strip-types scripts/check-beta-agent.mjs"
+    "test:agent:beta": "node --experimental-strip-types scripts/check-beta-agent.mjs",
+    "audit:modules": "node scripts/audit-modules.mjs"
   },
   "dependencies": {
-    "@assistant-ui/react": "^0.15.25",
     "@radix-ui/react-slot": "^1.2.4",
     "@supabase/supabase-js": "2.117.3",
     "class-variance-authority": "^0.7.1",
