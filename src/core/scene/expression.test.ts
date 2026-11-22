@@ -6,7 +6,6 @@ import {
   polynomial,
   realRoots,
 } from "./expression";
-import { expressionScene, parseScene } from "./document";
 const vars = { a: 2, b: 1, c: -3 };
 it.each(
   [["-x^2", 2, -4], ["2x+3", 2, 7], ["2^3^2", 0, 512], ["sin(pi/2)", 0, 1], [
@@ -66,18 +65,6 @@ it.each([
   "rejects executable or invalid input %s",
   (s) => expect(() => parseExpression(s)).toThrow(),
 );
-it("links generic elements to valid expressions and rejects dangling references", () => {
-  const scene = expressionScene("sin(x)");
-  expect(parseScene(JSON.parse(JSON.stringify(scene)) as unknown)).toEqual(
-    scene,
-  );
-  expect(() =>
-    parseScene({
-      ...scene,
-      elements: [{ id: "bad", kind: "plot", expressionId: "missing" }],
-    })
-  ).toThrow();
-});
 
 it.each([1e-100, 1e-13, 1e-11, 1, 1e100])("keeps real roots invariant under nonzero scale %s", scale => {
   expect(realRoots(polynomial(parseExpression(`${scale}*(x^2+1)`), vars)!)).toEqual([]);

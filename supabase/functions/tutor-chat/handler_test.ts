@@ -13,11 +13,14 @@ type Scenario = {
   completionFailures?: number;
   healthFailure?: boolean;
   budget?: number;
+  storedModel?: string;
+  configuredModel?: string;
 };
 async function run(scenario: Scenario = {}, health = false) {
   const calls: Array<{ name: string; args: Record<string, unknown> }> = [];
   let completionAttempts = 0, responsesCalled = 0;
   let active = false;
+  let providerModel = "";
   const dbFetch: typeof fetch = (input, init) =>
     Promise.resolve((() => {
       const url = new URL(input instanceof Request ? input.url : String(input));
@@ -32,7 +35,7 @@ async function run(scenario: Scenario = {}, health = false) {
             max_retrieved_chunks: 5,
             max_input_tokens: scenario.budget ?? 8000,
             max_output_tokens: 1500,
-            default_model: "test-model",
+            default_model: scenario.storedModel ?? "test-model",
             reasoning_effort: "low",
           });
         }
@@ -71,7 +74,7 @@ async function run(scenario: Scenario = {}, health = false) {
           ? Response.json({ message: "limits unavailable" }, { status: 503 })
           : Response.json({
             is_enabled: true,
-            default_model: "test-model",
+            default_model: scenario.storedModel ?? "test-model",
             max_output_tokens: 1500,
           });
       }
@@ -83,7 +86,7 @@ async function run(scenario: Scenario = {}, health = false) {
       throw new Error(`Unexpected database request ${url}`);
     })());
   const original = globalThis.fetch;
-  globalThis.fetch = (input) => {
+  globalThis.fetch = (input,init) => {
     if (String(input).endsWith("/embeddings")) {
       return Promise.resolve(
         Response.json({
@@ -93,6 +96,7 @@ async function run(scenario: Scenario = {}, health = false) {
       );
     }
     responsesCalled++;
+    providerModel=JSON.parse(String(init?.body)).model;
     if (scenario.upstreamStatus) {
       return Promise.resolve(
         new Response("provider unavailable", {
@@ -121,6 +125,7 @@ async function run(scenario: Scenario = {}, health = false) {
     const handler = createTutorHandler((name) =>
       name === "OPENAI_API_KEY"
         ? "test-key"
+        : name === "OPENAI_MODEL" ? scenario.configuredModel
         : name === "EMBEDDING_DIMENSIONS"
         ? "1"
         : undefined
@@ -155,11 +160,25 @@ async function run(scenario: Scenario = {}, health = false) {
       active,
       completionAttempts,
       responsesCalled,
+      providerModel,
     };
   } finally {
     globalThis.fetch = original;
   }
 }
+
+Deno.test("document tutor retires old model defaults and preserves an explicit override",async()=>{
+  for(const storedModel of ["gpt-6-astra","gpt-6.1-sol",""]) {
+    const health=await run({storedModel},true);
+    assert.equal(health.body.model,"gpt-6.1-terra");
+    const response=await run({storedModel});
+    assert.equal(response.providerModel,"gpt-6.1-terra");
+  }
+  const custom=await run({storedModel:"test-custom"});
+  assert.equal(custom.providerModel,"test-custom");
+  const configured=await run({storedModel:"gpt-6-astra",configuredModel:"explicit-model"});
+  assert.equal(configured.providerModel,"explicit-model");
+});
 
 for (
   const [label, scenario] of Object.entries<Scenario>({

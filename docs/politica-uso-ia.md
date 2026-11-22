@@ -40,3 +40,7 @@ La batería SQL contrasta alta con cinco créditos, agotamiento tras cinco gener
 Los tests de Edge comprueban que no hay llamada al proveedor al agotar saldo, que el chat no consulta carteras y que las respuestas inválidas/fallidas devuelven la reserva. Los tests de interfaz cubren selección de cuenta y asignación, reintento sin duplicar y chat habilitado con saldo cero. Las pruebas SQL y los proveedores simulados no acreditan por sí solos una petición real; la prueba de despliegue se realiza por separado y no requiere gastar cinco llamadas reales.
 
 La verificación de despliegue pasó con dos peticiones reales: chat mantuvo 5 créditos y una generación válida dejó 4. Una cuenta normal recibió denegación al listar usuarios y al intentar reservar directamente por RPC. La comprobación de base confirmó un único administrador, correspondiente a la cuenta autorizada. Las escenas de esta prueba se mantuvieron en memoria.
+
+## Tutor documental
+
+`tutor-chat` tiene sus propias reservas y límites de RAG. En la rama de limpieza del 22 de noviembre, los defaults históricos Astra/Sol de `tutor_limits` se sustituyen por Terra; un `OPENAI_MODEL` explícito o un modelo personalizado mantienen prioridad. Este cambio requiere desplegar la función y no modifica el saldo interno de construcción del lienzo.

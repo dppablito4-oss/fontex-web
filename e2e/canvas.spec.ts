@@ -4,6 +4,15 @@ import { expect, test } from "@playwright/test";
 
 test.beforeEach(async ({ page }) => { await page.goto("/#/lienzo"); });
 
+test("old canvas URLs open the current primitive editor",async({page})=>{
+  for(const route of ["laboratorio","lienzo-clasico","fracciones"]) {
+    await page.goto(`/#/${route}`);
+    await page.getByRole("button",{name:"Elementos",exact:true}).click();
+    await expect(page.getByRole("region",{name:"Elementos",exact:true}).getByRole("button",{name:"Cuerpo 3D",exact:true})).toBeVisible();
+    await page.getByRole("button",{name:"Elementos",exact:true}).click();
+  }
+});
+
 test("full-width transparent plot, inline measurements and save/reopen", async ({ page }, info) => {
   await page.locator('.pc-empty button[data-module="green"]').last().click();
   if (await page.getByRole("button", { name: "Cerrar panel" }).count()) await page.getByRole("button", { name: "Cerrar panel" }).click();

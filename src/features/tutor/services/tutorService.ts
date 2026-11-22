@@ -1,4 +1,5 @@
 import { supabase } from "../../../lib/supabase/client";
+import { tutorModels } from "../../../../supabase/functions/_shared/practice/models";
 import type { Database } from "../../../lib/supabase/database.types";
 import type {
   TutorCitation,
@@ -61,7 +62,7 @@ export async function checkTutorHealth(): Promise<TutorHealthStatus> {
       return {
         configured: true,
         available: false,
-        model: "gpt-6-astra",
+        model: tutorModels.study.id,
         error: invocation.error
           ? await readableFunctionError(invocation.error, "Servicio no disponible")
           : "Sin respuesta",
@@ -71,13 +72,13 @@ export async function checkTutorHealth(): Promise<TutorHealthStatus> {
     return {
       configured: true,
       available: Boolean(invocation.data.ready),
-      model: invocation.data.model || "gpt-6-astra",
+      model: invocation.data.model || tutorModels.study.id,
     };
   } catch (err) {
     return {
       configured: true,
       available: false,
-      model: "gpt-6-astra",
+      model: tutorModels.study.id,
       error: err instanceof Error ? err.message : "Error al conectar con el tutor",
     };
   }
