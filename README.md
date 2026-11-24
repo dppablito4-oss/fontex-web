@@ -4,6 +4,8 @@ Lienzo matemático interactivo para crear, explicar y practicar, con aulas y bib
 
 El registro por correo está abierto: cada cuenta recibe 5 créditos iniciales de generación y debe confirmar su correo. No se necesita invitación para crear la cuenta; las aulas privadas mantienen sus propios enlaces de acceso.
 
+Administración: asignación de créditos, suspensión temporal, bloqueo, reactivación y baja de Fontex con MFA. [Alcance y protección de la identidad compartida](docs/ADMINISTRACION-CUENTAS.md).
+
 ## Qué incluye
 
 - **Lienzo:** doce primitivas componibles y 40 plantillas, variables compartidas, edición, historial, pestañas, presentación, JSON y descarga directa de PDF.

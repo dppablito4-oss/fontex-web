@@ -489,3 +489,6 @@ verify_jwt = true
 verify_jwt = false
 [functions.classroom-agent]
 verify_jwt = false
+
+[functions.account-admin]
+verify_jwt = true

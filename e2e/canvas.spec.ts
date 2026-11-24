@@ -308,3 +308,23 @@ test("edits line parameters and a mathematical answer without changing the defin
   await expect(page.getByRole("button",{name:"Cambiar Función f(x)",exact:true})).toHaveCount(0);
   await expect(page.getByRole("button",{name:"Cambiar Tu respuesta",exact:true})).toContainText("2*x+1");
 });
+
+test("mobile canvas supports button zoom and a two-finger pinch without zooming the browser",async({page},info)=>{
+  test.skip(info.project.name!=="mobile","Touch gesture runs on the mobile device.");
+  await page.getByRole("button",{name:"Derivada e integral"}).click();
+  const close=page.getByRole("button",{name:"Cerrar panel",exact:true});if(await close.count())await close.click();
+  const board=page.locator(".pc-board"),stage=page.locator(".pc-stage");
+  await expect(board).toHaveCSS("transform","matrix(1, 0, 0, 1, 0, 0)");
+  await page.getByRole("button",{name:"Acercar",exact:true}).click();await expect(board).not.toHaveCSS("transform","matrix(1, 0, 0, 1, 0, 0)");
+  await page.getByRole("button",{name:"Ajustar ancho",exact:true}).click();await expect(board).toHaveCSS("transform","matrix(1, 0, 0, 1, 0, 0)");
+  const box=(await stage.boundingBox())!,x=Math.round(box.x+box.width/2),y=Math.round(box.y+box.height/2);
+  const session=await page.context().newCDPSession(page);
+  await session.send("Input.dispatchTouchEvent",{type:"touchStart",touchPoints:[{x:x-45,y,id:1},{x:x+45,y,id:2}]});
+  await session.send("Input.dispatchTouchEvent",{type:"touchMove",touchPoints:[{x:x-80,y,id:1},{x:x+80,y,id:2}]});
+  await session.send("Input.dispatchTouchEvent",{type:"touchEnd",touchPoints:[]});
+  await expect.poll(()=>board.evaluate(el=>new DOMMatrix(getComputedStyle(el).transform).a)).toBeGreaterThan(1.4);
+  expect(await page.evaluate(()=>window.visualViewport?.scale??1)).toBe(1);
+  await expect(page.getByRole("complementary",{name:"Panel de Fontex"})).toHaveCount(0);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+  await page.getByRole("button",{name:"Ajustar ancho",exact:true}).click();await expect(board).toHaveCSS("transform","matrix(1, 0, 0, 1, 0, 0)");
+});

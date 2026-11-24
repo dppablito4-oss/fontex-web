@@ -57,7 +57,8 @@ it("blocks missing routes and endpoints accepting unauthenticated calls",async()
 it("checks the SQL contract, CORS and authentication without credentials or AI calls",async()=>{
   const fetch=backend();vi.stubGlobal("fetch",fetch);
   await import("./check-backend-release.mjs");
-  expect(fetch).toHaveBeenCalledTimes(25);
+  expect(fetch).toHaveBeenCalledTimes(27);
+  expect(fetch.mock.calls.filter(([url])=>String(url).endsWith("/functions/v1/account-admin")).map(([,options])=>options.method)).toEqual(["OPTIONS","POST"]);
   expect(fetch.mock.calls.every(([url])=>String(url).startsWith("https://backend.example.invalid/"))).toBe(true);
   expect(fetch.mock.calls.every(([,options])=>!options.headers.Authorization)).toBe(true);
   const publicRead=fetch.mock.calls.find(([url])=>String(url).endsWith("/rpc/read_public_canvas"));

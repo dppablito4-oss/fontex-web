@@ -194,17 +194,20 @@ function Frame({
     const node = content.current;
     if (!node || narrow) return;
     const observer = new ResizeObserver(() => {
-      const next = Math.ceil(node.scrollHeight + 24);
+      const heading = node.previousElementSibling as HTMLElement | null;
+      const headingStyle = heading ? getComputedStyle(heading) : null;
+      const headingHeight = headingStyle?.position === "absolute" || headingStyle?.display === "none" ? 0 : heading?.offsetHeight ?? 0;
+      const next = Math.ceil(node.scrollHeight + headingHeight + 2);
       if (
         (p.autoHeight && Math.abs(next - p.height) > 3) ||
         (!p.autoHeight && next > p.height + 3)
       ) {
-        onFit(p.id, Math.max(100, Math.min(100000, next)));
+        onFit(p.id, Math.max(p.kind === "math_block" ? 60 : 100, Math.min(100000, next)));
       }
     });
     observer.observe(node);
     return () => observer.disconnect();
-  }, [p.id, p.height, p.autoHeight, p.width, onFit, narrow]);
+  }, [p.id, p.kind, p.height, p.autoHeight, p.width, onFit, narrow]);
   return (
     <article
       ref={frame}
@@ -383,14 +386,28 @@ function Editor(
   const viewportBatch = useRef({ id: "", time: 0 });
   const root = useRef<HTMLDivElement>(null),
     stage = useRef<HTMLDivElement>(null),
+    boardRef = useRef<HTMLDivElement>(null),
     file = useRef<HTMLInputElement>(null),
     drag = useRef<Drag | null>(null),
     live = useRef(scene),
     abort = useRef<AbortController | null>(null),
     messageEnd = useRef<HTMLDivElement>(null);
   const manualZoom = useCallback((value: number) => { setAutoZoom(false); setZoom(value); }, [setAutoZoom, setZoom]);
-  const viewport = useWorkspaceViewport(stage, narrow, zoom, manualZoom);
+  const viewport = useWorkspaceViewport(stage, zoom, manualZoom);
   const roots = useMemo(() => workspaceRoots(scene), [scene]);
+  const [mobileSize, setMobileSize] = useState({ width: 360, height: 0 });
+  useEffect(() => {
+    const node = stage.current, board = boardRef.current;
+    if (!node || !board || !narrow) return;
+    const measure = () => {
+      const css = getComputedStyle(node);
+      const width = Math.max(240, node.clientWidth-(parseFloat(css.paddingLeft)||0)-(parseFloat(css.paddingRight)||0));
+      const height = Math.max(board.offsetHeight, board.scrollHeight);
+      setMobileSize(old => old.width === width && old.height === height ? old : { width, height });
+    };
+    const observer = new ResizeObserver(measure); observer.observe(node); observer.observe(board); measure();
+    return () => observer.disconnect();
+  }, [narrow, roots.length]);
   // Frame imported padding once; dragging an element must not move the camera.
   const [framing, setFraming] = useState({ id: scene.id, hasContent: false, origin: { x: 0, y: 0 } });
   if (framing.id !== scene.id || framing.hasContent !== Boolean(roots.length)) {
@@ -424,9 +441,7 @@ function Editor(
     const node = stage.current;
     if (!node) return;
     const observer = new ResizeObserver(() => {
-      if (autoZoom && !narrow) {
-        setZoom(Math.max(0.1, Math.min(1.5, (node.clientWidth - 32) / boardWidth)));
-      }
+      if (autoZoom) setZoom(narrow ? 1 : Math.max(MIN_CANVAS_ZOOM, Math.min(1.5, (node.clientWidth - 32) / boardWidth)));
     });
     observer.observe(node);
     return () => observer.disconnect();
@@ -931,7 +946,7 @@ function Editor(
                         p={p}
                         scene={scene}
                         visibleStep={presenting ? step : undefined}
-                        displayScale={narrow ? 1 : zoom}
+                        displayScale={zoom}
                         scope={scope}
                         functions={functions}
                         onChange={update}
@@ -1303,20 +1318,21 @@ function Editor(
               <div
                 className="pc-board-space"
                 style={{
-                  width: narrow ? "100%" : boardWidth * zoom,
-                  height: narrow ? "auto" : height * zoom,
+                  width: (narrow ? mobileSize.width : boardWidth) * zoom,
+                  height: (narrow ? mobileSize.height : height) * zoom,
                 }}
               >
                 <div
                   className="pc-board"
+                  ref={boardRef}
                   style={{
-                    width: narrow ? "100%" : boardWidth,
+                    width: narrow ? mobileSize.width : boardWidth,
                     height: narrow ? "auto" : height,
-                    transform: narrow ? "none" : `scale(${zoom})`,
+                    transform: `scale(${zoom})`,
                   }}
                 >
                   {narrow
-                    ? mobileLessons.map(item => <div key={item.id}>{item.content}</div>)
+                    ? mobileLessons.map(item => <div className="pc-mobile-lesson" key={item.id}>{item.content}</div>)
                     : roots.filter(p => !presenting || p.presentationStep <= step)
                       .sort((a,b) => a.y-b.y || a.x-b.x).map(p => renderPrimitiveFrame(p))}
                   {!narrow && lessons.flatMap(lesson => {
@@ -1664,17 +1680,18 @@ function Editor(
           variables
         </span>
         <button
+          aria-label="Organizar lienzo"
           disabled={practice}
           onClick={() => {
             commit(organizePrimitiveScene(scene));
             setAutoZoom(true);
           }}
         >
-          <LayoutDashboard size={16} />Organizar lienzo
+          <LayoutDashboard size={16} />{!narrow && "Organizar lienzo"}
         </button>
         <span className="pc-zoom">
           <span>Zoom del lienzo</span>
-          {narrow ? "Vista móvil" : (
+          {(
             <>
               <button
                 aria-label="Alejar"

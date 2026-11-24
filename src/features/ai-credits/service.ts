@@ -14,6 +14,8 @@ const account = z.object({
   credits: z.number().int().min(0),
   created_at: z.string(),
   is_admin: z.boolean(),
+  status: z.enum(["active","suspended","blocked","deleting","deleted"]).default("active"),
+  suspended_until: z.string().nullable().optional(),
 });
 export type CreditAccount = z.infer<typeof account>;
 export const historySchema = z.array(z.object({

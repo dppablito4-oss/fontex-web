@@ -17,6 +17,8 @@ import {
   listCreditAccounts,
 } from "./service";
 import "./credits.css";
+import { AccountControls } from "./AccountControls";
+import { accountStatusNames } from "./account-controls";
 import { BetaAdminPanel } from "../beta/BetaAdminPanel";
 import { AdminMfaGate } from "../auth/AdminMfaGate";
 import { CanvasDiagnostics } from "../beta/CanvasDiagnostics";
@@ -72,7 +74,7 @@ function CreditAdministration() {
   }, [selected]);
   async function assign(e: FormEvent) {
     e.preventDefault();
-    if (!selected || pending) return;
+    if (!selected || pending || selected.status === "deleted" || selected.status === "deleting") return;
     if (!Number.isInteger(amount) || amount < 1 || amount > 1000) {
       setError("Asigna entre 1 y 1000 créditos.");
       return;
@@ -111,7 +113,7 @@ function CreditAdministration() {
   return (
     <Card className="ai-credit-admin p-5 sm:p-7">
       <p className="eyebrow">Administración de IA</p>
-      <h2 className="mt-2 text-xl font-semibold">Créditos de generación</h2>
+      <h2 className="mt-2 text-xl font-semibold">Cuentas y créditos</h2>
       <p className="mt-2 text-sm text-muted-foreground">
         Cada cuenta empieza con 5 generaciones. Puedes añadir saldo a cualquier
         cuenta, incluida la tuya.
@@ -134,7 +136,7 @@ function CreditAdministration() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </label>
-        <Button type="submit" disabled={loading}>Buscar cuenta</Button>
+        <Button type="submit" disabled={loading || pending}>Buscar cuenta</Button>
         <Button
           type="button"
           variant="secondary"
@@ -152,15 +154,16 @@ function CreditAdministration() {
           <div className="ai-account-table-wrap">
             <table className="ai-account-table">
               <caption>Cuentas y saldo de IA · página {offset / 25 + 1}</caption>
-              <thead><tr><th scope="col">Usuario</th><th scope="col">Rol</th><th scope="col">Créditos</th><th scope="col">Registro</th><th scope="col">Acciones</th></tr></thead>
+              <thead><tr><th scope="col">Usuario</th><th scope="col">Rol</th><th scope="col">Estado</th><th scope="col">Créditos</th><th scope="col">Registro</th><th scope="col">Acciones</th></tr></thead>
               <tbody>{accounts.map(account => <tr key={account.user_id} data-selected={selected?.user_id===account.user_id}>
                 <td><strong>{account.display_name}</strong><small>{account.email ?? "Cuenta sin correo"}</small></td>
                 <td><span className="ai-role-badge">{account.is_admin?"Administrador":"Participante"}</span></td>
+                <td>{accountStatusNames[account.status??"active"]}</td>
                 <td><strong className="ai-table-balance">{account.credits}</strong></td>
                 <td>{new Date(account.created_at).toLocaleDateString("es")}</td>
                 <td><Button type="button" variant="secondary" size="sm" disabled={pending} aria-pressed={selected?.user_id===account.user_id}
                   aria-label={`Administrar ${account.display_name} · ${account.email ?? "Cuenta sin correo"}`}
-                  onClick={()=>{setSelected(account);setEvents([]);setHistoryError("");setMessage("");}}>Gestionar créditos</Button></td>
+                  onClick={()=>{setSelected(account);setEvents([]);setHistoryError("");setMessage("");}}>Administrar cuenta</Button></td>
               </tr>)}</tbody>
             </table>
             {!accounts.length && <p className="p-4">No hay cuentas que coincidan.</p>}
@@ -170,7 +173,7 @@ function CreditAdministration() {
         <Button
           type="button"
           variant="secondary"
-          disabled={loading || offset === 0}
+          disabled={loading || pending || offset === 0}
           onClick={() => {
             setOffset(Math.max(0, offset - 25));
             setSelected(null);
@@ -182,7 +185,7 @@ function CreditAdministration() {
         <Button
           type="button"
           variant="secondary"
-          disabled={loading || !hasMore}
+          disabled={loading || pending || !hasMore}
           onClick={() => {
             setOffset(offset + 25);
             setSelected(null);
@@ -191,6 +194,10 @@ function CreditAdministration() {
           Siguiente
         </Button>
       </div>
+      {selected && <AccountControls key={selected.user_id} account={selected} disabled={pending} onPending={setPending} onUpdated={async()=>{
+        const result=await listCreditAccounts(query,offset);setAccounts(result.accounts);setMore(result.hasMore);
+        const updated=result.accounts.find(a=>a.user_id===selected.user_id);setSelected(current=>current?.user_id===selected.user_id?updated??null:current);
+      }}/>}
       {selected && (
         <section aria-label="Asignar créditos">
           <h3>Asignar a {selected.email ?? selected.display_name}</h3>
@@ -220,7 +227,7 @@ function CreditAdministration() {
                 onChange={(e) => setReason(e.target.value)}
               />
             </label>
-            <Button type="submit" disabled={pending}>
+            <Button type="submit" disabled={pending || selected.status === "deleted" || selected.status === "deleting"}>
               {pending ? "Asignando…" : "Añadir créditos"}
             </Button>
           </form>
@@ -264,7 +271,7 @@ export function AiCreditPanel() {
         )}
         <a href="#/lienzo">Ir al lienzo</a>
       </Card>
-      {status?.is_admin && <AdminMfaGate><CreditAdministration /><details className="ai-admin-detail"><summary>Participantes y acceso</summary><BetaAdminPanel /></details><details className="ai-admin-detail"><summary>Diagnóstico de construcciones</summary><CanvasDiagnostics /></details></AdminMfaGate>}
+      {status?.is_admin && <AdminMfaGate><CreditAdministration /><details className="ai-admin-detail"><summary>Disponibilidad de IA</summary><BetaAdminPanel /></details><details className="ai-admin-detail"><summary>Diagnóstico de construcciones</summary><CanvasDiagnostics /></details></AdminMfaGate>}
     </div>
   );
 }

@@ -34,7 +34,7 @@ const learning = await fetch(`${base}/rest/v1/rpc/class_learning_contract`, {
   method:"POST",headers:{apikey:key,"Content-Type":"application/json"},body:"{}",signal:AbortSignal.timeout(10000),
 });
 if (!learning.ok || await learning.json() !== "classroom-learning-v092") throw Error("Falta la migración de actividades de aula v0.9.2.");
-for (const endpoint of ["studio-agent", "scene-agent", "tutor-chat", "practice-tutor", "document-upload", "document-delete", "document-process", "document-search", "classroom-api", "classroom-agent"]) {
+for (const endpoint of ["studio-agent", "scene-agent", "tutor-chat", "practice-tutor", "document-upload", "document-delete", "document-process", "document-search", "classroom-api", "classroom-agent", "account-admin"]) {
   const preflight = await fetch(`${base}/functions/v1/${endpoint}`, {
     method: "OPTIONS", headers: { Origin: "https://fontex-release-check.invalid", "Access-Control-Request-Method": "POST" },
     signal: AbortSignal.timeout(10000),
@@ -52,4 +52,4 @@ for (const endpoint of ["studio-agent", "scene-agent", "tutor-chat", "practice-t
   });
   if (response.status !== 401) throw Error(`El endpoint ${endpoint} debe existir y rechazar peticiones sin sesión (401). Recibido: ${response.status}`);
 }
-console.log("Backend compatible: contrato SQL v4, lectura pública, invitaciones de aula, agente de práctica y 10 rutas protegidas verificados. La prueba autenticada se registra por separado.");
+console.log("Backend compatible: contrato SQL v4, lectura pública, invitaciones de aula, agente de práctica y 11 rutas protegidas verificados. La prueba autenticada se registra por separado.");
