@@ -15,7 +15,7 @@ insert into public.classrooms(id,organization_id,title,owner_id) values('accc400
 ('accc4000-0000-4000-8000-000000000003','accc3000-0000-4000-8000-000000000003','Clase personal','accc0000-0000-4000-8000-000000000002');
 insert into public.class_members(classroom_id,user_id,role) values('accc4000-0000-4000-8000-000000000001','accc0000-0000-4000-8000-000000000002','teacher'),
 ('accc4000-0000-4000-8000-000000000002','accc0000-0000-4000-8000-000000000001','teacher'),
-('accc4000-0000-4000-8000-000000000003','accc0000-0000-4000-8000-000000000002','teacher');
+('accc4000-0000-4000-8000-000000000003','accc0000-0000-4000-8000-000000000002','teacher') on conflict (classroom_id,user_id) do nothing;
 select set_config('request.jwt.claims','{"sub":"accc0000-0000-4000-8000-000000000002","role":"authenticated"}',true);
 insert into public.documents(id,owner_id,classroom_id,title,original_filename,mime_type,size_bytes,page_count,content_sha256,storage_path) values('accc5000-0000-4000-8000-000000000001','accc0000-0000-4000-8000-000000000002','accc4000-0000-4000-8000-000000000003','PDF personal','personal.pdf','application/pdf',100,1,repeat('a',64),'accc0000-0000-4000-8000-000000000002/accc5000-0000-4000-8000-000000000001.pdf');
 do $$ declare who uuid; begin
