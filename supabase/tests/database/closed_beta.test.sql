@@ -3,8 +3,8 @@ create extension if not exists pgtap with schema extensions;
 select extensions.no_plan();
 select extensions.is((select count(*)::int from pg_tables t where schemaname='public' and tablename<>'forma_connection_checks' and not exists(select 1 from pg_policies p where p.schemaname=t.schemaname and p.tablename=t.tablename and p.policyname='beta_members_only')),0,'every Fontex table retains the beta restriction');
 insert into fontex_beta.invitations(email) values ('beta-admin@example.invalid'),('beta-user@example.invalid'),('beta-other@example.invalid');
-select extensions.throws_ok($$insert into auth.users(id,email) values('be7a0000-0000-4000-8000-000000000099','uninvited@example.invalid')$$,'42501',null,'all shared project signups require an administrator invitation');
-select extensions.is(fontex_beta.allowed('be7a0000-0000-4000-8000-000000000099'),false,'shared Auth registration does not admit an uninvited Fontex participant');
+select extensions.lives_ok($$insert into auth.users(id,email) values('be7a0000-0000-4000-8000-000000000099','uninvited@example.invalid')$$,'registration is open without an administrator invitation');
+select extensions.is(fontex_beta.allowed('be7a0000-0000-4000-8000-000000000099'),false,'unconfirmed public registration cannot access remote resources');
 insert into auth.users(id,email,raw_user_meta_data) values
 ('be7a0000-0000-4000-8000-000000000001','beta-admin@example.invalid','{}'),
 ('be7a0000-0000-4000-8000-000000000002','beta-user@example.invalid','{"is_admin":true,"beta":true}'),
@@ -12,7 +12,7 @@ insert into auth.users(id,email,raw_user_meta_data) values
 insert into fontex_ai.admins(user_id) values('be7a0000-0000-4000-8000-000000000001');
 select extensions.is(fontex_beta.allowed('be7a0000-0000-4000-8000-000000000002'),false,'an invitation without confirmed email does not enable remote access');
 update auth.users set email_confirmed_at=now() where id::text like 'be7a0000-%';
-select extensions.is((select count(*)::int from fontex_beta.members where user_id::text like 'be7a%'),3,'only invited signups become members');
+select extensions.is((select count(*)::int from fontex_beta.members where user_id::text like 'be7a%'),4,'public and invited signups both become members');
 select extensions.is((select enabled from fontex_beta.invitations where email='beta-user@example.invalid'),false,'signup consumes its invitation');
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"be7a0000-0000-4000-8000-000000000002","role":"authenticated"}',true);

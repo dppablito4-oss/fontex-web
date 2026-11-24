@@ -72,7 +72,7 @@ export function AuthPage({ initialMode = 'signin' }: { initialMode?: Mode }) {
         <button aria-pressed={mode === 'signup'} disabled={pending} className={`flex-1 rounded-lg px-3 py-2 text-sm font-semibold ${mode === 'signup' ? 'bg-surface shadow-sm' : 'text-muted-foreground'}`} onClick={() => switchMode('signup')} type="button">Crear cuenta</button>
       </div>
       {!configured && <p role="alert" className="mt-5 text-sm text-error">El acceso a cuentas no está disponible en esta versión. Puedes seguir usando el lienzo sin una cuenta.</p>}
-      {mode === 'signup' && <p className="mt-5 text-sm text-muted-foreground">Beta cerrada: regístrate con el correo autorizado por el administrador. Si todavía no tienes invitación, puedes explorar el lienzo local.</p>}
+      {mode === 'signup' && <p className="mt-5 text-sm text-muted-foreground">Crea tu cuenta con tu correo y recibe 5 créditos iniciales de IA. Confirma el enlace que recibirás para empezar.</p>}
       <form className="mt-7 space-y-5" onSubmit={event => void submit(event)}>
         <fieldset disabled={pending || !configured} className="space-y-5 border-0 p-0">
           {mode === 'signup' && <label className="form-field"><span>Nombre visible</span><input autoComplete="name" maxLength={80} minLength={1} onChange={event => setDisplayName(event.target.value)} required value={displayName}/></label>}

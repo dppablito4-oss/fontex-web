@@ -264,7 +264,7 @@ export function AiCreditPanel() {
         )}
         <a href="#/lienzo">Ir al lienzo</a>
       </Card>
-      {status?.is_admin && <AdminMfaGate><CreditAdministration /><details className="ai-admin-detail"><summary>Acceso a la beta e invitaciones</summary><BetaAdminPanel /></details><details className="ai-admin-detail"><summary>Diagnóstico de construcciones</summary><CanvasDiagnostics /></details></AdminMfaGate>}
+      {status?.is_admin && <AdminMfaGate><CreditAdministration /><details className="ai-admin-detail"><summary>Participantes y acceso</summary><BetaAdminPanel /></details><details className="ai-admin-detail"><summary>Diagnóstico de construcciones</summary><CanvasDiagnostics /></details></AdminMfaGate>}
     </div>
   );
 }

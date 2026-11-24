@@ -53,10 +53,13 @@ update public.class_members set status='removed' where user_id='c1a55000-0000-40
 set local role authenticated;
 select extensions.throws_ok($$select public.join_classroom_by_invite(current_setting('test.class_link')::jsonb->>'code')$$,'42501','classroom_membership_removed','removed student cannot rejoin using the old code');
 reset role;
-select extensions.throws_ok($$insert into auth.users(id,email,raw_user_meta_data) values('c1a55000-0000-4000-8000-000000000099','forged@example.invalid','{"classroom_guest_token":"forged","role":"teacher"}')$$,'42501',null,'untrusted metadata cannot authorize registration');
+select extensions.lives_ok($$insert into auth.users(id,email,raw_user_meta_data) values('c1a55000-0000-4000-8000-000000000099','forged@example.invalid','{"classroom_guest_token":"forged","role":"teacher"}')$$,'public registration does not require a guest credential');
+select extensions.is((select count(*)::int from public.class_members where user_id='c1a55000-0000-4000-8000-000000000099'),0,'forged metadata cannot enroll the new account in a classroom');
 insert into auth.users(id,email,raw_user_meta_data) values('c1a55000-0000-4000-8000-000000000004','ana@example.invalid',jsonb_build_object('classroom_guest_token',current_setting('test.class_guest')::jsonb->>'token','display_name','Ana'));
 select extensions.is(fontex_beta.allowed('c1a55000-0000-4000-8000-000000000004'),false,'upgrade still requires email confirmation');
-select extensions.throws_ok($$insert into auth.users(id,email,raw_user_meta_data) values('c1a55000-0000-4000-8000-000000000005','second@example.invalid',jsonb_build_object('classroom_guest_token',current_setting('test.class_guest')::jsonb->>'token'))$$,'42501',null,'guest signup credential is single use');
+select extensions.lives_ok($$insert into auth.users(id,email,raw_user_meta_data) values('c1a55000-0000-4000-8000-000000000005','second@example.invalid',jsonb_build_object('classroom_guest_token',current_setting('test.class_guest')::jsonb->>'token'))$$,'another account can register after a guest credential was claimed');
+select extensions.is((select claimed_by from private.classroom_guests where id=(current_setting('test.class_guest')::jsonb->>'id')::uuid),'c1a55000-0000-4000-8000-000000000004'::uuid,'a second signup cannot steal the original guest claim');
+select extensions.is((select count(*)::int from public.class_members where user_id='c1a55000-0000-4000-8000-000000000005'),0,'reused credential does not grant classroom access');
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"c1a55000-0000-4000-8000-000000000003","role":"authenticated"}',true);
 select extensions.throws_ok($$select public.complete_classroom_guest(current_setting('test.class_guest')::jsonb->>'token')$$,'42501','classroom_guest_expired','different account cannot claim registered guest');
