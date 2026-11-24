@@ -12,7 +12,7 @@ it("times out a stalled access check and ignores its late result",async()=>{
   try {
     const view=render(<BetaGate><p>Contenido privado</p></BetaGate>);
     await act(async()=>{await vi.advanceTimersByTimeAsync(10001);});
-    expect(screen.getByRole("status")).toHaveTextContent("No se pudo verificar tu invitación");
+    expect(screen.getByRole("status")).toHaveTextContent("No se pudo verificar tu cuenta");
     await act(async()=>{resolve({data:{allowed:true,is_admin:false},error:null});await Promise.resolve();});
     expect(screen.queryByText("Contenido privado")).not.toBeInTheDocument();
     view.unmount();
@@ -36,7 +36,7 @@ it("does not mount remote content until the server verifies membership", async (
     </BetaGate>,
   );
   expect(screen.queryByText("Contenido privado")).not.toBeInTheDocument();
-  await screen.findByText(/Esta cuenta necesita una invitación/);
+  await screen.findByText(/Esta cuenta todavía no tiene acceso/);
   mock.rpc.mockResolvedValue({
     data: { allowed: true, is_admin: false },
     error: null,

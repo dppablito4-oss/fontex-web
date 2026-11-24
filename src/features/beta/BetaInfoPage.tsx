@@ -11,20 +11,20 @@ export function BetaInfoPage() {
             Ayuda y datos durante la beta
           </h1>
           <p className="mt-3 text-muted-foreground">
-            Estamos probando Fontex con un grupo invitado. Guarda una copia de
+            El registro de Fontex está abierto. Guarda una copia de
             los materiales que necesites conservar y cuéntanos si algo falla.
           </p>
         </header>
         <Card className="p-5 sm:p-7 space-y-3">
-          <h2 className="text-xl font-semibold">Empezar y pedir acceso</h2>
+          <h2 className="text-xl font-semibold">Crear una cuenta</h2>
           <p>
             El lienzo y las plantillas se pueden usar sin cuenta. Para guardar
-            en tu cuenta, usar aulas, documentos o IA, el administrador debe
-            autorizar tu correo.
+            en tu cuenta, usar aulas, documentos o IA, crea una cuenta con
+            tu correo. No necesitas una invitación.
           </p>
           <p>
-            Regístrate con ese correo y confirma el enlace recibido. Las
-            invitaciones nuevas duran 30 días. Si tu acceso fue revocado,
+            Regístrate y confirma el enlace recibido. Cada cuenta nueva recibe
+            5 créditos iniciales de IA. Si tu acceso fue revocado,
             consulta al administrador.
           </p>
           <a className="text-primary underline" href="#/lienzo">
@@ -41,7 +41,7 @@ export function BetaInfoPage() {
             impedir recuperarlos.
           </p>
           <p>
-            Con acceso a la beta, se guardan tu cuenta, perfil, matrícula,
+            Con una cuenta confirmada, se guardan tu cuenta, perfil, matrícula,
             materiales y conversaciones en los servicios de Fontex. Los lienzos
             de tu cuenta son privados. Los PDF pueden compartirse con grupos o
             aulas cuando autorizas ese acceso.

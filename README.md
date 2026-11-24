@@ -2,6 +2,8 @@
 
 Lienzo matemático interactivo para crear, explicar y practicar, con aulas y biblioteca documental. La web es una SPA de React, TypeScript y Vite; el motor calcula en el navegador. La IA propone JSON validado, sin ejecutar código generado.
 
+El registro por correo está abierto: cada cuenta recibe 5 créditos iniciales de generación y debe confirmar su correo. No se necesita invitación para crear la cuenta; las aulas privadas mantienen sus propios enlaces de acceso.
+
 ## Qué incluye
 
 - **Lienzo:** doce primitivas componibles y 40 plantillas, variables compartidas, edición, historial, pestañas, presentación, JSON y descarga directa de PDF.

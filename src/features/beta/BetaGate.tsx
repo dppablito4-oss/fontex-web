@@ -6,13 +6,13 @@ export function BetaGate({ children }: { children: ReactNode }) {
   if (access.status === "allowed" || access.status === "local") return children;
   return (
     <main className="page-wrap space-y-5">
-      <h1 className="text-2xl font-bold">Beta cerrada de Fontex</h1>
+      <h1 className="text-2xl font-bold">Acceso a Fontex</h1>
       <p role="status">
         {access.status === "loading"
-          ? "Verificando tu invitación…"
+          ? "Verificando tu cuenta…"
           : access.status === "denied"
-          ? "Esta cuenta necesita una invitación del administrador para acceder a aulas, documentos e IA."
-          : "No se pudo verificar tu invitación. Intenta de nuevo."}
+          ? "Esta cuenta todavía no tiene acceso. Confirma tu correo; si ya lo confirmaste, consulta al administrador."
+          : "No se pudo verificar tu cuenta. Intenta de nuevo."}
       </p>
       <p>
         Puedes seguir creando con las plantillas y las herramientas locales.

@@ -2,7 +2,7 @@
 
 ## Uso y saldo
 
-Cada cuenta invitada recibe **5 créditos iniciales de generación**. Es una asignación única, sin renovación diaria o mensual; las cuentas existentes también reciben el saldo al activar esta política. El chat del lienzo no consume créditos. Durante la beta, chat y construcción comparten límites de frecuencia, concurrencia y presupuesto: inicialmente 20 solicitudes/hora, 60/24 horas móviles y una solicitud simultánea por cuenta. Los tutores del aula de práctica y documental conservan además sus propias cuotas. Consulta [la guía de beta](beta-cerrada.md) para los límites globales, invitaciones y activación.
+Cada cuenta nueva recibe **5 créditos iniciales de generación**. Es una asignación única, sin renovación diaria o mensual; las cuentas existentes también reciben el saldo al activar esta política. El chat del lienzo no consume créditos. Durante la beta, chat y construcción comparten límites de frecuencia, concurrencia y presupuesto: inicialmente 20 solicitudes/hora, 60/24 horas móviles y una solicitud simultánea por cuenta. Los tutores del aula de práctica y documental conservan además sus propias cuotas. Consulta [la guía de beta](beta-cerrada.md) para los límites globales y administración del acceso.
 
 Una solicitud de **Crear lienzo / Crear en el lienzo** consume un crédito cuando el servidor termina y valida una propuesta. Una propuesta válida completada cuenta aunque luego el usuario cambie de documento, decida no utilizarla o pierda la conexión después de completarse. Conversar, editar, usar plantillas, presentar y exportar PDF no consumen saldo.
 

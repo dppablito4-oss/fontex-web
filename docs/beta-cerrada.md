@@ -1,6 +1,12 @@
-# Preparación y operación de la beta cerrada
+# Operación de Fontex y registro abierto
 
 Cambios del 14 de noviembre de 2026, a partir de la [auditoría](AUDITORIA-BETA-CERRADA-2026-11-14.md). El backend de producción `goegjuglstapjwcckawp` ya incorpora los controles de esta beta. El resultado de la publicación se registra en [el acta de despliegue](DESPLIEGUE-BETA-2026-11-14.md).
+
+## Registro abierto desde el 24 de noviembre de 2026
+
+La migración `20261124151106_open_signup_five_credits.sql` sustituye la exigencia de invitación descrita en las secciones históricas de esta guía. Cualquier persona puede registrarse por correo y obtiene **5 créditos iniciales, una sola vez**. Debe confirmar su correo para acceder a datos remotos e IA. Las cuentas existentes sin membresía se incorporan automáticamente; se conservan los saldos, los créditos ya usados y las revocaciones expresas.
+
+El registro de Auth del proyecto compartido queda abierto, sin modificar los permisos ni los datos de otras aplicaciones. Los enlaces de aula siguen siendo necesarios para entrar a una clase privada. Se conserva la conversión de invitados y sus créditos según la política de aulas, sin permitir reclamar dos veces un mismo invitado. Administradores, roles, cuotas, RLS, pausa de IA y confirmación de correo siguen protegidos. El identificador técnico `closed-beta-v4` se conserva por compatibilidad con el verificador de despliegue.
 
 ## Cambios implementados
 

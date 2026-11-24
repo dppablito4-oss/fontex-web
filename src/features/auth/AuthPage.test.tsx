@@ -24,6 +24,8 @@ describe("Fontex authentication screen", () => {
     fireEvent.click(screen.getByRole("button", { name: "Crear cuenta" }));
 
     expect(screen.getByLabelText("Nombre visible")).toBeRequired();
+    expect(screen.getByText(/recibe 5 créditos iniciales de IA/)).toBeInTheDocument();
+    expect(screen.queryByText(/correo autorizado por el administrador/)).not.toBeInTheDocument();
     expect(
       screen.getAllByRole("button", { name: "Crear cuenta" }).find((button) => button.getAttribute("type") === "submit"),
     ).toBeInTheDocument();

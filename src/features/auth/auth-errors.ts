@@ -2,7 +2,7 @@ export function readableAuthError(error: unknown): string {
   const item = error && typeof error === 'object' ? error as { message?: string; code?: string; status?: number } : {};
   const message = item.message?.toLowerCase() ?? '';
   switch (item.code) {
-    case 'unexpected_failure': case 'database_error': return 'No se pudo completar la solicitud. Si estás creando una cuenta, usa un correo invitado por el administrador de la beta.';
+    case 'unexpected_failure': case 'database_error': return 'No se pudo completar la solicitud. Inténtalo de nuevo en unos minutos.';
     case 'email_not_confirmed': return 'Confirma tu correo antes de iniciar sesión. Revisa también la carpeta de spam o solicita un nuevo enlace.';
     case 'invalid_credentials': return 'El correo o la contraseña no son correctos.';
     case 'user_already_exists': case 'email_exists': return 'Ese correo ya está registrado. Inicia sesión con tu contraseña.';
