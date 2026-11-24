@@ -98,3 +98,8 @@
 }
 
 .ai-account-table-wrap{overflow-x:auto;border:1px solid var(--ui-border);border-radius:12px;margin-top:20px}.ai-account-table{width:100%;border-collapse:collapse;text-align:left;font-size:.875rem}.ai-account-table caption{text-align:left;padding:14px 16px;font-weight:650;background:var(--ui-subtle)}.ai-account-table th{font-size:.75rem;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;background:var(--ui-subtle)}.ai-account-table th,.ai-account-table td{padding:14px 16px;border-bottom:1px solid var(--ui-border)}.ai-account-table tr:last-child td{border:0}.ai-account-table tr[data-selected=true]{background:var(--ui-success-surface)}.ai-account-table td:first-child{min-width:200px}.ai-role-badge{display:inline-block;padding:4px 9px;background:var(--ui-subtle);border-radius:999px;font-size:.75rem}.ai-table-balance{font-size:1.2rem;font-variant-numeric:tabular-nums}.ai-admin-detail{border:1px solid var(--ui-border);border-radius:14px;overflow:hidden}.ai-admin-detail>summary{padding:20px;cursor:pointer;font-weight:650}.ai-credit-admin section[aria-label="Asignar créditos"]{padding:20px;border:1px solid var(--ui-border);border-radius:14px;margin-top:24px}
+
+.ai-account-controls { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
+.ai-account-controls h3 { font-weight: 700; margin-bottom: 12px; }
+.ai-account-controls form p { grid-column: 1 / -1; font-size: 13px; line-height: 1.6; }
+.ai-account-controls details { margin-top: 16px; }

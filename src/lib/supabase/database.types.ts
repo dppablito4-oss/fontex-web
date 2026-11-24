@@ -474,6 +474,10 @@ export type Database = {
       admin_beta_overview: { Args: Record<string,never>; Returns: Json };
       admin_set_beta_ai_enabled: { Args: {p_enabled:boolean}; Returns: undefined };
       get_ai_credit_status: { Args: Record<string,never>; Returns: Json };
+      admin_account_access: { Args: {p_user_id:string;p_action:string;p_hours:number;p_reason:string;p_request_id:string}; Returns: Json };
+      admin_account_history: { Args: {p_user_id:string}; Returns: Json };
+      admin_prepare_account_deletion: { Args: {p_user_id:string;p_confirm:string;p_reason:string;p_request_id:string}; Returns: Json };
+      admin_finish_account_deletion: { Args: {p_user_id:string;p_request_id:string;p_actor:string}; Returns: Json };
       admin_list_ai_accounts: { Args: {p_search?:string;p_limit?:number;p_offset?:number}; Returns: Json };
       admin_grant_ai_credits: { Args: {p_user_id:string;p_amount:number;p_reason:string;p_request_id:string}; Returns: Json };
       admin_ai_credit_history: { Args: {p_user_id:string}; Returns: Json };

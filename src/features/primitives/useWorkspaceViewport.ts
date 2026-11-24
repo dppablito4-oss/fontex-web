@@ -7,18 +7,18 @@ const editable = "input,textarea,select,[contenteditable=true]";
 /** Native scrolling bounds the camera; navigation never changes a lesson. */
 export function useWorkspaceViewport(
   stageRef: RefObject<HTMLDivElement | null>,
-  disabled: boolean,
   zoom: number,
   onZoom: (zoom: number) => void,
 ) {
   const [moving, setMoving] = useState(false);
   const space = useRef(false);
+  const suppressClick = useRef(0);
   const drag = useRef<{ x: number; y: number; left: number; top: number } | null>(null);
   const pending = useRef<{ left: number; top: number } | null>(null);
   const zoomTo = useCallback((value: number, anchor?: { x: number; y: number }) => {
     const node = stageRef.current;
     const next = Math.max(MIN_CANVAS_ZOOM, Math.min(MAX_CANVAS_ZOOM, value));
-    if (!node || disabled || next === zoom) return;
+    if (!node || next === zoom) return;
     const padding = getComputedStyle(node);
     const x = (anchor?.x ?? node.clientWidth / 2) - (parseFloat(padding.paddingLeft) || 0),
       y = (anchor?.y ?? node.clientHeight / 2) - (parseFloat(padding.paddingTop) || 0);
@@ -27,7 +27,7 @@ export function useWorkspaceViewport(
       top: (node.scrollTop + y) * next / zoom - y,
     };
     onZoom(next);
-  }, [stageRef, disabled, zoom, onZoom]);
+  }, [stageRef, zoom, onZoom]);
   useLayoutEffect(() => {
     const node = stageRef.current, position = pending.current;
     if (node && position) node.scrollTo(position);
@@ -38,9 +38,9 @@ export function useWorkspaceViewport(
       if ((e.target as HTMLElement)?.closest(editable)) return;
       if (e.code === "Space" && !(e.target as HTMLElement)?.closest("button,summary,a,[role=button]")) {
         space.current = true;
-        if (!disabled && stageRef.current?.contains(e.target as Node)) e.preventDefault();
+        if (stageRef.current?.contains(e.target as Node)) e.preventDefault();
       }
-      if (!disabled && (e.ctrlKey || e.metaKey) && stageRef.current?.contains(e.target as Node)) {
+      if ((e.ctrlKey || e.metaKey) && stageRef.current?.contains(e.target as Node)) {
         if (["+", "=", "-", "0"].includes(e.key)) {
           e.preventDefault();
           zoomTo(e.key === "0" ? 1 : zoom * (e.key === "-" ? 1 / 1.2 : 1.2));
@@ -57,10 +57,10 @@ export function useWorkspaceViewport(
       window.removeEventListener("keyup", up);
       window.removeEventListener("blur", blur);
     };
-  }, [stageRef, disabled, zoom, zoomTo]);
+  }, [stageRef, zoom, zoomTo]);
   useEffect(() => {
     const node = stageRef.current;
-    if (!node || disabled) return;
+    if (!node) return;
     const wheel = (e: WheelEvent) => {
       if ((!e.ctrlKey && !e.metaKey) || (e.target as Element).closest(editable)) return;
       e.preventDefault();
@@ -75,7 +75,43 @@ export function useWorkspaceViewport(
     // Capture before nested plots: this gesture always scales the whole canvas.
     node.addEventListener("wheel", wheel, { passive: false, capture: true });
     return () => node.removeEventListener("wheel", wheel, true);
-  }, [stageRef, disabled, zoom, zoomTo]);
+  }, [stageRef, zoom, zoomTo]);
+  const pinch = useRef<{ distance: number; zoom: number; x: number; y: number } | null>(null);
+  useEffect(() => {
+    const node = stageRef.current;
+    if (!node) return;
+    const geometry = (e: TouchEvent) => {
+      const a = e.touches[0]!, b = e.touches[1]!, box = node.getBoundingClientRect(), css = getComputedStyle(node);
+      return { distance: Math.hypot(b.clientX-a.clientX, b.clientY-a.clientY),
+        x: (a.clientX+b.clientX)/2-box.left-node.clientLeft-(parseFloat(css.paddingLeft)||0),
+        y: (a.clientY+b.clientY)/2-box.top-node.clientTop-(parseFloat(css.paddingTop)||0) };
+    };
+    const start = (e: TouchEvent) => {
+      if (e.touches.length !== 2 || (e.target as Element).closest(`${editable},.pc-ink-active`)) return;
+      e.preventDefault();
+      const point = geometry(e);
+      if (point.distance < 2) return;
+      suppressClick.current = performance.now()+500;
+      pinch.current = { distance: point.distance, zoom, x: (node.scrollLeft+point.x)/zoom, y: (node.scrollTop+point.y)/zoom };
+    };
+    const move = (e: TouchEvent) => {
+      const initial = pinch.current;
+      if (!initial || e.touches.length !== 2) return;
+      e.preventDefault(); e.stopPropagation();
+      const point = geometry(e), next = Math.max(MIN_CANVAS_ZOOM, Math.min(MAX_CANVAS_ZOOM, initial.zoom*point.distance/initial.distance));
+      const position = { left: initial.x*next-point.x, top: initial.y*next-point.y };
+      if (next === zoom) node.scrollTo(position);
+      else { pending.current = position; onZoom(next); }
+    };
+    const end = () => { if(pinch.current)suppressClick.current=performance.now()+350; pinch.current = null; };
+    node.addEventListener("touchstart", start, { passive: false, capture: true });
+    node.addEventListener("touchmove", move, { passive: false, capture: true });
+    node.addEventListener("touchend", end); node.addEventListener("touchcancel", end);
+    return () => {
+      node.removeEventListener("touchstart", start, true); node.removeEventListener("touchmove", move, true);
+      node.removeEventListener("touchend", end); node.removeEventListener("touchcancel", end);
+    };
+  }, [stageRef, zoom, onZoom]);
   function finish(e: PointerEvent<HTMLDivElement>) {
     if (!drag.current) return;
     drag.current = null;
@@ -86,8 +122,9 @@ export function useWorkspaceViewport(
     moving, zoomTo,
     reset: () => { pending.current = null; stageRef.current?.scrollTo({ left: 0, top: 0 }); },
     events: {
+      onClickCapture: (e: React.MouseEvent<HTMLDivElement>) => { if(e.detail>0&&performance.now()<suppressClick.current){e.preventDefault();e.stopPropagation();} },
       onPointerDown: (e: PointerEvent<HTMLDivElement>) => {
-        if (disabled || ![1, 2].includes(e.button) && !(space.current && e.button === 0) ||
+        if (![1, 2].includes(e.button) && !(space.current && e.button === 0) ||
           (e.target as Element).closest(`${editable},button,a,.pc-plot-overlay`)) return;
         e.preventDefault();
         e.stopPropagation();

@@ -45,3 +45,9 @@ La migración `20261115013301` se aplicó al proyecto alojado tras pasar sus 269
 La comprobación alojada generó una propuesta real, confirmó su recibo y un saldo de cuatro créditos, rechazó su UUID duplicado y abrió el editor en Chromium sin aplicar la respuesta original. El editor recuperó y guardó cinco elementos; recargar mantuvo los cinco y el mismo saldo. La misma cuenta temporal comprobó denegación de administración a AAL1, enrolamiento TOTP desde la interfaz y carga del panel tras verificar el código. No hubo errores de página sin capturar; sus sesiones, cuenta e invitación se limpiaron.
 
 También se comprobó entrega real de confirmación a una cuenta nueva mediante un alias temporal del Gmail autorizado. El destinatario confirmó recepción y regreso a Fontex; Auth acreditó `email_confirmed_at` y `last_sign_in_at`. Se eliminaron únicamente sus sesiones, cuenta temporal e invitación. La cuenta habitual y su contraseña permanecen intactas.
+
+## Zoom y espaciado en celular (24 de noviembre de 2026)
+
+La lectura adaptable del celular también admite el zoom del lienzo completo: botones +/−, Ajustar ancho y pellizco con dos dedos dentro del lienzo. Con un dedo se mantiene el desplazamiento. La interfaz exterior no cambia de tamaño y el gesto no edita las posiciones guardadas ni consume IA. Cuando se está dibujando sobre un trazo activo, los botones permiten ampliar sin iniciar un gesto de dibujo accidental.
+
+La vista móvil mide la altura real de la lección antes de escalarla. Los textos se ajustan al contenido, sin reservar la altura de un encabezado oculto; las etapas y modelos conservan separaciones compactas. Escritorio mantiene rueda, arrastre, zoom y edición de valores, y el PDF conserva su flujo independiente.

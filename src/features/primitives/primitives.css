@@ -837,12 +837,8 @@
   .pc-stage {
     padding: 10px 8px;
   }
-  .pc-board-space,
-  .pc-board {
-    width: 100%!important;
-    height: auto!important;
-    transform: none!important;
-  }
+  .pc-stage .pc-board-space { overflow: clip; margin: 0; }
+  .pc-stage .pc-board { transform-origin: top left; }
   .pc-object {
     position: relative;
     inset: auto!important;
@@ -1604,3 +1600,22 @@ dialog.pc-dialog::backdrop { background: #0008; }
 .pc-solid-measures strong { color: var(--pc-ink); }
 .pc-export-sheet .pc-solid-controls, .pc-export-sheet .pc-solid-hint { display: none; }
 @media print { .pc-solid-controls, .pc-solid-hint { display: none; } }
+
+/* Compact lesson blocks keep their editor handles outside the reading flow. */
+.pc-stage .pc-node-math_block > .pc-object-heading { position: absolute; inset: -24px 0 auto; }
+.pc-stage .pc-node-math_block:not(.pc-selected) > .pc-object-heading { visibility: hidden; }
+.pc-stage .pc-node-math_block .pc-object-content { padding-top: 8px; padding-bottom: 12px; }
+
+@media (max-width:900px) {
+  .pc-stage .pc-mobile-lesson { margin-bottom: 14px; }
+  .pc-stage .pc-mobile-lesson:last-child { margin-bottom: 0; }
+  .pc-stage .pc-mobile-lesson > .pc-object { margin-bottom: 0; }
+  .pc-bottom .pc-zoom { gap: 4px; font-size: 11px; }
+  .pc-bottom { flex-wrap: wrap; height: auto; gap: 4px; }
+  .pc-bottom button { padding-inline: 6px; }
+  .pc-bottom > span:first-child { display: none; }
+  .pc-stage { touch-action: pan-x pan-y; }
+}
+
+.pc-stage .pc-math-card { padding: 8px 12px; }
+.pc-stage { scrollbar-gutter: stable; }

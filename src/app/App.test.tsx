@@ -188,9 +188,8 @@ it("expands fixed-height content and moves the following object below it", async
       value: 450,
     });
     act(() => observers.get(content)!([], {} as ResizeObserver));
-    await waitFor(() => expect(frame.style.height).toBe("474px"));
-    expect(screen.getByRole("article", { name: "Texto siguiente" }).style.top)
-      .toBe("534px");
+    await waitFor(() => expect(parseFloat(frame.style.height)).toBeGreaterThanOrEqual(450));
+    expect(parseFloat(screen.getByRole("article", { name: "Texto siguiente" }).style.top) - (20 + parseFloat(frame.style.height))).toBe(40);
   } finally {
     vi.stubGlobal("ResizeObserver", previous);
   }
@@ -216,8 +215,11 @@ it("edits a 100 cm measure, follows it on the plot, and restores automatic fitti
     return Math.max(...xs) - Math.min(...xs);
   };
   const originalWidth = width();
-  fireEvent.click(screen.getByRole("button", { name: "Acercar plano" }));
-  fireEvent.click(screen.getByRole("button", { name: "Acercar plano" }));
+  const gestureClock = vi.spyOn(Date, "now").mockReturnValue(10000);
+  try {
+    fireEvent.click(screen.getByRole("button", { name: "Acercar plano" }));
+    fireEvent.click(screen.getByRole("button", { name: "Acercar plano" }));
+  } finally { gestureClock.mockRestore(); }
   expect(width()).toBeGreaterThan(originalWidth);
   expect(screen.getByText("Vista libre")).toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: "Deshacer" }));
