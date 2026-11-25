@@ -451,6 +451,7 @@ export type Database = {
       };
       admin_list_assessments: { Args: { p_offset: number }; Returns: Json };
       admin_get_university_pretest: { Args: never; Returns: Json };
+      admin_get_tics_pretest: { Args: never; Returns: Json };
       admin_get_assessment: { Args: { p_form: string }; Returns: Json };
       admin_set_assessment_open: { Args: { p_form: string; p_open: boolean }; Returns: boolean };
       admin_assessment_answers: { Args: { p_form: string; p_codes: string[] }; Returns: Json };

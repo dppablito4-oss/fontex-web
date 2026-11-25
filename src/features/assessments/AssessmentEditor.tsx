@@ -2,7 +2,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { type FormEvent, useRef, useState } from "react";
 import { Button } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
-import { universityTechnicalCount } from "./assessment-score";
+import { assessmentSections, universityTechnicalCount } from "./assessment-score";
 import type { AssessmentTemplate } from "./assessment-templates";
 import { type AssessmentKind, createAssessment, questionKindLabel, type QuestionKind } from "./service";
 
@@ -88,9 +88,9 @@ export function AssessmentEditor({ template, onPublished, onCancel }: {
   }
 
   return <Card className="space-y-5 p-4 sm:p-6">
-    <h3 className="text-lg font-semibold">{graded ? "Revisar pretest universitario de Fontex" : template ? "Revisar pretest de Matemática" : "Nueva evaluación"}</h3>
+    <h3 className="text-lg font-semibold">{template ? `Revisar ${template.title}` : "Nueva evaluación"}</h3>
     {template && <p className="text-sm text-muted-foreground">{graded
-      ? "6 preguntas de arquitectura y desarrollo y 4 de uso de Fontex. Cada acierto vale un punto."
+      ? "Diez situaciones para analizar. Puedes editar las preguntas, las alternativas y la respuesta correcta antes de publicar. Cada acierto vale un punto."
       : "12 preguntas editables de aritmética, álgebra, geometría y datos."}</p>}
     <form className="space-y-4" onSubmit={(event) => void submit(event)}>
       <fieldset className="space-y-4" disabled={pending}>
@@ -109,7 +109,7 @@ export function AssessmentEditor({ template, onPublished, onCancel }: {
         </label>
         {questions.map((question, index) => <section key={question.id} aria-label={`Pregunta ${index + 1}`} className="space-y-4 rounded-xl border border-border bg-subtle/40 p-4 sm:p-5">
           {graded && (index === 0 || index === universityTechnicalCount) && <h4 className="font-semibold">
-            {index === 0 ? "Arquitectura y desarrollo · 60 %" : "Uso de Fontex · 40 %"}
+            {index === 0 ? `${assessmentSections[0]} · 60 %` : `${assessmentSections[1]} · 40 %`}
           </h4>}
           <label className="form-field"><span>Pregunta {index + 1}</span>
             <input required maxLength={400} value={question.prompt} onChange={(event) => update(question.id, { prompt: event.target.value })} />

@@ -11,7 +11,7 @@ const question = z.object({
   options: z.array(z.string()),
 });
 const score = z.number().int().min(0).max(universityQuestionCount);
-const universityTemplate = z.object({
+const gradedTemplate = z.object({
   title: z.string(),
   kind: z.literal("pretest"),
   description: z.string(),
@@ -90,7 +90,13 @@ export async function listAssessments(offset: number) {
 export async function loadUniversityPretest() {
   const { data, error } = await client().rpc("admin_get_university_pretest");
   if (error) throw adminError(error.code, "No se pudo cargar la plantilla de Fontex.");
-  return universityTemplate.parse(data);
+  return gradedTemplate.parse(data);
+}
+
+export async function loadTicsPretest() {
+  const { data, error } = await client().rpc("admin_get_tics_pretest");
+  if (error) throw adminError(error.code, "No se pudo cargar Pretest TICs 1.");
+  return gradedTemplate.parse(data);
 }
 
 export async function createAssessment(values: {

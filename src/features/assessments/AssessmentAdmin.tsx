@@ -9,7 +9,7 @@ import { AssessmentSheet } from "./AssessmentPrint";
 import {
   type AssessmentCode, type AssessmentDetail, type AssessmentSummary, assessmentAnswerBatch,
   assessmentKindLabel, assessmentPageSize, deleteAssessment, deleteAssessmentQuestion, deliveryDate, getAssessment,
-  getAssessmentAnswers, listAssessments, loadUniversityPretest, questionKindLabel, setAssessmentOpen,
+  getAssessmentAnswers, listAssessments, loadTicsPretest, loadUniversityPretest, questionKindLabel, setAssessmentOpen,
 } from "./service";
 
 function errorText(error: unknown, fallback: string) {
@@ -49,11 +49,11 @@ export function AssessmentAdmin() {
     setRefresh((current) => current + 1);
   }
 
-  async function openUniversityTemplate() {
+  async function openTemplate(load: () => Promise<AssessmentTemplate>) {
     setTemplateBusy(true);
     setTemplateError("");
     try {
-      setEditor(await loadUniversityPretest());
+      setEditor(await load());
       setSelected(null);
     } catch (failure) {
       setTemplateError(errorText(failure, "No se pudo cargar la plantilla de Fontex."));
@@ -70,7 +70,10 @@ export function AssessmentAdmin() {
       </div>
       {!editor && <div className="flex flex-wrap gap-2">
         <Button disabled={templateBusy} onClick={() => { setTemplateError(""); setEditor("blank"); setSelected(null); }}><Plus className="size-4" aria-hidden /> Nueva evaluación</Button>
-        <Button disabled={templateBusy} onClick={() => void openUniversityTemplate()}>
+        <Button disabled={templateBusy} onClick={() => void openTemplate(loadTicsPretest)}>
+          {templateBusy ? "Cargando plantilla…" : "Cargar Pretest TICs 1"}
+        </Button>
+        <Button disabled={templateBusy} variant="secondary" onClick={() => void openTemplate(loadUniversityPretest)}>
           {templateBusy ? "Cargando plantilla…" : "Cargar pretest universitario de Fontex"}
         </Button>
         <Button disabled={templateBusy} variant="secondary" onClick={() => { setTemplateError(""); setEditor(secondaryMathPretest); setSelected(null); }}>

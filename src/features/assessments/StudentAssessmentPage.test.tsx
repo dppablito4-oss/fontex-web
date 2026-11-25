@@ -27,8 +27,8 @@ describe("pretest desde el navegador", () => {
   it("conserva el identificador y el inicio del cronómetro al recargar", async () => {
     const initial = render(<StudentAssessmentPage token={token} />);
     expect(await screen.findByText("Tiempo transcurrido")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Arquitectura y desarrollo" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Uso de Fontex" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Análisis de situaciones" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Uso educativo" })).toBeInTheDocument();
     const [seenToken, browser] = vi.mocked(loadBrowserAssessment).mock.calls[0]!;
     expect(seenToken).toBe(token);
     expect(localStorage.getItem(startKey)).not.toBeNull();

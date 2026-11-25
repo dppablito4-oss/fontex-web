@@ -4,7 +4,7 @@ import { Button } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
 import { AssessmentScore } from "./AssessmentScore";
 import { AssessmentTimer } from "./AssessmentTimer";
-import { universityTechnicalCount } from "./assessment-score";
+import { assessmentSections, universityTechnicalCount } from "./assessment-score";
 import {
   assessmentKindLabel, type BrowserAssessment, loadBrowserAssessment, type StudentAnswer,
   submitBrowserAssessment, validAssessmentToken,
@@ -163,7 +163,7 @@ export function StudentAssessmentPage({ token }: { token: string }) {
           const multiple = question.kind === "multiple";
           return <div className="space-y-3" key={question.position}>
             {form.graded && (index === 0 || index === universityTechnicalCount) && <h2 className="text-lg font-semibold">
-              {index === 0 ? "Arquitectura y desarrollo" : "Uso de Fontex"}
+              {assessmentSections[index === 0 ? 0 : 1]}
             </h2>}
             <Card className="p-5">
             {question.kind !== "text" ? <fieldset disabled={pending} className="space-y-3">
