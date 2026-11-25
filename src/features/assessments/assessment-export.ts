@@ -9,8 +9,8 @@ export function assessmentWorkbookSheets(
   form: AssessmentDetail,
   answers: ReadonlyMap<string, string[]>,
 ) {
-  const heading = ["Estudiante", "Código", "Fecha de entrega (UTC)",
-    ...form.questions.map((question) => `${question.position}. ${question.prompt}`),
+  const heading = ["Estudiante", "Fecha de entrega (UTC)",
+    ...form.questions.map((question, index) => `${index + 1}. ${question.prompt}`),
   ];
   const data: SheetData = [heading.map((label) => ({ ...textCell(label), fontWeight: "bold" }))];
 
@@ -19,7 +19,6 @@ export function assessmentWorkbookSheets(
     if (!item.student_name || !item.submitted_at || !values) continue;
     data.push([
       textCell(item.student_name),
-      textCell(item.code),
       { type: Date, value: new Date(item.submitted_at), format: "yyyy-mm-dd hh:mm:ss" },
       ...values.map(textCell),
     ]);
@@ -27,7 +26,7 @@ export function assessmentWorkbookSheets(
   return [
     {
       data, sheet: "Respuestas", stickyRowsCount: 1,
-      columns: [{ width: 32 }, { width: 17 }, { width: 26 }, ...form.questions.map(() => ({ width: 44 }))],
+      columns: [{ width: 32 }, { width: 26 }, ...form.questions.map(() => ({ width: 44 }))],
     },
     {
       sheet: "Evaluación", columns: [{ width: 24 }, { width: 72 }],

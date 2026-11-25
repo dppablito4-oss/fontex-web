@@ -39,6 +39,24 @@ describe("plantilla de pretest en Administración", () => {
     await screen.findByRole("alert");
   });
 
+  it("permite guardar selección múltiple sin pedir cantidad de códigos", async () => {
+    render(<AssessmentAdmin />);
+    fireEvent.click(screen.getByRole("button", { name: "Nueva evaluación" }));
+    expect(screen.queryByLabelText(/códigos individuales/i)).not.toBeInTheDocument();
+    fireEvent.change(screen.getByRole("textbox", { name: "Título" }), { target: { value: "Encuesta" } });
+    fireEvent.change(screen.getByRole("textbox", { name: "Pregunta 1" }), { target: { value: "Elige colores" } });
+    fireEvent.change(screen.getByRole("combobox", { name: "Tipo de respuesta" }), { target: { value: "multiple" } });
+    fireEvent.change(screen.getByRole("textbox", { name: "Opciones, una por línea" }), {
+      target: { value: "Verde\nNaranja" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Publicar evaluación" }));
+    await waitFor(() => expect(createAssessment).toHaveBeenCalledTimes(1));
+    expect(vi.mocked(createAssessment).mock.calls[0]?.[0].questions[0]).toEqual({
+      kind: "multiple", prompt: "Elige colores", options: ["Verde", "Naranja"],
+    });
+    await screen.findByRole("alert");
+  });
+
   it("mantiene la creación desde cero, incluida la opción Encuesta", () => {
     render(<AssessmentAdmin />);
     fireEvent.click(screen.getByRole("button", { name: "Nueva evaluación" }));

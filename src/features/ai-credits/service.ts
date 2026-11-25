@@ -52,7 +52,7 @@ export async function listCreditAccounts(search: string, offset: number) {
     page_size: z.number().int(),
   }).parse(data);
   return {
-    accounts: result.accounts.slice(0, 25),
+    accounts: result.accounts.slice(0, 25).filter(({ status }) => status !== "deleted"),
     hasMore: result.accounts.length > 25,
   };
 }

@@ -67,5 +67,12 @@ select extensions.throws_ok($$insert into public.studio_workspaces(user_id,state
 select extensions.is((select count(*)::int from public.organizations where id='accc3000-0000-4000-8000-000000000003'),0,'private workspace ownership does not block personal deletion');
 select extensions.ok(not has_table_privilege('authenticated','fontex_beta.account_events','insert'),'audit data is server controlled');
 select extensions.is((select balance from fontex_ai.wallets where user_id='accc0000-0000-4000-8000-000000000003'),5,'peer credits remain unchanged');
+set local role authenticated;
+select set_config('request.jwt.claims','{"role":"authenticated","sub":"accc0000-0000-4000-8000-000000000001","aal":"aal2"}',true);
+select extensions.is(jsonb_array_length(public.admin_list_ai_accounts('control-user@example.invalid', 25, 0)->'accounts'),
+  0, 'completed deletions disappear from account search');
+select extensions.is(jsonb_array_length(public.admin_list_ai_accounts('control-peer@example.invalid', 25, 0)->'accounts'),
+  1, 'other accounts remain visible');
+reset role;
 select * from extensions.finish();
 rollback;

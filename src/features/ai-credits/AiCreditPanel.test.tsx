@@ -60,6 +60,7 @@ it("hides registered accounts and credit assignment from normal users", () => {
 });
 it("lets the administrator choose an account and add credits", async () => {
   render(<AiCreditPanel />);
+  fireEvent.click(screen.getByRole("button", { name: "Cuentas y créditos" }));
   fireEvent.click(
     await screen.findByRole("button", { name: /Persona de prueba/ }),
   );
@@ -77,6 +78,7 @@ it("reuses a grant request after a failed network confirmation", async () => {
   mock.grant.mockRejectedValueOnce(new Error("No se pudo confirmar"))
     .mockResolvedValueOnce({ balance: 10, duplicate: true });
   render(<AiCreditPanel />);
+  fireEvent.click(screen.getByRole("button", { name: "Cuentas y créditos" }));
   fireEvent.click(
     await screen.findByRole("button", { name: /Persona de prueba/ }),
   );

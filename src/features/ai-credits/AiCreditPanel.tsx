@@ -1,3 +1,4 @@
+import { ClipboardList, Settings2, Users } from "lucide-react";
 import {
   type FormEvent,
   lazy,
@@ -167,7 +168,7 @@ function CreditAdministration() {
                 <td>{accountStatusNames[account.status??"active"]}</td>
                 <td><strong className="ai-table-balance">{account.credits}</strong></td>
                 <td>{new Date(account.created_at).toLocaleDateString("es")}</td>
-                <td><Button type="button" variant="secondary" size="sm" disabled={pending} aria-pressed={selected?.user_id===account.user_id}
+                <td><Button type="button" variant="ghost" size="sm" disabled={pending} aria-pressed={selected?.user_id===account.user_id}
                   aria-label={`Administrar ${account.display_name} · ${account.email ?? "Cuenta sin correo"}`}
                   onClick={()=>{setSelected(account);setEvents([]);setHistoryError("");setMessage("");}}>Administrar cuenta</Button></td>
               </tr>)}</tbody>
@@ -200,9 +201,21 @@ function CreditAdministration() {
           Siguiente
         </Button>
       </div>
-      {selected && <AccountControls key={selected.user_id} account={selected} disabled={pending} onPending={setPending} onUpdated={async()=>{
-        const result=await listCreditAccounts(query,offset);setAccounts(result.accounts);setMore(result.hasMore);
-        const updated=result.accounts.find(a=>a.user_id===selected.user_id);setSelected(current=>current?.user_id===selected.user_id?updated??null:current);
+      {selected && <AccountControls key={selected.user_id} account={selected} disabled={pending} onPending={setPending} onUpdated={async(removed)=>{
+        if (removed) {
+          setAccounts(current => current.filter(account => account.user_id !== selected.user_id));
+          setSelected(current => current?.user_id === selected.user_id ? null : current);
+          setMessage("Cuenta eliminada de Fontex.");
+        }
+        const result = await listCreditAccounts(query, offset);
+        if (result.accounts.length === 0 && offset > 0) {
+          setOffset(Math.max(0, offset - 25));
+          return;
+        }
+        setAccounts(result.accounts);
+        setMore(result.hasMore);
+        const updated = result.accounts.find(account => account.user_id === selected.user_id);
+        setSelected(current => current?.user_id === selected.user_id ? updated ?? null : current);
       }}/>}
       {selected && (
         <section aria-label="Asignar créditos">
@@ -249,46 +262,43 @@ function CreditAdministration() {
     </Card>
   );
 }
+const adminSections = [
+  { id: "assessments", label: "Encuestas y pretest", icon: ClipboardList },
+  { id: "accounts", label: "Cuentas y créditos", icon: Users },
+  { id: "tools", label: "Herramientas", icon: Settings2 },
+] as const;
+
 export function AiCreditPanel() {
   const { status, error, refresh } = useAiCredits();
-  const [openedAssessments, setOpenedAssessments] = useState(false);
-  return (
-    <div className="ai-credit-section">
-      <Card className="p-5 sm:p-7">
-        <p className="eyebrow">Uso de IA</p>
-        <h2 className="mt-2 text-xl font-semibold">Tu saldo de generaciones</h2>
-        <p className="ai-credit-balance">
-          {status
-            ? `${status.balance} créditos disponibles`
-            : error ?? "Consultando saldo…"}
-        </p>
-        <p>
-          Chat sin cobro, con límites temporales de uso. Crear en el lienzo consume 1 crédito por
-          propuesta válida completada.
-        </p>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Recibes 5 créditos iniciales, sin renovación automática. Los fallos
-          antes de completar una generación devuelven el crédito. Las plantillas
-          y la edición manual no consumen saldo.
-        </p>
-        {error && (
-          <Button variant="secondary" onClick={() => void refresh()}>
-            Reintentar saldo
+  const [section, setSection] = useState<(typeof adminSections)[number]["id"]>("assessments");
+  const balance = <Card className="p-5 sm:p-6">
+    <h2 className="text-lg font-semibold">Tu saldo de generaciones</h2>
+    <p className="ai-credit-balance">{status ? `${status.balance} créditos disponibles` : error ?? "Consultando saldo…"}</p>
+    <p className="text-sm text-muted-foreground">Empiezas con 5 generaciones. Crear en el lienzo consume 1 crédito por propuesta válida.</p>
+    <div className="mt-4 flex flex-wrap gap-2">
+      <Button variant="secondary" size="sm" asChild><a href="#/lienzo">Ir al lienzo</a></Button>
+      {error && <Button variant="ghost" size="sm" onClick={() => void refresh()}>Reintentar saldo</Button>}
+    </div>
+  </Card>;
+
+  return <div className="ai-credit-section">
+    {status?.is_admin ? <AdminMfaGate>
+      <nav aria-label="Secciones de administración" className="flex flex-wrap gap-1.5 rounded-xl border border-border bg-surface p-2">
+        {adminSections.map(({ id, label, icon: Icon }) => (
+          <Button key={id} size="sm" variant={section === id ? "primary" : "ghost"}
+            aria-pressed={section === id} onClick={() => setSection(id)}>
+            <Icon className="size-4" aria-hidden /> {label}
           </Button>
-        )}
-        <a href="#/lienzo">Ir al lienzo</a>
-      </Card>
-      {status?.is_admin && <AdminMfaGate>
-        <details className="ai-admin-detail" onToggle={(event) => {
-          if (event.currentTarget.open) setOpenedAssessments(true);
-        }}>
-          <summary>Encuestas y pretest</summary>
-          {openedAssessments && <Suspense fallback={<p role="status">Abriendo evaluaciones…</p>}><AssessmentAdmin /></Suspense>}
-        </details>
-        <CreditAdministration />
+        ))}
+      </nav>
+      <div hidden={section !== "assessments"}>
+        <Suspense fallback={<p role="status">Abriendo evaluaciones…</p>}><AssessmentAdmin /></Suspense>
+      </div>
+      {section === "accounts" && <div className="grid gap-4">{balance}<CreditAdministration /></div>}
+      {section === "tools" && <div className="grid gap-3">
         <details className="ai-admin-detail"><summary>Disponibilidad de IA</summary><BetaAdminPanel /></details>
         <details className="ai-admin-detail"><summary>Diagnóstico de construcciones</summary><CanvasDiagnostics /></details>
-      </AdminMfaGate>}
-    </div>
-  );
+      </div>}
+    </AdminMfaGate> : balance}
+  </div>;
 }

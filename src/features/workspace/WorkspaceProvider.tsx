@@ -434,6 +434,10 @@ function WorkspaceSession({ children }: { children: ReactNode }) {
           if (memberError) {
             throw new Error(readableDataError(memberError.message));
           }
+          if (selectedClassroom.current === activeClassroom.id) {
+            setMembers(current => current.filter(member => member.userId !== userId));
+            setGroupMemberships(current => current.filter(member => member.userId !== userId));
+          }
         });
       },
       async setMemberRole(userId, role) {
