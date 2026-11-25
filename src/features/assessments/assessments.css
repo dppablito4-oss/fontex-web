@@ -1,0 +1,65 @@
+.assessment-print-sheet {
+  display: none;
+}
+
+.assessment-response header,
+.assessment-response ol {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.assessment-response h3 {
+  font-size: 1.15rem;
+  font-weight: 650;
+}
+
+.assessment-response ol {
+  list-style: decimal;
+  margin-block-start: 1rem;
+  padding-inline-start: 1.4rem;
+}
+
+.assessment-answer {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+@media print {
+  body:has(> .assessment-print-sheet) > :not(.assessment-print-sheet) {
+    display: none !important;
+  }
+
+  body:has(> .assessment-print-sheet) {
+    background: white !important;
+    color: black !important;
+    min-width: 0;
+  }
+
+  .assessment-print-sheet {
+    display: block;
+    color: black;
+    font: 11pt/1.4 system-ui, sans-serif;
+    margin: 0.5cm;
+  }
+
+  .assessment-print-sheet header {
+    padding-bottom: 0.5cm;
+    border-bottom: 1px solid #aaa;
+    break-inside: avoid;
+  }
+
+  .assessment-print-sheet h3 {
+    font-size: 18pt;
+    font-weight: bold;
+  }
+
+  .assessment-print-sheet ol {
+    list-style: decimal;
+    padding-inline-start: 0.6cm;
+  }
+
+  .assessment-print-sheet li {
+    margin-top: 0.45cm;
+    break-inside: avoid;
+  }
+}
