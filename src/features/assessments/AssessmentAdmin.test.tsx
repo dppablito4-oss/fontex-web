@@ -1,11 +1,12 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AssessmentAdmin } from "./AssessmentAdmin";
-import { createAssessment, loadUniversityPretest } from "./service";
+import { createAssessment, loadTicsPretest, loadUniversityPretest } from "./service";
 
 vi.mock("./service", async (importOriginal) => ({
   ...await importOriginal<typeof import("./service")>(),
   loadUniversityPretest: vi.fn(),
+  loadTicsPretest: vi.fn(),
   listAssessments: vi.fn().mockResolvedValue({ forms: [], hasMore: false }),
   createAssessment: vi.fn().mockRejectedValue(new Error("Publicación de prueba")),
 }));
@@ -49,8 +50,8 @@ describe("plantilla de pretest en Administración", () => {
     });
     render(<AssessmentAdmin />);
     fireEvent.click(screen.getByRole("button", { name: "Cargar pretest universitario de Fontex" }));
-    expect(await screen.findByText("Arquitectura y desarrollo · 60 %")).toBeInTheDocument();
-    expect(screen.getByText("Uso de Fontex · 40 %")).toBeInTheDocument();
+    expect(await screen.findByText("Análisis de situaciones · 60 %")).toBeInTheDocument();
+    expect(screen.getByText("Uso educativo · 40 %")).toBeInTheDocument();
     expect(screen.getAllByRole("textbox", { name: /^Pregunta \d+$/ })).toHaveLength(10);
     fireEvent.change(screen.getByRole("combobox", { name: "Respuesta correcta para la pregunta 1" }), {
       target: { value: "Dos" },
@@ -59,6 +60,40 @@ describe("plantilla de pretest en Administración", () => {
     await waitFor(() => expect(createAssessment).toHaveBeenCalledTimes(1));
     expect(vi.mocked(createAssessment).mock.calls[0]?.[0].questions[0]?.correct_option).toBe("Dos");
     await screen.findByRole("alert");
+  });
+
+  it("carga Pretest TICs 1 para revisión sin publicarlo automáticamente", async () => {
+    vi.mocked(loadTicsPretest).mockResolvedValue({
+      title: "Pretest TICs 1", kind: "pretest", description: "Casos de criterio tecnológico y aprendizaje con Fontex.",
+      questions: Array.from({ length: 10 }, (_, index) => ({
+        prompt: `Situación de Fontex ${index + 1}`, kind: "choice", options: ["Propuesta A", "Propuesta B"], correct_option: "Propuesta B",
+      })),
+    });
+    render(<AssessmentAdmin />);
+    fireEvent.click(screen.getByRole("button", { name: "Cargar Pretest TICs 1" }));
+    expect(await screen.findByRole("heading", { name: "Revisar Pretest TICs 1" })).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Título" })).toHaveValue("Pretest TICs 1");
+    expect(screen.getAllByRole("textbox", { name: /^Pregunta \d+$/ })).toHaveLength(10);
+    expect(createAssessment).not.toHaveBeenCalled();
+    fireEvent.change(screen.getByRole("textbox", { name: "Pregunta 1" }), { target: { value: "Caso adaptado para mi clase" } });
+    fireEvent.click(screen.getByRole("button", { name: "Publicar evaluación" }));
+    await waitFor(() => expect(createAssessment).toHaveBeenCalledTimes(1));
+    const sent = vi.mocked(createAssessment).mock.calls[0]?.[0];
+    expect(sent?.title).toBe("Pretest TICs 1");
+    expect(sent?.questions).toHaveLength(10);
+    expect(sent?.questions[0]).toMatchObject({
+      prompt: "Caso adaptado para mi clase", correct_option: "Propuesta B",
+    });
+    await screen.findByRole("alert");
+  });
+
+  it("informa si falla la carga y permite reintentar", async () => {
+    vi.mocked(loadTicsPretest).mockRejectedValue(new Error("No se pudo cargar Pretest TICs 1."));
+    render(<AssessmentAdmin />);
+    fireEvent.click(screen.getByRole("button", { name: "Cargar Pretest TICs 1" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("No se pudo cargar Pretest TICs 1.");
+    expect(screen.getByRole("button", { name: "Cargar Pretest TICs 1" })).toBeEnabled();
+    expect(createAssessment).not.toHaveBeenCalled();
   });
 
   it("permite guardar selección múltiple sin pedir cantidad de códigos", async () => {

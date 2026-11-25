@@ -1,5 +1,6 @@
 export const universityQuestionCount = 10;
 export const universityTechnicalCount = 6;
+export const assessmentSections = ["Análisis de situaciones", "Uso educativo"] as const;
 
 const levels = [
   { max: 2, label: "Inicial", tone: "red", fill: "#FEE2E2", ink: "#991B1B" },
