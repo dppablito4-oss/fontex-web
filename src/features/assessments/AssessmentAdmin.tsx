@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Button } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
 import { AssessmentEditor } from "./AssessmentEditor";
+import { secondaryMathPretest } from "./assessment-templates";
 import { AssessmentSheet } from "./AssessmentPrint";
 import {
   type AssessmentCode, type AssessmentDetail, type AssessmentSummary, assessmentAnswerBatch,
@@ -20,7 +21,7 @@ export function AssessmentAdmin() {
   const [refresh, setRefresh] = useState(0);
   const [listBusy, setListBusy] = useState(true);
   const [error, setError] = useState("");
-  const [showEditor, setShowEditor] = useState(false);
+  const [editor, setEditor] = useState<"blank" | "math" | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
 
   useEffect(() => {
@@ -50,15 +51,19 @@ export function AssessmentAdmin() {
         <h2 className="text-xl font-semibold">Encuestas y pretest</h2>
         <p className="mt-1 text-sm text-muted-foreground">Crea un formulario, comparte su QR y revisa las entregas.</p>
       </div>
-      {!showEditor && <Button onClick={() => { setShowEditor(true); setSelected(null); }}>Nueva evaluación</Button>}
+      {!editor && <div className="flex flex-wrap gap-2">
+        <Button onClick={() => { setEditor("math"); setSelected(null); }}>Cargar pretest de Matemática</Button>
+        <Button variant="secondary" onClick={() => { setEditor("blank"); setSelected(null); }}>Nueva evaluación</Button>
+      </div>}
     </div>
-    {showEditor && <AssessmentEditor onCancel={() => setShowEditor(false)} onPublished={(id) => {
-      setShowEditor(false);
-      setSelected(id);
-      reload(0);
-    }} />}
-    {!showEditor && selected && <AssessmentResults key={selected} id={selected} onChanged={() => reload()} />}
-    {!showEditor && <Card className="space-y-3 p-4 sm:p-5">
+    {editor && <AssessmentEditor template={editor === "math" ? secondaryMathPretest : undefined}
+      onCancel={() => setEditor(null)} onPublished={(id) => {
+        setEditor(null);
+        setSelected(id);
+        reload(0);
+      }} />}
+    {!editor && selected && <AssessmentResults key={selected} id={selected} onChanged={() => reload()} />}
+    {!editor && <Card className="space-y-3 p-4 sm:p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="font-semibold">Tus evaluaciones</h3>
         <Button variant="secondary" size="sm" disabled={listBusy} onClick={() => reload()}>Actualizar lista</Button>

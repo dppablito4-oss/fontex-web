@@ -1,6 +1,7 @@
 import { type FormEvent, useRef, useState } from "react";
 import { Button } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
+import type { AssessmentTemplate } from "./assessment-templates";
 import { type AssessmentKind, createAssessment, type QuestionKind } from "./service";
 
 interface DraftQuestion {
@@ -14,11 +15,19 @@ function blankQuestion(): DraftQuestion {
   return { id: crypto.randomUUID(), prompt: "", kind: "text", options: "" };
 }
 
-export function AssessmentEditor({ onPublished, onCancel }: { onPublished: (id: string) => void; onCancel: () => void }) {
-  const [title, setTitle] = useState("");
-  const [kind, setKind] = useState<AssessmentKind>("pretest");
-  const [description, setDescription] = useState("");
-  const [questions, setQuestions] = useState<DraftQuestion[]>(() => [blankQuestion()]);
+export function AssessmentEditor({ template, onPublished, onCancel }: {
+  template?: AssessmentTemplate;
+  onPublished: (id: string) => void;
+  onCancel: () => void;
+}) {
+  const [title, setTitle] = useState(template?.title ?? "");
+  const [kind, setKind] = useState<AssessmentKind>(template?.kind ?? "pretest");
+  const [description, setDescription] = useState(template?.description ?? "");
+  const [questions, setQuestions] = useState<DraftQuestion[]>(() => template
+    ? template.questions.map(({ options, ...question }) => ({
+      ...question, id: crypto.randomUUID(), options: options.join("\n"),
+    }))
+    : [blankQuestion()]);
   const [codeCount, setCodeCount] = useState("30");
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
@@ -70,7 +79,8 @@ export function AssessmentEditor({ onPublished, onCancel }: { onPublished: (id: 
   }
 
   return <Card className="space-y-4 p-4 sm:p-6">
-    <h3 className="font-semibold">Nueva evaluación</h3>
+    <h3 className="font-semibold">{template ? "Revisar pretest de Matemática" : "Nueva evaluación"}</h3>
+    {template && <p className="text-sm text-muted-foreground">12 preguntas editables de aritmética, álgebra, geometría y datos.</p>}
     <form className="space-y-4" onSubmit={(event) => void submit(event)}>
       <fieldset className="space-y-4" disabled={pending}>
         <div className="grid gap-3 sm:grid-cols-[1fr_10rem]">
