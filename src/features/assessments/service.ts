@@ -2,7 +2,7 @@ import { z } from "zod";
 import { supabase } from "../../lib/supabase/client";
 
 const kind = z.enum(["survey", "pretest"]);
-const questionKind = z.enum(["text", "choice"]);
+const questionKind = z.enum(["text", "choice", "multiple"]);
 const question = z.object({
   position: z.number().int().positive(),
   prompt: z.string(),
@@ -31,17 +31,26 @@ const detail = publicForm.extend({
   created_at: z.string(),
   codes: z.array(accessCode),
 });
+const browserAssessment = z.discriminatedUnion("state", [
+  publicForm.omit({ is_open: true }).extend({ state: z.literal("open"), question_version: z.number().int().positive() }),
+  z.object({ state: z.literal("submitted"), title: z.string().optional() }),
+  z.object({ state: z.literal("closed"), title: z.string().optional() }),
+]);
 const answerList = z.array(z.object({ code: z.string(), answers: z.array(z.string()) }));
 
 export type AssessmentKind = z.infer<typeof kind>;
 export type QuestionKind = z.infer<typeof questionKind>;
 export type AssessmentQuestion = z.infer<typeof question>;
-export type PublicAssessment = z.infer<typeof publicForm>;
+export type BrowserAssessment = z.infer<typeof browserAssessment>;
+export type StudentAnswer = string | string[];
 export type AssessmentSummary = z.infer<typeof summary>;
 export type AssessmentDetail = z.infer<typeof detail>;
 export type AssessmentCode = z.infer<typeof accessCode>;
 
 export const assessmentKindLabel: Record<AssessmentKind, string> = { survey: "Encuesta", pretest: "Pretest" };
+export const questionKindLabel: Record<QuestionKind, string> = {
+  text: "Respuesta libre", choice: "Selección única", multiple: "Selección múltiple",
+};
 export const assessmentPageSize = 25;
 export const assessmentAnswerBatch = 25;
 
@@ -70,7 +79,6 @@ export async function createAssessment(values: {
   kind: AssessmentKind;
   description: string;
   questions: Omit<AssessmentQuestion, "position">[];
-  codeCount: number;
 }) {
   const { data, error } = await client().rpc("admin_create_assessment", {
     p_request: values.request,
@@ -78,11 +86,11 @@ export async function createAssessment(values: {
     p_kind: values.kind,
     p_description: values.description,
     p_questions: values.questions,
-    p_code_count: values.codeCount,
+    p_code_count: 0,
   });
   if (error) {
     const message = error.code === "22023"
-      ? "Revisa el título, los códigos y las preguntas antes de publicar."
+      ? "Revisa el título y las preguntas antes de publicar."
       : "No se pudo confirmar la publicación. Puedes reintentar desde este formulario.";
     throw adminError(error.code, message);
   }
@@ -107,26 +115,37 @@ export async function getAssessmentAnswers(id: string, codes: string[]) {
   return answerList.parse(data);
 }
 
-export async function loadPublicAssessment(token: string) {
-  if (!z.uuid().safeParse(token).success) return null;
-  const { data, error } = await client().rpc("get_public_assessment", { p_token: token });
-  if (error) throw Error("No se pudo cargar el formulario. Comprueba la conexión e inténtalo de nuevo.");
-  return publicForm.nullable().parse(data);
+export async function deleteAssessment(id: string) {
+  const { error } = await client().rpc("admin_delete_assessment", { p_form: id });
+  if (error) throw adminError(error.code, "No se pudo eliminar la evaluación.");
 }
 
-export async function submitAssessment(token: string, code: string, name: string, request: string, answers: string[]) {
-  const { data, error } = await client().rpc("submit_public_assessment", {
-    p_token: token, p_code: code, p_name: name, p_request: request, p_answers: answers,
+export async function deleteAssessmentQuestion(id: string, position: number) {
+  const { error } = await client().rpc("admin_delete_assessment_question", { p_form: id, p_position: position });
+  if (error) throw adminError(error.code, error.message === "assessment_last_question"
+    ? "La evaluación debe conservar al menos una pregunta." : "No se pudo eliminar la pregunta.");
+}
+
+export function validAssessmentToken(token: string) {
+  return z.uuid().safeParse(token).success;
+}
+
+export async function loadBrowserAssessment(token: string, browserId: string) {
+  const { data, error } = await client().rpc("get_browser_assessment", { p_token: token, p_browser: browserId });
+  if (error) throw Error("No se pudo abrir el formulario. Comprueba tu conexión y vuelve a intentar.");
+  return browserAssessment.parse(data);
+}
+
+export async function submitBrowserAssessment(
+  token: string, browserId: string, name: string, questionVersion: number, answers: StudentAnswer[],
+) {
+  const { data, error } = await client().rpc("submit_browser_assessment", {
+    p_token: token, p_browser: browserId, p_name: name, p_question_version: questionVersion, p_answers: answers,
   });
   if (error) {
-    const messages: Partial<Record<string, string>> = {
-      assessment_closed: "Este formulario ya está cerrado.",
-      assessment_invalid_code: "El código no corresponde a esta evaluación. Pídele otro a tu docente.",
-      assessment_code_used: "Ya se registró una entrega con ese código.",
-      assessment_invalid_answers: "Revisa que hayas respondido todas las preguntas y que el texto sea válido.",
-      assessment_invalid_submission: "Escribe tu nombre y el código que te dio tu docente.",
-    };
-    throw Error(messages[error.message] ?? "No pudimos confirmar el envío. Conserva tus respuestas y vuelve a intentar.");
+    if (error.message === "assessment_invalid_answers") throw Error("Revisa que todas tus respuestas sean válidas.");
+    if (error.message === "assessment_invalid_submission") throw Error("Escribe tu nombre para enviar las respuestas.");
+    throw Error("No pudimos confirmar el envío. Conserva tus respuestas y vuelve a intentar.");
   }
-  if (data !== true) throw Error("No pudimos confirmar el envío. Vuelve a intentar.");
+  return z.enum(["submitted", "closed", "changed"]).parse(data);
 }

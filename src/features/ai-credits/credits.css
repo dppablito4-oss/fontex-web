@@ -8,11 +8,6 @@
   font-weight: 700;
   margin: 12px 0;
 }
-.ai-credit-section a {
-  display: inline-block;
-  margin-top: 12px;
-  text-decoration: underline;
-}
 .ai-account-search,
 .ai-grant-form {
   display: flex;
@@ -46,7 +41,7 @@
   outline: 2px solid var(--ui-primary);
   outline-offset: -2px;
 }
-.ai-credit-section small {
+.ai-credit-admin small {
   display: block;
   font-size: .8rem;
   opacity: .8;
@@ -58,7 +53,7 @@
   gap: 12px;
   margin: 16px 0;
 }
-.ai-credit-section h3 {
+.ai-credit-admin h3 {
   margin: 24px 0 12px;
   font-weight: 650;
 }

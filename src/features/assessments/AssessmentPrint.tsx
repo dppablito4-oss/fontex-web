@@ -13,7 +13,6 @@ export function AssessmentSheet({ form, entry, answers, printOnly }: {
       <p>{assessmentKindLabel[form.kind]} · Fontex</p>
       <h3>{form.title}</h3>
       <p><strong>Estudiante </strong>{entry.student_name}</p>
-      <p><strong>Código </strong>{entry.code}</p>
       {entry.submitted_at && <p><strong>Entrega </strong>{deliveryDate(entry.submitted_at)}</p>}
     </header>
     <ol>

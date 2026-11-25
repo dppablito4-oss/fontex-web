@@ -1,4 +1,4 @@
-import { ClipboardCopy, Download, FileSpreadsheet, Printer, QrCode } from "lucide-react";
+import { ClipboardCopy, FileSpreadsheet, Plus, Printer, QrCode, RefreshCw, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
@@ -7,7 +7,8 @@ import { secondaryMathPretest } from "./assessment-templates";
 import { AssessmentSheet } from "./AssessmentPrint";
 import {
   type AssessmentCode, type AssessmentDetail, type AssessmentSummary, assessmentAnswerBatch,
-  assessmentKindLabel, assessmentPageSize, deliveryDate, getAssessment, getAssessmentAnswers, listAssessments, setAssessmentOpen,
+  assessmentKindLabel, assessmentPageSize, deleteAssessment, deleteAssessmentQuestion, deliveryDate, getAssessment,
+  getAssessmentAnswers, listAssessments, questionKindLabel, setAssessmentOpen,
 } from "./service";
 
 function errorText(error: unknown, fallback: string) {
@@ -45,15 +46,15 @@ export function AssessmentAdmin() {
     setRefresh((current) => current + 1);
   }
 
-  return <section className="space-y-4">
-    <div className="flex flex-wrap items-start justify-between gap-3">
+  return <section className="space-y-6">
+    <div className="flex flex-wrap items-start justify-between gap-4">
       <div>
         <h2 className="text-xl font-semibold">Encuestas y pretest</h2>
         <p className="mt-1 text-sm text-muted-foreground">Crea un formulario, comparte su QR y revisa las entregas.</p>
       </div>
       {!editor && <div className="flex flex-wrap gap-2">
-        <Button onClick={() => { setEditor("math"); setSelected(null); }}>Cargar pretest de Matemática</Button>
-        <Button variant="secondary" onClick={() => { setEditor("blank"); setSelected(null); }}>Nueva evaluación</Button>
+        <Button onClick={() => { setEditor("blank"); setSelected(null); }}><Plus className="size-4" aria-hidden /> Nueva evaluación</Button>
+        <Button variant="secondary" onClick={() => { setEditor("math"); setSelected(null); }}>Cargar pretest de Matemática</Button>
       </div>}
     </div>
     {editor && <AssessmentEditor template={editor === "math" ? secondaryMathPretest : undefined}
@@ -62,11 +63,14 @@ export function AssessmentAdmin() {
         setSelected(id);
         reload(0);
       }} />}
-    {!editor && selected && <AssessmentResults key={selected} id={selected} onChanged={() => reload()} />}
+    {!editor && selected && <AssessmentResults key={selected} id={selected} onChanged={() => reload()} onDeleted={() => {
+      setSelected(null);
+      reload(0);
+    }} />}
     {!editor && <Card className="space-y-3 p-4 sm:p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="font-semibold">Tus evaluaciones</h3>
-        <Button variant="secondary" size="sm" disabled={listBusy} onClick={() => reload()}>Actualizar lista</Button>
+        <Button variant="ghost" size="sm" disabled={listBusy} onClick={() => reload()}><RefreshCw className="size-4" aria-hidden /> Actualizar lista</Button>
       </div>
       {error && <p className="text-error" role="alert">{error}</p>}
       {listBusy && <p role="status">Cargando evaluaciones…</p>}
@@ -89,19 +93,18 @@ export function AssessmentAdmin() {
   </section>;
 }
 
-function AssessmentResults({ id, onChanged }: { id: string; onChanged: () => void }) {
+function AssessmentResults({ id, onChanged, onDeleted }: { id: string; onChanged: () => void; onDeleted: () => void }) {
   const [form, setForm] = useState<AssessmentDetail | null>(null);
   const [qr, setQr] = useState("");
   const [qrError, setQrError] = useState("");
   const [student, setStudent] = useState<{ entry: AssessmentCode; answers: string[] } | null>(null);
   const [loading, setLoading] = useState(true);
   const [refresh, setRefresh] = useState(0);
-  const [action, setAction] = useState<"state" | "xlsx" | "sheet" | null>(null);
+  const [action, setAction] = useState<"state" | "xlsx" | "sheet" | "delete" | "question" | null>(null);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const link = form ? `${window.location.origin}${window.location.pathname}#/evaluacion/${form.token}` : "";
   const completed = form?.codes.filter((item) => item.submitted_at !== null) ?? [];
-  const available = form?.codes.filter((item) => item.submitted_at === null) ?? [];
 
   useEffect(() => {
     let active = true;
@@ -159,6 +162,38 @@ function AssessmentResults({ id, onChanged }: { id: string; onChanged: () => voi
     }
   }
 
+
+  async function removeForm() {
+    if (!form || action || !window.confirm(`¿Eliminar «${form.title}»? Se eliminarán también sus preguntas y entregas.`)) return;
+    setAction("delete");
+    setError("");
+    try {
+      await deleteAssessment(form.id);
+      onDeleted();
+    } catch (failure) {
+      setError(errorText(failure, "No se pudo eliminar la evaluación."));
+    } finally {
+      setAction(null);
+    }
+  }
+
+  async function removeQuestion(position: number, index: number) {
+    if (!form || action || !window.confirm(`¿Eliminar la pregunta ${index + 1}? También se eliminarán las respuestas a esa pregunta.`)) return;
+    setAction("question");
+    setError("");
+    setMessage("");
+    try {
+      await deleteAssessmentQuestion(form.id, position);
+      setStudent(null);
+      reload();
+      setMessage("Pregunta eliminada.");
+    } catch (failure) {
+      setError(errorText(failure, "No se pudo eliminar la pregunta."));
+    } finally {
+      setAction(null);
+    }
+  }
+
   async function showSheet(entry: AssessmentCode) {
     if (!form || action) return;
     setAction("sheet");
@@ -202,69 +237,75 @@ function AssessmentResults({ id, onChanged }: { id: string; onChanged: () => voi
     }
   }
 
-  return <Card className="space-y-5 p-4 sm:p-6">
+  return <Card className="space-y-6 p-4 sm:p-6">
     {!form && loading && <p role="status">Cargando evaluación…</p>}
     {error && <p className="text-error" role="alert">{error}</p>}
     {!form && !loading && <Button variant="secondary" onClick={reload}>Reintentar</Button>}
     {form && <>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="eyebrow">{assessmentKindLabel[form.kind]} · {form.is_open ? "Abierta" : "Cerrada"}</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="eyebrow">{assessmentKindLabel[form.kind]}</p>
+            <span className={form.is_open ? "rounded-full bg-success/10 px-2.5 py-1 text-xs font-medium text-success"
+              : "rounded-full bg-subtle px-2.5 py-1 text-xs text-muted-foreground"}>
+              {form.is_open ? "Abierta" : "Cerrada"}
+            </span>
+          </div>
           <h3 className="mt-1 break-words text-xl font-semibold">{form.title}</h3>
-          <p className="text-sm text-muted-foreground">{form.questions.length} preguntas · {completed.length} de {form.codes.length} entregas</p>
+          <p className="text-sm text-muted-foreground">{form.questions.length} preguntas · {completed.length} entregas</p>
         </div>
-        <Button variant="secondary" disabled={action !== null || loading} onClick={() => void toggleOpen()}>
+        <Button variant={form.is_open ? "secondary" : "primary"} disabled={action !== null || loading} onClick={() => void toggleOpen()}>
           {form.is_open ? "Cerrar recepción" : "Reabrir recepción"}
         </Button>
       </div>
       {message && <p className="text-success" role="status">{message}</p>}
-      <div className="grid items-start gap-4 sm:grid-cols-[auto_1fr]">
+      <section className="grid items-start gap-4 rounded-xl border border-border bg-subtle/40 p-4 sm:grid-cols-[auto_1fr] sm:p-5" aria-label="Compartir evaluación">
         {qr && <img className="size-36 rounded-lg bg-white" src={qr} alt="QR del enlace para responder esta evaluación" width={144} height={144} />}
         <div className="min-w-0 space-y-3">
+          <h4 className="font-semibold">Compartir con estudiantes</h4>
+          <p className="text-sm text-muted-foreground">El QR abre el formulario. Cada navegador admite una entrega.</p>
           <label className="form-field"><span>Enlace para estudiantes</span>
             <input value={link} readOnly onFocus={(event) => event.currentTarget.select()} />
           </label>
           <div className="flex flex-wrap gap-2">
-            <Button variant="secondary" size="sm" onClick={() => void copy(link, "Enlace copiado.")}><ClipboardCopy className="size-4" /> Copiar enlace</Button>
-            <a className="px-2 py-2 text-sm font-semibold underline" href={link} target="_blank" rel="noreferrer">Abrir formulario</a>
-            {qr && <a className="inline-flex items-center gap-2 px-2 py-2 text-sm font-semibold underline" href={qr} download="qr-evaluacion-fontex.png">
-              <QrCode className="size-4" /> Descargar QR
-            </a>}
+            <Button size="sm" onClick={() => void copy(link, "Enlace copiado.")}><ClipboardCopy className="size-4" aria-hidden /> Copiar enlace</Button>
+            {qr && <Button variant="secondary" size="sm" asChild>
+              <a href={qr} download="qr-evaluacion-fontex.png"><QrCode className="size-4" aria-hidden /> Descargar QR</a>
+            </Button>}
+            <Button variant="ghost" size="sm" asChild><a href={link} target="_blank" rel="noreferrer">Abrir formulario</a></Button>
           </div>
           {qrError && <p className="text-sm text-muted-foreground">{qrError}</p>}
         </div>
-      </div>
-      <details className="rounded-lg border border-border p-3">
-        <summary className="cursor-pointer font-semibold">Códigos para repartir ({available.length} disponibles)</summary>
-        <p className="mt-2 text-sm text-muted-foreground">Entrega un código distinto a cada estudiante. El mismo QR abre el formulario para todo el grupo.</p>
-        {available.length > 0 && <>
-          <label className="form-field mt-3"><span>Códigos disponibles</span>
-            <textarea rows={4} value={available.map((item) => item.code).join("\n")} readOnly onFocus={(event) => event.currentTarget.select()} />
-          </label>
-          <Button variant="secondary" size="sm" className="mt-2" onClick={() =>
-            void copy(available.map((item) => item.code).join("\n"), "Códigos disponibles copiados.")}>
-            <ClipboardCopy className="size-4" /> Copiar códigos
-          </Button>
-        </>}
-      </details>
-      <details className="rounded-lg border border-border p-3">
-        <summary className="cursor-pointer font-semibold">Ver preguntas ({form.questions.length})</summary>
-        <ol className="mt-2 list-decimal space-y-2 pl-6 text-sm">
-          {form.questions.map((question) => <li key={question.position}>
-            <strong>{question.prompt}</strong>
-            <p className="text-muted-foreground">{question.kind === "choice" ? question.options.join(" / ") : "Respuesta abierta"}</p>
+      </section>
+      <details className="rounded-xl border border-border p-4">
+        <summary className="cursor-pointer font-semibold">Preguntas ({form.questions.length})</summary>
+        <ol className="mt-3 divide-y divide-border">
+          {form.questions.map((question, index) => <li className="flex flex-wrap items-start justify-between gap-3 py-3" key={question.position}>
+            <div className="min-w-0 flex-1 break-words text-sm">
+              <strong>{index + 1}. {question.prompt}</strong>
+              <p className="mt-1 text-muted-foreground">{questionKindLabel[question.kind]}</p>
+              {question.options.length > 0 && <ul className="mt-1 list-disc pl-5 text-muted-foreground">
+                {question.options.map((option) => <li key={option}>{option}</li>)}
+              </ul>}
+            </div>
+            <Button variant="ghost" size="sm" className="hover:text-error" disabled={loading || action !== null || form.questions.length === 1}
+              aria-label={`Eliminar pregunta ${index + 1}`} onClick={() => void removeQuestion(question.position, index)}>
+              <Trash2 className="size-4" aria-hidden /> Eliminar
+            </Button>
           </li>)}
         </ol>
+        {form.questions.length === 1 && <p className="text-xs text-muted-foreground">La evaluación debe conservar una pregunta.</p>}
       </details>
       <section className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h4 className="font-semibold">Entregas de estudiantes</h4>
           <div className="flex flex-wrap gap-2">
-            <Button variant="secondary" size="sm" disabled={loading || action !== null} onClick={reload}>Actualizar entregas</Button>
+            <Button variant="ghost" size="sm" disabled={loading || action !== null} onClick={reload}>
+              <RefreshCw className="size-4" aria-hidden /> Actualizar
+            </Button>
             <Button variant="secondary" size="sm" disabled={loading || action !== null || completed.length === 0}
               onClick={() => void exportWorkbook()}>
               <FileSpreadsheet className="size-4" /> {action === "xlsx" ? "Generando…" : "Exportar Excel"}
-              {action !== "xlsx" && <Download className="size-3" aria-hidden />}
             </Button>
           </div>
         </div>
@@ -273,14 +314,13 @@ function AssessmentResults({ id, onChanged }: { id: string; onChanged: () => voi
           : <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead><tr className="border-b border-border">
-                <th scope="col" className="p-2">Estudiante</th><th scope="col" className="p-2">Código</th>
+                <th scope="col" className="p-2">Estudiante</th>
                 <th scope="col" className="p-2">Entrega</th><th scope="col" className="p-2">Ficha</th>
               </tr></thead>
               <tbody>{completed.map((entry) => <tr key={entry.code} className="border-b border-border">
                 <td className="p-2">{entry.student_name}</td>
-                <td className="p-2"><code>{entry.code}</code></td>
                 <td className="p-2">{entry.submitted_at && deliveryDate(entry.submitted_at)}</td>
-                <td className="p-2"><Button size="sm" variant="secondary" disabled={action !== null}
+                <td className="p-2"><Button size="sm" variant="ghost" disabled={action !== null}
                   aria-label={`Ver ficha de ${entry.student_name}`} onClick={() => void showSheet(entry)}>Ver ficha</Button></td>
               </tr>)}</tbody>
             </table>
@@ -294,6 +334,15 @@ function AssessmentResults({ id, onChanged }: { id: string; onChanged: () => voi
         <AssessmentSheet form={form} {...student} />
         <AssessmentSheet form={form} {...student} printOnly />
       </section>}
+      <details className="border-t border-border pt-4">
+        <summary className="cursor-pointer text-sm font-medium text-muted-foreground">Gestionar evaluación</summary>
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm text-muted-foreground">Eliminar la evaluación borra el enlace y todas sus entregas.</p>
+          <Button variant="danger" size="sm" disabled={loading || action !== null} onClick={() => void removeForm()}>
+            <Trash2 className="size-4" aria-hidden /> Eliminar evaluación
+          </Button>
+        </div>
+      </details>
     </>}
   </Card>;
 }

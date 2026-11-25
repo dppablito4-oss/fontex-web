@@ -453,6 +453,13 @@ export type Database = {
       admin_get_assessment: { Args: { p_form: string }; Returns: Json };
       admin_set_assessment_open: { Args: { p_form: string; p_open: boolean }; Returns: boolean };
       admin_assessment_answers: { Args: { p_form: string; p_codes: string[] }; Returns: Json };
+      admin_delete_assessment: { Args: { p_form: string }; Returns: undefined };
+      admin_delete_assessment_question: { Args: { p_form: string; p_position: number }; Returns: undefined };
+      get_browser_assessment: { Args: { p_token: string; p_browser: string }; Returns: Json };
+      submit_browser_assessment: {
+        Args: { p_token: string; p_browser: string; p_name: string; p_question_version: number; p_answers: Json };
+        Returns: string;
+      };
       get_public_assessment: { Args: { p_token: string }; Returns: Json };
       submit_public_assessment: {
         Args: { p_token: string; p_code: string; p_name: string; p_request: string; p_answers: Json };
