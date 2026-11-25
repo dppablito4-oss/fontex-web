@@ -3,12 +3,13 @@ import { useEffect, useState } from "react";
 import { Button } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
 import { AssessmentEditor } from "./AssessmentEditor";
-import { secondaryMathPretest } from "./assessment-templates";
+import { type AssessmentTemplate, secondaryMathPretest } from "./assessment-templates";
+import { AssessmentScore } from "./AssessmentScore";
 import { AssessmentSheet } from "./AssessmentPrint";
 import {
   type AssessmentCode, type AssessmentDetail, type AssessmentSummary, assessmentAnswerBatch,
   assessmentKindLabel, assessmentPageSize, deleteAssessment, deleteAssessmentQuestion, deliveryDate, getAssessment,
-  getAssessmentAnswers, listAssessments, questionKindLabel, setAssessmentOpen,
+  getAssessmentAnswers, listAssessments, loadUniversityPretest, questionKindLabel, setAssessmentOpen,
 } from "./service";
 
 function errorText(error: unknown, fallback: string) {
@@ -22,7 +23,9 @@ export function AssessmentAdmin() {
   const [refresh, setRefresh] = useState(0);
   const [listBusy, setListBusy] = useState(true);
   const [error, setError] = useState("");
-  const [editor, setEditor] = useState<"blank" | "math" | null>(null);
+  const [editor, setEditor] = useState<AssessmentTemplate | "blank" | null>(null);
+  const [templateBusy, setTemplateBusy] = useState(false);
+  const [templateError, setTemplateError] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
 
   useEffect(() => {
@@ -46,6 +49,19 @@ export function AssessmentAdmin() {
     setRefresh((current) => current + 1);
   }
 
+  async function openUniversityTemplate() {
+    setTemplateBusy(true);
+    setTemplateError("");
+    try {
+      setEditor(await loadUniversityPretest());
+      setSelected(null);
+    } catch (failure) {
+      setTemplateError(errorText(failure, "No se pudo cargar la plantilla de Fontex."));
+    } finally {
+      setTemplateBusy(false);
+    }
+  }
+
   return <section className="space-y-6">
     <div className="flex flex-wrap items-start justify-between gap-4">
       <div>
@@ -53,11 +69,17 @@ export function AssessmentAdmin() {
         <p className="mt-1 text-sm text-muted-foreground">Crea un formulario, comparte su QR y revisa las entregas.</p>
       </div>
       {!editor && <div className="flex flex-wrap gap-2">
-        <Button onClick={() => { setEditor("blank"); setSelected(null); }}><Plus className="size-4" aria-hidden /> Nueva evaluación</Button>
-        <Button variant="secondary" onClick={() => { setEditor("math"); setSelected(null); }}>Cargar pretest de Matemática</Button>
+        <Button disabled={templateBusy} onClick={() => { setTemplateError(""); setEditor("blank"); setSelected(null); }}><Plus className="size-4" aria-hidden /> Nueva evaluación</Button>
+        <Button disabled={templateBusy} onClick={() => void openUniversityTemplate()}>
+          {templateBusy ? "Cargando plantilla…" : "Cargar pretest universitario de Fontex"}
+        </Button>
+        <Button disabled={templateBusy} variant="secondary" onClick={() => { setTemplateError(""); setEditor(secondaryMathPretest); setSelected(null); }}>
+          Cargar pretest de Matemática
+        </Button>
       </div>}
     </div>
-    {editor && <AssessmentEditor template={editor === "math" ? secondaryMathPretest : undefined}
+    {templateError && <p className="text-error" role="alert">{templateError}</p>}
+    {editor && <AssessmentEditor template={editor === "blank" ? undefined : editor}
       onCancel={() => setEditor(null)} onPublished={(id) => {
         setEditor(null);
         setSelected(id);
@@ -288,12 +310,13 @@ function AssessmentResults({ id, onChanged, onDeleted }: { id: string; onChanged
                 {question.options.map((option) => <li key={option}>{option}</li>)}
               </ul>}
             </div>
-            <Button variant="ghost" size="sm" className="hover:text-error" disabled={loading || action !== null || form.questions.length === 1}
+            <Button variant="ghost" size="sm" className="hover:text-error" disabled={loading || action !== null || form.questions.length === 1 || form.graded}
               aria-label={`Eliminar pregunta ${index + 1}`} onClick={() => void removeQuestion(question.position, index)}>
               <Trash2 className="size-4" aria-hidden /> Eliminar
             </Button>
           </li>)}
         </ol>
+        {form.graded && <p className="text-xs text-muted-foreground">El pretest calificado conserva las diez preguntas para que los puntajes sean comparables.</p>}
         {form.questions.length === 1 && <p className="text-xs text-muted-foreground">La evaluación debe conservar una pregunta.</p>}
       </details>
       <section className="space-y-3">
@@ -315,11 +338,12 @@ function AssessmentResults({ id, onChanged, onDeleted }: { id: string; onChanged
             <table className="w-full text-left text-sm">
               <thead><tr className="border-b border-border">
                 <th scope="col" className="p-2">Estudiante</th>
-                <th scope="col" className="p-2">Entrega</th><th scope="col" className="p-2">Ficha</th>
+                <th scope="col" className="p-2">Entrega</th>{form.graded && <th scope="col" className="p-2">Resultado</th>}<th scope="col" className="p-2">Ficha</th>
               </tr></thead>
               <tbody>{completed.map((entry) => <tr key={entry.code} className="border-b border-border">
                 <td className="p-2">{entry.student_name}</td>
                 <td className="p-2">{entry.submitted_at && deliveryDate(entry.submitted_at)}</td>
+                {form.graded && <td className="p-2">{entry.score != null && <AssessmentScore score={entry.score} />}</td>}
                 <td className="p-2"><Button size="sm" variant="ghost" disabled={action !== null}
                   aria-label={`Ver ficha de ${entry.student_name}`} onClick={() => void showSheet(entry)}>Ver ficha</Button></td>
               </tr>)}</tbody>

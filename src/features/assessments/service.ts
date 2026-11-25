@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { supabase } from "../../lib/supabase/client";
+import { universityQuestionCount } from "./assessment-score";
 
 const kind = z.enum(["survey", "pretest"]);
 const questionKind = z.enum(["text", "choice", "multiple"]);
@@ -8,6 +9,16 @@ const question = z.object({
   prompt: z.string(),
   kind: questionKind,
   options: z.array(z.string()),
+});
+const score = z.number().int().min(0).max(universityQuestionCount);
+const universityTemplate = z.object({
+  title: z.string(),
+  kind: z.literal("pretest"),
+  description: z.string(),
+  questions: z.array(question.omit({ position: true }).extend({
+    kind: z.literal("choice"),
+    correct_option: z.string(),
+  })).length(universityQuestionCount),
 });
 const publicForm = z.object({
   title: z.string(),
@@ -24,16 +35,18 @@ const accessCode = z.object({
   code: z.string(),
   student_name: z.string().nullable(),
   submitted_at: z.string().nullable(),
+  score: score.nullish(),
 });
 const detail = publicForm.extend({
   id: z.uuid(),
   token: z.uuid(),
   created_at: z.string(),
   codes: z.array(accessCode),
+  graded: z.boolean().optional(),
 });
 const browserAssessment = z.discriminatedUnion("state", [
-  publicForm.omit({ is_open: true }).extend({ state: z.literal("open"), question_version: z.number().int().positive() }),
-  z.object({ state: z.literal("submitted"), title: z.string().optional() }),
+  publicForm.omit({ is_open: true }).extend({ state: z.literal("open"), question_version: z.number().int().positive(), graded: z.boolean().optional() }),
+  z.object({ state: z.literal("submitted"), title: z.string().optional(), score: score.nullish() }),
   z.object({ state: z.literal("closed"), title: z.string().optional() }),
 ]);
 const answerList = z.array(z.object({ code: z.string(), answers: z.array(z.string()) }));
@@ -41,6 +54,7 @@ const answerList = z.array(z.object({ code: z.string(), answers: z.array(z.strin
 export type AssessmentKind = z.infer<typeof kind>;
 export type QuestionKind = z.infer<typeof questionKind>;
 export type AssessmentQuestion = z.infer<typeof question>;
+export type AssessmentQuestionDraft = Omit<AssessmentQuestion, "position"> & { correct_option?: string };
 export type BrowserAssessment = z.infer<typeof browserAssessment>;
 export type StudentAnswer = string | string[];
 export type AssessmentSummary = z.infer<typeof summary>;
@@ -73,12 +87,18 @@ export async function listAssessments(offset: number) {
   return { forms: forms.slice(0, assessmentPageSize), hasMore: forms.length > assessmentPageSize };
 }
 
+export async function loadUniversityPretest() {
+  const { data, error } = await client().rpc("admin_get_university_pretest");
+  if (error) throw adminError(error.code, "No se pudo cargar la plantilla de Fontex.");
+  return universityTemplate.parse(data);
+}
+
 export async function createAssessment(values: {
   request: string;
   title: string;
   kind: AssessmentKind;
   description: string;
-  questions: Omit<AssessmentQuestion, "position">[];
+  questions: AssessmentQuestionDraft[];
 }) {
   const { data, error } = await client().rpc("admin_create_assessment", {
     p_request: values.request,

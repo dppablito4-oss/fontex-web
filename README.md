@@ -15,7 +15,7 @@ Administración: asignación de créditos, suspensión temporal, bloqueo, reacti
 - **Biblioteca:** lienzos personales, PDF privados y compartidos, visor y búsqueda documental con permisos.
 - **Tutor documental:** conversaciones por aula, selección de fuentes y citas verificadas. Es distinto del asistente que construye el lienzo.
 - **Aprender:** catálogo de actividades y PDF locales, progreso y tutor de práctica.
-- **Encuestas y pretest:** en Administración, los administradores con verificación en dos pasos pueden publicar preguntas de respuesta libre, selección única o selección múltiple. Un QR abre el formulario sin cuenta y permite una entrega por navegador mientras conserva sus datos del sitio. El administrador que publicó la evaluación puede revisar las entregas, imprimir fichas individuales o descargar un archivo Excel.
+- **Encuestas y pretest:** en Administración, los administradores con verificación en dos pasos pueden publicar preguntas de respuesta libre, selección única o selección múltiple. Un QR abre el formulario sin cuenta y permite una entrega por navegador mientras conserva sus datos del sitio. El administrador que publicó la evaluación puede revisar las entregas, imprimir fichas individuales o descargar un archivo Excel. La plantilla universitaria de Fontex incluye 6 preguntas de arquitectura y desarrollo y 4 de uso. Se califica sobre diez con cinco niveles de color y el pretest conserva el inicio del cronómetro al recargar.
 
 El editor funciona sin IA y permite trabajo local sin cuenta. La sincronización, las aulas y los servicios de IA requieren su configuración y permisos. El funcionamiento local no implica que la aplicación pueda abrirse desde cero sin conexión: no hay instalación PWA ni caché offline completa.
 

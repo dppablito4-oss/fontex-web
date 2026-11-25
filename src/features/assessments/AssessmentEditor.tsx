@@ -2,6 +2,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { type FormEvent, useRef, useState } from "react";
 import { Button } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
+import { universityTechnicalCount } from "./assessment-score";
 import type { AssessmentTemplate } from "./assessment-templates";
 import { type AssessmentKind, createAssessment, questionKindLabel, type QuestionKind } from "./service";
 
@@ -10,6 +11,11 @@ interface DraftQuestion {
   prompt: string;
   kind: QuestionKind;
   options: string;
+  correct_option?: string;
+}
+
+function parseOptions(options: string) {
+  return options.split("\n").map((option) => option.trim()).filter(Boolean);
 }
 
 function blankQuestion(): DraftQuestion {
@@ -21,6 +27,7 @@ export function AssessmentEditor({ template, onPublished, onCancel }: {
   onPublished: (id: string) => void;
   onCancel: () => void;
 }) {
+  const graded = template?.questions.some((question) => question.correct_option !== undefined) ?? false;
   const [title, setTitle] = useState(template?.title ?? "");
   const [kind, setKind] = useState<AssessmentKind>(template?.kind ?? "pretest");
   const [description, setDescription] = useState(template?.description ?? "");
@@ -44,19 +51,22 @@ export function AssessmentEditor({ template, onPublished, onCancel }: {
     const values = questions.map((question) => ({
       prompt: question.prompt.trim(),
       kind: question.kind,
-      options: question.kind !== "text" ? question.options.split("\n").map((option) => option.trim()).filter(Boolean) : [],
+      options: question.kind !== "text" ? parseOptions(question.options) : [],
+      ...(graded ? { correct_option: question.correct_option ?? "" } : {}),
     }));
     const invalid = values.findIndex((question) => !question.prompt || (question.kind !== "text" && (
       question.options.length < 2 || question.options.length > 8
       || question.options.some((option) => option.length > 180)
       || new Set(question.options).size !== question.options.length
+      || (graded && !question.options.includes(question.correct_option ?? ""))
     )));
     if (!title.trim()) {
       setError("Escribe un título para la evaluación.");
       return;
     }
     if (invalid >= 0) {
-      setError(`Revisa la pregunta ${invalid + 1}. Las preguntas de selección necesitan entre 2 y 8 opciones distintas.`);
+      const details = graded ? "Usa entre 2 y 8 opciones distintas y marca la correcta." : "Las preguntas de selección necesitan entre 2 y 8 opciones distintas.";
+      setError(`Revisa la pregunta ${invalid + 1}. ${details}`);
       return;
     }
 
@@ -78,8 +88,10 @@ export function AssessmentEditor({ template, onPublished, onCancel }: {
   }
 
   return <Card className="space-y-5 p-4 sm:p-6">
-    <h3 className="text-lg font-semibold">{template ? "Revisar pretest de Matemática" : "Nueva evaluación"}</h3>
-    {template && <p className="text-sm text-muted-foreground">12 preguntas editables de aritmética, álgebra, geometría y datos.</p>}
+    <h3 className="text-lg font-semibold">{graded ? "Revisar pretest universitario de Fontex" : template ? "Revisar pretest de Matemática" : "Nueva evaluación"}</h3>
+    {template && <p className="text-sm text-muted-foreground">{graded
+      ? "6 preguntas de arquitectura y desarrollo y 4 de uso de Fontex. Cada acierto vale un punto."
+      : "12 preguntas editables de aritmética, álgebra, geometría y datos."}</p>}
     <form className="space-y-4" onSubmit={(event) => void submit(event)}>
       <fieldset className="space-y-4" disabled={pending}>
         <div className="grid gap-3 sm:grid-cols-[1fr_10rem]">
@@ -87,7 +99,7 @@ export function AssessmentEditor({ template, onPublished, onCancel }: {
             <input required maxLength={120} value={title} onChange={(event) => setTitle(event.target.value)} />
           </label>
           <label className="form-field"><span>Tipo</span>
-            <select value={kind} onChange={(event) => setKind(event.target.value === "survey" ? "survey" : "pretest")}>
+            <select disabled={graded} value={kind} onChange={(event) => setKind(event.target.value === "survey" ? "survey" : "pretest")}>
               <option value="pretest">Pretest</option><option value="survey">Encuesta</option>
             </select>
           </label>
@@ -96,10 +108,13 @@ export function AssessmentEditor({ template, onPublished, onCancel }: {
           <textarea rows={3} maxLength={600} value={description} onChange={(event) => setDescription(event.target.value)} />
         </label>
         {questions.map((question, index) => <section key={question.id} aria-label={`Pregunta ${index + 1}`} className="space-y-4 rounded-xl border border-border bg-subtle/40 p-4 sm:p-5">
+          {graded && (index === 0 || index === universityTechnicalCount) && <h4 className="font-semibold">
+            {index === 0 ? "Arquitectura y desarrollo · 60 %" : "Uso de Fontex · 40 %"}
+          </h4>}
           <label className="form-field"><span>Pregunta {index + 1}</span>
             <input required maxLength={400} value={question.prompt} onChange={(event) => update(question.id, { prompt: event.target.value })} />
           </label>
-          <div className="flex flex-wrap items-end justify-between gap-3">
+          {!graded && <div className="flex flex-wrap items-end justify-between gap-3">
             <label className="form-field"><span>Tipo de respuesta</span>
               <select value={question.kind} onChange={(event) => {
                 const value = event.target.value as QuestionKind;
@@ -112,13 +127,20 @@ export function AssessmentEditor({ template, onPublished, onCancel }: {
               aria-label={`Quitar pregunta ${index + 1}`} onClick={() => setQuestions((current) => current.filter((item) => item.id !== question.id))}>
               <Trash2 className="size-4" aria-hidden /> Quitar
             </Button>}
-          </div>
+          </div>}
           {question.kind !== "text" && <label className="form-field">
             <span>Opciones, una por línea</span>
             <textarea rows={4} required maxLength={1447} value={question.options} onChange={(event) => update(question.id, { options: event.target.value })} />
           </label>}
+          {graded && <label className="form-field">
+            <span>Respuesta correcta para la pregunta {index + 1}</span>
+            <select required value={question.correct_option ?? ""} onChange={(event) => update(question.id, { correct_option: event.target.value })}>
+              <option value="">Elige la respuesta correcta</option>
+              {[...new Set(parseOptions(question.options))].map((option) => <option key={option} value={option}>{option}</option>)}
+            </select>
+          </label>}
         </section>)}
-        <Button type="button" variant="secondary" disabled={questions.length >= 30} onClick={() => setQuestions((current) => [...current, blankQuestion()])}><Plus className="size-4" aria-hidden /> Añadir pregunta</Button>
+        {!graded && <Button type="button" variant="secondary" disabled={questions.length >= 30} onClick={() => setQuestions((current) => [...current, blankQuestion()])}><Plus className="size-4" aria-hidden /> Añadir pregunta</Button>}
       </fieldset>
       <p className="text-sm text-muted-foreground">Publica para generar el enlace y el QR. Cada navegador podrá enviar una sola vez.</p>
       {error && <p className="text-error" role="alert">{error}</p>}

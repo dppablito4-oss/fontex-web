@@ -1,5 +1,6 @@
 import { createPortal } from "react-dom";
 import { type AssessmentCode, type AssessmentDetail, assessmentKindLabel, deliveryDate } from "./service";
+import { AssessmentScore } from "./AssessmentScore";
 import "./assessments.css";
 
 export function AssessmentSheet({ form, entry, answers, printOnly }: {
@@ -14,6 +15,7 @@ export function AssessmentSheet({ form, entry, answers, printOnly }: {
       <h3>{form.title}</h3>
       <p><strong>Estudiante </strong>{entry.student_name}</p>
       {entry.submitted_at && <p><strong>Entrega </strong>{deliveryDate(entry.submitted_at)}</p>}
+      {entry.score != null && <p><AssessmentScore score={entry.score} /></p>}
     </header>
     <ol>
       {form.questions.map((question, index) => <li key={question.position}>

@@ -1,10 +1,10 @@
-import type { AssessmentKind, AssessmentQuestion } from "./service";
+import type { AssessmentKind, AssessmentQuestionDraft } from "./service";
 
 export interface AssessmentTemplate {
   title: string;
   kind: AssessmentKind;
   description: string;
-  questions: Omit<AssessmentQuestion, "position">[];
+  questions: AssessmentQuestionDraft[];
 }
 
 export const secondaryMathPretest: AssessmentTemplate = {

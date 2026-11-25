@@ -1,10 +1,11 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AssessmentAdmin } from "./AssessmentAdmin";
-import { createAssessment } from "./service";
+import { createAssessment, loadUniversityPretest } from "./service";
 
 vi.mock("./service", async (importOriginal) => ({
   ...await importOriginal<typeof import("./service")>(),
+  loadUniversityPretest: vi.fn(),
   listAssessments: vi.fn().mockResolvedValue({ forms: [], hasMore: false }),
   createAssessment: vi.fn().mockRejectedValue(new Error("Publicación de prueba")),
 }));
@@ -36,6 +37,27 @@ describe("plantilla de pretest en Administración", () => {
       options: ["1/4", "1/3", "3/4", "7/5"],
     });
     expect(sent?.questions.filter((question) => question.kind === "text")).toHaveLength(4);
+    await screen.findByRole("alert");
+  });
+
+  it("carga las diez preguntas de Fontex y publica las claves seleccionadas", async () => {
+    vi.mocked(loadUniversityPretest).mockResolvedValue({
+      title: "Pretest universitario de Fontex", description: "", kind: "pretest",
+      questions: Array.from({ length: 10 }, (_, index) => ({
+        prompt: `Caso ${index + 1}`, kind: "choice", options: ["Uno", "Dos"], correct_option: "Uno",
+      })),
+    });
+    render(<AssessmentAdmin />);
+    fireEvent.click(screen.getByRole("button", { name: "Cargar pretest universitario de Fontex" }));
+    expect(await screen.findByText("Arquitectura y desarrollo · 60 %")).toBeInTheDocument();
+    expect(screen.getByText("Uso de Fontex · 40 %")).toBeInTheDocument();
+    expect(screen.getAllByRole("textbox", { name: /^Pregunta \d+$/ })).toHaveLength(10);
+    fireEvent.change(screen.getByRole("combobox", { name: "Respuesta correcta para la pregunta 1" }), {
+      target: { value: "Dos" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Publicar evaluación" }));
+    await waitFor(() => expect(createAssessment).toHaveBeenCalledTimes(1));
+    expect(vi.mocked(createAssessment).mock.calls[0]?.[0].questions[0]?.correct_option).toBe("Dos");
     await screen.findByRole("alert");
   });
 

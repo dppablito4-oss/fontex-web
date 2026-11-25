@@ -63,3 +63,15 @@
     break-inside: avoid;
   }
 }
+
+.assessment-score {
+  display: inline-block;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  padding: .2rem .55rem;
+  font-size: .875rem;
+}
+
+@media print {
+  .assessment-score { print-color-adjust: exact; }
+}

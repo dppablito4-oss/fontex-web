@@ -2,30 +2,33 @@ import { Check, CircleX } from "lucide-react";
 import { type FormEvent, useEffect, useRef, useState } from "react";
 import { Button } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
+import { AssessmentScore } from "./AssessmentScore";
+import { AssessmentTimer } from "./AssessmentTimer";
+import { universityTechnicalCount } from "./assessment-score";
 import {
   assessmentKindLabel, type BrowserAssessment, loadBrowserAssessment, type StudentAnswer,
   submitBrowserAssessment, validAssessmentToken,
 } from "./service";
 
-async function browserIdentity(token: string) {
-  const key = `fontex-assessment-browser-v1:${token}`;
+async function storedValue(key: string, valid: (value: string) => boolean, create: () => string) {
   function getOrCreate() {
     try {
       const previous = localStorage.getItem(key);
-      if (previous && validAssessmentToken(previous)) return previous;
-      const id = crypto.randomUUID();
-      localStorage.setItem(key, id);
-      return id;
+      if (previous && valid(previous)) return previous;
+      const value = create();
+      localStorage.setItem(key, value);
+      return value;
     } catch {
       throw Error("Permite que este navegador guarde datos del sitio para poder responder.");
     }
   }
-  // Coordinate first-time access when the same evaluation opens in multiple tabs.
+  // Two tabs must share the same identity and start time.
   return navigator.locks ? navigator.locks.request(key, getOrCreate) : getOrCreate();
 }
 
 export function StudentAssessmentPage({ token }: { token: string }) {
   const [form, setForm] = useState<BrowserAssessment | null>(null);
+  const [startedAt, setStartedAt] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [attempt, setAttempt] = useState(0);
@@ -40,8 +43,17 @@ export function StudentAssessmentPage({ token }: { token: string }) {
     let active = true;
     async function load(): Promise<BrowserAssessment> {
       if (!validAssessmentToken(token)) return { state: "closed" };
-      browserId.current = await browserIdentity(token);
-      return loadBrowserAssessment(token, browserId.current);
+      const id = await storedValue(`fontex-assessment-browser-v1:${token}`, validAssessmentToken, () => crypto.randomUUID());
+      if (!active) return { state: "closed" };
+      browserId.current = id;
+      const result = await loadBrowserAssessment(token, id);
+      if (active && result.state === "open" && result.kind === "pretest") {
+        const start = await storedValue(`fontex-assessment-start-v1:${token}`,
+          (value) => Number.isSafeInteger(Number(value)) && Number(value) > 0,
+          () => String(Date.now()));
+        if (active) setStartedAt(Number(start));
+      }
+      return result;
     }
     void load().then((result) => {
       if (active) setForm(result);
@@ -87,7 +99,8 @@ export function StudentAssessmentPage({ token }: { token: string }) {
     setPending(true);
     setError("");
     try {
-      const state = await submitBrowserAssessment(token, browserId.current, name.trim(), form.question_version, values);
+      const id = browserId.current;
+      const state = await submitBrowserAssessment(token, id, name.trim(), form.question_version, values);
       setAnswers({});
       if (state === "changed") {
         setError("Las preguntas se actualizaron. Revisa el formulario y responde la versión nueva.");
@@ -95,6 +108,12 @@ export function StudentAssessmentPage({ token }: { token: string }) {
       } else {
         setForm({ state, title: form.title });
         setName("");
+        if (state === "submitted" && form.graded) {
+          // The receipt is already confirmed. A failed score lookup can be retried by reopening the link.
+          void loadBrowserAssessment(token, id).then((receipt) => {
+            if (receipt.state === "submitted") setForm(receipt);
+          }).catch(() => {});
+        }
       }
     } catch (failure) {
       setError(failure instanceof Error ? failure.message : "No se pudo confirmar el envío.");
@@ -126,6 +145,7 @@ export function StudentAssessmentPage({ token }: { token: string }) {
           <p className="text-muted-foreground">
             {form.state === "submitted" ? "Tus respuestas ya están registradas." : "La evaluación cerró o el enlace ya venció."}
           </p>
+          {form.state === "submitted" && form.score != null && <AssessmentScore score={form.score} />}
         </Card>
       )}
       {open && <form onSubmit={(event) => void submit(event)} className="space-y-4">
@@ -134,13 +154,18 @@ export function StudentAssessmentPage({ token }: { token: string }) {
             <span>Nombres y apellidos</span>
             <input maxLength={100} autoComplete="name" required disabled={pending} value={name} onChange={(event) => setName(event.target.value)} />
           </label>
+          {startedAt !== null && <AssessmentTimer startedAt={startedAt} />}
           <p className="text-sm text-muted-foreground">Puedes enviar una sola vez desde este navegador.</p>
         </Card>
         {error && <p className="text-error" role="alert">{error}</p>}
         {form.questions.map((question, index) => {
           const answer = answers[question.position];
           const multiple = question.kind === "multiple";
-          return <Card key={question.position} className="p-5">
+          return <div className="space-y-3" key={question.position}>
+            {form.graded && (index === 0 || index === universityTechnicalCount) && <h2 className="text-lg font-semibold">
+              {index === 0 ? "Arquitectura y desarrollo" : "Uso de Fontex"}
+            </h2>}
+            <Card className="p-5">
             {question.kind !== "text" ? <fieldset disabled={pending} className="space-y-3">
               <legend className="mb-3 font-semibold">{index + 1}. {question.prompt}</legend>
               {multiple && <p className="text-sm text-muted-foreground">Marca todas las alternativas que correspondan.</p>}
@@ -159,7 +184,8 @@ export function StudentAssessmentPage({ token }: { token: string }) {
               <textarea rows={4} maxLength={800} required disabled={pending} value={typeof answer === "string" ? answer : ""}
                 onChange={(event) => setAnswers((current) => ({ ...current, [question.position]: event.target.value }))} />
             </label>}
-          </Card>;
+            </Card>
+          </div>;
         })}
         <Button disabled={pending} type="submit">{pending ? "Enviando…" : "Enviar respuestas"}</Button>
       </form>}
