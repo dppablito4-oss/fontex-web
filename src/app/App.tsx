@@ -21,6 +21,10 @@ import { WorkspaceProvider } from "../features/workspace/WorkspaceProvider";
 const LessonPage = lazy(() => import("../features/classrooms/LessonPage").then(m => ({default:m.LessonPage})));
 const GuestClassroomPage = lazy(() => import("../features/classrooms/ClassroomLearning").then(m => ({default:m.GuestClassroomPage})));
 
+const StudentAssessmentPage = lazy(() =>
+  import("../features/assessments/StudentAssessmentPage").then(module => ({ default: module.StudentAssessmentPage })),
+);
+
 const SharedCanvasPage = lazy(() => import("../features/primitives/CanvasReading").then(m => ({ default: m.SharedCanvasPage })));
 
 const PrimitiveCanvas = lazy(() => import("../features/primitives/PrimitiveCanvas").then(m => ({ default: m.PrimitiveCanvas })));
@@ -45,6 +49,7 @@ export function App() {
   const joinRoute = useMatch("/unirse");
   const classroomRoute = useMatch("/aula");
   const sharedRoute = useMatch("/compartido/:token");
+  const assessmentRoute = useMatch("/evaluacion/:token");
   const generalRoute = useMatch("/laboratorio");
   const demoRoute = useMatch("/demo");
   const landingRoute = useMatch("/");
@@ -61,6 +66,12 @@ export function App() {
 
   // Existing email/role invitations retain their authenticated acceptance flow.
   const legacyInvitation = new URLSearchParams(location.search).has("invite");
+  if (assessmentRoute?.params.token) {
+    const token = assessmentRoute.params.token;
+    return <Suspense fallback={<div className="page-wrap" role="status">Abriendo formulario…</div>}>
+      <StudentAssessmentPage key={token} token={token} />
+    </Suspense>;
+  }
   if (lessonRoute) return <Suspense fallback={<div>Abriendo clase…</div>}><LessonPage key={lessonRoute.params.id} id={lessonRoute.params.id!}/></Suspense>;
   if (classroomRoute && guest) return <Suspense fallback={<div>Abriendo aula…</div>}><GuestClassroomPage/></Suspense>;
   if (joinRoute || (classroomRoute && status === "anonymous" && !legacyInvitation)) return <JoinClassroomPage key={location.search} />;

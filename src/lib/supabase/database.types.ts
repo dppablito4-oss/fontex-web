@@ -445,6 +445,19 @@ export type Database = {
     };
     Views: Record<string, never>;
     Functions: {
+      admin_create_assessment: {
+        Args: { p_request: string; p_title: string; p_kind: string; p_description: string; p_questions: Json; p_code_count: number };
+        Returns: string;
+      };
+      admin_list_assessments: { Args: { p_offset: number }; Returns: Json };
+      admin_get_assessment: { Args: { p_form: string }; Returns: Json };
+      admin_set_assessment_open: { Args: { p_form: string; p_open: boolean }; Returns: boolean };
+      admin_assessment_answers: { Args: { p_form: string; p_codes: string[] }; Returns: Json };
+      get_public_assessment: { Args: { p_token: string }; Returns: Json };
+      submit_public_assessment: {
+        Args: { p_token: string; p_code: string; p_name: string; p_request: string; p_answers: Json };
+        Returns: boolean;
+      };
       teacher_classrooms: { Args: Record<string, never>; Returns: Json };
       publish_class_lesson: { Args: {p_classroom:string;p_scene_id:string;p_title:string;p_topic:string;p_date:string;p_week:number;p_instructions:string;p_due:string|null;p_attachments:Json}; Returns: string };
       list_class_lessons: { Args: {p_classroom:string;p_guest?:string|null}; Returns: Json };

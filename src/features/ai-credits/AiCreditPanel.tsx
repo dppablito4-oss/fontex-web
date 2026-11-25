@@ -1,5 +1,7 @@
 import {
   type FormEvent,
+  lazy,
+  Suspense,
   useCallback,
   useEffect,
   useRef,
@@ -22,6 +24,10 @@ import { accountStatusNames } from "./account-controls";
 import { BetaAdminPanel } from "../beta/BetaAdminPanel";
 import { AdminMfaGate } from "../auth/AdminMfaGate";
 import { CanvasDiagnostics } from "../beta/CanvasDiagnostics";
+const AssessmentAdmin = lazy(() =>
+  import("../assessments/AssessmentAdmin").then(module => ({ default: module.AssessmentAdmin })),
+);
+
 const eventNames = {
   initial: "Créditos iniciales",
   grant: "Créditos asignados",
@@ -245,6 +251,7 @@ function CreditAdministration() {
 }
 export function AiCreditPanel() {
   const { status, error, refresh } = useAiCredits();
+  const [openedAssessments, setOpenedAssessments] = useState(false);
   return (
     <div className="ai-credit-section">
       <Card className="p-5 sm:p-7">
@@ -271,7 +278,17 @@ export function AiCreditPanel() {
         )}
         <a href="#/lienzo">Ir al lienzo</a>
       </Card>
-      {status?.is_admin && <AdminMfaGate><CreditAdministration /><details className="ai-admin-detail"><summary>Disponibilidad de IA</summary><BetaAdminPanel /></details><details className="ai-admin-detail"><summary>Diagnóstico de construcciones</summary><CanvasDiagnostics /></details></AdminMfaGate>}
+      {status?.is_admin && <AdminMfaGate>
+        <details className="ai-admin-detail" onToggle={(event) => {
+          if (event.currentTarget.open) setOpenedAssessments(true);
+        }}>
+          <summary>Encuestas y pretest</summary>
+          {openedAssessments && <Suspense fallback={<p role="status">Abriendo evaluaciones…</p>}><AssessmentAdmin /></Suspense>}
+        </details>
+        <CreditAdministration />
+        <details className="ai-admin-detail"><summary>Disponibilidad de IA</summary><BetaAdminPanel /></details>
+        <details className="ai-admin-detail"><summary>Diagnóstico de construcciones</summary><CanvasDiagnostics /></details>
+      </AdminMfaGate>}
     </div>
   );
 }
